@@ -125,6 +125,7 @@ import { NotSignedIn } from '../components/workspace/NotSignedIn.tsx';
 import { Profile } from '../components/workspace/Profile.tsx';
 import { ProfileEditor } from '../components/workspace/ProfileEditor.tsx';
 import { ProfileHead } from '../components/workspace/ProfileHead.tsx';
+import { PublicProfile } from '../components/workspace/PublicProfile.tsx';
 import { Published } from '../components/workspace/Published.tsx';
 import { ReadingKey } from '../components/workspace/ReadingKey.tsx';
 import { TipControl } from '../components/workspace/TipControl.tsx';
@@ -701,6 +702,7 @@ const editorView = (over: Partial<ProfileEditorView>): ProfileEditorView => ({
   creating: false,
   account: { shown: 'a-name.near', full: 'a-name.near' },
   needsNearWallet: false,
+  onSocial: true,
   draft: {
     name: 'A name on NEAR Social',
     about: 'A short bio, in the account’s own words.',
@@ -2820,6 +2822,7 @@ export const registry: LabEntry[] = [
             view={editorView({
               account: { shown: '0x3f…f0be', full: '0x3f5ce5fbfe3e9af3971dd833d26ba9b5c936f0be' },
               needsNearWallet: true,
+              onSocial: false,
             })}
           />
         ),
@@ -3209,6 +3212,67 @@ export const registry: LabEntry[] = [
         ),
       },
       { name: 'still reading', render: () => <Contribution contribution="reading" /> },
+    ],
+  },
+  {
+    id: 'PublicProfile',
+    group: 'The workspace',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/workspace/PublicProfile.tsx',
+    states: [
+      {
+        name: 'on NEAR Social',
+        render: () => (
+          <PublicProfile
+            answer={{
+              account: 'a-name.near',
+              chain: 'near',
+              source: 'near-social',
+              profile: {
+                name: 'A name',
+                about: 'Maps who holds power in DAOs.',
+                avatar: null,
+                links: { github: 'a-handle', x: 'a-handle' },
+              },
+            }}
+          />
+        ),
+      },
+      {
+        name: 'an Ethereum account, its NEAR Social profile',
+        render: () => (
+          <PublicProfile
+            answer={{
+              account: '0x3f5ce5fbfe3e9af3971dd833d26ba9b5c936f0be',
+              chain: 'eip155',
+              source: 'near-social',
+              profile: { name: 'A name', about: null, avatar: null, links: {} },
+            }}
+          />
+        ),
+      },
+      {
+        name: 'set on Petals',
+        render: () => (
+          <PublicProfile
+            answer={{
+              account: 'DgiASgeARPbs4p4LSMhhtKb7L6BkW9tfN4eDT1C9yeCE',
+              chain: 'solana',
+              source: 'petals',
+              profile: { name: null, about: 'A bio set on Petals.', avatar: null, links: {} },
+            }}
+          />
+        ),
+      },
+      {
+        name: 'none',
+        render: () => (
+          <PublicProfile
+            answer={{ account: 'nobody.near', chain: 'near', source: null, profile: null }}
+          />
+        ),
+      },
     ],
   },
   {

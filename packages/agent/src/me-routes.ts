@@ -48,13 +48,28 @@ import {
   type ToolContext,
 } from '@petal/tools';
 import { type Context, Hono } from 'hono';
-import type { RouteAuth } from './auth-routes.ts';
+import { caip10Of, type RouteAuth, type WalletNetwork } from './auth-routes.ts';
 import type { LlmClient } from './llm.ts';
 import { PRICE, tipPercentOfPerson } from './price.ts';
 import { fail } from './routes.ts';
+import type { PublicProfile, PublicProfileReader } from './social-read.ts';
 import { reconcile, recordOf } from './usage.ts';
+import type { WalletCipher } from './wallet-cipher.ts';
 
 const HASH = /^[0-9a-f]{64}$/;
+const EVM_ADDRESS = /^0x[0-9a-fA-F]{40}$/;
+const NEAR_IMPLICIT = /^[0-9a-f]{64}$/;
+const NEAR_NAMED = /^(?=.{2,64}$)(([a-z\d]+[-_])*[a-z\d]+\.)*([a-z\d]+[-_])*[a-z\d]+$/;
+const SOLANA_ADDRESS = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
+
+/** Which network an account is on, by its shape: an EVM address, a NEAR account (mainnet), or Solana's. */
+export function networkOfAccount(account: string): WalletNetwork | null {
+  if (EVM_ADDRESS.test(account)) return 'eip155';
+  if (NEAR_IMPLICIT.test(account) || (NEAR_NAMED.test(account) && account.includes('.')))
+    return 'mainnet';
+  if (SOLANA_ADDRESS.test(account)) return 'solana';
+  return NEAR_NAMED.test(account) ? 'mainnet' : null;
+}
 const isPerson = (subject: string | null): subject is string => !!subject?.startsWith('prs_');
 const DEFAULT_HASH = viewHash(DEFAULT_VIEW);
 const IMMUTABLE = 'public, max-age=31536000, immutable';
@@ -94,6 +109,10 @@ const chars = (s: string) => [...s].length;
 export interface MeDeps {
   store: Store;
   gate: RouteAuth;
+  /** finds a person by one of their wallets, for a public profile by account */
+  cipher?: () => WalletCipher;
+  /** NEAR Social's profile of an account; none: a public profile shows only what's set on Petals */
+  socialProfile?: PublicProfileReader;
   /** the site's public address, for a picture's address; none: relative */
   apiBase?: string;
   /** whose billing a person's usage is reconciled with */
@@ -394,6 +413,53 @@ export function meRoutes(d: MeDeps): Hono {
       saved_at: iso(),
     });
     return ok(c, await profileAnswer(me.person));
+  });
+
+  // A person's public profile, by any one of their accounts, for anyone, signed in or not: one profile, the
+  // same as NEAR Social. First the account's own NEAR Social profile (a NEAR account), then that of the
+  // person's NEAR wallet, then what they set on Petals, else none. It names only the account asked: never
+  // the person's other wallets. Name, bio, picture and links; nothing private.
+  app.get('/api/v1/profiles/:account', async (c) => {
+    const raw = c.req.param('account');
+    const network = networkOfAccount(raw);
+    if (!network) return fail(c, 'bad_input', 'That is not an account.');
+    c.header('Cache-Control', 'public, max-age=60');
+    const account = network === 'eip155' ? raw.toLowerCase() : raw;
+    const answer = (source: 'near-social' | 'petals' | null, profile: PublicProfile | null) =>
+      ok(c, { account, chain: network === 'mainnet' ? 'near' : network, source, profile });
+    const social = d.socialProfile;
+    if (network === 'mainnet' && social) {
+      const own = await social(account);
+      if (own) return answer('near-social', own);
+    }
+    const cipher = d.cipher?.();
+    if (!cipher) return answer(null, null);
+    const person = (await store.walletBinding.byHash(cipher.index(caip10Of(network, account))))
+      ?.person;
+    if (!person) return answer(null, null);
+    if (social) {
+      for (const w of await store.walletBinding.ofPerson(person)) {
+        if (w.network !== 'mainnet') continue;
+        let near: string;
+        try {
+          near = cipher.open(w.caip10_encrypted).split(':').slice(2).join(':');
+        } catch {
+          continue;
+        }
+        if (near === account) continue;
+        const theirs = await social(near);
+        if (theirs) return answer('near-social', theirs);
+      }
+    }
+    const row = await store.personProfile.get(person);
+    if (!row) return answer(null, null);
+    const set = JSON.parse(row.body) as Profile;
+    return answer('petals', {
+      name: set.name ?? null,
+      about: set.about ?? null,
+      avatar: set.avatar ?? null,
+      links: set.links ?? {},
+    });
   });
 
   // -- the price (price/v2) and the person's tip, a donation at a percent of their usage

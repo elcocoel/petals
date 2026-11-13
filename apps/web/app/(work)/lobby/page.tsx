@@ -2,7 +2,9 @@
 // nobody signed in goes to the front page, asked here before anything is drawn, so a visitor never sees it.
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
+import { chainLogo } from '../../../landscape/land.ts';
 import { api } from '../../../lib/api.ts';
+import { repoRoot } from '../../../lib/config.ts';
 import { mapList, mapTile } from '../../../lib/maps.ts';
 import { viewerView } from '../../../lib/viewer-view.ts';
 import { LobbySurface } from './LobbySurface.tsx';
@@ -19,5 +21,14 @@ export default async function LobbyPage() {
   // map reads and opens the same in both. No answer is the same as none.
   const maps = await mapList((await viewerView()).hash);
   const cards = maps.ok ? maps.value.maps : [];
-  return <LobbySurface map={{ tiles: cards.map((m) => ({ key: m.id, ...mapTile(m) })) }} />;
+  // each chain's logo, as the map's chain list draws it, for the Wallets card's buttons
+  const root = repoRoot();
+  const logos = {
+    near: chainLogo(root, 'near'),
+    evm: chainLogo(root, 'eip155:1'),
+    solana: chainLogo(root, 'solana'),
+  };
+  return (
+    <LobbySurface map={{ tiles: cards.map((m) => ({ key: m.id, ...mapTile(m) })) }} logos={logos} />
+  );
 }

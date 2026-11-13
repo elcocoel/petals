@@ -6,19 +6,28 @@
 // own, shown as plain text; the links are never followed, checked or trusted. Edit and Create show only when
 // there's something to open them.
 // Props only: viewmodels/useProfile.ts reads it. Words from lib/lobby-view.ts.
-import { editorWords, profileWords, type SocialState } from '../../lib/lobby-view.ts';
+import {
+  editorWords,
+  profileWords,
+  publicProfileWords,
+  type SocialState,
+} from '../../lib/lobby-view.ts';
 import { serviceName } from '../../lib/near-social.ts';
 import { ActionRow } from '../ui/ActionRow.tsx';
 import { Badge } from '../ui/Badge.tsx';
 import { Button } from '../ui/Button.tsx';
+import { TextLink } from '../ui/TextLink.tsx';
 
 export function Profile({
   social,
   onEdit,
   saved,
   published,
+  publicHref,
 }: {
   social: SocialState;
+  /** Where anyone reads this profile: the person's public page. */
+  publicHref?: string;
   /** Opens the editor: Edit with a profile, Create without one. */
   onEdit?: () => void;
   /** The person just saved a change into Petals. */
@@ -78,6 +87,11 @@ export function Profile({
       )}
       {onEdit && (social.kind === 'profile' || social.kind === 'none') && (
         <ActionRow>
+          {publicHref && social.kind === 'profile' && (
+            <TextLink href={publicHref} arrow>
+              {publicProfileWords.see}
+            </TextLink>
+          )}
           {profile ? (
             <Button variant="secondary" onClick={onEdit}>
               {editorWords.edit}

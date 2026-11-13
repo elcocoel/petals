@@ -149,13 +149,12 @@ export function ProfileEditor({ view }: { view: ProfileEditorView }) {
       </div>
       <div className="flex flex-wrap items-center gap-block-gap">
         <Button variant="primary" disabled={busy} onClick={view.save}>
-          {view.phase === 'saving' ? editorWords.saving : editorWords.save}
+          {view.phase === 'saving'
+            ? editorWords.saving
+            : (PUBLISHING[view.phase] ?? editorWords.save)}
         </Button>
         <Button variant="quiet" disabled={busy} onClick={view.cancel}>
           {editorWords.cancel}
-        </Button>
-        <Button variant="secondary" disabled={busy || !view.publish} onClick={view.publish}>
-          {PUBLISHING[view.phase] ?? editorWords.publish}
         </Button>
         {view.phase === 'failed' && (
           <span className="flex items-center gap-space-8">
@@ -172,9 +171,7 @@ export function ProfileEditor({ view }: { view: ProfileEditorView }) {
           </TextLink>
         </p>
       ) : (
-        <p className="my-0 type-caption text-muted">
-          {view.publish ? editorWords.publicNote : editorWords.keptNote}
-        </p>
+        view.onSocial && <p className="my-0 type-caption text-muted">{editorWords.socialNote}</p>
       )}
     </Card>
   );
