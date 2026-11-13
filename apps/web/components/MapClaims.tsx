@@ -1,11 +1,10 @@
-// What Petals' own mapping says about the map you're in (lib/map-claims.ts; Elco, 11 Nov: "we need to design
-// how authored claims show on the map"), Insights, as a tool panel (Elco, 12 Nov, walk 2: "we need to create a
-// specific look for insights ... The typography inside the insight panel is confusing ... a utilitarian look
-// ... inspired by the side panel"). Folded to its bar with how many until asked. Open, each account under one
-// of the side panel's heads, its petal's name and how many; each claim its words, two lines until it's pressed,
-// then how it's known as a badge and who said it, quiet. Pressed, its fields, each named: by which tool and
-// when it was said, what it rests on and doesn't claim, an inference's method, each piece of evidence with who
-// found it and when. Long addresses read at their ends, whole on hover. Never "verified". Props only.
+// What Petals' own mapping says about the map you're in (lib/map-claims.ts): how authored claims show on the
+// map. Insights, as a tool panel with a utilitarian look taken from the side panel. Folded to its bar with how
+// many until asked. Open, each account under one of the side panel's heads, its petal's name and how many; each
+// claim its words, two lines until it's pressed, then how it's known as a badge and who said it, quiet.
+// Pressed, its fields, each named: by which tool and when it was said, what it rests on and doesn't claim, an
+// inference's method, each piece of evidence with who found it and when. Long addresses read at their ends,
+// whole on hover. Never "verified". Props only.
 import { type MapClaimGroup, mapClaimWords as words, wordsOf } from '../lib/map-claims.ts';
 import { Badge } from './ui/Badge.tsx';
 import { LineRow } from './ui/LineRow.tsx';

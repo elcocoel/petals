@@ -21,7 +21,7 @@ export function Composer({
   controls?: ReactNode;
   /** Where it sits in whatever holds it. By default, at the foot of the conversation's column. */
   className?: string;
-  /** The field fills the base it's in (design/conversation.md, line 15). */
+  /** The field fills the base it's in. */
   device?: boolean;
   onChange: (text: string) => void;
   onSend: () => void;

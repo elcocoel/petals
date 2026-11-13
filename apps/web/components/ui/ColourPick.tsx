@@ -1,8 +1,8 @@
 'use client';
-// A value's colour, chosen by hand (Elco, wave 4: "choosing which colour a value gets"): its swatch is a button, and
-// pressing it opens the look's six keys as swatches in a row, the chosen one ringed, and 'As it comes' to hand the
-// value back to the ranking. The row opens in the browser's top layer under its swatch, as a dropdown's list does
-// (ui/Select); Escape or a press elsewhere closes it. Props only, and whether it's open.
+// A value's colour, chosen by hand: its swatch is a button, and pressing it opens the look's six keys as swatches
+// in a row, the chosen one ringed, and 'As it comes' to hand the value back to the ranking. The row opens in the
+// browser's top layer under its swatch, as a dropdown's list does (ui/Select); Escape or a press elsewhere closes
+// it. Props only, and whether it's open.
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 /** How far from the window's edges the row keeps. */

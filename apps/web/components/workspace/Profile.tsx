@@ -1,10 +1,10 @@
-// The Profile card (Elco, 9 and 10 Nov; the redo's frame, "Build it"; the profile kept in Petals): the
-// profile Petals keeps, or the account's NEAR Social profile before it keeps one, with its bio and the
-// links it declares, each with a badge that says only that, and a line saying where it is and who sees
-// it; or, with none anywhere, what goes there and the one thing to do; or that it's still being read, or
-// that it couldn't be read. NEAR Social's words are the account's own, shown as plain text; the links are never
-// followed, checked or trusted. Edit and Create show only when there's something to open them.
-// Props only: viewmodels/useProfile.ts reads it. Words from lib/lobby-view.ts, drafts.
+// The Profile card (the profile kept in Petals): the profile Petals keeps, or the account's NEAR Social profile
+// before it keeps one, with its bio and the links it declares, each with a badge that says only that, and a
+// line saying where it is and who sees it; or, with none anywhere, what goes there and the one thing to do; or
+// that it's still being read, or that it couldn't be read. NEAR Social's words are the account's own, shown as
+// plain text; the links are never followed, checked or trusted. Edit and Create show only when there's
+// something to open them.
+// Props only: viewmodels/useProfile.ts reads it. Words from lib/lobby-view.ts.
 import { editorWords, profileWords, type SocialState } from '../../lib/lobby-view.ts';
 import { serviceName } from '../../lib/near-social.ts';
 import type { PowerQuoteItem } from '../../lib/power-quotes.ts';
@@ -27,7 +27,7 @@ export function Profile({
   saved?: boolean;
   /** The person just published it and NEAR Social took it. */
   published?: boolean;
-  /** An illustrated power quote for when there's no profile yet (#89, wave 7). */
+  /** An illustrated power quote for when there's no profile yet. */
   quote?: PowerQuoteItem | null;
 }) {
   const profile = social.kind === 'profile' ? social.profile : null;

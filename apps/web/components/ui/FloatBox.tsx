@@ -1,6 +1,6 @@
 'use client';
 // A box that floats over a canvas: a BarBox a hand can move and size. The conversation, the models and the
-// flower's own box are this. With a `foot` it's two parts, one box (design/conversation.md): a light sheet
+// flower's own box are this. With a `foot` it's two parts, one box: a light sheet
 // rising out of a dark base, a little narrower, its foot in behind the base's edge, sized apart at the seam.
 // It holds no state: where it is and what a hand does to it come from viewmodels/useFloatBoxes.ts, which
 // writes directly to the element, so a drag never renders. Hidden until that has placed it, since only the
@@ -76,7 +76,7 @@ export function FloatBox({
       onPointerDownCapture={hand.raise}
       // box.close
       hidden={closed}
-      // the map reads where the boxes over it stand, so its names and notes keep clear of them (LOOK)
+      // the map reads where the boxes over it stand, so its names and notes keep clear of them
       data-float=""
       className="invisible fixed top-0 left-0 flex flex-col"
     >
@@ -108,8 +108,7 @@ export function FloatBox({
         barProps={hand.bar}
       >
         {/* its rows scroll above the box's rounded foot, so nothing is cut by the corner and the scroll bar stays
-            inside it (Elco, 12 Nov, wave 4 walk: "things going out of the visual frame in this radius ... Even the
-            scroll bar just falls out of the thing"); with a base, the base closes it instead */}
+            inside it, never falling out of the frame at the radius; with a base, the base closes it instead */}
         <div className={`flex min-h-0 flex-1 flex-col ${foot ? '' : 'pb-space-32'}`}>
           <div
             className={`flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-none ${foot ? 'pb-space-16' : ''}`}

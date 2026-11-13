@@ -1,8 +1,8 @@
 // The way to add credit for Petals' agent, where the person meets it in the chat (B): one line and one
 // button, which opens the wallet, and beside it paying with any other token from any chain through NEAR
-// Intents (Elco, 10 Nov): pick the token, the dollars and a refund address, then send the exact amount to
+// Intents: pick the token, the dollars and a refund address, then send the exact amount to
 // the address given, in one transfer from any wallet. Props only: viewmodels/usePay.ts and useTopUp.ts
-// hold the payments. Words from lib/pay.ts and lib/intents.ts, drafts.
+// hold the payments. Words from lib/pay.ts and lib/intents.ts.
 import { intentWords, type TopUpView } from '../../lib/intents.ts';
 import { PAY_NEAR, type PayPhase, payWords } from '../../lib/pay.ts';
 import { ActionRow } from '../ui/ActionRow.tsx';
@@ -107,7 +107,7 @@ function Form({ topUp }: { topUp: TopUpView }) {
             scale="app"
           />
           <div>
-            {/* one main action in the row: Add 1 NEAR's (design/minimally-good.md, rule 6) */}
+            {/* one main action in the row: Add 1 NEAR's */}
             <Button variant="pill" disabled={topUp.getting} onClick={actions.get}>
               {topUp.getting ? intentWords.getting : intentWords.get}
             </Button>

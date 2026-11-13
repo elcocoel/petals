@@ -89,7 +89,7 @@ export function docAsset(name: string): Uint8Array | null {
 }
 /**
  * The site's own pictures (apps/web/public), such as the landing's illustrations, at the address the site
- * serves them: the brand kit shows the same files the landing does, never a copy (card 110, part 4).
+ * serves them: the brand kit shows the same files the landing does, never a copy.
  */
 function siteImage(src: string): string | undefined {
   return /^(\/[a-z0-9-]+)+\.(png|webp)$/.test(src) &&
@@ -198,8 +198,7 @@ export function catalog(): DocPage[] {
     }
     if (section === 'data-protocol') {
       const schemaFiles = files('packages/core/schema').filter((p) => p.endsWith('.schema.json'));
-      // Only each format's current version (Elco's walk 8: "why do we have every version of each
-      // protocol?"); the older ones stay in the repo.
+      // Only each format's current version; the older ones stay in the repo.
       const version = (s: Schema) => /^urn:petal:schema:([^:]+):v(\d+)$/.exec(s.$id ?? '');
       const newest = new Map<string, number>();
       for (const raw of Object.values(schemas)) {
@@ -338,8 +337,8 @@ export async function content(page: DocPage, pages: DocPage[]) {
   };
 }
 /**
- * The brand kit's colours and type, read from the design tokens at build time, so they change in one place
- * (card 110, part 4): the brand's colours, the petals' keys (most common first, and grey for context), and the
+ * The brand kit's colours and type, read from the design tokens at build time, so they change in one place:
+ * the brand's colours, the petals' keys (most common first, and grey for context), and the
  * three families.
  */
 function brandReference(): string {
@@ -366,8 +365,8 @@ function brandReference(): string {
   ].join('\n\n');
 }
 /**
- * How the interface stays manageable, counted when the site is built so the numbers stay true (Elco, 12 Nov,
- * through META: "count them yourself"): the shared components, and the data formats with their versions.
+ * How the interface stays manageable, counted when the site is built so the numbers stay true: the shared
+ * components, and the data formats with their versions.
  */
 function interfaceReference(): string {
   const components = readdirSync(join(repoRoot(), 'apps/web/components/ui')).filter(
@@ -415,7 +414,7 @@ export async function renderMarkdown(markdown: string, source: string, pages: Do
               title: textOf(node),
               level: Number(node.tagName[1]),
             });
-          // {slot}: a space only Elco can fill (card 110), kept empty and visibly so, with no words in it
+          // {slot}: a space the copy leaves open, kept empty and visibly so, with no words in it
           if (node.tagName === 'p' && textOf(node).trim() === '{slot}') {
             node.tagName = 'div';
             node.properties = { dataSlot: '' };
