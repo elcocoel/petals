@@ -133,6 +133,29 @@ describe('the import: what was on the map before the record', () => {
     expect(await recordOf(r.ctx)).toHaveLength(2);
   });
 
+  test("a re-read changes Petals' rows: the next run appends the next version, its parent the last", async () => {
+    await importRecord(r.ctx);
+    const [first] = await recordOf(r.ctx, MAP);
+    const store = privateStore(r.ctx.config);
+    const row = await store.mark.get(MAP);
+    const mark = { ...JSON.parse(String(row?.body)), read_at: '2026-11-13T12:00:00.000Z' };
+    await store.mark.put({ about: MAP, body: JSON.stringify(mark), read_at: mark.read_at });
+    const next = await importRecord(r.ctx);
+    expect(next.publications.map((p) => [p.author, p.layers])).toEqual([
+      ['mapping.petals.near', { snapshot: 1, mark: 1 }],
+    ]);
+    const own = (await recordOf(r.ctx, MAP)).filter(
+      (e) => e.publication.author === 'mapping.petals.near',
+    );
+    expect(own).toHaveLength(2);
+    expect(own[1]?.publication).toMatchObject({ parent: first?.hash, previous: first?.hash });
+    // the record keeps the mark it held before; the new version names the new one
+    const shas = (e: (typeof own)[number] | undefined) =>
+      e?.publication.layers.map((l) => l.sha256).sort();
+    expect(shas(own[1])).not.toEqual(shas(own[0]));
+    expect((await importRecord(r.ctx)).publications).toEqual([]);
+  });
+
   test('a press since the record began is its own publication: the import leaves it', async () => {
     await privateStore(r.ctx.config).annotation.add([
       {
