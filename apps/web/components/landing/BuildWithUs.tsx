@@ -16,16 +16,14 @@ export function BuildWithUs() {
   return (
     <Section kind="ink" head={<SectionName name={copy.title} />}>
       <div className="flex flex-col gap-column-gap">
-        <div className="flex justify-center">
-          <ActionRow gap="tight">
-            {copy.doors.map((door) => (
-              <Button key={door.title} href={siteLinks[door.link]} arrow={door.icon === 'arrow'}>
-                {door.icon === 'star' && <Icon name="star" />}
-                {door.title}
-              </Button>
-            ))}
-          </ActionRow>
-        </div>
+        <ActionRow gap="tight" align="center">
+          {copy.doors.map((door) => (
+            <Button key={door.title} href={siteLinks[door.link]} arrow={door.icon === 'arrow'}>
+              {door.icon === 'star' && <Icon name="star" />}
+              {door.title}
+            </Button>
+          ))}
+        </ActionRow>
       </div>
     </Section>
   );

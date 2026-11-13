@@ -1,5 +1,5 @@
 // Figma's Footer (66:2360), a band on the FAQ's grey with a section's padding above its content: on the
-// left half, the wordmark as wide as that half (mark.fill) with the small print under it; bottom right, the site's
+// left, the wordmark a third of the band's width (mark.fill) with the small print under it; bottom right, the site's
 // pages and the outside links. The content sits one block gap from the window's own edges (left, right, bottom),
 // not on the page's inset column. Only links that go somewhere: an outside link shows once its address is set.
 import type { ReactNode } from 'react';
@@ -37,7 +37,9 @@ export function Footer() {
     >
       <div className="flex flex-col gap-column-gap px-block-gap pt-section-padding pb-block-gap antialiased md:flex-row md:items-end md:justify-between">
         <div className="@container flex w-full flex-col gap-block-gap md:w-1/2">
-          <Wordmark size="fill" />
+          <div className="@container w-full md:w-2/3">
+            <Wordmark size="fill" />
+          </div>
           <p className="my-0 type-lead">
             {copy.built.split(copy.by)[0]}
             <TextLink href={siteLinks.elementaryComplexity} variant="inline">
