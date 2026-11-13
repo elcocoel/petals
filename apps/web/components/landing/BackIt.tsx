@@ -8,6 +8,7 @@ import { landingCopy } from '../../lib/landing-copy.ts';
 import { PlateLink } from '../ui/PlateLink.tsx';
 import { Section } from '../ui/Section.tsx';
 import { SectionHead } from '../ui/SectionHead.tsx';
+import { SectionName } from '../ui/SectionName.tsx';
 
 const copy = landingCopy.backIt;
 type WayCopy = (typeof copy.ways)[number];
@@ -34,7 +35,7 @@ function WayTile({ way }: { way: WayCopy }) {
 export function BackIt({ layout = 'split' }: { layout?: 'split' | 'columns' }) {
   if (layout === 'columns')
     return (
-      <Section head={<SectionHead title={copy.title} />}>
+      <Section head={<SectionName name={copy.title} look="signed" />}>
         <ul className="m-0 grid list-none grid-cols-1 gap-column-gap p-0 md:grid-cols-2 lg:grid-cols-3">
           {copy.ways.map((way) => (
             <li key={way.title} className="min-w-0">

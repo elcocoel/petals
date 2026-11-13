@@ -6,7 +6,7 @@
 import { landingCopy } from '../../lib/landing-copy.ts';
 import { FaqItem } from '../ui/FaqItem.tsx';
 import { Section } from '../ui/Section.tsx';
-import { SectionHead } from '../ui/SectionHead.tsx';
+import { SectionName } from '../ui/SectionName.tsx';
 
 const copy = landingCopy.questions;
 
@@ -16,7 +16,7 @@ export function Questions() {
       <div className="grid grid-cols-1 gap-column-gap lg:grid-cols-3">
         <div>
           <div className="lg:sticky lg:top-section-padding">
-            <SectionHead title={copy.title} />
+            <SectionName name={copy.title} look="pixel" />
           </div>
         </div>
         <div className="border-t border-hairline lg:col-span-2">

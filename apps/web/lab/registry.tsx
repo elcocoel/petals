@@ -97,6 +97,7 @@ import { Range } from '../components/ui/Range.tsx';
 import { RowField } from '../components/ui/RowField.tsx';
 import { Section } from '../components/ui/Section.tsx';
 import { SectionHead } from '../components/ui/SectionHead.tsx';
+import { SectionName } from '../components/ui/SectionName.tsx';
 import { Select } from '../components/ui/Select.tsx';
 import { SourceLink } from '../components/ui/SourceLink.tsx';
 import { Switch } from '../components/ui/Switch.tsx';
@@ -893,6 +894,27 @@ export const registry: LabEntry[] = [
         render: () => (
           <GalleryCard thumb="even" label={landingCopy.gallery.open} href="#gallerycard" />
         ),
+      },
+    ],
+  },
+  {
+    id: 'SectionName',
+    group: 'Blocks',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/ui/SectionName.tsx',
+    states: [
+      {
+        name: 'logo',
+        render: () => <SectionName name={landingCopy.howItWorks.title} look="logo" />,
+      },
+      {
+        name: 'pixel',
+        render: () => <SectionName name={landingCopy.questions.title} look="pixel" />,
+      },
+      {
+        name: 'signed',
+        render: () => <SectionName name={landingCopy.backIt.title} look="signed" />,
       },
     ],
   },
