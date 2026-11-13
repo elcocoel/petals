@@ -1,5 +1,5 @@
-// A grade's five steps, lightest to darkest, as one bar of swatches (LOOK's grade, Elco, wave 4: "Colour graded by a
-// number or a date"). Drawn, because its colours come from the look's own grade (hex), which no class names: the
+// A grade's five steps, lightest to darkest, as one bar of swatches (the look's grade, for a colour graded
+// by a number or a date). Drawn, because its colours come from the look's own grade (hex), which no class names: the
 // five steps side by side, a swatch high, nothing between them. Props only.
 export function Ramp({ fills, label }: { fills: readonly string[]; label: string }) {
   return (

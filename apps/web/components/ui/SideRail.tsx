@@ -1,7 +1,6 @@
 'use client';
-// The side panel (specs/004-workspace; design/side-panel.md, every state and every click; Elco, 10 Nov:
-// "once the sidebar is open, I can see all of the sections one after the other"). Docked to the window's
-// left edge, the full height. A bar of icons is always there: first the one collapse control, which always
+// The side panel (specs/004-workspace): once open, every section shows one after the other. Docked to the
+// window's left edge, the full height. A bar of icons is always there: first the one collapse control, which always
 // works, then one icon per section, with the person's own two (Profile, Settings) at its foot, as in VS
 // Code and every IDE; each icon's name shows in a tooltip. Open, under the wordmark, what's always in sight
 // (`top`: connecting an agent, and what's connected); then the panel beside the bar is one column of
@@ -119,8 +118,7 @@ export function SideRail({
             ref={column}
             className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-none px-space-8 pb-block-gap"
           >
-            {/* the last section takes at least the column's height, so any head can come to the top
-                (design/side-panel.md, lines 7 and 8) */}
+            {/* the last section takes at least the column's height, so any head can come to the top */}
             {sections.map((s, i) => (
               <div
                 key={s.key}
@@ -131,7 +129,7 @@ export function SideRail({
               </div>
             ))}
           </div>
-          {/* the sash (design/side-panel.md, lines 16 to 19 and 33): drag to size, double-click for the
+          {/* the sash: drag to size, double-click for the
               usual width; under the pointer, and while it's dragged, the line shows in the accent */}
           <span
             aria-hidden="true"

@@ -1,5 +1,5 @@
-// Layers kept on the site, and the versions of a dataset (specs/005-mapping-brain/data.md; Elco, 9 Nov:
-// "anyone can add, fork and use the prior", private first). A dataset is everything an author holds about one
+// Layers kept on the site, and the versions of a dataset (specs/005-mapping-brain/data.md: anyone can add,
+// fork and use the prior, private first). A dataset is everything an author holds about one
 // address; a version of it is a set of layer hashes plus the version it came from (parent). Nothing is
 // overwritten: keeping a layer makes a new version after the author's last one, and a fork makes one from a
 // version they can see, with layers added or dropped.

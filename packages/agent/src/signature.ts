@@ -84,7 +84,7 @@ function signingAddresses(report: unknown): string[] {
 
 /**
  * `GET /v1/attestation/report` before the completion. Keeps the exact bytes in the store.
- * Query as in research/build-primer.md section 3; checked live on all three models in T060.
+ * The query was checked live on all three models in T060.
  */
 export async function fetchAttestation(
   http: NearAiHttp,

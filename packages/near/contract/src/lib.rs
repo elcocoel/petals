@@ -1,5 +1,5 @@
-//! Petals' credit contract. Elco, 9 Nov, chose "A NEAR contract, before the freeze": "A small contract
-//! holds each person's deposit and they withdraw it themselves, so Petals holds nobody's money."
+//! Petals' credit contract: a small contract holds each person's deposit and they withdraw it themselves,
+//! so Petals holds nobody's money.
 //!
 //! - `deposit`: a person sends NEAR with the call; it goes onto their own balance, under their own account.
 //!   Storing a new balance costs a little NEAR, which comes out of the first deposit.
@@ -7,7 +7,7 @@
 //! - `charge`: what a turn of Petals' agent cost moves from a person's balance to what Petals has earned.
 //!   Only the charger account (Petals' server) may call it, never more than the balance, and it can't send
 //!   NEAR anywhere.
-//! - `claim`: the owner (Elco's account) takes what has been earned.
+//! - `claim`: the owner takes what has been earned.
 //!
 //! The server's key is a function-call key on the charger account that can call `charge` on this contract
 //! and nothing else, and can't attach NEAR. Whoever held it could only move people's balances into what
@@ -28,7 +28,7 @@ enum Key {
 #[near(contract_state)]
 #[derive(PanicOnDefault)]
 pub struct Credit {
-    /// Elco's account: it takes what has been earned
+    /// The owner's account: it takes what has been earned
     owner: AccountId,
     /// Petals' server: it may charge, and do nothing else
     charger: AccountId,

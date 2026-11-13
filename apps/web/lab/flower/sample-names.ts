@@ -1,6 +1,6 @@
-// Server only. Names for the outline bench (annotation-layer.md, step 7; Elco's (b), 11 Nov): made-up
-// annotations on a real DAO's largest accounts, so the outline has a person's name_kind to show. Every name
-// says it's a sample. Each kind of claim appears, in turn, so the bench shows a value past the outline's three.
+// Server only. Names for the outline bench: made-up annotations on a real DAO's largest accounts, so the outline
+// has a person's name_kind to show. Every name says it's a sample. Each kind of claim appears, in turn, so the
+// bench shows a value past the outline's three.
 import type { Claim, ClaimDraft } from '@petal/core/types';
 
 const KINDS = ['sourced', 'inferred', 'stated', 'declared'] as const;

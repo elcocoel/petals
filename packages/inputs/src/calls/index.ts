@@ -1,6 +1,6 @@
-// Open calls, read keyless (Elco, 12 Nov: "open calls is the most useful ... let's bias towards keyless"):
+// Open calls, read keyless:
 // each source's open calls as calls/v1, every field as the source says it. A source that doesn't answer
-// throws, so its calls already kept stay as they were (research/treasury-2026-11-12.md, section 3).
+// throws, so its calls already kept stay as they were.
 import type { Call, CallKind } from '@petal/core';
 import type { Fetch } from '../marks/lists.ts';
 import { nsToIso, type RpcPool } from '../rpc/pool.ts';
@@ -234,7 +234,7 @@ export interface Forum {
   name: string;
 }
 
-/** The forums read for now (META, 12 Nov, Elco's order: smallest first): NEAR's and Arbitrum's. */
+/** The forums read for now, smallest first: NEAR's and Arbitrum's. */
 export const FORUMS: readonly Forum[] = [
   { base: 'https://gov.near.org', name: 'NEAR' },
   { base: 'https://forum.arbitrum.foundation', name: 'Arbitrum DAO' },

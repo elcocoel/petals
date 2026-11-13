@@ -1,5 +1,5 @@
-// A usage record for every model call (usage/v1; coordinator/pricing-protocol.md; Elco, 10 Nov: "count usage
-// like pros"). Each answer's tokens, the list price they were counted at, what the person was charged, and,
+// A usage record for every model call (usage/v1).
+// Each answer's tokens, the list price they were counted at, what the person was charged, and,
 // once NEAR AI knows it, NEAR AI's own bill for the call, found by its inference id. The person is charged
 // the bill: when it differs from what was counted, the difference goes back or is charged as its own entry.
 // Reconciling happens when it's needed, before a person's next chat and when they look at their usage: no

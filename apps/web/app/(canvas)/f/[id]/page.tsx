@@ -1,8 +1,7 @@
-// The flower view (T064; coordinator/one-source.md, steps 4 and 6): a published or fixture flower, live,
-// drawn in the person's view, with the same box as /make's: its date, the reading key or the selected petal,
-// and one quiet click away its interpretation with sources, the model signature (or why there is none), who
-// made it and who published it. When its reading is on the Power Map, the map opens inside it, at its map's
-// place; otherwise it stands alone.
+// The flower view (T064): a published or fixture flower, live, drawn in the person's view, with the same box
+// as /make's: its date, the reading key or the selected petal, and one quiet click away its interpretation
+// with sources, the model signature (or why there is none), who made it and who published it. When its
+// reading is on the Power Map, the map opens inside it, at its map's place; otherwise it stands alone.
 import type { Entry } from '@petal/core/types';
 import { notFound } from 'next/navigation';
 import { ReadingColumn } from '../../../../components/SiteChrome.tsx';
@@ -37,7 +36,7 @@ export default async function FlowerPageRoute({ params }: { params: Promise<{ id
   const { id } = await params;
   const got = await api<GotFlower>(`/api/v1/flowers/${encodeURIComponent(id)}`);
   if (!got.ok) {
-    // not there, or no such id: the site's 404, the bouncer (#78)
+    // not there, or no such id: the site's 404, the bouncer
     if (isMissing(got.error)) notFound();
     return (
       <ReadingColumn>
@@ -58,8 +57,8 @@ export default async function FlowerPageRoute({ params }: { params: Promise<{ id
     snapshot: entry.spec.snapshot.sha256,
   });
   const flower = storedPanelFlower(entry, id, '');
-  // People's words (design/minimally-good.md, rule 5): where it lives, and a warning only if its entry
-  // doesn't match its id. Ids and hashes stay in the API.
+  // People's words: where it lives, and a warning only if its entry doesn't match its id. Ids and
+  // hashes stay in the API.
   const note = (where === 'map' || !verified.entry_hash) && (
     <>
       {where === 'map' && (

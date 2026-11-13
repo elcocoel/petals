@@ -61,7 +61,7 @@ describe('the brain', () => {
     ]);
   });
 
-  test('every chapter and recipe is in one of the seven departments Elco named; the doctrine is in none', () => {
+  test('every chapter and recipe is in one of the seven departments; the doctrine is in none', () => {
     const index = buildBrainIndex(BRAIN);
     expect(index.petal).toBe('brain-index/v2');
     expect([...BRAIN_DEPARTMENTS]).toEqual([
@@ -102,7 +102,7 @@ describe('the brain', () => {
     ]);
     expect(by('money')).toEqual(['payouts', 'value', 'vesting']);
     expect(by('investigation')).toEqual(['going-deeper', 'on-the-map', 'over-time']);
-    // services holds #101's nine chapters (Elco, 12 Nov: all free)
+    // services holds nine chapters, all free
     expect(by('services')).toEqual([
       'authority-map',
       'compare-daos-or-periods',

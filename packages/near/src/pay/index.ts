@@ -1,4 +1,4 @@
-// @petal/near/pay (W3): NEAR Intents 1Click, dry quotes only (FR-031); and since 9 Nov, paying for Petals' agent:
+// @petal/near/pay (W3): NEAR Intents 1Click, dry quotes only (FR-031); and paying for Petals' agent:
 // a NEAR transfer read back from the chain (readTransfer) and NEAR's price from NEAR Intents (nearUsd).
 import type { QuoteRequest, QuoteResult } from '@petal/core/types';
 

@@ -1,4 +1,4 @@
-// One illustrated power quote (#89), for a screen with nothing on it yet: the picture, the words, who said them.
+// One illustrated power quote, for a screen with nothing on it yet: the picture, the words, who said them.
 // Props only; the quotes are lib/power-quotes.ts's, picked by viewmodels/usePowerQuote.ts.
 import type { PowerQuoteItem } from '../lib/power-quotes.ts';
 

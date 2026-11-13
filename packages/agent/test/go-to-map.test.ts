@@ -1,4 +1,4 @@
-// "Navigate me there" (Elco, 12 Nov, run 421a5e8a: thirteen tool calls and a count from scratch for a map that
+// "Navigate me there" (run 421a5e8a took thirteen tool calls and a count from scratch for a map that
 // was already there): the agent has get_map and the words to go to a map first, and two calls take the person
 // there with its link and what it holds. The real tools on the real fixtures, through the real loop. $0: a
 // scripted model.
@@ -66,7 +66,7 @@ describe('going to a map', () => {
     expect(got[1]?.readings[0].snapshot).toBe(VALIDATORS);
     const said = es.find((e) => e.event === 'message')?.data as Out;
     expect(said.text).toContain(map.map_url);
-    // the map moves once, before the answer, to the map both reads were about (WORKSPACE's 'show')
+    // the map moves once, before the answer, to the map both reads were about (the `show` event)
     const shows = es.filter((e) => e.event === 'show');
     expect(shows.map((e) => e.data)).toEqual([{ map: map.id }]);
     expect(es.indexOf(shows[0] as AgentEvent)).toBeLessThan(
@@ -84,7 +84,7 @@ describe('going to a map', () => {
   });
 });
 
-describe('the ceremony (Elco, 12 Nov: "mapping something new is a ceremony")', () => {
+describe('the ceremony: mapping something new', () => {
   test("a new map waiting for its yes says where it lands, what's read, its rough cost and whose it is", async () => {
     const ctx = {
       ...(await withAMap()),

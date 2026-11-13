@@ -1,9 +1,8 @@
-// The petal look's bench (#76; design/flower-art-direction/default-system-vnext.md, V1, Elco 11 Nov): the art
-// direction drawn by the live flower on real data, each flower at its normal size and at map distance. ?show=
-// raidguild (the flower it was drawn on, with the accepted highlight), keys (that flower in each key and grey, the
-// highlight checked on every colour), near (NEAR's recorded backer segments, highlighted), and tail (a close look
-// at "everyone else", folded, on both real flowers). In production it
-// stays hidden unless PETAL_LAB=1, like the lab, and nothing here reaches a product page until Elco has seen it.
+// The petal look's bench (V1): the art direction drawn by the live flower on real data, each flower at its normal
+// size and at map distance. ?show=raidguild (the flower it was drawn on, with the accepted highlight), keys (that
+// flower in each key and grey, the highlight checked on every colour), near (NEAR's recorded backer segments,
+// highlighted), and tail (a close look at "everyone else", folded, on both real flowers). In production it stays
+// hidden unless PETAL_LAB=1, like the lab, and nothing here reaches a product page.
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { FlowerCanvas } from '../../../flower/FlowerCanvas.tsx';

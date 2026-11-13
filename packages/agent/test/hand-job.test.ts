@@ -1,4 +1,4 @@
-// hand_job (9 Nov, C): Petals' agent hands a job to the person's own agent, the stream says so, and the
+// hand_job: Petals' agent hands a job to the person's own agent, the stream says so, and the
 // report their agent leaves is in the system message of the next chat, as data. Through petalApp, with a
 // scripted model; the person's side (take_job, report_job) is the store's calls here.
 import { join } from 'node:path';

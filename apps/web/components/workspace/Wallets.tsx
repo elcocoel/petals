@@ -1,9 +1,8 @@
-// The Wallets card (#79, the profile page as the investigator's card): the wallets the person proved by
+// The Wallets card (the profile page as the investigator's card): the wallets the person proved by
 // signing in with them, each with its chain and when it signed, and the badge PROVEN, set against a link's
 // DECLARED, so it reads what backs the person and what's only their word. Null while it's read; with no
-// answer, it says so. Its one action, Add a wallet (Elco, 11 Nov: "allow me to add more wallets"), asks
-// another wallet to sign, as signing in does. Props only: viewmodels/useLobby.ts reads it and adds. Words
-// from lib/profile-view.ts, drafts.
+// answer, it says so. Its one action, Add a wallet, asks another wallet to sign, as signing in does.
+// Props only: viewmodels/useLobby.ts reads it and adds. Words from lib/profile-view.ts.
 import {
   type AddWalletPhase,
   profilePageWords,

@@ -1,4 +1,4 @@
-// Petals' open-calls feed (Elco, 12 Nov): read keyless into the store, a source's replaced as a whole, one that
+// Petals' open-calls feed: read keyless into the store, a source's replaced as a whole, one that
 // doesn't answer keeping what it had; served from the store as list_calls, GET /api/v1/calls and its RSS.
 import { mkdtempSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -178,8 +178,11 @@ describe("Snapshot's open votes, for the DAOs Petals maps", () => {
 });
 
 describe('serving them', () => {
-  async function served() {
+  // before the committee's RFP closes (29 May 2025), so every call kept is still open
+  const BEFORE = new Date('2025-05-01T12:00:00.000Z');
+  async function served(now = BEFORE) {
     const ctx = setup();
+    ctx.now = () => now;
     await readCalls(ctx, {
       save: true,
       fetch: karma([
@@ -219,11 +222,20 @@ describe('serving them', () => {
     expect(rss).toContain(
       '<link>https://near.social/infrastructure-committee.near/widget/app?page=rfp&amp;id=8</link>',
     );
-    // a deadline that has passed stays beside the status the source gives
     expect(rss).toContain(
       'Build a relayer &amp; its SDK Offered by NEAR Infrastructure Committee. Closes 2025-05-29. Status: ACCEPTING_SUBMISSIONS.',
     );
     expect(rss).not.toContain('Arbitrum Audit Program');
     expect(rss).toMatch(/<atom:link href="[^"]*\/api\/v1\/calls\.rss\?kind=rfp" rel="self"/);
+  });
+
+  test('a call whose deadline has passed leaves the feed, whatever status its source last gave', async () => {
+    const app = await served(NOW);
+    const calls = (
+      (await (await app.request('/api/v1/calls')).json()) as { calls: { id: string }[] }
+    ).calls.map((c) => c.id);
+    expect(calls).toEqual(['karma:2', 'karma:1']);
+    const rss = await (await app.request('/api/v1/calls.rss?kind=rfp')).text();
+    expect(rss).not.toContain('Chain Abstracted Relayer RFP');
   });
 });

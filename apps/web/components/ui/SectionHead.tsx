@@ -1,8 +1,8 @@
 // An eyebrow, a title, a paragraph: the head of nearly every section, with Figma's gaps per size.
 // A line break in the title or the paragraph is written in the copy. At the panel's size it heads a
-// section of the side panel instead (design/side-panel.md, lines 39, 40 and 43): a band in the tint, the
-// panel's full width, one row high, a hairline at its foot, its name in muted mono after a chevron that
-// folds the section, which settles under it (head.settle); it doesn't rise in as a section's head does.
+// section of the side panel instead: a band in the tint, the panel's full width, one row high, a
+// hairline at its foot, its name in muted mono after a chevron that folds the section, which settles
+// under it (head.settle); it doesn't rise in as a section's head does.
 // A section's one action is its last row, not a control here.
 import { Fragment, type ReactNode } from 'react';
 import { Icon } from './Icon.tsx';
@@ -10,7 +10,7 @@ import { Mono } from './Mono.tsx';
 
 const SIZES = {
   // The landing's hero, beside its story: the page's one h1, a size down from display so the stage leads
-  // (HERO ART's V2, 11 Nov: about 64 px wide, 44 px on a phone).
+  // (about 64 px wide, 44 px on a phone).
   hero: {
     Tag: 'h1',
     title: 'type-title lg:type-display-compact',

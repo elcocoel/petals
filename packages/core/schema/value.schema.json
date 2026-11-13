@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:petal:schema:value:v1",
   "title": "Petal value v1",
-  "description": "What a map's token is worth in dollars, and how much of it there is (board #91; Elco, 11 Nov: 'monetary estimates of the value of these petals and the stakes and the supply and all of these data that we can put about each community and tokens'): its price from NEAR Intents' 1Click list, its supply from its own chain, and its reading's totals at that price. One per map, named by the map's address, read again to refresh. A token 1Click doesn't price has price null: no price, never a guess.",
+  "description": "What a map's token is worth in dollars, and how much of it there is: its price from NEAR Intents' 1Click list, its supply from its own chain, and its reading's totals at that price. One per map, named by the map's address, read again to refresh. A token 1Click doesn't price has price null: no price, never a guess.",
   "type": "object",
   "additionalProperties": false,
   "required": ["petal", "about", "asset", "price", "supply", "snapshot", "measure", "totals", "read_at"],

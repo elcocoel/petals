@@ -1,12 +1,11 @@
-// A map's token as the markets count it, and its treasury (12 Nov; Elco: "knowing the sizes of treasuries and
-// all of the usual cap information, so circulating supply, max cap"; "bias towards keyless"). Keyless, each
-// value naming where it came from (research/treasury-2026-11-12.md):
+// A map's token as the markets count it, and its treasury: the treasury's size and the usual cap figures
+// (circulating supply, max supply, market cap). Keyless, each value naming where it came from:
 //   max:          the chain's first: a cap() the token holds, a Solana mint whose mint authority is gone, NEAR's
 //                 own inflation setting (no max); otherwise CoinGecko's
 //   circulating:  CoinGecko's (no chain can prove it: it's a method)
 //   market cap:   CoinGecko's
 //   treasury:     DefiLlama's, where it knows the map's token or DAO, one protocol at a time
-// Nothing a source doesn't say is guessed: no answer is null. With CoinGecko's free Demo key (12 Nov) its calls
+// Nothing a source doesn't say is guessed: no answer is null. With CoinGecko's free Demo key its calls
 // carry it in a header; keyless without it.
 import type {
   ValueMarketCap,
@@ -126,7 +125,7 @@ export async function coinGeckoMarkets(
   fetchImpl: Fetch,
   wanted: Array<{ chain: string; asset: string }>,
   now: () => Date = () => new Date(),
-  /** CoinGecko's free Demo key (12 Nov): a header only, never in a ref; keyless without it */
+  /** CoinGecko's free Demo key: a header only, never in a ref; keyless without it */
   apiKey?: string,
 ): Promise<{ markets: Map<string, CoinMarket>; failed: string[]; ambiguous: string[] }> {
   const headers: Record<string, string> = apiKey ? { 'x-cg-demo-api-key': apiKey } : {};

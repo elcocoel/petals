@@ -1,6 +1,6 @@
-// Server only. The vote ring on real data (#93): NEAR's Marketing DAO, its members as petals (sized by votes cast)
-// and its 1,059 proposals with every vote, as SYSTEMS reads them (proposals/v1), from the live server. The ring
-// shows a stretch of the DAO's own time, its last 90 days by default, until the legend's period setting (#92).
+// Server only. The vote ring on real data: NEAR's Marketing DAO, its members as petals (sized by votes cast)
+// and its 1,059 proposals with every vote, as the server reads them (proposals/v1), from the live server. The ring
+// shows a stretch of the DAO's own time, its last 90 days by default, until the legend's period setting.
 
 import type { Snapshot, Spec } from '@petal/core/types';
 import { GREY, KEYS, type Key } from '@petal/core/wedge/keys';
@@ -58,7 +58,7 @@ export async function votesBench(days = 90): Promise<LookFlower | { error: strin
       votes: {
         ...stretch,
         proposals,
-        // the reading's meaning for this question (Elco's example): for mint, against pink; abstain is context
+        // the reading's meaning for this question: for mint, against pink; abstain is context
         colours: { for: mint, against: pink, abstain: GREY.hex },
       },
     },
@@ -78,8 +78,8 @@ export async function votesBench(days = 90): Promise<LookFlower | { error: strin
 }
 
 /**
- * RaidGuild's ring (#93): its delegates' flower, the one the art direction was drawn on, with its Baal's 246
- * proposals and every vote with its time, as SYSTEMS reads them, over the last `days` of its proposals. A voter
+ * RaidGuild's ring: its delegates' flower, the one the art direction was drawn on, with its Baal's 246
+ * proposals and every vote with its time, as the server reads them, over the last `days` of its proposals. A voter
  * who isn't one of the drawn delegates (a member voting by its shares) has no petal, so no dot.
  */
 export async function raidguildVotes(days = 90): Promise<LookFlower | { error: string }> {

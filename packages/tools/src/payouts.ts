@@ -1,5 +1,5 @@
-// What each DAO map paid out, the run over the shared map (payouts/v1, 12 Nov; Elco: "an unopinionated
-// 'payouts from this treasury over period x'"; NEAR first): for each map of a Sputnik DAO, every passed
+// What each DAO map paid out, the run over the shared map (payouts/v1, 12 Nov; unopinionated, a treasury's
+// payouts over a period; NEAR first): for each map of a Sputnik DAO, every passed
 // proposal's payment, dated by the DAO's own transfer and priced on that day, kept by the map's address.
 // scripts/map-payouts.ts runs it where the server runs. Read again, a map's payouts are replaced.
 import { type Payout, type Payouts, validatePayouts } from '@petal/core';
@@ -44,7 +44,7 @@ export interface PayoutRun {
 const payoutKey = (p: Payout) => `${p.proposal.ref}|${p.asset.id}|${p.to}|${p.raw}`;
 
 /**
- * A read again never knows less than the one kept (META, 12 Nov, after run 3: DefiLlama refused past prices in the
+ * A read again never knows less than the one kept (DefiLlama once refused past prices in the
  * real run that it gave in the dry one): a payout this read found no dollars or date for keeps the kept read's,
  * with the transfer that dated it. What this read found itself stands.
  */

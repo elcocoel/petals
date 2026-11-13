@@ -1,4 +1,4 @@
-// A Sputnik DAO (board #93): its members by the votes they cast, and its proposals with each account's vote.
+// A Sputnik DAO: its members by the votes they cast, and its proposals with each account's vote.
 // Raw data in the DAO's own shape (get_policy, get_proposals), as the Marketing DAO answered on 11 Nov.
 import { titleOf, validateProposals, validateSnapshot } from '@petal/core';
 import { describe, expect, test } from 'vitest';
@@ -63,13 +63,13 @@ describe('a Sputnik DAO', () => {
       'MDAO Design services',
     );
     expect(titleOf('Transfer NEAR balance\nmore')).toBe('Transfer NEAR balance');
-    // Astro's 'text$$$$link': the title is the text before it (walk 3, 12 Nov)
+    // Astro's 'text$$$$link': the title is the text before it
     expect(titleOf('Part of funds to return back to Aurora DAO$$$$')).toBe(
       'Part of funds to return back to Aurora DAO',
     );
   });
 
-  test("a proposal's summary is its own text; its link is an address that text names, and says so (walk 3)", () => {
+  test("a proposal's summary is its own text; its link is an address that text names, and says so", () => {
     const p = sputnikProposals(`near:mainnet:${DAO}`, DAO, read, AT, AT.as_of);
     for (const x of p.proposals) {
       expect(x).toHaveProperty('summary');

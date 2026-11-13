@@ -57,6 +57,11 @@ describe.skipIf(!server)('the runtime role on a real server', () => {
     'ALTER TABLE person ADD COLUMN x text',
     'TRUNCATE person',
     'CREATE EXTENSION pg_trgm',
+    // the publication record is append-only by its grants
+    'UPDATE publication SET author = author WHERE false',
+    'DELETE FROM publication WHERE false',
+    'UPDATE published_layer SET body = body WHERE false',
+    'DELETE FROM published_layer WHERE false',
   ])('refused: %s', async (q) => {
     await expect(sql(q)).rejects.toThrow(/permission|must be owner|denied/i);
   });

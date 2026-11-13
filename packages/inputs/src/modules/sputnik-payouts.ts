@@ -1,5 +1,5 @@
-// A Sputnik DAO's payouts (payouts/v1, 12 Nov; Elco: "an unopinionated 'payouts from this treasury over period
-// x'"), keyless, from its own chain:
+// A Sputnik DAO's payouts (payouts/v1, 12 Nov), unopinionated: what a treasury paid out over a period,
+// keyless, from its own chain:
 //   what:  each proposal that passed (Sputnik runs one on its approving vote, so Approved is paid, Failed is
 //          not) and pays someone: a Transfer (its token, receiver and amount), a FunctionCall's ft_transfer
 //          actions (the token is the call's receiver), a BountyDone (its bounty's token and amount)

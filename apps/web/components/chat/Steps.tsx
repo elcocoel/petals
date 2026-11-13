@@ -1,5 +1,5 @@
 // Stages, progress and tool calls between the answers: kept quiet, and open for anyone who wants them,
-// under one line with the side panel's chevron (design/conversation.md, line 24).
+// under one line with the side panel's chevron.
 import type { StepRow } from '../../lib/thread-view.ts';
 import { Icon } from '../ui/Icon.tsx';
 

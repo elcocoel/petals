@@ -1,4 +1,4 @@
-// keep_data and list_data (#98): what an agent found or made, kept privately in the person's project by its
+// keep_data and list_data: what an agent found or made, kept privately in the person's project by its
 // canonical sha256, checked as the person's own project checks it. A claim goes to the annotations, a reading to
 // the store, the rest to project_data. Over HTTP, through the project's links, as people's agents call them.
 import { readFileSync } from 'node:fs';

@@ -1,10 +1,10 @@
 // search (T334): words to pages, through DuckDuckGo Lite.
 //
 // UNOFFICIAL ROUTE. This reads a page meant for people: there is no API and no agreement behind it, it
-// can change or refuse at any time, and it has only been tried from Elco's machine (12 of 12 on 6 Nov,
+// can change or refuse at any time, and it has only been tried from a developer's machine (12 of 12 on 6 Nov,
 // four seconds apart), never from a server. So it fails soft, says it's down when it is, and nothing
 // in Petal depends on it. It keeps to the rate that was tested: one at a time, four seconds apart.
-// Every other keyless route tried on 6 Nov refused or gave junk: design/tools.md.
+// Every other keyless route tried on 6 Nov refused or gave junk.
 import { defineTool, type PetalTool } from '../define.ts';
 import { ToolFailure } from '../errors.ts';
 import { decodeEntities } from '../page-text.ts';

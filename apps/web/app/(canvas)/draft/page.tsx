@@ -1,7 +1,7 @@
-// The draft view (T064; coordinator/one-source.md, steps 4 and 6): a flower from its spec alone (/draft?spec=,
-// the view_url render_flower returns, where a map's drawings link), live, drawn in the person's view, with
-// the same box as /make's. When its reading is on the Power Map, the map opens inside it, at its map's place;
-// otherwise it stands alone. Not published, so there is no interpretation, maker or signature to show.
+// The draft view (T064): a flower from its spec alone (/draft?spec=, the view_url render_flower returns,
+// where a map's drawings link), live, drawn in the person's view, with the same box as /make's. When its
+// reading is on the Power Map, the map opens inside it, at its map's place; otherwise it stands alone. Not
+// published, so there is no interpretation, maker or signature to show.
 import { ReadingColumn } from '../../../components/SiteChrome.tsx';
 import { Badge } from '../../../components/ui/Badge.tsx';
 import { FlowerPage } from '../../../flower/FlowerPage.tsx';

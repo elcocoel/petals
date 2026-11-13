@@ -1,5 +1,5 @@
-// proposals/v1 (board #93; Elco, 11 Nov: proposals on the flower's ring, and on hover each wallet's yes and no,
-// absent showing nothing): a DAO's proposals and how each account voted, read from its own chain, kept by the
+// proposals/v1 (drawn on the flower's ring, and on hover each wallet's yes and no, absent showing nothing): a
+// DAO's proposals and how each account voted, read from its own chain, kept by the
 // map's address. An account that didn't vote isn't in a proposal's votes: absent, never a guess.
 import { createAjv, schemaId } from './schema/ajv.ts';
 import type { Result, ValidationIssue } from './types/index.ts';

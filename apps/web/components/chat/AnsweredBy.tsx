@@ -1,5 +1,5 @@
 // T168: which model answered, in the words thread-view.ts chose, kept quiet in mono. With a summary, the
-// note folds under it, with the side panel's chevron, as the steps do (#78, 11 Nov).
+// note folds under it, with the side panel's chevron, as the steps do.
 import type { Segment } from '../../lib/thread-view.ts';
 import { Icon } from '../ui/Icon.tsx';
 

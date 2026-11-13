@@ -1,4 +1,4 @@
-// Postgres: where Petals' data goes (Elco, 8 Nov). A real server through node-postgres, with a pool of
+// Postgres: where Petals' data goes. A real server through node-postgres, with a pool of
 // connections and time limits, or PGlite, Postgres itself built to run inside Node, for tests. Both
 // speak the same SQL and take the same migrations. The password never travels in the address: it comes
 // from a file (PETAL_DATABASE_PASSWORD_FILE), so it stays out of logs, env listings and process tables.

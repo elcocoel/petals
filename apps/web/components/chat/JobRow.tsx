@@ -1,7 +1,7 @@
 // A job Petals' agent handed to one of the person's own agents, in the chat (C): one line saying who it
 // went to and where it stands, what the agent said when it reported, the way to the job's own
 // conversation (swarm.md, step 2), and the person's say over it (step 3): when its worker was last heard
-// from, Stop, Send it again, Hand it to another agent. Props only. Words from lib/jobs.ts, drafts.
+// from, Stop, Send it again, Hand it to another agent. Props only. Words from lib/jobs.ts.
 import { type JobControlsView, jobWords } from '../../lib/jobs.ts';
 import { Button } from '../ui/Button.tsx';
 import { Field } from '../ui/Field.tsx';
