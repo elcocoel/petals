@@ -73,7 +73,12 @@ export type AddWalletPhase =
  * What a wallet's refusal says, plainly, with the wallet's name: the person said no (EIP-1193's 4001, or a
  * wallet's own words for it), it already has a request open (-32002), or whatever else it said, as it said it.
  */
-export function walletRefusal(wallet: string, e: unknown): string {
+export function walletRefusal(
+  wallet: string,
+  e: unknown,
+  /** what a no says, where the page asked for something other than adding a wallet */
+  declined: (wallet: string) => string = profilePageWords.declined,
+): string {
   const code = (e as { code?: unknown } | null)?.code;
   const said =
     e instanceof Error
@@ -82,7 +87,7 @@ export function walletRefusal(wallet: string, e: unknown): string {
         ? (e as { message: string }).message
         : String(e);
   if (code === 4001 || /reject|denied|declin|cancel|closed/i.test(said))
-    return profilePageWords.declined(wallet);
+    return declined(wallet);
   if (code === -32002) return profilePageWords.busy(wallet);
   return profilePageWords.answered(wallet, said || profilePageWords.notAdded);
 }

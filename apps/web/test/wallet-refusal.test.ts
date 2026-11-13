@@ -1,5 +1,6 @@
 // What a wallet's refusal says: plainly, with the wallet's name, never nothing.
 import { describe, expect, test } from 'vitest';
+import { doorWords } from '../lib/door-words.ts';
 import { profilePageWords, walletRefusal } from '../lib/profile-view.ts';
 
 describe('a wallet’s refusal, said plainly', () => {
@@ -21,6 +22,11 @@ describe('a wallet’s refusal, said plainly', () => {
   test('anything else, in the wallet’s own words', () => {
     expect(walletRefusal('SafePal', new Error('Wallet is locked'))).toBe(
       'SafePal answered: Wallet is locked',
+    );
+  });
+  test('at the door, a no is said without what adding a wallet would say', () => {
+    expect(walletRefusal('MetaMask', { code: 4001 }, doorWords.declined)).toBe(
+      'MetaMask declined.',
     );
   });
   test('an answer with no words still says something', () => {

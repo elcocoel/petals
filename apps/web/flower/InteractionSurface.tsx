@@ -20,6 +20,7 @@ import { Button } from '../components/ui/Button.tsx';
 import { FloatBox } from '../components/ui/FloatBox.tsx';
 import { Icon } from '../components/ui/Icon.tsx';
 import { MappingBox } from '../components/workspace/MappingBox.tsx';
+import { WalletAsk } from '../components/workspace/WalletAsk.tsx';
 import { LandscapeCanvas } from '../landscape/LandscapeCanvas.tsx';
 import { ceremonyWords } from '../lib/ceremony.ts';
 import type { Catalogue } from '../lib/composer-options.ts';
@@ -314,8 +315,16 @@ export function InteractionSurface({
                   busy={state.session.busy}
                   failed={state.session.failed}
                   onConnect={state.session.connect}
-                  onConnectEvm={state.session.connectEvm}
-                  onConnectSolana={state.session.connectSolana}
+                  onConnectEvm={() => state.session.connectEvm()}
+                  onConnectSolana={() => state.session.connectSolana()}
+                  ask={
+                    <WalletAsk
+                      pick={state.session.pick?.wallets ?? null}
+                      waitingFor={state.session.waitingFor}
+                      onChoose={state.session.choose}
+                      onStop={state.session.stop}
+                    />
+                  }
                 />
               )}
               {/* Hidden, not gone, so what's in it and the way to it stay while someone connects. */}

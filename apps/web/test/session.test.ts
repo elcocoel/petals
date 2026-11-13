@@ -2,7 +2,8 @@
 import { describe, expect, test } from 'vitest';
 import type { Challenge, SessionClient } from '../lib/agent-client.ts';
 import { doorWords } from '../lib/door-words.ts';
-import { signIn } from '../viewmodels/useSession.ts';
+import { NO_EVM_WALLET } from '../lib/evm-wallet.ts';
+import { signIn, signInEvm } from '../viewmodels/useSession.ts';
 
 const challenge: Challenge = {
   nonce: 'n',
@@ -78,5 +79,43 @@ describe('connecting', () => {
     await signIn(f.deps);
     expect(f.arrivedCount()).toBe(0);
     expect(f.said).toEqual([doorWords.badSignature]);
+  });
+});
+
+describe('an Ethereum wallet at the door', () => {
+  test('a no in the wallet is said in its name, never a dead button', async () => {
+    const g = globalThis as unknown as Record<string, unknown>;
+    const before = { dispatchEvent: g.dispatchEvent, ethereum: g.ethereum };
+    g.dispatchEvent = () => true;
+    g.ethereum = {
+      isMetaMask: true,
+      request: async () => {
+        throw Object.assign(new Error('User rejected the request.'), { code: 4001 });
+      },
+    };
+    try {
+      const said: string[] = [];
+      let arrived = false;
+      await signInEvm(
+        () => {
+          arrived = true;
+        },
+        (w) => said.push(w),
+      );
+      expect(arrived).toBe(false);
+      expect(said).toEqual([doorWords.declined('MetaMask')]);
+    } finally {
+      g.dispatchEvent = before.dispatchEvent;
+      g.ethereum = before.ethereum;
+    }
+  });
+
+  test('with no wallet, it says so', async () => {
+    const said: string[] = [];
+    await signInEvm(
+      () => {},
+      (w) => said.push(w),
+    );
+    expect(said).toEqual([NO_EVM_WALLET]);
   });
 });
