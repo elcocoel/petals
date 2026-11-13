@@ -85,7 +85,7 @@ export function ConversationThread({
       }}
       // credit is added in the lobby's Balance: a refusal for want of it points there
       renderPay={(row) => (
-        <p key={row.key} className="my-0">
+        <p key={row.key} className="my-0 type-ui">
           <CreditPointer line={payWords.outOf} />
         </p>
       )}

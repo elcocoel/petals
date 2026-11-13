@@ -342,9 +342,16 @@ export function InteractionSurface({
                           </Button>
                         )}
                         {state.balance && (
-                          <span className="type-mono text-muted">{state.balance}</span>
+                          <span className="type-mono text-muted">
+                            {state.balance}
+                            {state.noCredit && (
+                              <>
+                                {' · '}
+                                <CreditPointer />
+                              </>
+                            )}
+                          </span>
                         )}
-                        {state.noCredit && <CreditPointer />}
                       </span>
                     )
                   }
