@@ -9,20 +9,8 @@ cd "$(dirname "$0")/.." || exit 1
 frozen=(packages/tokens/source.ts)
 # Still being reworded on open branches; each leaves this list once it's clean.
 pending=(
-  apps/web/components/landing
-  apps/web/app/lab/landing-hero
-  apps/web/components/ui/Button.tsx
-  apps/web/components/ui/Footer.tsx
-  apps/web/components/ui/SectionName.tsx
-  apps/web/components/workspace/NotSignedIn.tsx
-  apps/web/lib/hero-map.ts
-  apps/web/lib/hero-shots.ts
-  apps/web/lib/hero-story.ts
-  apps/web/lib/landing-copy.ts
-  apps/web/lib/site-links.ts
-  apps/web/test/hero-story.test.ts
-  apps/web/test/icons.test.ts
-  apps/web/test/site-links.test.ts
+  apps/web/components/landing/GallerySection.tsx
+  apps/web/components/landing/LandingMap.tsx
 )
 skip=()
 for p in "${frozen[@]}" "${pending[@]}"; do skip+=(":(exclude)$p"); done

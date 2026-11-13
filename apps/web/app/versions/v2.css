@@ -515,7 +515,7 @@
   border-end-end-radius: inherit;
 }
 
-/* The conversation's base is its field (design/conversation.md, line 16): the cursor in it, its edge says so. */
+/* The conversation's base is its field: the cursor in it, its edge says so. */
 /* box.well */
 :root[data-version="2"] [data-b="box"][data-foot]:focus-within {
   border-color: var(--accent);
@@ -1032,7 +1032,7 @@
 }
 
 /* A section of the side panel folds under its head, and what's below settles against it softly, as a drawer
-   with a soft-close does (design/side-panel.md, line 43): its height runs out on a long slowing, with no
+   with a soft-close does: its height runs out on a long slowing, with no
    bounce. Open, what's in it may reach past it (a row's menu); folding, it's clipped at once, and opening,
    only once it's open. */
 /* head.settle */
@@ -1084,7 +1084,7 @@
   opacity: 1;
 }
 
-/* Your own words in a conversation keep the fill (design/conversation.md, line 23). */
+/* Your own words in a conversation keep the fill. */
 /* item.said */
 :root[data-version="2"] [data-b="item"][data-said]::before {
   opacity: 1;
