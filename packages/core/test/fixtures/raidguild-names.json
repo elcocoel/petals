@@ -1,0 +1,877 @@
+[
+  {
+    "petal": "claim/v3",
+    "issued_at": "2026-11-10T23:04:52Z",
+    "subject": "eip155:100:0x224aba5d489675a7bd3ce07786fada466b46fa0f",
+    "verb": "named",
+    "object": {
+      "value": "Santiago"
+    },
+    "kind": "sourced",
+    "evidence": [
+      {
+        "type": "proposal",
+        "found_by": "tool:codex@2026-11-10",
+        "found_at": "2026-11-10T23:04:52Z",
+        "url": "https://gnosisscan.io/tx/0xbc2f96aee8750fc71d0e744c822776f989f46377b74fe32354e206b65505fad9",
+        "tx": "eip155:100:0xbc2f96aee8750fc71d0e744c822776f989f46377b74fe32354e206b65505fad9",
+        "proposal": "proposal:eip155:100:0xf02fd4286917270cb94fbc13a0f4e1ed76f7e986:245",
+        "quote": "Santiago (0x224aBa5D489675a7bD3CE07786FAda466b46FA0F)",
+        "note": "Prose explicitly names address; one of three matching transfers; corroborated by RIP #239. Proposal passed; action succeeded."
+      }
+    ],
+    "via": "tool:codex@2026-11-10",
+    "by": "near:mainnet:petals.near",
+    "id": "07ef763afd9e0dd61af228cb19cedf8d3559a67d6fbd2b03167bd53e39d9da38"
+  },
+  {
+    "petal": "claim/v3",
+    "issued_at": "2026-11-10T23:04:52Z",
+    "subject": "eip155:100:0xced608aa29bb92185d9b6340adcbfa263dae075b",
+    "verb": "named",
+    "object": {
+      "value": "Deekan / Duckanbro"
+    },
+    "kind": "sourced",
+    "evidence": [
+      {
+        "type": "proposal",
+        "found_by": "tool:codex@2026-11-10",
+        "found_at": "2026-11-10T23:04:52Z",
+        "url": "https://github.com/raid-guild/RIPs/issues/234",
+        "tx": "eip155:100:0x6e83bb67495fe3a29198632312664d63c7deea3d27f1cd55196a247e3b226fc0",
+        "proposal": "proposal:eip155:100:0xf02fd4286917270cb94fbc13a0f4e1ed76f7e986:224",
+        "quote": "$500 to Deekan / Duckanbro — `0xCED608Aa29bB92185D9b6340Adcbfa263DAe075b`",
+        "note": "Explicit linked-RIP payee/address; spelling/alias variation of the Dekan claim, not independently verified identity. Proposal passed; action succeeded."
+      }
+    ],
+    "via": "tool:codex@2026-11-10",
+    "by": "near:mainnet:petals.near",
+    "id": "12b47f031a2a858126dd20956af8d236b29834418799b35801918d3a8a7df88a"
+  },
+  {
+    "petal": "claim/v3",
+    "issued_at": "2026-11-10T23:04:52Z",
+    "subject": "eip155:100:0x2606cb984b962ad4aa1ef00f9af9b654b435ad44",
+    "verb": "named",
+    "object": {
+      "value": "Derrek"
+    },
+    "kind": "sourced",
+    "evidence": [
+      {
+        "type": "proposal",
+        "found_by": "tool:codex@2026-11-10",
+        "found_at": "2026-11-10T23:04:52Z",
+        "url": "https://gnosisscan.io/tx/0x2f057b9ae1e3d94a9c1ad7a0fe29955ef994d6a921199d8f2643ab0dcc441d5d",
+        "tx": "eip155:100:0x2f057b9ae1e3d94a9c1ad7a0fe29955ef994d6a921199d8f2643ab0dcc441d5d",
+        "proposal": "proposal:eip155:100:0xf02fd4286917270cb94fbc13a0f4e1ed76f7e986:173",
+        "quote": "Remove Derrek as Tavern Keeper, Take 2 (Q1, 2026)",
+        "note": "Outgoing transferHat wearer in named removal; “Derrick” is the spelling in RIP #222. Proposal passed; action failed."
+      }
+    ],
+    "via": "tool:codex@2026-11-10",
+    "by": "near:mainnet:petals.near",
+    "id": "15d18ffdd13f8a4c72499a3274df5ed2d815c58f06230b80b6783d51c3c6d609"
+  },
+  {
+    "petal": "claim/v3",
+    "issued_at": "2026-11-10T23:04:52Z",
+    "subject": "eip155:100:0x69a9e35b769a7b8bad41ff5421e5c365632830a7",
+    "verb": "named",
+    "object": {
+      "value": "vani11a"
+    },
+    "kind": "sourced",
+    "evidence": [
+      {
+        "type": "proposal",
+        "found_by": "tool:codex@2026-11-10",
+        "found_at": "2026-11-10T23:04:52Z",
+        "url": "https://gnosisscan.io/tx/0x985254e0f788372526234cf6188c667c029e291ea7a6bd778d310aed32c08bda",
+        "tx": "eip155:100:0x985254e0f788372526234cf6188c667c029e291ea7a6bd778d310aed32c08bda",
+        "proposal": "proposal:eip155:100:0xf02fd4286917270cb94fbc13a0f4e1ed76f7e986:56",
+        "quote": "vani11a transfer shares",
+        "note": "New wallet (mintShares) in an explicitly named wallet-rotation proposal. Proposal passed; action succeeded."
+      }
+    ],
+    "via": "tool:codex@2026-11-10",
+    "by": "near:mainnet:petals.near",
+    "id": "18081d30e61c7cd2d6229fd6dd0df4c27f44a6ecdc841373743d58c64e7844af"
+  },
+  {
+    "petal": "claim/v3",
+    "issued_at": "2026-11-10T23:04:52Z",
+    "subject": "eip155:100:0x9d0a3e2b1669b9d272db2800dd55418837f21645",
+    "verb": "named",
+    "object": {
+      "value": "Sk Ayaz"
+    },
+    "kind": "sourced",
+    "evidence": [
+      {
+        "type": "proposal",
+        "found_by": "tool:codex@2026-11-10",
+        "found_at": "2026-11-10T23:04:52Z",
+        "url": "https://github.com/raid-guild/RIPs/issues/151",
+        "tx": "eip155:100:0xee3cbf644ed89302e9f76a79cd4e57afc0d87a33c2d7f86420a08175568b5fab",
+        "proposal": "proposal:eip155:100:0xf02fd4286917270cb94fbc13a0f4e1ed76f7e986:33",
+        "quote": "Sk Ayaz - 0x9d0a3e2b1669b9d272db2800dd55418837f21645",
+        "note": "Explicit linked-RIP wallet declaration; this is NOT the direct #33 recipient (0xcf30…1021), which remains a separate distribution gap. Proposal passed; action succeeded."
+      }
+    ],
+    "via": "tool:codex@2026-11-10",
+    "by": "near:mainnet:petals.near",
+    "id": "228398583e5439cf258d6fbf82f3b272aae5ef5240436611e94c3123a461b068"
+  },
+  {
+    "petal": "claim/v3",
+    "issued_at": "2026-11-10T23:04:52Z",
+    "subject": "eip155:100:0xced608aa29bb92185d9b6340adcbfa263dae075b",
+    "verb": "named",
+    "object": {
+      "value": "Dekan"
+    },
+    "kind": "sourced",
+    "evidence": [
+      {
+        "type": "proposal",
+        "found_by": "tool:codex@2026-11-10",
+        "found_at": "2026-11-10T23:04:52Z",
+        "url": "https://gnosisscan.io/tx/0x75dc363d5cb9f27d79eb5dca9ade9da7d00f48fb4f9ad5946abdb1362077d803",
+        "tx": "eip155:100:0x75dc363d5cb9f27d79eb5dca9ade9da7d00f48fb4f9ad5946abdb1362077d803",
+        "proposal": "proposal:eip155:100:0xf02fd4286917270cb94fbc13a0f4e1ed76f7e986:167",
+        "quote": "Elect Dekan as Keeper of the Handbook (Q1, 2026)",
+        "note": "Incoming transferHat wearer; also named explicitly with this address in #245. #176 creates a separate beneficiary ambiguity below. Proposal passed; action succeeded."
+      }
+    ],
+    "via": "tool:codex@2026-11-10",
+    "by": "near:mainnet:petals.near",
+    "id": "24f1a92be80caa6d62c96b124eefb4b0d13c65e06a6d071f23f39429b61d8650"
+  },
+  {
+    "petal": "claim/v3",
+    "issued_at": "2026-11-10T23:04:52Z",
+    "subject": "eip155:100:0x516cafd745ec780d20f61c0d71fe258ea765222d",
+    "verb": "named",
+    "object": {
+      "value": "nintynick"
+    },
+    "kind": "sourced",
+    "evidence": [
+      {
+        "type": "proposal",
+        "found_by": "tool:codex@2026-11-10",
+        "found_at": "2026-11-10T23:04:52Z",
+        "url": "https://gnosisscan.io/tx/0xb7cdc571c817af8ebb5dea66b7eb4cf1093dbcd170d3931cb68239ea4685671b",
+        "tx": "eip155:100:0xb7cdc571c817af8ebb5dea66b7eb4cf1093dbcd170d3931cb68239ea4685671b",
+        "proposal": "proposal:eip155:100:0xf02fd4286917270cb94fbc13a0f4e1ed76f7e986:10",
+        "quote": "Champion staking reward to nintynick for LukeKK",
+        "note": "Named beneficiary/member in this proposal; matching transfer or mint recipient. This is a declaration, not proof of who controls the address. Proposal passed; action succeeded."
+      }
+    ],
+    "via": "tool:codex@2026-11-10",
+    "by": "near:mainnet:petals.near",
+    "id": "2756a5a019aae1ac3af5ca1defaab62176a354b7ee017f59b0585c6f7452af9a"
+  },
+  {
+    "petal": "claim/v3",
+    "issued_at": "2026-11-10T23:04:52Z",
+    "subject": "eip155:100:0x8760e565273b47195f76a22455ce0b68a11af5b5",
+    "verb": "named",
+    "object": {
+      "value": "st4rgard3n the 2ed"
+    },
+    "kind": "sourced",
+    "evidence": [
+      {
+        "type": "proposal",
+        "found_by": "tool:codex@2026-11-10",
+        "found_at": "2026-11-10T23:04:52Z",
+        "url": "https://gnosisscan.io/tx/0xe768b1ab52b7fbeb5d92b3d7b9367ef0234454266db20e3ac9f44a04acaa53b9",
+        "tx": "eip155:100:0xe768b1ab52b7fbeb5d92b3d7b9367ef0234454266db20e3ac9f44a04acaa53b9",
+        "proposal": "proposal:eip155:100:0xf02fd4286917270cb94fbc13a0f4e1ed76f7e986:7",
+        "quote": "0x8760e565273b47195f76a22455ce0b68a11af5b5 (@st4rgard3n the 2ed) - $500",
+        "note": "Explicit prose name/address pairing matches nested disperseTokenSimple recipient. Proposal passed; action succeeded."
+      }
+    ],
+    "via": "tool:codex@2026-11-10",
+    "by": "near:mainnet:petals.near",
+    "id": "27ff0295e683aa3d37fcf769ed1388d65a2fb1873e19db0d35394cfd71964382"
+  },
+  {
+    "petal": "claim/v3",
+    "issued_at": "2026-11-10T23:04:52Z",
+    "subject": "eip155:100:0xcca692199f1169afc31a5fe1e5a0b6463b8fef9d",
+    "verb": "named",
+    "object": {
+      "value": "Pupcakes"
+    },
+    "kind": "sourced",
+    "evidence": [
+      {
+        "type": "proposal",
+        "found_by": "tool:codex@2026-11-10",
+        "found_at": "2026-11-10T23:04:52Z",
+        "url": "https://gnosisscan.io/tx/0x40617942e4f29fec7f585e58f96a8e47c7e82f7a04c0480f1c5b5010cd3d9fe0",
+        "tx": "eip155:100:0x40617942e4f29fec7f585e58f96a8e47c7e82f7a04c0480f1c5b5010cd3d9fe0",
+        "proposal": "proposal:eip155:100:0xf02fd4286917270cb94fbc13a0f4e1ed76f7e986:82",
+        "quote": "Hi, it's Pupcakes.",
+        "note": "Membership mintShares recipient; #144, #179 and #182 independently name the payout beneficiary. Proposal passed; action succeeded."
+      }
+    ],
+    "via": "tool:codex@2026-11-10",
+    "by": "near:mainnet:petals.near",
+    "id": "2eb109fbef7748d447beae4a125e9bf1f24be31b730fda0cb45d2e494de79f34"
+  },
+  {
+    "petal": "claim/v3",
+    "issued_at": "2026-11-10T23:04:52Z",
+    "subject": "eip155:100:0x99f5a4431d084f11d6ee97d7602412267bf8478f",
+    "verb": "named",
+    "object": {
+      "value": "dan13ram"
+    },
+    "kind": "sourced",
+    "evidence": [
+      {
+        "type": "proposal",
+        "found_by": "tool:codex@2026-11-10",
+        "found_at": "2026-11-10T23:04:52Z",
+        "url": "https://gnosisscan.io/tx/0xa9714f6f44997d77dd38d320c2bbde3f95adc43ea19d64914227a643886d4dda",
+        "tx": "eip155:100:0xa9714f6f44997d77dd38d320c2bbde3f95adc43ea19d64914227a643886d4dda",
+        "proposal": "proposal:eip155:100:0xf02fd4286917270cb94fbc13a0f4e1ed76f7e986:62",
+        "quote": "Transfer shares to new Wallet - dan13ram",
+        "note": "New wallet (mintShares) in an explicitly named wallet-rotation proposal. Proposal passed; action succeeded."
+      }
+    ],
+    "via": "tool:codex@2026-11-10",
+    "by": "near:mainnet:petals.near",
+    "id": "383255cd55c72e53438737ed406ea8dbe998cfd34c1961993ff5add5d52590cd"
+  },
+  {
+    "petal": "claim/v3",
+    "issued_at": "2026-11-10T23:04:52Z",
+    "subject": "eip155:100:0xce7298e5ef1ae8af0573edc2ebd03ab0f837e214",
+    "verb": "named",
+    "object": {
+      "value": "Elco (old wallet)"
+    },
+    "kind": "sourced",
+    "evidence": [
+      {
+        "type": "proposal",
+        "found_by": "tool:codex@2026-11-10",
+        "found_at": "2026-11-10T23:04:52Z",
+        "url": "https://gnosisscan.io/tx/0xab8595006b7ebca017a25ece3991df1d9f6b53427b6c4aa0cf1ecded2a78424a",
+        "tx": "eip155:100:0xab8595006b7ebca017a25ece3991df1d9f6b53427b6c4aa0cf1ecded2a78424a",
+        "proposal": "proposal:eip155:100:0xf02fd4286917270cb94fbc13a0f4e1ed76f7e986:122",
+        "quote": "380 shares transfer from 0xce7298E5....37E214 to 0x14a81C....16fdf0",
+        "note": "burnShares source, explicitly paired with the new wallet; historical, not current ownership. Proposal passed; action succeeded."
+      }
+    ],
+    "via": "tool:codex@2026-11-10",
+    "by": "near:mainnet:petals.near",
+    "id": "3a2ae2e8f9cf0c2d5fd2757fd36f04eef40add79776a0f8e9ac8bec1b000bb38"
+  },
+  {
+    "petal": "claim/v3",
+    "issued_at": "2026-11-10T23:04:52Z",
+    "subject": "eip155:100:0x1e9c89aff77215f3ad26bffe0c50d4fdeba6a352",
+    "verb": "named",
+    "object": {
+      "value": "dan13ram"
+    },
+    "kind": "sourced",
+    "evidence": [
+      {
+        "type": "proposal",
+        "found_by": "tool:codex@2026-11-10",
+        "found_at": "2026-11-10T23:04:52Z",
+        "url": "https://gnosisscan.io/tx/0xa9714f6f44997d77dd38d320c2bbde3f95adc43ea19d64914227a643886d4dda",
+        "tx": "eip155:100:0xa9714f6f44997d77dd38d320c2bbde3f95adc43ea19d64914227a643886d4dda",
+        "proposal": "proposal:eip155:100:0xf02fd4286917270cb94fbc13a0f4e1ed76f7e986:62",
+        "quote": "Transfer shares to new Wallet - dan13ram",
+        "note": "Old wallet (burnShares) in an explicitly named wallet-rotation proposal. Proposal passed; action succeeded."
+      }
+    ],
+    "via": "tool:codex@2026-11-10",
+    "by": "near:mainnet:petals.near",
+    "id": "3e9691da618ca2325bc01e9343eff7513c4f873f0ca64071a7dbcbce755b4920"
+  },
+  {
+    "petal": "claim/v3",
+    "issued_at": "2026-11-10T23:04:52Z",
+    "subject": "eip155:100:0xd1d8e452a864388280b714537cbead6ff9e28530",
+    "verb": "named",
+    "object": {
+      "value": "plor"
+    },
+    "kind": "sourced",
+    "evidence": [
+      {
+        "type": "proposal",
+        "found_by": "tool:codex@2026-11-10",
+        "found_at": "2026-11-10T23:04:52Z",
+        "url": "https://gnosisscan.io/tx/0x265a706749751acdfffd8e3535557ec610e6bdc938e5c23e9661258f41833ac4",
+        "tx": "eip155:100:0x265a706749751acdfffd8e3535557ec610e6bdc938e5c23e9661258f41833ac4",
+        "proposal": "proposal:eip155:100:0xf02fd4286917270cb94fbc13a0f4e1ed76f7e986:12",
+        "quote": "Cohort payout for plor",
+        "note": "Named beneficiary/member in this proposal; matching transfer or mint recipient. This is a declaration, not proof of who controls the address. Proposal passed; action succeeded."
+      }
+    ],
+    "via": "tool:codex@2026-11-10",
+    "by": "near:mainnet:petals.near",
+    "id": "4c545cc6080a089ff49efc99473103e0f35ad29f4373efbcfcd5069d4d98d91f"
+  },
+  {
+    "petal": "claim/v3",
+    "issued_at": "2026-11-10T23:04:52Z",
+    "subject": "eip155:100:0xcff878b6673bcbc3525e2c6432d2e9698738ef34",
+    "verb": "named",
+    "object": {
+      "value": "Suede"
+    },
+    "kind": "sourced",
+    "evidence": [
+      {
+        "type": "proposal",
+        "found_by": "tool:codex@2026-11-10",
+        "found_at": "2026-11-10T23:04:52Z",
+        "url": "https://gnosisscan.io/tx/0xeed8d8db246d145ff17822ee82d5069356dacbc20af19ea74537811fe1db43ab",
+        "tx": "eip155:100:0xeed8d8db246d145ff17822ee82d5069356dacbc20af19ea74537811fe1db43ab",
+        "proposal": "proposal:eip155:100:0xf02fd4286917270cb94fbc13a0f4e1ed76f7e986:91",
+        "quote": "Suede ~ Bid for the Banner ",
+        "note": "Named beneficiary/member in this proposal; matching transfer or mint recipient. This is a declaration, not proof of who controls the address. Proposal passed; action succeeded."
+      }
+    ],
+    "via": "tool:codex@2026-11-10",
+    "by": "near:mainnet:petals.near",
+    "id": "53fddacfd085dc76467ea125c2f86603a86f2e266414bb6f947468ed83994282"
+  },
+  {
+    "petal": "claim/v3",
+    "issued_at": "2026-11-10T23:04:52Z",
+    "subject": "eip155:100:0x7bc48221928f11184b376da7a57650768dfd3332",
+    "verb": "named",
+    "object": {
+      "value": "Benedictvs"
+    },
+    "kind": "sourced",
+    "evidence": [
+      {
+        "type": "proposal",
+        "found_by": "tool:codex@2026-11-10",
+        "found_at": "2026-11-10T23:04:52Z",
+        "url": "https://gnosisscan.io/tx/0x73ceb716c92adb45a036c49ac050e584680b2496a66207f5ffb0544af81ef102",
+        "tx": "eip155:100:0x73ceb716c92adb45a036c49ac050e584680b2496a66207f5ffb0544af81ef102",
+        "proposal": "proposal:eip155:100:0xf02fd4286917270cb94fbc13a0f4e1ed76f7e986:172",
+        "quote": "Remove Benedictvs as Bard (Q1, 2026)",
+        "note": "Outgoing transferHat wearer in named removal; this action FAILED. #16 paid the same address but its text does not name the author. Do not infer a completed hat removal. Proposal passed; action failed."
+      }
+    ],
+    "via": "tool:codex@2026-11-10",
+    "by": "near:mainnet:petals.near",
+    "id": "54049a0770d3dcbff33725cc8590fc14ffbc5b7b9f03f8b813a1a05c2731a957"
+  },
+  {
+    "petal": "claim/v3",
+    "issued_at": "2026-11-10T23:04:52Z",
+    "subject": "eip155:100:0xda5b2cd0d0bb26e79fb3210233ddabdb7de131c9",
+    "verb": "named",
+    "object": {
+      "value": "vani11a"
+    },
+    "kind": "sourced",
+    "evidence": [
+      {
+        "type": "proposal",
+        "found_by": "tool:codex@2026-11-10",
+        "found_at": "2026-11-10T23:04:52Z",
+        "url": "https://gnosisscan.io/tx/0x985254e0f788372526234cf6188c667c029e291ea7a6bd778d310aed32c08bda",
+        "tx": "eip155:100:0x985254e0f788372526234cf6188c667c029e291ea7a6bd778d310aed32c08bda",
+        "proposal": "proposal:eip155:100:0xf02fd4286917270cb94fbc13a0f4e1ed76f7e986:56",
+        "quote": "vani11a transfer shares",
+        "note": "Old wallet (burnShares) in an explicitly named wallet-rotation proposal. Proposal passed; action succeeded."
+      }
+    ],
+    "via": "tool:codex@2026-11-10",
+    "by": "near:mainnet:petals.near",
+    "id": "56685bf795abfdad449ed64da8905ff355cbefb2c62de56225c079ac15805adb"
+  },
+  {
+    "petal": "claim/v3",
+    "issued_at": "2026-11-10T23:04:52Z",
+    "subject": "eip155:100:0x1a9cee6e1d21c3c09fb83a980ea54299f01920cd",
+    "verb": "named",
+    "object": {
+      "value": "ECWireless"
+    },
+    "kind": "sourced",
+    "evidence": [
+      {
+        "type": "proposal",
+        "found_by": "tool:codex@2026-11-10",
+        "found_at": "2026-11-10T23:04:52Z",
+        "url": "https://gnosisscan.io/tx/0xe20afa1d165efd26847d2754a50bd7873f172e26f099d043c1df52b51bf74174",
+        "tx": "eip155:100:0xe20afa1d165efd26847d2754a50bd7873f172e26f099d043c1df52b51bf74174",
+        "proposal": "proposal:eip155:100:0xf02fd4286917270cb94fbc13a0f4e1ed76f7e986:3",
+        "quote": "Requesting repayment for Vercel hosting between January, 2023 and June, 2023 by @ECWireless.",
+        "note": "Single ERC20 recipient; #7 also pairs name/address in prose; incoming wearer in #195. Proposal passed; action succeeded."
+      }
+    ],
+    "via": "tool:codex@2026-11-10",
+    "by": "near:mainnet:petals.near",
+    "id": "57be5f3d71e446d973c09b7b06ba1adcf3ceb7c0c29706d89d6a3bf5a672b04f"
+  },
+  {
+    "petal": "claim/v3",
+    "issued_at": "2026-11-10T23:04:52Z",
+    "subject": "eip155:100:0xb1a87b31d3c13c47a1dac755d48845abe49cfe2d",
+    "verb": "named",
+    "object": {
+      "value": "vika"
+    },
+    "kind": "sourced",
+    "evidence": [
+      {
+        "type": "proposal",
+        "found_by": "tool:codex@2026-11-10",
+        "found_at": "2026-11-10T23:04:52Z",
+        "url": "https://gnosisscan.io/tx/0x2b786832e98b5061798f64b38611367466249fd6ed35ec94de5fee7d5806a4e3",
+        "tx": "eip155:100:0x2b786832e98b5061798f64b38611367466249fd6ed35ec94de5fee7d5806a4e3",
+        "proposal": "proposal:eip155:100:0xf02fd4286917270cb94fbc13a0f4e1ed76f7e986:117",
+        "quote": "vika membership proposal",
+        "note": "Named beneficiary/member in this proposal; matching transfer or mint recipient. This is a declaration, not proof of who controls the address. Proposal passed; action succeeded."
+      }
+    ],
+    "via": "tool:codex@2026-11-10",
+    "by": "near:mainnet:petals.near",
+    "id": "62fcd8172e728cda0a32f373bb1839d74d02611fd3c00c07479e3d1abb93d61c"
+  },
+  {
+    "petal": "claim/v3",
+    "issued_at": "2026-11-10T23:04:52Z",
+    "subject": "eip155:100:0x503a5161d1c5d9d82bf35a4c80da0c3ad72d9244",
+    "verb": "named",
+    "object": {
+      "value": "Sayonara"
+    },
+    "kind": "sourced",
+    "evidence": [
+      {
+        "type": "proposal",
+        "found_by": "tool:codex@2026-11-10",
+        "found_at": "2026-11-10T23:04:52Z",
+        "url": "https://gnosisscan.io/tx/0x272746a25fa24dd4c12b49c572956db82f67c65d21e167047b9a6c056ce1e244",
+        "tx": "eip155:100:0x272746a25fa24dd4c12b49c572956db82f67c65d21e167047b9a6c056ce1e244",
+        "proposal": "proposal:eip155:100:0xf02fd4286917270cb94fbc13a0f4e1ed76f7e986:61",
+        "quote": "Sayonara Membership Proposal",
+        "note": "Named beneficiary/member in this proposal; matching transfer or mint recipient. This is a declaration, not proof of who controls the address. Proposal passed; action succeeded."
+      }
+    ],
+    "via": "tool:codex@2026-11-10",
+    "by": "near:mainnet:petals.near",
+    "id": "707dd51718b03c3f303650bc0aa32c988718a8cd8f9533d6c7d1a7fe368b8a71"
+  },
+  {
+    "petal": "claim/v3",
+    "issued_at": "2026-11-10T23:04:52Z",
+    "subject": "eip155:100:0x2410d50ba4993c1fe13b3db0bcdae51b1c617d0a",
+    "verb": "named",
+    "object": {
+      "value": "Nitegeist"
+    },
+    "kind": "sourced",
+    "evidence": [
+      {
+        "type": "proposal",
+        "found_by": "tool:codex@2026-11-10",
+        "found_at": "2026-11-10T23:04:52Z",
+        "url": "https://gnosisscan.io/tx/0x5e023c11c8445ade48b0c3dd1441b44fc92f0cb1e14de17cdf8291bb9ef83e0d",
+        "tx": "eip155:100:0x5e023c11c8445ade48b0c3dd1441b44fc92f0cb1e14de17cdf8291bb9ef83e0d",
+        "proposal": "proposal:eip155:100:0xf02fd4286917270cb94fbc13a0f4e1ed76f7e986:46",
+        "quote": "Champion staking reward to Nitegeist for Sero",
+        "note": "Named beneficiary/member in this proposal; matching transfer or mint recipient. This is a declaration, not proof of who controls the address. Proposal passed; action succeeded."
+      }
+    ],
+    "via": "tool:codex@2026-11-10",
+    "by": "near:mainnet:petals.near",
+    "id": "7c8f0286b303ce2da82e09bfb58dcebae405451ba73750397693bd5d4133b0af"
+  },
+  {
+    "petal": "claim/v3",
+    "issued_at": "2026-11-10T23:04:52Z",
+    "subject": "eip155:100:0x87690be28b65f13394741c2c2be5a6bdb0505039",
+    "verb": "named",
+    "object": {
+      "value": "borrowlucid"
+    },
+    "kind": "sourced",
+    "evidence": [
+      {
+        "type": "proposal",
+        "found_by": "tool:codex@2026-11-10",
+        "found_at": "2026-11-10T23:04:52Z",
+        "url": "https://gnosisscan.io/tx/0xfb65e8bb6c96d278816ac6fdd4f63af01759a19899bf10682313c8ba25fa7cb5",
+        "tx": "eip155:100:0xfb65e8bb6c96d278816ac6fdd4f63af01759a19899bf10682313c8ba25fa7cb5",
+        "proposal": "proposal:eip155:100:0xf02fd4286917270cb94fbc13a0f4e1ed76f7e986:8",
+        "quote": "borrowlucid s6 preppers",
+        "note": "Named beneficiary/member in this proposal; matching transfer or mint recipient. This is a declaration, not proof of who controls the address. Proposal passed; action succeeded."
+      }
+    ],
+    "via": "tool:codex@2026-11-10",
+    "by": "near:mainnet:petals.near",
+    "id": "87c85752acbbb384fe5d5341cbd490eea24681144bbb64c2bfe9e2c6086d38bc"
+  },
+  {
+    "petal": "claim/v3",
+    "issued_at": "2026-11-10T23:04:52Z",
+    "subject": "eip155:100:0x14a81ca2dd1202de7a6190e16d81aa3e4116fdf0",
+    "verb": "named",
+    "object": {
+      "value": "Elco"
+    },
+    "kind": "sourced",
+    "evidence": [
+      {
+        "type": "proposal",
+        "found_by": "tool:codex@2026-11-10",
+        "found_at": "2026-11-10T23:04:52Z",
+        "url": "https://gnosisscan.io/tx/0xab8595006b7ebca017a25ece3991df1d9f6b53427b6c4aa0cf1ecded2a78424a",
+        "tx": "eip155:100:0xab8595006b7ebca017a25ece3991df1d9f6b53427b6c4aa0cf1ecded2a78424a",
+        "proposal": "proposal:eip155:100:0xf02fd4286917270cb94fbc13a0f4e1ed76f7e986:122",
+        "quote": "Elco request to transfer shares to new address",
+        "note": "New mintShares recipient; #164 incoming Bard wearer, #180 and #202 payout corroboration. Proposal passed; action succeeded."
+      }
+    ],
+    "via": "tool:codex@2026-11-10",
+    "by": "near:mainnet:petals.near",
+    "id": "8cbf0831131480552780d4df4dfc3bf1a1e1bcea86cf132854967d09826b1536"
+  },
+  {
+    "petal": "claim/v3",
+    "issued_at": "2026-11-10T23:04:52Z",
+    "subject": "eip155:100:0x684e721008565957365fd4f9d63819a3deef909a",
+    "verb": "named",
+    "object": {
+      "value": "Aphilos"
+    },
+    "kind": "sourced",
+    "evidence": [
+      {
+        "type": "proposal",
+        "found_by": "tool:codex@2026-11-10",
+        "found_at": "2026-11-10T23:04:52Z",
+        "url": "https://gnosisscan.io/tx/0x945d552d8e389d335fba9bcf8516faed850493287a9f7e4ca257c29ce79acd29",
+        "tx": "eip155:100:0x945d552d8e389d335fba9bcf8516faed850493287a9f7e4ca257c29ce79acd29",
+        "proposal": "proposal:eip155:100:0xf02fd4286917270cb94fbc13a0f4e1ed76f7e986:190",
+        "quote": "Membership Request for Aphilos",
+        "note": "Named beneficiary/member in this proposal; matching transfer or mint recipient. This is a declaration, not proof of who controls the address. Proposal passed; action succeeded."
+      }
+    ],
+    "via": "tool:codex@2026-11-10",
+    "by": "near:mainnet:petals.near",
+    "id": "97d0b8af3b318cdebfdfbe6dbceba07947428dc50a7e90ad21745964e616c516"
+  },
+  {
+    "petal": "claim/v3",
+    "issued_at": "2026-11-10T23:04:52Z",
+    "subject": "eip155:100:0x6cbc9e74c21be570a8f0c5578a77d03ee99266c1",
+    "verb": "named",
+    "object": {
+      "value": "Shawky"
+    },
+    "kind": "sourced",
+    "evidence": [
+      {
+        "type": "proposal",
+        "found_by": "tool:codex@2026-11-10",
+        "found_at": "2026-11-10T23:04:52Z",
+        "url": "https://gnosisscan.io/tx/0x77d054353fd722e37c2285336188915c46748efdf87af972e6160d819868bec4",
+        "tx": "eip155:100:0x77d054353fd722e37c2285336188915c46748efdf87af972e6160d819868bec4",
+        "proposal": "proposal:eip155:100:0xf02fd4286917270cb94fbc13a0f4e1ed76f7e986:152",
+        "quote": "Shawky's Membership Proposal ",
+        "note": "Named beneficiary/member in this proposal; matching transfer or mint recipient. This is a declaration, not proof of who controls the address. Proposal passed; action succeeded."
+      }
+    ],
+    "via": "tool:codex@2026-11-10",
+    "by": "near:mainnet:petals.near",
+    "id": "9e98dc0e4c0742a20de7356f1d3ff94a259812195b1d0f8b9663fda13aeecd25"
+  },
+  {
+    "petal": "claim/v3",
+    "issued_at": "2026-11-10T23:04:52Z",
+    "subject": "eip155:100:0x187089b33e5812310ed32a57f53b3fad0383a19d",
+    "verb": "named",
+    "object": {
+      "value": "taekekz"
+    },
+    "kind": "sourced",
+    "evidence": [
+      {
+        "type": "proposal",
+        "found_by": "tool:codex@2026-11-10",
+        "found_at": "2026-11-10T23:04:52Z",
+        "url": "https://gnosisscan.io/tx/0xe768b1ab52b7fbeb5d92b3d7b9367ef0234454266db20e3ac9f44a04acaa53b9",
+        "tx": "eip155:100:0xe768b1ab52b7fbeb5d92b3d7b9367ef0234454266db20e3ac9f44a04acaa53b9",
+        "proposal": "proposal:eip155:100:0xf02fd4286917270cb94fbc13a0f4e1ed76f7e986:7",
+        "quote": "0x187089b33e5812310ed32a57f53b3fad0383a19d (@taekekz) - $650",
+        "note": "Explicit prose name/address pairing matches nested disperseTokenSimple recipient. Proposal passed; action succeeded."
+      }
+    ],
+    "via": "tool:codex@2026-11-10",
+    "by": "near:mainnet:petals.near",
+    "id": "9fbc4826635c1579539ffef77d62845ebf6374217125c284109612b8cc3dc61a"
+  },
+  {
+    "petal": "claim/v3",
+    "issued_at": "2026-11-10T23:04:52Z",
+    "subject": "eip155:100:0x81aaa9a7a8358cc2971b9b8de72acce6d7862bc8",
+    "verb": "named",
+    "object": {
+      "value": "proofoftom"
+    },
+    "kind": "sourced",
+    "evidence": [
+      {
+        "type": "proposal",
+        "found_by": "tool:codex@2026-11-10",
+        "found_at": "2026-11-10T23:04:52Z",
+        "url": "https://gnosisscan.io/tx/0x35089c31479eeffadd443ef0b7e885abd9f704ae085232d4fa4559eae4abceba",
+        "tx": "eip155:100:0x35089c31479eeffadd443ef0b7e885abd9f704ae085232d4fa4559eae4abceba",
+        "proposal": "proposal:eip155:100:0xf02fd4286917270cb94fbc13a0f4e1ed76f7e986:106",
+        "quote": "Transfer proofoftom shares to new account",
+        "note": "Old wallet (burnShares) in an explicitly named wallet-rotation proposal. Proposal passed; action succeeded."
+      }
+    ],
+    "via": "tool:codex@2026-11-10",
+    "by": "near:mainnet:petals.near",
+    "id": "bba319db9291cc564455cf625debf7819487aed92a506638240c8a3aea789f15"
+  },
+  {
+    "petal": "claim/v3",
+    "issued_at": "2026-11-10T23:04:52Z",
+    "subject": "eip155:100:0xd083764c39eddb70a749e0c1f808c14706b0cf44",
+    "verb": "named",
+    "object": {
+      "value": "huntrr"
+    },
+    "kind": "sourced",
+    "evidence": [
+      {
+        "type": "proposal",
+        "found_by": "tool:codex@2026-11-10",
+        "found_at": "2026-11-10T23:04:52Z",
+        "url": "https://gnosisscan.io/tx/0x8f31d7da313fd64770afd9f0f60892f793a1cbb7df50dff738062e73940676fd",
+        "tx": "eip155:100:0x8f31d7da313fd64770afd9f0f60892f793a1cbb7df50dff738062e73940676fd",
+        "proposal": "proposal:eip155:100:0xf02fd4286917270cb94fbc13a0f4e1ed76f7e986:1",
+        "quote": "huntrr to become Raid Guild member",
+        "note": "Named beneficiary/member in this proposal; matching transfer or mint recipient. This is a declaration, not proof of who controls the address. Proposal passed; action succeeded."
+      }
+    ],
+    "via": "tool:codex@2026-11-10",
+    "by": "near:mainnet:petals.near",
+    "id": "c00339b0b4636c9ec3ea8602eedbcc26015c6d9c4fa500e8d66504bc5fccf97e"
+  },
+  {
+    "petal": "claim/v3",
+    "issued_at": "2026-11-10T23:04:52Z",
+    "subject": "eip155:100:0xc0163e58648b247c143023cfb26c2baa42c9d9a9",
+    "verb": "named",
+    "object": {
+      "value": "Sero"
+    },
+    "kind": "sourced",
+    "evidence": [
+      {
+        "type": "proposal",
+        "found_by": "tool:codex@2026-11-10",
+        "found_at": "2026-11-10T23:04:52Z",
+        "url": "https://gnosisscan.io/tx/0xc8810b88dd063daafc337dba257f709ac5fcf40c3a58f701d9abfd6db73e8ef4",
+        "tx": "eip155:100:0xc8810b88dd063daafc337dba257f709ac5fcf40c3a58f701d9abfd6db73e8ef4",
+        "proposal": "proposal:eip155:100:0xf02fd4286917270cb94fbc13a0f4e1ed76f7e986:22",
+        "quote": "Sero - Season 6 Membership proposal",
+        "note": "Named beneficiary/member in this proposal; matching transfer or mint recipient. This is a declaration, not proof of who controls the address. Proposal passed; action succeeded."
+      }
+    ],
+    "via": "tool:codex@2026-11-10",
+    "by": "near:mainnet:petals.near",
+    "id": "c6e4814d36b6f8f8d30cfc9803b12c1d4eab23db0466f7127b88390d9830df89"
+  },
+  {
+    "petal": "claim/v3",
+    "issued_at": "2026-11-10T23:04:52Z",
+    "subject": "eip155:100:0x35b248d06bf280e17d8cbff63c56a58e52a936f1",
+    "verb": "named",
+    "object": {
+      "value": "loui"
+    },
+    "kind": "sourced",
+    "evidence": [
+      {
+        "type": "proposal",
+        "found_by": "tool:codex@2026-11-10",
+        "found_at": "2026-11-10T23:04:52Z",
+        "url": "https://gnosisscan.io/tx/0xc7011b249b7b22f78f53d6cce422e8936d33abb2238df6ba8942eb79ceb25e84",
+        "tx": "eip155:100:0xc7011b249b7b22f78f53d6cce422e8936d33abb2238df6ba8942eb79ceb25e84",
+        "proposal": "proposal:eip155:100:0xf02fd4286917270cb94fbc13a0f4e1ed76f7e986:108",
+        "quote": "bananadana designer comp for loui",
+        "note": "Single named-beneficiary payout; likely alias of Louchi, retained as a distinct source spelling. Proposal passed; action succeeded."
+      }
+    ],
+    "via": "tool:codex@2026-11-10",
+    "by": "near:mainnet:petals.near",
+    "id": "c8ea61d374ff6ef08207fca3f4a250eb9c4e20d92ac241c7fa40c393ba1ae731"
+  },
+  {
+    "petal": "claim/v3",
+    "issued_at": "2026-11-10T23:04:52Z",
+    "subject": "eip155:100:0x9f082e184259d2f7089df5ced36679bb88bfe123",
+    "verb": "named",
+    "object": {
+      "value": "proofoftom"
+    },
+    "kind": "sourced",
+    "evidence": [
+      {
+        "type": "proposal",
+        "found_by": "tool:codex@2026-11-10",
+        "found_at": "2026-11-10T23:04:52Z",
+        "url": "https://gnosisscan.io/tx/0x35089c31479eeffadd443ef0b7e885abd9f704ae085232d4fa4559eae4abceba",
+        "tx": "eip155:100:0x35089c31479eeffadd443ef0b7e885abd9f704ae085232d4fa4559eae4abceba",
+        "proposal": "proposal:eip155:100:0xf02fd4286917270cb94fbc13a0f4e1ed76f7e986:106",
+        "quote": "Transfer proofoftom shares to new account",
+        "note": "New wallet (mintShares) in an explicitly named wallet-rotation proposal. Proposal passed; action succeeded."
+      }
+    ],
+    "via": "tool:codex@2026-11-10",
+    "by": "near:mainnet:petals.near",
+    "id": "d31e86d2aadc7f5e98a5aab26968437f2fec8aa60bf7161a48fe5e7397f4ce5b"
+  },
+  {
+    "petal": "claim/v3",
+    "issued_at": "2026-11-10T23:04:52Z",
+    "subject": "eip155:100:0x08e3f287adba42a26904919917bc7907f1f0df18",
+    "verb": "named",
+    "object": {
+      "value": "Mehrdad"
+    },
+    "kind": "sourced",
+    "evidence": [
+      {
+        "type": "proposal",
+        "found_by": "tool:codex@2026-11-10",
+        "found_at": "2026-11-10T23:04:52Z",
+        "url": "https://gnosisscan.io/tx/0x5540143de551021f137096ca4dc23542641c350944a0682a5a8b964b387d2f53",
+        "tx": "eip155:100:0x5540143de551021f137096ca4dc23542641c350944a0682a5a8b964b387d2f53",
+        "proposal": "proposal:eip155:100:0xf02fd4286917270cb94fbc13a0f4e1ed76f7e986:134",
+        "quote": "Mehrdad's Membership Proposal",
+        "note": "Named beneficiary/member in this proposal; matching transfer or mint recipient. This is a declaration, not proof of who controls the address. Proposal passed; action succeeded."
+      }
+    ],
+    "via": "tool:codex@2026-11-10",
+    "by": "near:mainnet:petals.near",
+    "id": "d6d0b04ee01655c734fa81d3463801308e100890ecf3e37a4544c47ec1f02bd2"
+  },
+  {
+    "petal": "claim/v3",
+    "issued_at": "2026-11-10T23:04:52Z",
+    "subject": "eip155:100:0xd8c1f97348da216c2ded7a3a92274f2ff5cf37b2",
+    "verb": "named",
+    "object": {
+      "value": "Bennisan"
+    },
+    "kind": "sourced",
+    "evidence": [
+      {
+        "type": "proposal",
+        "found_by": "tool:codex@2026-11-10",
+        "found_at": "2026-11-10T23:04:52Z",
+        "url": "https://gnosisscan.io/tx/0xa6a795fe544e592aa20db5d3f5b68a22218478aa78c4d3a1e2e2fc78177f5ab1",
+        "tx": "eip155:100:0xa6a795fe544e592aa20db5d3f5b68a22218478aa78c4d3a1e2e2fc78177f5ab1",
+        "proposal": "proposal:eip155:100:0xf02fd4286917270cb94fbc13a0f4e1ed76f7e986:23",
+        "quote": "Swag payout Bennisan",
+        "note": "Named beneficiary/member in this proposal; matching transfer or mint recipient. This is a declaration, not proof of who controls the address. Proposal passed; action succeeded."
+      }
+    ],
+    "via": "tool:codex@2026-11-10",
+    "by": "near:mainnet:petals.near",
+    "id": "e54eb2ab479a50c07547b64151a0225d98331bf45d599d32d2e13bba7267adac"
+  },
+  {
+    "petal": "claim/v3",
+    "issued_at": "2026-11-10T23:04:52Z",
+    "subject": "eip155:100:0x7b86f576669f8d20a8244dabefc65b31d7deb3f2",
+    "verb": "named",
+    "object": {
+      "value": "0xMaker"
+    },
+    "kind": "sourced",
+    "evidence": [
+      {
+        "type": "proposal",
+        "found_by": "tool:codex@2026-11-10",
+        "found_at": "2026-11-10T23:04:52Z",
+        "url": "https://gnosisscan.io/tx/0x5f32d8a9de13ba0ca4e5de5f7c5e3b23c95b11b4ab9a19c0edc0f4e67f87227f",
+        "tx": "eip155:100:0x5f32d8a9de13ba0ca4e5de5f7c5e3b23c95b11b4ab9a19c0edc0f4e67f87227f",
+        "proposal": "proposal:eip155:100:0xf02fd4286917270cb94fbc13a0f4e1ed76f7e986:13",
+        "quote": "RIP 127 Payout for 0xMaker",
+        "note": "Named beneficiary/member in this proposal; matching transfer or mint recipient. This is a declaration, not proof of who controls the address. Proposal passed; action succeeded."
+      }
+    ],
+    "via": "tool:codex@2026-11-10",
+    "by": "near:mainnet:petals.near",
+    "id": "ee5218d0ef2c10d7172d797d737bcc3cb603a85a7392d28ce38a93909d2fcb72"
+  },
+  {
+    "petal": "claim/v3",
+    "issued_at": "2026-11-10T23:04:52Z",
+    "subject": "eip155:100:0xf025b4ac25d5dc1ffd77b099a31ddc269d55c039",
+    "verb": "named",
+    "object": {
+      "value": "suns"
+    },
+    "kind": "sourced",
+    "evidence": [
+      {
+        "type": "proposal",
+        "found_by": "tool:codex@2026-11-10",
+        "found_at": "2026-11-10T23:04:52Z",
+        "url": "https://gnosisscan.io/tx/0x500dcb5de1e7a085d542f89b94077849b58762e6299abb571e88a17727d98352",
+        "tx": "eip155:100:0x500dcb5de1e7a085d542f89b94077849b58762e6299abb571e88a17727d98352",
+        "proposal": "proposal:eip155:100:0xf02fd4286917270cb94fbc13a0f4e1ed76f7e986:119",
+        "quote": "suns membership prop",
+        "note": "Named beneficiary/member in this proposal; matching transfer or mint recipient. This is a declaration, not proof of who controls the address. Proposal passed; action succeeded."
+      }
+    ],
+    "via": "tool:codex@2026-11-10",
+    "by": "near:mainnet:petals.near",
+    "id": "f2e1e46bb470b74fa0cd160eb0e938c71ebcadc845479ff33d02c6fca36ee31c"
+  },
+  {
+    "petal": "claim/v3",
+    "issued_at": "2026-11-10T23:04:52Z",
+    "subject": "eip155:100:0x35b248d06bf280e17d8cbff63c56a58e52a936f1",
+    "verb": "named",
+    "object": {
+      "value": "Louchi"
+    },
+    "kind": "sourced",
+    "evidence": [
+      {
+        "type": "proposal",
+        "found_by": "tool:codex@2026-11-10",
+        "found_at": "2026-11-10T23:04:52Z",
+        "url": "https://github.com/raid-guild/RIPs/issues/234",
+        "tx": "eip155:100:0x6e83bb67495fe3a29198632312664d63c7deea3d27f1cd55196a247e3b226fc0",
+        "proposal": "proposal:eip155:100:0xf02fd4286917270cb94fbc13a0f4e1ed76f7e986:224",
+        "quote": "$500 to Louchi — `0x35b248d06Bf280E17d8Cbff63C56A58e52a936f1`",
+        "note": "Referenced RIP explicitly names payee/address; #224 sends one of its two matching transfers here. #108 uses the name loui. Proposal passed; action succeeded."
+      }
+    ],
+    "via": "tool:codex@2026-11-10",
+    "by": "near:mainnet:petals.near",
+    "id": "fc1dbccff2b4b67cb26f7684e59c199f272af3911c57edbdf99236f43d7db723"
+  }
+]

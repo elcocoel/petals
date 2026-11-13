@@ -580,6 +580,31 @@ export const MIGRATIONS: readonly string[] = [
     read_at TEXT NOT NULL
   );
   `,
+  // 35: the publication record (13 Nov, wave 8; specs/005-mapping-brain/composition.md; Elco: "it's the heart of the
+  // promise of the protocol"): append-only. Each publication/v1 an author signed, with the server's own order (seq)
+  // and time beside it, and the qualifier's outcomes it recorded; each published layer kept once, by its hash (a
+  // reading's body stays in the snapshot store, by the same hash). Rows are added, never updated or deleted.
+  `
+  CREATE TABLE publication (
+    seq INTEGER PRIMARY KEY,
+    hash TEXT NOT NULL UNIQUE,
+    about TEXT NOT NULL,
+    author TEXT NOT NULL,
+    appended_at TEXT NOT NULL,
+    body TEXT NOT NULL,
+    scores TEXT
+  );
+  CREATE INDEX publication_about ON publication(about);
+  CREATE INDEX publication_author ON publication(author);
+  CREATE TABLE published_layer (
+    sha256 TEXT PRIMARY KEY,
+    petal TEXT NOT NULL,
+    about TEXT NOT NULL,
+    body TEXT,
+    first_seq INTEGER NOT NULL
+  );
+  CREATE INDEX published_layer_about ON published_layer(about);
+  `,
 ];
 
 /**
