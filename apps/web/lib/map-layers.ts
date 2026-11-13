@@ -6,6 +6,7 @@
 import type { Claim } from '@petal/core/types';
 import { dateLabel } from './flower-view.ts';
 import { claimWho } from './map-claims.ts';
+import type { CardAuthor, CardLayer } from './map-strata.ts';
 import { type MapCard, makerWords } from './maps.ts';
 import { dollars, sourceName } from './value-view.ts';
 
@@ -34,7 +35,13 @@ export interface CardProposals {
   period?: { from: string; to: string } | null;
 }
 
-export type LayerCard = Pick<MapCard, 'readings' | 'value'> & { proposals?: CardProposals | null };
+export type LayerCard = Pick<MapCard, 'readings' | 'value'> & {
+  proposals?: CardProposals | null;
+  /** wave 8 (composition.md §9): every layer anyone published, their authors, and how many slots differ */
+  layers?: readonly CardLayer[];
+  authors?: readonly CardAuthor[];
+  differs?: number;
+};
 
 export const layerWords = {
   title: 'Layers',

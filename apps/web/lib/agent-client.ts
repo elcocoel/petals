@@ -2,7 +2,7 @@
 // Everything else gets plain values and agent events, so views and ViewModels hold no URLs, no status
 // codes and no `fetch`. layers.test.ts names this file as the only one in lib/ allowed to call it.
 
-import type { Blocs, Credit as CreditRecord } from '@petal/core';
+import type { Blocs, Credit as CreditRecord, SeamPiece } from '@petal/core';
 import type {
   AgentEvent,
   ChatMessage,
@@ -17,6 +17,7 @@ import type {
   View,
 } from '@petal/core/types';
 import type { Proposal } from '@petal/core/wedge/votes';
+import type { FlowerReading } from '../flower/model.ts';
 import type { BenchLandscape } from '../landscape/land.ts';
 import type { ConnectedAgent } from './agents.ts';
 import type { AnnotationRow } from './claim-lines.ts';
@@ -561,6 +562,42 @@ export async function readShared(a: string, b: string): Promise<string[]> {
   return (json.accounts ?? []).flatMap((x) =>
     x.account_a ? [x.account_a, x.account_a.slice(x.account_a.lastIndexOf(':') + 1)] : [],
   );
+}
+
+/** A composed reading as the server gives it: the reading the map draws, its pieces, and what it was composed from. */
+export interface ComposedReading {
+  title: string;
+  petals: FlowerReading['petals'];
+  given?: SeamPiece[];
+  pieces?: string[];
+  composed_from?: readonly string[];
+  /** who stated each value (composition.md §9): per piece and participant, its authors, and the values that differ */
+  credit?: {
+    pieces?: Record<
+      string,
+      Record<
+        string,
+        { by?: readonly string[]; differs?: readonly { value: string; by: readonly string[] }[] }
+      >
+    >;
+    authors?: Record<string, { name?: string | null; imported?: boolean }>;
+  };
+}
+
+/**
+ * A map's reading composed from the layers on (GET /api/v1/maps/:id/reading, composition.md §9; Elco, wave 8: "results
+ * should be deterministic"): what the map draws for them, in the person's view. Null when it can't be read.
+ */
+export async function readComposed(
+  map: string,
+  layers: readonly string[],
+  view: string,
+): Promise<ComposedReading | null> {
+  const q = new URLSearchParams({ layers: layers.join(','), view });
+  const res = await fetch(`/api/v1/maps/${encodeURIComponent(map)}/reading?${q}`).catch(() => null);
+  if (!res?.ok) return null;
+  const json = (await res.json().catch(() => null)) as ComposedReading | null;
+  return json?.petals ? json : null;
 }
 
 /** A map's card (GET /api/v1/maps/:id), for its layers in the map's Information box: null when it can't be read. */

@@ -14,6 +14,13 @@ export interface WalletView {
   facts: [string, string][];
   /** its dollars where priced, and where that price was read */
   worth: { text: string; source: string; link?: string } | null;
+  /** where authors stated different values for it (wave 8): each piece, who stated the value drawn, and each other
+   * value with who stated it */
+  differs?: readonly {
+    what: string;
+    drawnBy: string;
+    values: readonly { value: string; by: string }[];
+  }[];
 }
 
 export const walletWords = {
@@ -23,6 +30,11 @@ export const walletWords = {
   kind: 'Kind',
   holds: 'Holds',
   share: 'Share',
+  /** Where authors differ (composition.md §5): both stand, read-only. Drafts. */
+  differ:
+    'Authors differ here. Both values stand and anyone can check; two reads of one block should agree, so one is probably wrong.',
+  value: (value: string, by: string) => `${value} by ${by}`,
+  drawn: (by: string) => `drawn as ${by} stated it`,
 } as const;
 
 /** 0.081877 → 8.19%; under a tenth of a percent, said so. */
@@ -51,4 +63,47 @@ export function walletView(
     ],
     worth: worth && worth !== 'no price' ? worth : null,
   };
+}
+
+/** An account by its address alone, as a petal may name it and as credit/v1 names it (CAIP-10). */
+const bare = (id: string) => (id.split(':').at(-1) ?? id).toLowerCase();
+
+/**
+ * Where authors stated different values for a wallet (composition.md §5, §9 credit): each piece, its values and who
+ * stated each, named as the map's authors say. Read-only; none erased.
+ */
+export function differsOf(
+  credit:
+    | {
+        pieces?: Record<
+          string,
+          Record<
+            string,
+            {
+              by?: readonly string[];
+              differs?: readonly { value: string; by: readonly string[] }[];
+            }
+          >
+        >;
+        authors?: Record<string, { name?: string | null }>;
+      }
+    | undefined,
+  participant: string,
+  wordsOf: (piece: string) => string,
+): { what: string; drawnBy: string; values: { value: string; by: string }[] }[] {
+  const names = credit?.authors ?? {};
+  const who = (a: string) => names[a]?.name ?? bare(a);
+  const out: { what: string; drawnBy: string; values: { value: string; by: string }[] }[] = [];
+  for (const [piece, byParticipant] of Object.entries(credit?.pieces ?? {})) {
+    const key = Object.keys(byParticipant).find((k) => bare(k) === bare(participant));
+    const entry = key ? byParticipant[key] : undefined;
+    const differs = entry?.differs;
+    if (!differs || differs.length === 0) continue;
+    out.push({
+      what: wordsOf(piece),
+      drawnBy: (entry?.by ?? []).map(who).join(', '),
+      values: differs.map((d) => ({ value: d.value, by: d.by.map(who).join(', ') })),
+    });
+  }
+  return out;
 }

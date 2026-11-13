@@ -29,6 +29,7 @@ import { MapClaims } from '../components/MapClaims.tsx';
 import { MapLayers } from '../components/MapLayers.tsx';
 import { MapProposal } from '../components/MapProposal.tsx';
 import { MapSearch } from '../components/MapSearch.tsx';
+import { MapStrata } from '../components/MapStrata.tsx';
 import { FloatBox } from '../components/ui/FloatBox.tsx';
 import { IconButton } from '../components/ui/IconButton.tsx';
 import { NavItem } from '../components/ui/NavItem.tsx';
@@ -43,12 +44,14 @@ import type { Rect, Size } from '../lib/float-box.ts';
 import { mapClaimGroups, mapClaimWords } from '../lib/map-claims.ts';
 import { layerWords, mapLayers } from '../lib/map-layers.ts';
 import { MAP_SEARCH_ID, mapSearchWords, type SearchRow, searchRows } from '../lib/map-search.ts';
+import { authorSwatches, strataOf, strataWords } from '../lib/map-strata.ts';
 import type { CanvasHit } from '../lib/panel-view.ts';
 import { panelWords } from '../lib/panel-words.ts';
 import { CHOOSABLE } from '../lib/person-view.ts';
 import { proposalView, proposalWords } from '../lib/proposal-view.ts';
 import { type LegendEdit, onlyWhatDraws } from '../lib/view-edit.ts';
-import { walletView, walletWords } from '../lib/wallet-view.ts';
+import { differsOf, walletView, walletWords } from '../lib/wallet-view.ts';
+import { useComposed } from '../viewmodels/useComposed.ts';
 import { useFloatBoxes } from '../viewmodels/useFloatBoxes.ts';
 import { useLegendEdit } from '../viewmodels/useLegendEdit.ts';
 import { useMapBlocs } from '../viewmodels/useMapBlocs.ts';
@@ -185,6 +188,19 @@ function gradeWords(
     to: `${high} ${say(hi)}`,
     fills: grades(hue).map((k) => k.hex),
   };
+}
+
+/**
+ * A publication that has just joined the map (WORKSPACE hands it after the press; wave 8: "publishing is the moment
+ * your layer joins the map in your name"): which map, its hash, its author, its documents. The map reads its layers
+ * and its composed reading again, and Information lights the documents it brought.
+ */
+export interface MapJoined {
+  map: string;
+  publication: string;
+  author: string;
+  documents: readonly { sha256: string; petal: string; what: string }[];
+  at: number;
 }
 
 /** A reading just made, for the map (LandscapeCanvas `landed`; WORKSPACE hands it from the conversation's turn). */
@@ -457,6 +473,7 @@ export function LandscapeCanvas({
   placeholder = null,
   progress = null,
   landed = null,
+  joined = null,
 }: {
   data: {
     flowers: CanvasFlower[];
@@ -521,6 +538,8 @@ export function LandscapeCanvas({
    * its flower is drawn from it; a completely new one stands where its placeholder stood.
    */
   landed?: MapLanded | null | undefined;
+  /** a publication that has just joined the map (WORKSPACE, wave 8): read again, and lit in Information */
+  joined?: MapJoined | null | undefined;
   /** What the page says about where it is (a map's page: what it maps, its worth, its readings), first in Information. */
   information?: { title: string; body: ReactNode } | undefined;
   /**
@@ -531,11 +550,37 @@ export function LandscapeCanvas({
 }) {
   // a reading just made lands on the map: a new layer of a map that's here, or a new map in its placeholder's place
   const person = usePersonView();
+  // a publication joining the map reads its layers and its composed reading again (wave 8)
+  const version = joined?.publication ?? '';
+  // the map's layers you switch, kept for the visit (wave 8, Elco: "how different data layers from different people
+  // contribute to fuller and fuller maps"): the map you're in and its layers, and the ones off; all on, the map draws
+  // its own reading
+  const [strata, setStrata] = useState<{ map: string; ids: readonly string[] } | null>(null);
+  const [layersOff, setLayersOff] = useState<ReadonlySet<string>>(() => new Set());
+  const layersOn = useMemo(() => {
+    if (!strata || layersOff.size === 0) return null;
+    return strata.ids.filter((id) => !layersOff.has(id));
+  }, [strata, layersOff]);
+  const composed = useComposed(strata?.map ?? null, layersOn, person.hash, version);
+  // the composed reading lands on its flower as a reading just made does (LOOK draws it, petals gliding)
+  const composedLanded = useMemo<MapLanded | null>(() => {
+    if (!composed || !strata) return null;
+    const f = given.flowers.find((x) => x.map === strata.map);
+    if (!f) return null;
+    return {
+      chain: f.place.chain,
+      name: f.name,
+      reading: { title: '', petals: composed.petals },
+      map: strata.map,
+      pieces: composed.pieces,
+      given: composed.given,
+    };
+  }, [composed, strata, given]);
   // and dressed in the person's view in the browser, at once (core redress; Elco, wave 4: after a change in Tools
   // the map redraws without the second's wait): the server's reading in that view comes after and draws the same
   const data = useMemo(
-    () => dressedIn(withLanded(given, landed), person.view),
-    [given, landed, person.view],
+    () => dressedIn(withLanded(withLanded(given, landed), composedLanded), person.view),
+    [given, landed, composedLanded, person.view],
   );
   // 'edit' (the Power Map, Elco, 11 Nov: "switch the legends live and watching the map adapt"): Settings' own
   // hands, for anyone: a person's view is kept on the server, a visitor's by its hash in their browser (Elco,
@@ -839,7 +884,46 @@ export function LandscapeCanvas({
   }, []);
   const claims = useMapClaims(legend ? (inFlower?.map ?? null) : null);
   // the map's layers, each with its period and who mapped it (Elco's walk 3), from its card and its insights
-  const card = useMapCard(legend && movable ? (inFlower?.map ?? null) : null);
+  const card = useMapCard(legend && movable ? (inFlower?.map ?? null) : null, version);
+  // the map's layers as strata, each first author in their colour (wave 8; SYSTEMS's layers and authors)
+  const strataLayers = useMemo(
+    () => (card?.layers && card.authors ? strataOf(card.layers, card.authors) : null),
+    [card],
+  );
+  const swatches = useMemo(
+    () => (strataLayers && card?.authors ? authorSwatches(strataLayers, card.authors) : undefined),
+    [strataLayers, card],
+  );
+  // the map you're in names the strata the switches act on
+  const strataMap = inFlower?.map ?? null;
+  useEffect(() => {
+    const ids = strataLayers?.map((l) => l.id) ?? null;
+    setStrata((now) => {
+      if (!strataMap || !ids) return null;
+      if (now && now.map === strataMap && now.ids.join() === ids.join()) return now;
+      return { map: strataMap, ids };
+    });
+  }, [strataMap, strataLayers]);
+  // another map, all its layers on again
+  // biome-ignore lint/correctness/useExhaustiveDependencies: a new map is what resets them
+  useEffect(() => {
+    setLayersOff(new Set());
+  }, [strataMap]);
+  // a publication that joins the map you're in opens Information on it
+  useEffect(() => {
+    if (joined && joined.map === strataMap) setClaimsOpen(true);
+  }, [joined, strataMap]);
+  // where authors differ, the map's credit says who stated which value: read once, all layers on (wave 8)
+  const creditRead = useComposed(
+    card?.differs ? strataMap : null,
+    card?.differs && strata ? strata.ids : null,
+    person.hash,
+    version,
+  );
+  const joinedHere = useMemo(
+    () => new Set(joined && joined.map === strataMap ? joined.documents.map((d) => d.sha256) : []),
+    [joined, strataMap],
+  );
   const layers = useMemo(() => (card ? mapLayers(card, claims) : []), [card, claims]);
   // the wallet chosen on the map, its own facts first in Information (WORKSPACE, wave 4: the same on /make)
   const chosenWallet = wallet
@@ -1147,7 +1231,14 @@ export function LandscapeCanvas({
                   <div className="flex flex-col px-space-8">
                     <SectionHead size="panel" title={walletWords.title} />
                     <div className="px-space-8 py-space-8">
-                      <WalletFacts view={walletView(chosenWallet, card?.value)} />
+                      <WalletFacts
+                        view={{
+                          ...walletView(chosenWallet, card?.value),
+                          differs: differsOf(creditRead?.credit, chosenWallet.id, (w) =>
+                            panelWords.settings.piece(w),
+                          ),
+                        }}
+                      />
                     </div>
                   </div>
                 )}
@@ -1167,13 +1258,43 @@ export function LandscapeCanvas({
                     </div>
                   </div>
                 )}
-                {layers.length > 0 && (
+                {strataLayers && strataLayers.length > 0 ? (
+                  // the map's layers as strata, each switchable (wave 8)
                   <div className="flex flex-col px-space-8">
-                    <SectionHead size="panel" title={layerWords.title} />
+                    <SectionHead size="panel" title={strataWords.title} />
                     <div className="px-space-8 py-space-8">
-                      <MapLayers layers={layers} />
+                      <MapStrata
+                        layers={strataLayers}
+                        on={
+                          new Set(strataLayers.map((l) => l.id).filter((id) => !layersOff.has(id)))
+                        }
+                        onToggle={(id) =>
+                          setLayersOff((now) => {
+                            const next = new Set(now);
+                            if (next.has(id)) next.delete(id);
+                            else next.add(id);
+                            return next;
+                          })
+                        }
+                        joined={joinedHere}
+                        swatches={swatches}
+                      />
+                      {card?.differs ? (
+                        <p className="my-0 pt-space-8 type-ui text-muted">
+                          {strataWords.differs(card.differs)}
+                        </p>
+                      ) : null}
                     </div>
                   </div>
+                ) : (
+                  layers.length > 0 && (
+                    <div className="flex flex-col px-space-8">
+                      <SectionHead size="panel" title={layerWords.title} />
+                      <div className="px-space-8 py-space-8">
+                        <MapLayers layers={layers} />
+                      </div>
+                    </div>
+                  )
                 )}
                 {showClaims && insightsOn && (
                   <>
