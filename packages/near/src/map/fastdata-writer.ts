@@ -138,7 +138,10 @@ export function fastDataWriter(
   deps: WriterDeps = {},
 ): MapWriter {
   if (cfg.network !== 'testnet')
-    throw new NearError('internal', 'fastDataWriter: testnet only; mainnet writes need the operator’s OK');
+    throw new NearError(
+      'internal',
+      'fastDataWriter: testnet only; mainnet writes need the operator’s OK',
+    );
   const provider = deps.provider ?? new JsonRpcProvider({ url: deps.rpcUrl ?? RPC_URLS.testnet });
   const kv = kvClient(cfg.network, deps.kv);
   const confirmTimeoutMs = deps.confirmTimeoutMs ?? 30_000;
