@@ -1,4 +1,4 @@
 {
-  "about": "Elco's words for the landing, typed on the page (?edit=1 on a local server, app/edit/CopyEditor.tsx). Each is a field's path in lib/landing-copy.ts and its words; they win over the ones written there.",
+  "about": "The landing's approved words, typed on the page (?edit=1 on a local server, app/edit/CopyEditor.tsx). Each is a field's path in lib/landing-copy.ts and its words; they win over the ones written there.",
   "words": {}
 }

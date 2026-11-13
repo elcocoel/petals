@@ -1,4 +1,4 @@
-// The behaviour tree: Elco's "css subclasses". A parent is one attribute, `data-b`, on a component's root,
+// The behaviour tree, like CSS subclasses. A parent is one attribute, `data-b`, on a component's root,
 // from the minimal set. A child is one thing that parent learned to do in a version, and it can't exist
 // without a row here: apps/web/test/behaviours.test.ts holds the stylesheet and JoyLayer to this table.
 // `?off=<parent>` strips the attribute, and everything below it falls back to v1.
