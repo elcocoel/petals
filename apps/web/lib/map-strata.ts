@@ -40,8 +40,8 @@ export interface StrataLayer {
   authors: readonly StrataAuthor[];
   /** when it was read (collected-at), in words */
   read: string | null;
-  /** how many layers it was built on */
-  builtOn: number;
+  /** the layers it was built on, by hash: named by their title where they're layers of this map */
+  from: readonly { id: string; title: string | null }[];
   /** the account that first published it: its stratum's colour */
   firstBy?: string | null;
 }
@@ -60,7 +60,10 @@ export const strataWords = {
     `on this map: ${first.toLocaleString('en-US')} added first · ${confirmed.toLocaleString('en-US')} confirmed · ${builtOn.toLocaleString('en-US')} built on it`,
   imported: 'imported, unsigned',
   read: (when: string) => `read ${when}`,
-  builtOn: (n: number) => (n === 1 ? 'built on 1 layer' : `built on ${n} layers`),
+  builtOn: 'built on',
+  /** the version you're seeing: the rule that composed it and the publications it was composed from */
+  version: (rule: string, n: number) =>
+    `This version: ${n.toLocaleString('en-US')} ${n === 1 ? 'publication' : 'publications'} composed by ${rule}`,
   joined: 'Just added, in your name',
   differs: (n: number) =>
     `${n.toLocaleString('en-US')} ${n === 1 ? 'fact differs' : 'facts differ'} between authors on this map: both values stand, and anyone can check. Two reads of one block should agree, so one is probably wrong.`,
@@ -89,14 +92,16 @@ export function authorsLine(authors: readonly StrataAuthor[]): string {
   return [strataWords.by(one(first)), ...rest.map((a) => strataWords.and(one(a)))].join(' ');
 }
 
-/** A layer's line under its title: its kind and standing, what it covers, when it was read, what it rests on. */
+/** A hash said by its ends, as a layer or a publication is named where it has no title. */
+export const shortHash = (h: string) => `${h.slice(0, 8)}…${h.slice(-6)}`;
+
+/** A layer's line under its title: its kind and standing, what it covers, when it was read. */
 export function strataLine(l: StrataLayer): string {
   return [
     l.kind,
     l.standing ? strataWords.standing[l.standing] : null,
     l.covers,
     l.read ? strataWords.read(l.read) : null,
-    l.builtOn > 0 ? strataWords.builtOn(l.builtOn) : null,
   ]
     .filter(Boolean)
     .join(' · ');
@@ -114,6 +119,8 @@ export interface CardLayer {
   source?: string | { name?: string } | null;
   /** its authors' accounts, first to last */
   by?: readonly string[];
+  /** the layers it was built on, by hash */
+  from?: readonly string[];
   first?: { author: string; publication: string; published_at: string } | null;
 }
 export interface CardAuthor {
@@ -204,6 +211,10 @@ export function strataOf(
           : null,
     };
   };
+  // a layer of this map is named by its title, as its own row is
+  const titled = new Map(
+    layers.map((l) => [l.sha256, l.title ? shortAddresses(l.title) : kindOf(l.petal)] as const),
+  );
   return [...layers]
     .sort(
       (a, b) =>
@@ -221,7 +232,7 @@ export function strataOf(
         named(account, i === 0 && l.first ? day(l.first.published_at) : null),
       ),
       read: l.collected_at ? day(l.collected_at) : null,
-      builtOn: 0,
+      from: (l.from ?? []).map((id) => ({ id, title: titled.get(id) ?? null })),
       firstBy: l.first?.author ?? l.by?.[0] ?? null,
     }));
 }

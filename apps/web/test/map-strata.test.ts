@@ -7,8 +7,10 @@ import {
   authorsLine,
   type CardAuthor,
   type CardLayer,
+  shortHash,
   strataLine,
   strataOf,
+  strataWords,
 } from '../lib/map-strata.ts';
 
 const layers: CardLayer[] = [
@@ -99,5 +101,30 @@ describe('a layer’s title as the record gives it', () => {
     );
     expect(l?.title).toBe('named 0x35b2…36f1');
     expect(l?.kind).toBe('a claim');
+  });
+});
+
+describe('what a layer was built on, and the version you see', () => {
+  test('each layer it was built on: by its title where it is a layer of this map, else by its hash', () => {
+    const outside = 'f'.repeat(64);
+    const [names] = strataOf(
+      [{ ...(layers[0] as CardLayer), from: ['a'.repeat(64), outside] }, layers[1] as CardLayer],
+      authors,
+    ).filter((l) => l.id === 'b'.repeat(64));
+    expect(names?.from).toEqual([
+      { id: 'a'.repeat(64), title: 'RaidGuild members and their shares' },
+      { id: outside, title: null },
+    ]);
+  });
+  test('none recorded, none said', () => {
+    expect(strataOf(layers, authors).every((l) => l.from.length === 0)).toBe(true);
+  });
+  test('a hash by its ends; the version by its rule and how many publications', () => {
+    expect(shortHash('9ba270a1ef913d93479444c7c0654f5c0a9e19fc5dce39f4ffbc82881efa146a')).toBe(
+      '9ba270a1…fa146a',
+    );
+    expect(strataWords.version('compose/v1', 1)).toBe(
+      'This version: 1 publication composed by compose/v1',
+    );
   });
 });

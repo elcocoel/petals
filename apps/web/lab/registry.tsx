@@ -3998,7 +3998,7 @@ export const registry: LabEntry[] = [
                   covers: 'Gnosis block 37,912,004 · 9 Nov 2026',
                   authors: [{ name: "Petals' mapping", signed: false, published: '9 Nov' }],
                   read: '9 Nov 2026',
-                  builtOn: 0,
+                  from: [],
                 },
                 {
                   id: 'a2',
@@ -4008,7 +4008,7 @@ export const registry: LabEntry[] = [
                   covers: '3 Feb 2021 to 11 Nov 2026',
                   authors: [{ name: "Petals' mapping", signed: false, published: '11 Nov' }],
                   read: '11 Nov 2026',
-                  builtOn: 0,
+                  from: [],
                 },
                 {
                   id: 'a3',
@@ -4021,12 +4021,19 @@ export const registry: LabEntry[] = [
                     { name: 'raid.near', signed: true, published: '13 Nov' },
                   ],
                   read: '12 Nov 2026',
-                  builtOn: 1,
+                  from: [{ id: 'a1', title: 'RaidGuild members and their shares' }],
                 },
               ]}
               on={new Set(['a1', 'a2', 'a3'])}
               onToggle={() => undefined}
               joined={new Set(['a3'])}
+              version={{
+                rule: 'compose/v1',
+                from: [
+                  '9ba270a1ef913d93479444c7c0654f5c0a9e19fc5dce39f4ffbc82881efa146a',
+                  '3c51f0e2a8b94d7c11e05a6f2d93b8e4c7a1f0d2e5b8c9a3f6e1d4b7a0c3e9f2',
+                ],
+              }}
             />
           </div>
         ),
@@ -4045,7 +4052,7 @@ export const registry: LabEntry[] = [
                   covers: 'Gnosis block 37,912,004 · 9 Nov 2026',
                   authors: [{ name: "Petals' mapping", signed: false, published: '9 Nov' }],
                   read: '9 Nov 2026',
-                  builtOn: 0,
+                  from: [],
                 },
                 {
                   id: 'a2',
@@ -4055,7 +4062,7 @@ export const registry: LabEntry[] = [
                   covers: '3 Feb 2021 to 11 Nov 2026',
                   authors: [{ name: "Petals' mapping", signed: false, published: '11 Nov' }],
                   read: '11 Nov 2026',
-                  builtOn: 0,
+                  from: [],
                 },
                 {
                   id: 'a3',
@@ -4068,7 +4075,7 @@ export const registry: LabEntry[] = [
                     { name: 'raid.near', signed: true, published: '13 Nov' },
                   ],
                   read: '12 Nov 2026',
-                  builtOn: 1,
+                  from: [{ id: 'a1', title: 'RaidGuild members and their shares' }],
                 },
               ]}
               on={new Set(['a1', 'a3'])}
