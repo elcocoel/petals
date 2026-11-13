@@ -143,6 +143,29 @@ A deterministic summary per author, built from the record alone, shaped so a fut
 
 A format not in this table can be published as a layer, but it gives no facts until a later `compose` version adds its rule.
 
+## 9. The API (answers, additive; the formats above are what's stored and signed)
+
+- **Before a press: `GET /api/v1/publish/data?map=`.** Each layer the press would publish: `{ sha256, petal, title, cases }`, where `cases` is `{ new_data: { whats }, new_moment: { states: [{ state, newest }] }, new_subjects: { count }, match: { count, authors }, differs: { count, authors } }`. `authors` are `[{ author, name }]`, the ones already credited. `totals` has the same `cases`, summed for the whole publication.
+- **Prepare: `POST /api/v1/publish/prepare { map, layers?, via? }`.**
+  - It answers `{ publication, sha256, text, recipient?, nonce? }`: the unsigned `publication/v1`, the hash of its canonical JSON, and the text the wallet signs (section 2).
+  - `via` comes from the page, as the person says it ("Mapped with Petals' agent"). It is inside what they sign.
+- **Publish: `POST /api/v1/publish/data { sha256, proof }`.**
+  - `proof` is `{ standard: 'nep413' | 'eip191' | 'ed25519', signature, public_key?, nonce? }`.
+  - It answers `{ publication, layers: [{ sha256, petal }], totals }`, where `publication` is the signed record's hash.
+- **The map's layers: `GET /api/v1/maps/:id` adds three things:**
+  - `layers: [{ sha256, petal, title, whats, states, collected_at, source, by, first }]`, newest state first, where `by` is the authors, first to last, and `first` is `{ author, publication, published_at }`;
+  - `authors: [{ author, name, imported }]`;
+  - `differs`: how many slots.
+- **A composed reading: `GET /api/v1/maps/:id/reading?layers=&at=&view=`.**
+  - The reading the map draws (`title`, `petals`, `given`), for the layers on (all by default) at a moment (the newest by default).
+  - `credit` comes beside it:
+    - `pieces[piece][participant]`: `{ by, first, differs? }`, where `differs` is `[{ value, by }]`;
+    - `petals[participant]`: the publication that first brought it;
+    - `publications[hash]`: `{ author, published_at }`;
+    - `authors[author]`: `{ name, imported }`.
+  - It also gives `composed_from` and `rule`. The same query always gives the same answer.
+- **Credit: `GET /api/v1/me/credit` and `GET /api/v1/credit/:account`.** The author's `credit/v1`, with its `hash`. NEAR Social's copy under the author's account (`petals/credit`) holds `{ hash, points, site }`, and anyone can recompute it here.
+
 ## What this changes, in order (nothing merges before Elco's OK)
 
 1. **Core:** `publication/v1` and `credit/v1`, each with its schema, fixture and pin; `factsOf`, `compose` and `creditOf`, pure, with golden fixtures. The fixtures are two real authors on one map: RaidGuild, with Elco's published names and Petals' mapping's reading. The check runs them.
