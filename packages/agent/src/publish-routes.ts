@@ -3,6 +3,9 @@
 // signed by one of their wallets, at once and credited to it (@petal/tools publish-data.ts holds the what;
 // this holds who and the signature).
 //
+//   GET  /api/v1/publish/data?maps=all     { author, maps: [{ about, name, layers }], left }: the maps where one press
+//                                          over many would publish something (&author=, default the wallet signed
+//                                          in), from the press's own dry run: no nonce, no draft
 //   GET  /api/v1/publish/data?map=<id>     { about, name, ready, claims, readings, private, published, adds,
 //                                          layers: [{ sha256, petal, title, cases }], totals }: what one press
 //                                          would publish, what each layer adds to the map, and what stays back
@@ -82,6 +85,36 @@ export function publishRoutes(d: PublishDeps): Hono {
   app.get('/api/v1/publish/data', async (c) => {
     const who = await whoOf(c);
     if (!who) return signIn(c);
+    // the maps where one press would publish something, before any press: the press's own dry run, kept nowhere
+    if (c.req.query('maps') === 'all') {
+      const author = c.req.query('author') || who.by;
+      try {
+        const authors = await d.gate.authorsOf(who.owner);
+        const dry = await preparePress(
+          d.tools,
+          { owner: who.owner, authors },
+          'all',
+          author,
+          d.site.hostname,
+          { dry: true },
+        ).catch((e: unknown) => {
+          // nothing to publish anywhere is an answer here, not a failure
+          if (fromThrown(e).error.code === 'not_found') return null;
+          throw e;
+        });
+        return ok(c, {
+          author: dry?.manifest.author ?? author,
+          maps: (dry?.publications ?? []).map((p) => ({
+            about: p.about,
+            name: p.name,
+            layers: p.publication.layers.length,
+          })),
+          left: dry?.left ?? [],
+        });
+      } catch (e) {
+        return failed(c, e);
+      }
+    }
     const map = mapIdOf(c.req.query('map') ?? '');
     if (!map) return fail(c, 'bad_input', 'map is the map’s address');
     try {

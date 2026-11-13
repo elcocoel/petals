@@ -134,8 +134,21 @@ describe('one press over many maps (manifest/v1)', () => {
     await w.signIn(alice);
     const me = await owner(w);
     const [m1, m2] = w.maps as [string, string];
+    // with nothing kept, nothing to press
+    expect((await w.request('/api/v1/publish/data?maps=all')).body).toMatchObject({
+      author: ALICE,
+      maps: [],
+    });
     const l1 = await keepLayer(w.ctx, me, m1, '3');
     const l2 = await keepLayer(w.ctx, me, m2, '5');
+    // before the press: the maps it would publish, read-only
+    const ahead = (await w.request('/api/v1/publish/data?maps=all')).body;
+    expect(ahead.maps.map((m: Out) => [m.about, m.layers]).sort()).toEqual(
+      [
+        [m1, 1],
+        [m2, 1],
+      ].sort(),
+    );
 
     const prep = (
       await w.request('/api/v1/publish/data/prepare', 'POST', { maps: [m1, m2], author: ALICE })
