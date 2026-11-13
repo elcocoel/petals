@@ -924,7 +924,17 @@ export function LandscapeCanvas({
     ? (inFlower?.reading.petals.find((p) => p.id === wallet) ?? null)
     : null;
   const blocs = useMapBlocs(legend ? (inFlower?.map ?? null) : null, span);
-  const choices = useMemo(() => (blocs ? blocChoices(blocs) : []), [blocs]);
+  // a bloc is offered only where its members are petals of the flower drawn (flow 15)
+  const choices = useMemo(
+    () =>
+      blocs && inFlower
+        ? blocChoices(
+            blocs,
+            inFlower.reading.petals.filter((p) => !p.tail).map((p) => p.id),
+          )
+        : [],
+    [blocs, inFlower],
+  );
   const lit = useMemo(() => choices.find((c) => c.id === bloc)?.members ?? null, [choices, bloc]);
   const claimGroups = useMemo(() => {
     if (!claims || claims.length === 0 || !inFlower) return [];
@@ -1109,6 +1119,7 @@ export function LandscapeCanvas({
               chosen: bloc,
               span,
               period: blocs && inFlower ? periodWords(blocs) : '',
+              elsewhere: !!blocs && blocs.blocs.length > 0 && choices.length === 0,
               onChoose: setBloc,
               // other votes are other blocs: the chosen one goes with them
               onSpan: (s) => {
