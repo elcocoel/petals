@@ -63,6 +63,8 @@ export function Lobby({
   /** The wallet this session signed in with, and the profile Petals keeps or NEAR Social's. */
   profile: {
     account: string | null;
+    /** The chain the account is on, by name; null until it's read. */
+    chain: string | null;
     social: SocialState;
     edit?: () => void;
     saved: boolean;
@@ -100,7 +102,12 @@ export function Lobby({
   return (
     <main aria-label={lobbyWords.page} data-surface="ground" className="flex h-dvh bg-surface">
       <div className="flex min-w-0 flex-1 flex-col gap-space-32 overflow-y-auto px-page-inset py-column-gap">
-        <ProfileHead account={profile.account} social={profile.social} onLeave={leave} />
+        <ProfileHead
+          account={profile.account}
+          chain={profile.chain}
+          social={profile.social}
+          onLeave={leave}
+        />
         {/* rows of two widgets, each pair the same height, titles on one line, so cards side by side align */}
         <div className="grid grid-cols-1 gap-block-gap lg:grid-cols-3">
           <div className={`grid min-w-0 ${editor ? 'lg:col-span-3' : 'lg:col-span-2'}`}>

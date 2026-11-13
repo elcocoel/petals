@@ -12,11 +12,14 @@ import { Mono } from '../ui/Mono.tsx';
 export function ProfileHead({
   account,
   social,
+  chain,
   onLeave,
 }: {
   /** The wallet this session signed in with; null until the server says. */
   account: string | null;
   social: SocialState;
+  /** The chain that wallet is on, by name; null until the server says. */
+  chain: string | null;
   /** Signs out, back to the front page. */
   onLeave?: () => void;
 }) {
@@ -51,7 +54,7 @@ export function ProfileHead({
               </Mono>
             </span>
           )}
-          {who && <Badge>{profileWords.chain}</Badge>}
+          {who && chain && <Badge>{chain}</Badge>}
           {social.kind === 'profile' && (
             <Badge>
               {social.source === 'petals' ? profileWords.inPetals : profileWords.social}

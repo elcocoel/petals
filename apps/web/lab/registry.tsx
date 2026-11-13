@@ -2622,6 +2622,7 @@ export const registry: LabEntry[] = [
         render: () => (
           <ProfileHead
             account="a-name.near"
+            chain="NEAR"
             social={{
               kind: 'profile',
               profile: { name: 'A name', about: null, avatar: null, links: [] },
@@ -2635,6 +2636,17 @@ export const registry: LabEntry[] = [
         render: () => (
           <ProfileHead
             account="02b85f8c8bbfbcc34f4d30b55724f36336768f05c27c2d7f97936e5d699018fc"
+            chain="NEAR"
+            social={{ kind: 'none' }}
+          />
+        ),
+      },
+      {
+        name: 'signed in with an Ethereum wallet',
+        render: () => (
+          <ProfileHead
+            account="0xd50ef448246cfaac93b37733b6fbe27aa1707b6b"
+            chain="Ethereum"
             social={{ kind: 'none' }}
           />
         ),

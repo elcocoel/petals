@@ -150,6 +150,10 @@ export function useLobby() {
   return {
     profile: {
       account: profile.account,
+      // the chain the account signed in on, as its own wallet row names it
+      chain: Array.isArray(wallets)
+        ? (wallets.find((w) => w.full === profile.account)?.chain ?? null)
+        : null,
       social: profile.social,
       edit: editor.open,
       saved: editor.saved,
