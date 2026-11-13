@@ -14,6 +14,8 @@ The Power Map is a collective construction: its people build it together, and no
 
 Points aren't money, and there's no token. They're proof of work for the common good: a future airdrop or governance token, even one without economic value, could read them. Anyone can work all three counts out again from the record.
 
+RaidGuild's map shows it today: two authors, Petals' own mapping, imported and unsigned, and petals.near, whose names for RaidGuild's accounts were signed by its wallet. Each has its own counts.
+
 Results read from a chain are deterministic. So the question isn't whose map wins: it's how layers from different people add up to a fuller map.
 
 ## Publishing
