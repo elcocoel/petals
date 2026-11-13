@@ -42,7 +42,7 @@ const VARIANTS: Record<ButtonVariant, string> = {
   primary: '',
   compact: 'h-row-height px-text-gap type-ui',
   secondary: 'border border-primary bg-transparent text-primary',
-  // secondary holding one icon, as wide as it is high: the hero's star beside Connect (Elco, 13 Nov)
+  // secondary holding one icon, as wide as it is high: the hero's star beside Connect
   square: 'w-control-height border border-primary bg-transparent px-0 text-primary',
   // a press that worked, in the green tone for a moment: as primary is, or edged as secondary is, so the button keeps
   // its size

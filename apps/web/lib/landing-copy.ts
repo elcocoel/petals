@@ -21,12 +21,12 @@ const written = {
   hero: {
     eyebrow: 'SEE POWER MOVE',
     title: 'Power has\na shape.\nNow you\ncan see it.',
-    /** The same words, two sentences, wrapping as the hero's column needs (HERO ART's V2, 11 Nov). */
+    /** The same words, two sentences, wrapping as the hero's column needs. */
     titleWide: 'Power has a shape.\nNow you can see it.',
     body: 'Point Petals at any wallet or contract, or just name a community, and map how power moves.',
-    /** The small button beside Connect and the setup prompt, read aloud and shown on hover (Elco, 13 Nov). */
+    /** The small button beside Connect and the setup prompt, read aloud and shown on hover. */
     star: 'Star Petals on GitHub',
-    /** The socials under the hero's buttons, in Elco's order (13 Nov), each named for the ear and on hover. */
+    /** The socials under the hero's buttons, each named for the ear and on hover. */
     socials: { github: 'GitHub', telegram: 'Telegram', twitter: 'Twitter', youtube: 'YouTube' },
     ask: {
       /** One line per chapter, in the chapters' order: the box types one, holds it, deletes it, types the next. */
@@ -54,10 +54,9 @@ const written = {
     ],
   },
   /**
-   * The hero's story (HERO ART's V2, approved by Elco 11 Nov: "BRO, 10 OUT OF 10 - LFG!!!! now its just a design
-   * issuem finesse - but get this in the hero please"): six beats, each a question and Petals' answer, word for
-   * word from design/hero-illustration/foreground-script-v2.md. The flower is a symbol: no network is named and
-   * nothing is counted. `name` is each beat's word under its tick.
+   * The hero's story: six beats, each a question and Petals' answer, word for word from
+   * design/hero-illustration/foreground-script-v2.md. The flower is a symbol: no network is named and nothing is
+   * counted. `name` is each beat's word under its tick.
    */
   heroStory: {
     you: 'You',
@@ -85,7 +84,7 @@ const written = {
     /** The history beat's line, from then to now. */
     past: 'Then',
     now: 'Now',
-    /** Drafts (LANDING, 11 Nov), for Elco: the play control's names, read aloud and shown on hover. */
+    /** The play control's names, read aloud and shown on hover. */
     pause: 'Pause',
     play: 'Play',
   },
@@ -165,9 +164,8 @@ const written = {
     next: 'Next',
   },
   /**
-   * Section 4, Version 4 draft (Elco, 11 Nov, through the design chat): word for word from
-   * design/section-4-agent-bridge.md and Figma 203:2343 (desktop) and 203:2359 (mobile). Only the line
-   * break is ours. "Click and paste" is Elco's on purpose; keep it.
+   * Section 4, Version 4: word for word from design/section-4-agent-bridge.md and Figma 203:2343 (desktop)
+   * and 203:2359 (mobile). Only the line break is ours. "Click and paste" is deliberate; keep it.
    */
   giveToAgent: {
     /** The band's one large line. */
@@ -178,7 +176,7 @@ const written = {
     copied: 'Copied',
     /** What to do next, said by a card by the button as it copies, never inside the button. */
     next: 'Paste it into your agent’s chat to get started.',
-    /** The one setup prompt, CONNECTORS's (lib/agents.ts); the page swaps in the address it's on when copying. */
+    /** The one setup prompt (lib/agents.ts); the page swaps in the address it's on when copying. */
     prompt: agentWords.setup,
   },
   gallery: {

@@ -25,14 +25,13 @@ import {
   question,
   toolsBox,
 } from '../../lib/hero-story.ts';
-// The landing's hero (HERO ART's V2, approved by Elco 11 Nov: "get this in the hero please"; HERO MOTION's
-// choreography): the approved eyebrow, headline, subline and Connect over the left of a stage the width of the
-// window, its layers apart, so the page can compose them for a phone or a wide screen (Elco, 11 Nov). In the
-// middle, one symbolic flower that performs each answer (StoryFlower), flat to the screen; the camera whips it from
-// shot to shot on each beat's one (lib/hero-shots.ts). Over it, the real Tools box, set as the flower is. In
-// front, the conversation, in one place just right of the words (Elco, 12 Nov: "keep the messages closer to each
-// other ... think of the route that an eye has to travel"): the question in a light bubble, turned in depth, and
-// Petals' answer under it in a dark box that stays, its words giving way to the next answer's.
+// The landing's hero: the eyebrow, headline, subline and Connect over the left of a stage the width of the
+// window, its layers apart, so the page can compose them for a phone or a wide screen. In the middle, one
+// symbolic flower that performs each answer (StoryFlower), flat to the screen; the camera whips it from shot to
+// shot on each beat's one (lib/hero-shots.ts). Over it, the real Tools box, set as the flower is. In front, the
+// conversation, in one place just right of the words, the messages close together so the eye travels a short
+// route between them: the question in a light bubble, turned in depth, and Petals' answer under it in a dark box
+// that stays, its words giving way to the next answer's.
 // It plays by itself (viewmodels/useHeroStory.ts). `HeroStoryView` only draws, so the lab can hand it a layer to
 // isolate. Only the stage redraws each frame.
 import { landingCopy } from '../../lib/landing-copy.ts';
@@ -51,9 +50,9 @@ import { StoryFlower } from './StoryFlower.tsx';
 
 const hero = landingCopy.hero;
 const story = landingCopy.heroStory;
-/** The one setup prompt, as the Give-to-your-agent section hands it out (CONNECTORS's piece, LANDING's words). */
+/** The one setup prompt, as the Give-to-your-agent section hands it out. */
 const setup = landingCopy.giveToAgent;
-/** The socials, in Elco's order (13 Nov: "github telegram twitter and youtube"). */
+/** The socials, in the order they show. */
 const SOCIALS = ['github', 'telegram', 'twitter', 'youtube'] as const;
 
 /** Which layers show: all of them on the page; the lab can look at the words or the flower alone. */
@@ -94,7 +93,7 @@ const leftOf = (p: Pin, z: number, deep: boolean) => {
 
 /**
  * A box on its pin: that corner of it on that point of the column, moved by its motion, at its depth, turned
- * towards the flower (Elco, 12 Nov: the 3D "more for the messages").
+ * towards the flower, so the depth is carried by the messages.
  */
 const pinned = (pin: Pin, m: Motion, deep = true): CSSProperties => {
   const side = pin.ax > 0.5 ? -1 : 1;
@@ -110,8 +109,8 @@ const pinned = (pin: Pin, m: Motion, deep = true): CSSProperties => {
 };
 
 /**
- * The page's column over the stage (Elco, 12 Nov: on a wide window the messages ran onto the headline): the story
- * is composed in it, as the words are, so it stays with them however wide the window; the world runs on past it.
+ * The page's column over the stage, so on a wide window the messages never run onto the headline: the story is
+ * composed in it, as the words are, so it stays with them however wide the window; the world runs on past it.
  */
 function Column({ children }: { children: ReactNode }) {
   return (
@@ -136,8 +135,8 @@ const GUTTER = 'px-block-gap md:px-page-inset lg:px-0';
 
 /**
  * The words: they never move, so they never redraw with the stage. Beside the stage on a wide screen; on a phone
- * or a tablet the headline, then the story, then the line under it and Connect (Elco, 12 Nov: words and stage in
- * one screen; the nav carries Connect there too), so each part is placed on its own (`order`).
+ * or a tablet the headline, then the story, then the line under it and Connect, so words and stage fit one screen
+ * (the nav carries Connect there too); each part is placed on its own (`order`).
  */
 const Intro = memo(function Intro() {
   return (
@@ -150,9 +149,8 @@ const Intro = memo(function Intro() {
         <p className="mt-block-gap mb-0 whitespace-pre-line text-pretty type-body">{hero.body}</p>
       </div>
       <div className={`order-4 mt-column-gap ${GUTTER}`}>
-        {/* Connect the one dark button; beside it, lighter, the setup prompt to copy and a smaller one with a
-            star for GitHub (Elco, 13 Nov: "connect is like the first one ... right next to it we should have
-            connect setup prompt and then a smaller button with a star") */}
+        {/* Connect the one dark button, first; beside it, lighter, the setup prompt to copy and a smaller one
+            with a star for GitHub */}
         <div className="flex flex-wrap items-center gap-space-8">
           <Button href={siteLinks.lobby} arrow>
             {hero.ask.action}
@@ -171,8 +169,8 @@ const Intro = memo(function Intro() {
             <span className="sr-only">{hero.star}</span>
           </Button>
         </div>
-        {/* Under them, the socials: just their icons, grey, no fill (Elco, 13 Nov: "they should be subtle
-            probably gray no background just the icons"); a social with no address yet does nothing. */}
+        {/* Under them, the socials, kept subtle: just their icons, grey, no fill; a social with no address yet
+            does nothing. */}
         <div className="mt-space-16 -ml-space-8 flex items-center">
           {SOCIALS.map((s) =>
             siteLinks.socials[s] ? (
@@ -237,9 +235,8 @@ function Question({
 
 /**
  * Petals' answer, the response, in a dark box across the flower from the question, that comes with the first answer
- * and stays (Elco, 12 Nov):
- * only its words change, the last answer giving way to the next word by word. Every answer sits in the same cell,
- * so the box is the size of the longest and never changes size.
+ * and stays: only its words change, the last answer giving way to the next word by word. Every answer sits in the
+ * same cell, so the box is the size of the longest and never changes size.
  */
 function Answer({
   beat,
@@ -332,9 +329,9 @@ function useTitleTop(stage: RefObject<HTMLElement | null>) {
 }
 
 /**
- * The Tools box, in the middle ground on a wide stage (Elco, 12 Nov: "it should be in the middle plane ... above the
- * petals ... behind the messages"): the map's own Tools box (HeroTools: the real ViewLegend in the real box), set as
- * the flower is, smaller than the words in front of it.
+ * The Tools box, in the middle ground on a wide stage, above the petals and behind the messages: the map's own
+ * Tools box (HeroTools: the real ViewLegend in the real box), set as the flower is, smaller than the words in front
+ * of it.
  */
 function Tools({ beat, t, top }: { beat: number; t: number; top: number }) {
   const m = toolsBox(beat, t);
@@ -363,20 +360,20 @@ export function HeroStoryView({
   return (
     <Section bleed padding="bar">
       {/*
-        The story runs the whole width of the window (Elco, 12 Nov: "it just feels like a graph in a box instead of a
-        cinematic story"), sixteen by nine; on a very wide or tall window no taller than sixteen by nine of the page's
-        width (Elco, 12 Nov: "a max height here that tries to stay within what would be a video aspect ratio"), and
-        short of the first screen, so the next band shows, with a way down to it; on a wide window the words sit over its
-        left side, in the page's column, and the story happens on the right, a little of it under the words. On a
-        phone or a tablet, the headline, then the story four by five, the question above a big flower and the
-        answer under it, then the rest of the words (Elco, 12 Nov: "purposefully layouted to work on mobile").
+        The story runs the whole width of the window, so it reads as a cinematic scene rather than a chart in a box,
+        sixteen by nine; on a very wide or tall window no taller than sixteen by nine of the page's width, so it keeps
+        a video's aspect ratio, and short of the first screen, so the next band shows, with a way down to it; on a
+        wide window the words sit over its left side, in the page's column, and the story happens on the right, a
+        little of it under the words. On a phone or a tablet, laid out for the small screen on purpose: the headline,
+        then the story four by five, the question above a big flower and the answer under it, then the rest of the
+        words.
       */}
       {/* Wide, the words and the stage share one cell, so the hero is as tall as the taller of them: words that
           outgrow a short stage push the next band down rather than run onto it. */}
       <div className="relative left-1/2 flex w-screen -translate-x-1/2 flex-col lg:grid">
         <div className="contents lg:pointer-events-none lg:relative lg:z-10 lg:col-start-1 lg:row-start-1 lg:block">
-          {/* The words a quarter of the way down the room the stage leaves them, not half (Elco, 13 Nov: "an
-              unnecessarily large amount of padding in relations to the top ... about half the size"). */}
+          {/* The words a quarter of the way down the room the stage leaves them, not half, so the space above
+              them is no larger than it needs to be. */}
           <div className="contents lg:mx-auto lg:flex lg:h-full lg:w-full lg:max-w-page-width lg:flex-col lg:px-page-inset">
             <div aria-hidden="true" className="hidden lg:block lg:flex-1" />
             <div className="contents lg:pointer-events-auto lg:block lg:w-1/3">
@@ -421,8 +418,8 @@ export function HeroStoryView({
             {/* Under the words, the world fades into the page, so what runs beneath them never fights them. */}
             <div className="pointer-events-none absolute inset-y-0 left-0 hidden w-1/2 bg-linear-to-r from-surface from-35% to-transparent lg:block" />
           </div>
-          {/* The way on to the rest of the page, at the stage's foot, nodding with the beat (Elco, 12 Nov: "little
-              arrows pointing down for people to actually look at the rest of the website"). */}
+          {/* The way on to the rest of the page, at the stage's foot, nodding with the beat: a small arrow
+              pointing down, so people go on to read the rest of the site. */}
           <div className="absolute inset-x-0 bottom-0 z-10 hidden justify-center lg:flex">
             <div style={{ translate: `0 ${n2(4 * pulse(t))}px` }}>
               <IconButton

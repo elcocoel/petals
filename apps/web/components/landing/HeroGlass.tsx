@@ -1,5 +1,5 @@
-// The hero's glass (Elco, 11 Nov: "making it feel like Minority Report ... simulating a 3D dimensionality
-// material"): the material behind its two bubbles, drawn rather than styled, like the flower, so it can be as
+// The hero's glass, a material that simulates a pane of three-dimensional glass floating over the stage: the
+// material behind its two bubbles, drawn rather than styled, like the flower, so it can be as
 // free as the story needs. A soft shadow under it; a body of glass, light for the person's question, smoked
 // ink for Petals' answer; a rim of light round its edge, brightest on the side the light comes from (the upper
 // left for the question, the flower's side for the answer, in the flower's own mint); faint scan lines in the dark

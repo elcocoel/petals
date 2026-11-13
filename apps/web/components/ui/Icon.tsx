@@ -87,7 +87,7 @@ const GLYPHS = {
   unarchive: ArrowUUpLeft,
   /** Removing something for good. */
   remove: Trash,
-  // a star given to Petals on GitHub, and the socials under the hero's buttons (Elco, 13 Nov)
+  // a star given to Petals on GitHub, and the socials under the hero's buttons
   star: Star,
   github: GithubLogo,
   telegram: TelegramLogo,
