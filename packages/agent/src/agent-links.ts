@@ -1,11 +1,11 @@
-// A person's agents, across all their projects (Elco, 9 Nov; coordinator/agent-house-test.md). The person
+// A person's agents, across all their projects. The person
 // copies one prompt into whichever agents they want; it carries an agent link, which can only wait for jobs.
 //   POST /api/v1/agents/link          signed in: a new link {id, token, created_at}, its token shown once.
 //                                     An older one keeps working until it's revoked.
 //   GET  /api/v1/agents/link          {links: [{id, created_at}]}
 //   POST /api/v1/agents/link/revoke   {id} for one, {} for all
 //   POST /api/v1/agents/disconnect    signed in: {name}, one agent, out of the list and refused from now on;
-//                                     the prompt copied into it again connects it again (Elco, 10 Nov)
+//                                     the prompt copied into it again connects it again
 //   POST /api/v1/agents/wait          Authorization: Bearer <token>, {as, worker?, wait_s?}: waits for a job
 //                                     sent to `as`, or to anyone, in any of the person's projects, takes it,
 //                                     and answers it with a continue link for its project; {job: null} if
@@ -16,7 +16,7 @@
 //   POST /api/v1/jobs/:job/hand-over  signed in, {to}: the same, for that agent; its old worker is told
 //   GET  /api/v1/agents               signed in: who's connected, one entry per worker (n: 1, 2, …),
 //                                     whether each is waiting now, and the job each holds
-// Presence is a wait that's open right now: nothing runs once the agent's session stops asking (Elco: no
+// Presence is a wait that's open right now: nothing runs once the agent's session stops asking (no
 // background service). The work itself goes through the project's continue link, as a pasted line does.
 import { randomBytes } from 'node:crypto';
 import { TOOLS_VERSION } from '@petal/core';
@@ -71,7 +71,7 @@ export class JobBell {
   }
 }
 
-/** A worker's id: petal.mjs makes it when a window or a sub-agent joins (swarm.md step 1). */
+/** A worker's id: petal.mjs makes it when a window or a sub-agent joins. */
 const WORKER = /^[A-Za-z0-9_-]{1,32}$/;
 
 /** Who's waiting right now, per person: name (lower case) and worker -> open waits. In this process only. */
@@ -218,7 +218,7 @@ export function agentLinkRoutes(d: AgentLinkDeps): Hono {
       typeof body?.wait_s === 'number' && body.wait_s >= 0 ? body.wait_s : WAIT_DEFAULT_S;
     const waitMs = Math.min(asked, WAIT_MAX_S) * 1000;
     const signal = c.req.raw.signal;
-    // what this worker says it can do, in its own words, each wait (swarm lean 2): the latest wins, null if unsaid
+    // what this worker says it can do, in its own words, each wait: the latest wins, null if unsaid
     const can = typeof body?.can === 'string' && body.can.trim() ? body.can.trim() : null;
     await store.agent.seen({ owner, name, worker, last_seen: now(), can });
     presence.enter(owner, name, worker);
@@ -240,7 +240,7 @@ export function agentLinkRoutes(d: AgentLinkDeps): Hono {
     }
   });
 
-  // -- supervision, without timers (swarm.md step 3): the person stops a job, or sends it again
+  // -- supervision, without timers: the person stops a job, or sends it again
 
   /** One of the signed-in person's jobs, from any of their projects; null for anyone else's. */
   async function ownJob(c: Context): Promise<{ owner: string; job: JobRow } | null> {
@@ -315,14 +315,14 @@ export function agentLinkRoutes(d: AgentLinkDeps): Hono {
   });
 
   /**
-   * A job as the agent gets it, with a continue link for where its work goes: its own conversation (swarm.md
-   * step 2), which now says who's on it, or the project it was handed out in, for an older job.
+   * A job as the agent gets it, with a continue link for where its work goes: its own conversation,
+   * which now says who's on it, or the project it was handed out in, for an older job.
    */
   async function delivered(job: JobRow, owner: string, name: string, worker: string | null) {
     const caller = { ...d.tools, caller: { subject: owner, door: 'agent' } };
     const workIn = job.conversation ?? job.exploration;
     const made = await makeLink(caller, workIn, 'continue');
-    // its worker's link, from now: each call through it marks the job alive (swarm.md step 3)
+    // its worker's link, from now: each call through it marks the job alive
     if (job.conversation) await store.job.handOut(job.id, made.id, now());
     const n = workerPlace(await store.agent.workers(owner), name, worker);
     touched(caller, workIn, 'take_job', name, n);
@@ -337,7 +337,7 @@ export function agentLinkRoutes(d: AgentLinkDeps): Hono {
         to: job.to,
       },
       project: { exploration: made.url, question: exploration?.question ?? null },
-      // the person's glasses (one-source.md): every flower their agent draws for them goes through these
+      // the person's glasses: every flower their agent draws for them goes through these
       view: await viewOfPerson(d.tools, owner),
     };
   }
@@ -362,7 +362,7 @@ export function agentLinkRoutes(d: AgentLinkDeps): Hono {
             presence.waiting(owner, a.name, w.worker) ||
             (i === 0 && presence.waiting(owner, a.name, null)),
           last_seen: w.last_seen,
-          // what it says it can do, in its own words (swarm lean 2), or null
+          // what it says it can do, in its own words, or null
           can: w.can,
           job: job ? { id: job.id, title: job.title, exploration: job.exploration } : null,
         };

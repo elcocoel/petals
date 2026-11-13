@@ -1,4 +1,4 @@
-// name_conversation (Elco, 10 Nov): Petals' agent names each conversation after its first answer and
+// name_conversation: Petals' agent names each conversation after its first answer and
 // renames it when the subject changes. It calls this in the same message as its answer, and a round whose
 // only calls are this one ends the turn (run.ts), so a name costs no model call of its own. One per run:
 // it knows which run it names. Only Petals' agent has it; the person's own agents send a title with

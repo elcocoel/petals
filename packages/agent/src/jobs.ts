@@ -126,7 +126,7 @@ export function runJobs(
             );
           }
           // and the person's view, the glasses every flower it draws for them is drawn through
-          // (one-source.md, step 2), so what it says about a flower is what they see
+          // so what it says about a flower is what they see
           const owner = (await privateStore(deps.tools.config).run.get(runId))?.owner ?? null;
           const tools = { ...deps.tools, view: await viewOfPerson(deps.tools, owner) };
           // and what the shared map holds, which it draws without a yes: drawing it reads nothing new
@@ -147,7 +147,7 @@ export function runJobs(
               runId,
               // its own hand_job, name_conversation and annotate, which know this run (and so its exploration)
               registry: [
-                // search_petals as this person's, so it finds their own work too (#105)
+                // search_petals as this person's, so it finds their own work too
                 ...(o.registry ?? defaultRegistry).map((t) =>
                   t.name === 'search_petals' ? searchPetalsFor(owner) : t,
                 ),

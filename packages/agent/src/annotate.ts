@@ -1,4 +1,4 @@
-// annotate (Elco, 10 Nov; annotation-layer.md step 3): Petals' agent saves what the person tells it, or what
+// annotate: Petals' agent saves what the person tells it, or what
 // it found, about an account into the person's project, in the same message as its answer: "this is Dekan's
 // wallet" becomes a name kept privately. A round whose only calls are this one and name_conversation, each
 // saved, ends the turn (run.ts), so saving costs no model call of its own; one that failed goes back to the

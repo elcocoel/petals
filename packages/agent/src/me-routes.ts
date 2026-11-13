@@ -1,4 +1,4 @@
-// A person's own, kept on this site (Elco, 10 Nov), each the person's and not a wallet's, with who saved it
+// A person's own, kept on this site, each the person's and not a wallet's, with who saved it
 // (the session's credential) and when beside it.
 //
 //   GET  /api/v1/me/view       { view, hash }: the person's view, or the default for anyone without one
@@ -20,12 +20,11 @@
 //                              conversation's project (a run's made now if it has none), or with none, theirs
 //                              in no project (exploration: null)
 //
-// The view is the glasses every petal the person sees is drawn through (one-source.md, step 1: "When the
-// user has a certain setting selected, all of the petals he will ever interact while those settings are
-// selected are going to be rendered in that way for him"). The profile holds what NEAR Social's profile
+// The view is the glasses every petal the person sees is drawn through: while a setting is selected, every
+// petal they interact with is rendered that way for them. The profile holds what NEAR Social's profile
 // holds (api2.near.social/standard.md: name, about, avatar, banner, location, links), so publishing it later
-// is a straight copy (Elco: "hold the same data shape as near.social in our DB in case the user doesn't want
-// to put it on chain"). A picture comes as a data: URI and is kept here under its sha256, as FastFS names an
+// is a straight copy (the same data shape as near.social, kept here in case the person doesn't put it on
+// chain). A picture comes as a data: URI and is kept here under its sha256, as FastFS names an
 // upload (media/{sha256}.{ext}); the profile then holds its address on this site.
 import { createHash } from 'node:crypto';
 import {
@@ -154,7 +153,7 @@ export function meRoutes(d: MeDeps): Hono {
     return row ? (JSON.parse(row.body) as View) : null;
   }
 
-  // -- annotations, from all their projects (annotation-layer.md step 5)
+  // -- annotations, from all their projects
 
   app.get('/api/v1/me/annotations', async (c) => {
     const me = await personOf(c);
@@ -262,7 +261,7 @@ export function meRoutes(d: MeDeps): Hono {
     return ok(c, { view, hash });
   });
 
-  // A visitor's own view (Elco, 12 Nov, walk 3: "is it expensive do allow me to change here too?"): kept by its
+  // A visitor's own view: kept by its
   // hash like any view, nobody's, so ?view=<hash> draws the map and its pictures in it. Signed in or not; the
   // same view twice is kept once. A person's own stays PUT /api/v1/me/view.
   app.put('/api/v1/views', bodyCap, async (c) => {
