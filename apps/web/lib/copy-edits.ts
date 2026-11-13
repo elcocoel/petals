@@ -1,6 +1,6 @@
-// Elco's words written straight on the page (Elco, 12 Nov, from the elementarycomplexity site's copy editor:
-// "write straight on the page with json"). A page's words stay in their own file; the words Elco types on the
-// page are kept beside it as a JSON of a field's path to its words ("backIt.ways.3.title": "…"), and win.
+// A page's words written straight on the page, as a JSON of edits. A page's words stay in their own file; the
+// words typed on the page are kept beside it as a JSON of a field's path to its words ("backIt.ways.3.title":
+// "…"), and win.
 // These two functions are the whole of it: list a copy's words by path, and lay the edits over it.
 
 type Copy = { readonly [key: string]: unknown } | readonly unknown[];

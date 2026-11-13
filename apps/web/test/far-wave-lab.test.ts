@@ -1,5 +1,4 @@
-// The far wave (#84) and the lines lean (#87) are on every map since 11 Nov (Elco: "let's get all the things that
-// are in lab into the systems, and into prod"): LandscapeCanvas draws them unless a page says otherwise.
+// The far wave and the lines are on every map: LandscapeCanvas draws them unless a page says otherwise.
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, test } from 'vitest';

@@ -1,4 +1,4 @@
-// What's said about a petal's account (annotation-layer.md, steps 3 and 7): each claim with what it says,
+// What's said about a petal's account: each claim with what it says,
 // how it's known, where it rests and who said it; never "verified".
 import { describe, expect, test } from 'vitest';
 import { type AnnotationRow, claimLines, noteDraft, whoSaid } from '../lib/claim-lines.ts';

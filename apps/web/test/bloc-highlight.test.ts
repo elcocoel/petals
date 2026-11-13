@@ -1,5 +1,5 @@
-// A chosen group's highlight on the map (#94): the legend's Highlight row (OVERLAYS) picks a bloc, the map
-// highlights its members inside the flower you're in (LandscapeAt.highlight), and the blocs come from SYSTEMS's
+// A chosen group's highlight on the map: the legend's Highlight row picks a bloc, the map
+// highlights its members inside the flower you're in (LandscapeAt.highlight), and the blocs come from the server's
 // GET /api/v1/maps/:id/blocs, read once per map (useMapBlocs).
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';

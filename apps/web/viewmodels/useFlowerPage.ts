@@ -1,4 +1,4 @@
-// A flower on its own page, /f/<id> or a draft's link (coordinator/one-source.md, step 4: one petal
+// A flower on its own page, /f/<id> or a draft's link (one petal
 // behaviour wherever a petal is touched). The same live flower as /make, drawn in the person's view, with
 // the same box beside it: a hover lights and swells a petal, a click selects it and opens its detail, the
 // ground lets it go, and Escape does too. Only the conversation is missing.
@@ -61,13 +61,13 @@ export function useFlowerPage(flower: PanelFlower) {
   return {
     state: {
       canvas,
-      /** its map's proposals on the ring (#93), where it has any */
+      /** its map's proposals on the ring, where it has any */
       votes,
       panel,
       selected: petal,
       petal: selected && canvasPetal(selected),
       unit: facts.units[flower.spec.selection.measure],
-      /** the selected petal's dollars at its map's price (#91) */
+      /** the selected petal's dollars at its map's price */
       worth: selected ? petalWorth(selected.amount, flower.spec.selection.measure, value) : null,
       section,
       boxOpen,

@@ -234,7 +234,7 @@ describe('the composer', () => {
       placeholder: 'A network, a DAO, a token or an address.',
     });
     expect(composer({ runId: 'r1' })).toMatchObject({ placeholder: 'A follow-up…' });
-    // that it goes on without the page is said only while a turn runs (#78)
+    // that it goes on without the page is said only while a turn runs
     expect(composer({ runId: 'r1' }).run).toBeUndefined();
     expect(composer({ runId: 'r1', busy: true })).toMatchObject({
       run: { id: 'r1', href: '/make?run=r1' },

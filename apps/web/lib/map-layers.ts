@@ -1,8 +1,7 @@
-// A map's layers, each with the period its data covers and who mapped it (Elco, 12 Nov, walk 3, Ref Finance:
-// "the user should always be aware of the data they're seeing they should know the period that is contained in
-// that data at each layer ... showing who mapped that layer"). From the map's card (SYSTEMS's GET /api/v1/maps/:id):
+// A map's layers, each with the period its data covers and who mapped it, so a person always knows the period
+// of the data they're seeing at each layer. From the map's card (GET /api/v1/maps/:id):
 // its readings (the sediments, newest first), its proposals, its price; and from what Petals' mapping says about
-// it, its insights. Each says only what its source says: a reading holds a moment, a price its day. Pure. Drafts.
+// it, its insights. Each says only what its source says: a reading holds a moment, a price its day. Pure.
 import type { Claim } from '@petal/core/types';
 import { dateLabel } from './flower-view.ts';
 import { claimWho } from './map-claims.ts';
@@ -27,7 +26,7 @@ export interface LayerLine {
 
 /**
  * What a card says of its proposals: how many, when they were read, and the span they cover, from the earliest
- * proposal's own time to the latest's (SYSTEMS's sys/cardperiod), when it says.
+ * proposal's own time to the latest's, when it says.
  */
 export interface CardProposals {
   count: number;
@@ -37,7 +36,7 @@ export interface CardProposals {
 
 export type LayerCard = Pick<MapCard, 'readings' | 'value'> & {
   proposals?: CardProposals | null;
-  /** wave 8 (composition.md §9): every layer anyone published, their authors, and how many slots differ */
+  /** (composition.md §9): every layer anyone published, their authors, and how many slots differ */
   layers?: readonly CardLayer[];
   authors?: readonly CardAuthor[];
   differs?: number;

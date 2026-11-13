@@ -1,7 +1,6 @@
-// The side panel's width, sized by a hand at its edge (design/side-panel.md, lines 16 to 19), as VS Code's
-// sash does: dragging writes the width straight to the panel, so a drag never renders; letting go keeps
-// it, in this browser, so a reload brings it back; double-clicking puts the usual width back. The bounds
-// are lib/panel-width.ts's.
+// The side panel's width, sized by a hand at its edge, as VS Code's sash does: dragging writes the width
+// straight to the panel, so a drag never renders; letting go keeps it, in this browser, so a reload brings it
+// back; double-clicking puts the usual width back. The bounds are lib/panel-width.ts's.
 import {
   type PointerEvent as ReactPointerEvent,
   useCallback,

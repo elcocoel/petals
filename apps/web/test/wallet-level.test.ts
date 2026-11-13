@@ -1,4 +1,4 @@
-// The wallet level (Elco, 11 Nov: "Where it sits everywhere", "Its votes"): a wallet pressed inside the flower you're
+// The wallet level (where it sits everywhere, and its votes): a wallet pressed inside the flower you're
 // in is chosen; it's lit in every flower that holds it, the flowers that don't recede, and its votes colour the ring.
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';

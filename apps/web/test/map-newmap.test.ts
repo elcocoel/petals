@@ -1,5 +1,5 @@
-// Elco, 12 Nov on /make: "mapping something new is a ceremony ... if it's completely new, than we have a 'place
-// holder' ... there should be a recognizable 'state'"; while work runs the map stays, a small strip on it; the
+// On /make, mapping something new is a ceremony: a new map has a place holder and a recognizable state;
+// while work runs the map stays, a small strip on it; the
 // result lands on the map as a new layer.
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -30,7 +30,7 @@ test('the placeholder, the strip of work and the landed reading', () => {
     /progress\?: \{ map: string \| 'new'; words: string; share: number \| null \} \| null \| undefined;/,
   );
   expect(canvas).toMatch(/landed\?: MapLanded \| null \| undefined;/);
-  // a reading just made lands, and over it the reading composed from the layers on (wave 8, OVERLAYS's useComposed)
+  // a reading just made lands, and over it the reading composed from the layers on (useComposed)
   expect(canvas).toMatch(
     /\(\) => dressedIn\(withLanded\(withLanded\(given, landed\), composedLanded\), person\.view\),/,
   );
@@ -60,8 +60,8 @@ test('while a change in Tools reads the map again, a strip says so under the DAO
   expect(text('landscape/scene.ts')).toMatch(/progress\?\.at === 'map'/);
 });
 
-// Elco, wave 8: "how different data layers from different people contribute to fuller and fuller maps"; a layer
-// switched hands the map its composed reading the way a just-made one lands (OVERLAYS useComposed)
+// Data layers from different people add up to fuller and fuller maps; a layer
+// switched hands the map its composed reading the way a just-made one lands (useComposed)
 test("a reading landing on a map that's here brings its own pieces, never the replaced reading's", () => {
   const canvas = text('landscape/LandscapeCanvas.tsx');
   expect(canvas).toMatch(/pieces: landed\.pieces \?\? here\.pieces,\s+given: landed\.given,/);

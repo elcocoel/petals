@@ -1,8 +1,8 @@
-// Mapping something new is a ceremony (Elco, 12 Nov: "there should be a recognizable 'state' of when we are
-// creating a new data packet that would get published in my name"). Petals' agent explores what's there
-// for free; a fresh read waits for the person's yes (the agent's approval_required), and the conversation
-// says so in one card: what will be read, who reads it, and that it becomes theirs. Nothing expensive starts
-// until the press. While the read runs, the composer says which state the person is in. Words are drafts.
+// Mapping something new is a ceremony: a recognizable state while a new data packet is made that would be
+// published in the person's name. Petals' agent explores what's there for free; a fresh read waits for the
+// person's yes (the agent's approval_required), and the conversation says so in one card: what will be read,
+// who reads it, and that it becomes theirs. Nothing expensive starts until the press. While the read runs,
+// the composer says which state the person is in.
 
 import type { FlowerResult, MapShow } from '@petal/core/types';
 import { networkLabel, shortId } from './flower-view.ts';
@@ -10,7 +10,7 @@ import type { Held, Item } from './thread.ts';
 
 export const ceremonyWords = {
   heading: 'Map something new',
-  /** adding to a map that's already there (SYSTEMS's existing_map) */
+  /** adding to a map that's already there (the agent's existing_map) */
   addTo: (name: string | null) => (name ? `Add to ${name}` : 'Add to this map'),
   cost: (usd: number | null, seconds: number | null) =>
     [
@@ -103,7 +103,7 @@ export function making(items: readonly Item[], busy: boolean): Making | null {
   return { held: c.held, doing, flower };
 }
 
-/** What the last turn's answer is about on the Power Map (SYSTEMS's show), or null. */
+/** What the last turn's answer is about on the Power Map (the agent's show), or null. */
 export function turnShow(items: readonly Item[]): MapShow | null {
   const said = items.findLastIndex((x) => x.kind === 'user');
   const shown = items.slice(said + 1).findLast((x) => x.kind === 'show');

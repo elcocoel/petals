@@ -1,8 +1,8 @@
 // The work menu's own state, the same on the lobby and the workspace (WorkMenu): open or folded, the
-// person's projects and which of them are showing their conversations (Elco, 10 Nov), the person's agents
-// and what each is doing, and the one prompt that connects another (Elco, 9 Nov, the first full test).
+// person's projects and which of them are showing their conversations, the person's agents
+// and what each is doing, and the one prompt that connects another.
 // The agents and the projects are read when the page opens, again whenever `fresh` changes (a run ending, or a
-// conversation's change signal), and when the window comes back into focus. One timer, on Elco's ask: after
+// conversation's change signal), and when the window comes back into focus. One timer: after
 // Connect an agent, a watch for the agent joining.
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -21,7 +21,7 @@ import { agentRows, agentWords, type ConnectedAgent, type CopiedAt } from '../li
 import type { ListedConversation, ListedProject, RowRef } from '../lib/conversation-list.ts';
 import { panelWords, type SectionKey } from '../lib/panel-words.ts';
 
-/** Folded sections, kept in this browser, as the width is (design/side-panel.md, line 41). */
+/** Folded sections, kept in this browser, as the width is. */
 const FOLDED = 'petals:panel-folded';
 const SECTIONS: readonly SectionKey[] = [
   'conversations',
@@ -35,7 +35,7 @@ const SECTIONS: readonly SectionKey[] = [
 function keptFolds(): SectionKey[] {
   try {
     const kept = window.localStorage.getItem(FOLDED);
-    // Settings starts folded until the person opens it once (design/side-panel.md, line 41)
+    // Settings starts folded until the person opens it once
     if (kept === null) return ['settings'];
     const raw: unknown = JSON.parse(kept);
     return Array.isArray(raw) ? SECTIONS.filter((k) => raw.includes(k)) : [];
@@ -52,13 +52,12 @@ function keepFolds(keys: readonly SectionKey[]) {
   }
 }
 
-/** How long Connect an agent's Copied shows (design/side-panel.md, line 45). */
+/** How long Connect an agent's Copied shows. */
 const COPIED_SHOWS_MS = 2400;
 /**
- * After Connect an agent is pressed, the panel watches for the agent joining, so it shows without a reload (Elco,
- * 12 Nov: "keep a watch for the model joining for a certain amount of time after a copy click"): it looks every
- * five seconds for ten minutes, and stops the moment a new one shows. Codex took two and a half minutes from the
- * copy to joining that day; ten leaves room for a slow install.
+ * After Connect an agent is pressed, the panel watches for the agent joining, so it shows without a reload: it
+ * looks every five seconds for ten minutes, and stops the moment a new one shows. Codex took two and a half
+ * minutes from the copy to joining in a test; ten leaves room for a slow install.
  */
 const WATCH_AFTER_COPY_MS = 10 * 60_000;
 const WATCH_EVERY_MS = 5_000;
@@ -72,10 +71,10 @@ export function useWorkMenu(
   reread: () => void = () => {},
 ) {
   const router = useRouter();
-  // box.fold: the panel starts open, as an IDE's does (design/side-panel.md); the one collapse control
+  // box.fold: the panel starts open, as an IDE's does; the one collapse control
   // hides it to the bar and shows it again; a section's icon opens it, if need be, and asks for that section
   const [open, setOpen] = useState(true);
-  // a narrow window folds it back to the bar (useWorkPanel.ts; design/side-panel.md, lines 47 to 49)
+  // a narrow window folds it back to the bar (useWorkPanel.ts)
   const shut = useCallback(() => setOpen(false), []);
   const [jump, setJump] = useState<{ key: SectionKey; n: number } | null>(null);
   // sections folded to their heads; read after the first paint, so the server's page and the browser's agree
@@ -95,23 +94,23 @@ export function useWorkMenu(
   const [naming, setNaming] = useState(false);
   // where each moved conversation is now, until the list is read again and says so itself
   const [placed, setPlaced] = useState<Record<string, string | null>>({});
-  // a row's menu (design/side-panel.md, lines 24 to 29): the one open, the move dialog and its search,
+  // a row's menu: the one open, the move dialog and its search,
   // the delete dialog and why it last failed
   const [menuFor, setMenuFor] = useState<string | null>(null);
   const [moving, setMoving] = useState<RowRef | null>(null);
   const [query, setQuery] = useState('');
   const [removing, setRemoving] = useState<RowRef | null>(null);
   const [removeFailed, setRemoveFailed] = useState<string | null>(null);
-  // dragging a row onto a project (lines 30 to 32), and what a move leaves behind (line 31)
+  // dragging a row onto a project, and what a move leaves behind
   const [dragging, setDragging] = useState<string | null>(null);
   const [dropOn, setDropOn] = useState<string | null>(null);
   const [justMoved, setJustMoved] = useState<string | null>(null);
   const [said, setSaid] = useState('');
-  // archived conversations (lines 27 and 28)
+  // archived conversations
   const [archived, setArchived] = useState<ListedConversation[]>([]);
   const [archivedOpen, setArchivedOpen] = useState(false);
   const [copied, setCopied] = useState<CopiedAt | null>(null);
-  // Copied shows for a moment, then goes (design/side-panel.md, line 45)
+  // Copied shows for a moment, then goes
   useEffect(() => {
     if (!copied) return;
     const gone = setTimeout(() => setCopied(null), COPIED_SHOWS_MS);
@@ -174,7 +173,7 @@ export function useWorkMenu(
     };
   }, [signedIn, watches]);
   // and again when the person comes back to this window: an agent they connect is pasted into another window and
-  // joins while this one is away (Elco, 12 Nov: Codex "didnt show up on the ui"). An event, not a timer.
+  // joins while this one is away (a Codex agent didn't show up without it). An event, not a timer.
   useEffect(() => {
     if (!signedIn) return;
     const back = () => setReads((n) => n + 1);

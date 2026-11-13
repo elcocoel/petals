@@ -7,7 +7,7 @@ import { parseMarkdown } from './markdown.ts';
 import type { PanelFlower } from './panel-view.ts';
 import type { Row } from './thread-view.ts';
 
-/** What the view needs from GET /api/v1/explorations/:ref (design/journey-api-map.md). */
+/** What the view needs from GET /api/v1/explorations/:ref. */
 export interface ElsewherePacket {
   question: string;
   current: { spec_sha256: string; spec: Spec; short_url: string } | null;
@@ -43,8 +43,8 @@ const speakerOf = (read: ElsewhereRead) => {
 };
 
 /**
- * Drafts. Work from another door goes on in that app, not in this page's box: the thread says so where it
- * ends, and the box for a message isn't shown (Elco, 10 Nov: no dead Send, no "happening" that isn't).
+ * Work from another door goes on in that app, not in this page's box: the thread says so where it ends,
+ * and the box for a message isn't shown (no dead Send button, and no "happening" state that isn't real).
  */
 export const elsewhereWords = {
   goesOn: (who: string) =>

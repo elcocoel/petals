@@ -1,8 +1,7 @@
-// Search in /docs (Elco, 12 Nov, through META: "another feature for us to add on the docs that make us legit -> the
-// search function"), the map's box on the docs: GET /api/v1/search with kinds=doc answers the files /docs renders,
-// each by its path in the repository (a format by its schema's $id), with the sections that matched (SEARCH's side). Here each answer becomes a
-// row: the page that renders that file, the first section that matched, and the words around the match. A path
-// /docs doesn't render is left out. Pure. Words are drafts for Elco.
+// Search in /docs, the map's box on the docs: GET /api/v1/search with kinds=doc answers the files /docs renders,
+// each by its path in the repository (a format by its schema's $id), with the sections that matched. Here each
+// answer becomes a row: the page that renders that file, the first section that matched, and the words around
+// the match. A path /docs doesn't render is left out. Pure.
 import { mapSearchWords, type SearchBody } from './map-search.ts';
 
 /** The search field's id: Cmd+K puts the cursor in it. */

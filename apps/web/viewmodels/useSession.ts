@@ -69,10 +69,9 @@ export async function signIn(d: SessionDeps): Promise<void> {
 }
 
 /**
- * An EVM wallet's proof (wave 5; Elco, 12 Nov: "multi chain wallet connection ... evm is priority"): the
- * browser's own EVM wallet names its account, Petals' challenge gives the Sign-In with Ethereum text for it,
- * and the wallet signs that text. No transaction, no spend. It rejects when there's no wallet or the person
- * says no.
+ * An EVM wallet's proof: the browser's own EVM wallet names its account, Petals' challenge gives the Sign-In
+ * with Ethereum text for it, and the wallet signs that text. No transaction, no spend. It rejects when there's no
+ * wallet or the person says no.
  */
 export async function evmProof(): Promise<EvmProof> {
   const { address, chainId } = await evmAccount();
@@ -101,7 +100,7 @@ export async function signInEvm(arrived: () => void, failed: (words: string) => 
   }
 }
 
-/** A Solana wallet's proof (wave 5): the browser's Solana wallet connects, Petals' challenge gives the text, the wallet signs it. */
+/** A Solana wallet's proof: the browser's Solana wallet connects, Petals' challenge gives the text, the wallet signs it. */
 export async function solanaProof(): Promise<SolanaProof> {
   const address = await solanaAccount();
   const { message } = await solanaChallenge(address);
@@ -172,14 +171,14 @@ export function useSession(reading: boolean) {
       setFailed(null);
       void signIn(deps).finally(() => setBusy(false));
     },
-    /** The same with an EVM wallet (wave 5): one signed message, then the page loads again. */
+    /** The same with an EVM wallet: one signed message, then the page loads again. */
     connectEvm: () => {
       if (busy) return;
       setBusy(true);
       setFailed(null);
       void signInEvm(deps.arrived, setFailed).finally(() => setBusy(false));
     },
-    /** The same with a Solana wallet (wave 5). */
+    /** The same with a Solana wallet. */
     connectSolana: () => {
       if (busy) return;
       setBusy(true);
@@ -187,7 +186,7 @@ export function useSession(reading: boolean) {
       void signInSolana(deps.arrived, setFailed).finally(() => setBusy(false));
     },
     disconnect: () => {
-      // Proposal (8 Nov, fe-frontdoor): leaving the account leaves the app, back to the front page.
+      // Leaving the account leaves the app, back to the front page.
       void sessionClient.logout().then(() => window.location.assign('/'));
     },
   };

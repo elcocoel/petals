@@ -1,9 +1,8 @@
-// What Petals' own mapping says about a map's accounts (Elco, 11 Nov: "we need to design how authored claims
-// show on the map - it's part of the overlays mission"): the waves' checked claims, the same for every viewer,
+// What Petals' own mapping says about a map's accounts: the mapping runs' checked claims, the same for every viewer,
 // read from GET /api/v1/maps/:id/claims. Each as a person reads it, in the flower's box's own words
 // (lib/claim-lines.ts): what it says, how it's known (never "verified"), who said it and when; and, asked,
 // what it rests on: each piece of evidence with who found it and when, an inference's method, and what a note
-// rests on and doesn't claim. Pure. The words are drafts.
+// rests on and doesn't claim. Pure.
 import type { Claim } from '@petal/core/types';
 import { claimWords } from './claim-lines.ts';
 
@@ -90,14 +89,13 @@ const EVIDENCE: Record<string, string> = {
   note: 'a note',
 };
 
-/** Drafts (Elco changes them later). */
+/** The box's words. */
 export const mapClaimWords = {
-  // Elco, 11 Nov, walk 5: "Let's call this insights"
   title: 'Insights',
   folded: (n: number) => `Insights · ${n}`,
   mapping: "Petals' mapping",
   found: (who: string, when: string) => `found by ${who}, ${when}`,
-  // an opened claim's fields, named (Elco, 12 Nov, walk 2: "the typography inside the insight panel is confusing")
+  // an opened claim's fields, named
   fields: {
     by: 'By',
     said: 'Said',
@@ -126,8 +124,8 @@ export function toolOf(ref: string | undefined): string | null {
 }
 
 /**
- * Who answers for a claim (SYSTEMS, 12 Nov): a person who published it to the shared map, by their account
- * ('near:mainnet:<account>' in its by), or else Petals' mapping, whose by names the wave's tool or model.
+ * Who answers for a claim: a person who published it to the shared map, by their account
+ * ('near:mainnet:<account>' in its by), or else Petals' mapping, whose by names the mapping run's tool or model.
  */
 export const claimWho = (by: string | undefined): string =>
   by?.startsWith('near:') ? (by.split(':').at(-1) ?? by) : mapClaimWords.mapping;

@@ -1,9 +1,9 @@
-// The browser's half of the one place the person's view is read (coordinator/one-source.md, step 3; the
+// The browser's half of the one place the person's view is read (the
 // server's half is lib/viewer-view.ts). The root layout reads it on the server and seeds the provider
 // (app/PersonView.tsx), so nothing flashes in the default first; every live flower and picture the browser
 // draws takes it from here. Saving keeps it on the server, redraws the live flowers at once, and asks the
 // server-built pages (their tiles and pictures) again without a reload. A visitor's is kept too, by its hash,
-// the hash in their browser (lib/visitor-view.ts; Elco's walk 3).
+// the hash in their browser (lib/visitor-view.ts).
 
 import type { View } from '@petal/core/types';
 import { DEFAULT_VIEW } from '@petal/core/view';
@@ -34,8 +34,8 @@ export interface PersonViewState extends PersonView {
   /** Puts the default back. */
   reset: () => Promise<void>;
   /**
-   * A change is on its way: from the press until the server has read the pages again in it (Elco, 12 Nov, wave 3:
-   * "some form of visual feedback that something is being updated in the back").
+   * A change is on its way: from the press until the server has read the pages again in it, so the page can show
+   * that something is being updated in the back.
    */
   busy: boolean;
 }
@@ -68,7 +68,7 @@ export function usePersonViewState(initial: PersonView): PersonViewState {
   const save = useCallback(
     async (view: View) => {
       setSaving(true);
-      // the view at the press, so the live flowers redraw at once (LOOK, wave 4); the server's answer wins after,
+      // the view at the press, so the live flowers redraw at once; the server's answer wins after,
       // and a refusal puts the one before back
       let before: PersonView | null = null;
       setPerson((p) => {
@@ -78,7 +78,7 @@ export function usePersonViewState(initial: PersonView): PersonViewState {
       try {
         let kept: PersonView;
         const asVisitor = async () => {
-          // a visitor's (Elco's walk 3): kept by its hash, the hash in their browser, the default forgotten
+          // a visitor's: kept by its hash, the hash in their browser, the default forgotten
           const k = await keepView(view);
           document.cookie = visitorViewCookie(k.hash === DEFAULT_PERSON_VIEW.hash ? null : k.hash);
           return k;

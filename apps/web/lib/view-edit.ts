@@ -1,5 +1,5 @@
-// What a choice in the Settings section does to the person's view (coordinator/one-source.md, section 3 and
-// step 7): a dimension takes a piece of data, or none; a dimension that has a scale takes one, while it
+// What a choice in the Settings section does to the person's view: a dimension takes a piece of data, or none;
+// a dimension that has a scale takes one, while it
 // shows a number. Only data that fits the dimension is ever offered (lib/person-view.ts, viewChoices), so a
 // choice keeps the view valid. The default is handed in (it's named only in lib/person-view.ts): it gives a
 // number its usual scale, and says when there's nothing to put back. Pure.
@@ -94,19 +94,19 @@ export interface LegendEdit {
   /** Puts the default back; absent while the view is the default. */
   onReset?: (() => void) | undefined;
   /**
-   * The dimension just changed while the map is drawn again in it (Elco, 12 Nov, wave 3: "visual feedback that
-   * something is being updated"), or null.
+   * The dimension just changed while the map is drawn again in it, as visual feedback that something is
+   * being updated, or null.
    */
   drawing?: Dimension | null | undefined;
   /** The colours chosen for Colour's values (view/v3 colour.keys), by value; 'grade' names a grade's colour. */
   colourKeys?: Readonly<Record<string, string>> | undefined;
-  /** Chooses a value's colour, or hands it back to the ranking (null) (Elco, wave 4). */
+  /** Chooses a value's colour, or hands it back to the ranking (null). */
   onKey?: ((value: string, key: string | null) => void) | undefined;
 }
 
 /**
- * What Tools offers where you are (META, wave 3: 'Who backs it' on a DAO with no delegations drew nothing; every
- * offered choice draws): the data some DAOs have (core's SOME_FLOWERS: who backs a wallet, its activity) only where
+ * What Tools offers where you are (every offered choice draws: 'Who backs it' on a DAO with no delegations
+ * drew nothing): the data some DAOs have (core's SOME_FLOWERS: who backs a wallet, its activity) only where
  * one of the flowers here has it; what every flower has, and a person's own names, always. A flower whose pieces
  * aren't known (an older server) leaves every choice offered.
  */
