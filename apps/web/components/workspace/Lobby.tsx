@@ -176,6 +176,9 @@ export function Lobby({
                   onEdit={profile.edit}
                   saved={profile.saved}
                   published={profile.published}
+                  {...(profile.account
+                    ? { publicHref: `/u/${encodeURIComponent(profile.account)}` }
+                    : {})}
                 />
               </div>
               {walletsCard}
