@@ -71,6 +71,15 @@ export {
 } from './proposals.ts';
 export type { PublicPage } from './public-fetch.ts';
 export { type Publishable, preparePublishData, publishable, publishData } from './publish-data.ts';
+export {
+  appendPublication,
+  authorsOn,
+  compositionOf,
+  creditFor,
+  layersOf,
+  recordOf,
+} from './record.ts';
+export { type ImportReport, importRecord } from './record-import.ts';
 export { callTool, describeTool, findTool, registry } from './registry.ts';
 export {
   type Findable,
