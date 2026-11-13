@@ -648,29 +648,31 @@ const LAB_CLAIMS: AnnotationRow[] = [
 /** A credit record for the lab (SYSTEMS's credit/v1 shape): two layers, others built on and reused them. */
 const LAB_CREDIT: CreditRecord = {
   petal: 'credit/v1',
-  rule: 'credit-rule/v1',
-  as_of: '2026-11-13T02:00:00Z',
-  points: 5,
+  author: 'near:mainnet:a-name.near',
   layers: [
     {
-      layer: 'a1'.repeat(32),
-      about: 'eip155:100:0xfe1084bc16427e5eb7f13fc19bcd4e641f7d571f',
+      sha256: 'a1'.repeat(32),
+      petal: 'layer/v1',
+      map: 'eip155:100:0xfe1084bc16427e5eb7f13fc19bcd4e641f7d571f',
       title: 'RaidGuild: who holds the shares',
       published_at: '2026-11-11T10:00:00Z',
-      built_on_by: 3,
-      reused_by: 1,
+      built_on_by: ['near:mainnet:b.near', 'near:mainnet:c.near', 'eip155:0xabc'],
+      reused_by: ['near:mainnet:d.near'],
       points: 4,
     },
     {
-      layer: 'b2'.repeat(32),
-      about: 'near:mainnet:astro-stakers.poolv1.near',
+      sha256: 'b2'.repeat(32),
+      petal: 'layer/v1',
+      map: 'near:mainnet:astro-stakers.poolv1.near',
       title: 'Astro Stakers: its delegators',
       published_at: '2026-11-12T18:00:00Z',
-      built_on_by: 0,
-      reused_by: 1,
+      built_on_by: [],
+      reused_by: ['near:mainnet:b.near'],
       points: 1,
     },
   ],
+  totals: { points: 5, layers: 2, accounts: 4 },
+  composed_from: { rule: 'credit/v1' },
   hash: 'c3'.repeat(32),
 };
 
@@ -2898,7 +2900,9 @@ export const registry: LabEntry[] = [
       },
       {
         name: 'none yet',
-        render: () => <Points points={pointsView({ ...LAB_CREDIT, points: 0, layers: [] })} />,
+        render: () => (
+          <Points points={pointsView({ ...LAB_CREDIT, totals: { points: 0 }, layers: [] })} />
+        ),
       },
       { name: 'still reading', render: () => <Points points="reading" /> },
     ],

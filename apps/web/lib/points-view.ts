@@ -8,24 +8,32 @@
 import { dateLabel } from './flower-view.ts';
 import { subjectOf } from './profile-view.ts';
 
-/** One layer in the record (GET /api/v1/me/credit, SYSTEMS's credit/v1). */
+/**
+ * One layer in the record (GET /api/v1/me/credit, SYSTEMS's credit/v1, composition.md section 7): its hash,
+ * format and map, when its author first published it, and the other authors who built on it (whose
+ * published layers name it in `from`, the whole chain back) or reused it (whose published versions include
+ * it); each other account counts once per layer.
+ */
 export interface CreditLayer {
-  layer: string;
-  about: string;
+  sha256: string;
+  petal?: string;
+  /** The map it's about, `chain:address`. */
+  map: string;
   title?: string | null;
   published_at?: string | null;
-  built_on_by: number;
-  reused_by: number;
-  points: number;
+  built_on_by: readonly string[];
+  reused_by: readonly string[];
+  /** The layer's points under points/v1, when the record carries them per layer. */
+  points?: number;
 }
 
-/** The person's credit record, as SYSTEMS keeps it. */
+/** The person's credit record, as SYSTEMS keeps it (credit/v1). */
 export interface CreditRecord {
   petal: string;
-  rule: string;
-  as_of: string;
-  points: number;
+  author: string;
   layers: CreditLayer[];
+  totals: { points: number; layers?: number; accounts?: number };
+  composed_from?: { publications?: readonly string[]; rule?: string };
   hash: string;
 }
 
@@ -57,7 +65,8 @@ export interface PointsRow {
   when: string | null;
   /** "built on by 3 · reused by 2" */
   how: string;
-  points: string;
+  /** "4 points"; null when the record doesn't give the layer's own. */
+  points: string | null;
 }
 
 export interface PointsView {
@@ -65,18 +74,24 @@ export interface PointsView {
   rows: PointsRow[];
 }
 
+/** A layer's points as the record gives them (points/v1 is the server's: only it applies the published-before rule). */
+const layerPoints = (l: CreditLayer) => l.points ?? 0;
+
 export function pointsView(record: CreditRecord): PointsView {
   return {
-    total: record.points,
+    total: record.totals.points,
     rows: [...record.layers]
-      .sort((a, b) => b.points - a.points)
+      .sort((a, b) => layerPoints(b) - layerPoints(a))
       .map((l) => ({
-        key: l.layer,
-        about: subjectOf(l.about),
+        key: l.sha256,
+        about: subjectOf(l.map),
         title: l.title ?? null,
         when: l.published_at ? dateLabel(l.published_at) : null,
-        how: [pointsWords.builtOn(l.built_on_by), pointsWords.reused(l.reused_by)].join('  ·  '),
-        points: pointsWords.points(l.points),
+        how: [
+          pointsWords.builtOn(new Set(l.built_on_by).size),
+          pointsWords.reused(new Set(l.reused_by).size),
+        ].join('  ·  '),
+        points: l.points === undefined ? null : pointsWords.points(l.points),
       })),
   };
 }
@@ -85,20 +100,15 @@ export function pointsView(record: CreditRecord): PointsView {
 export const CREDIT_KEY = 'petals/credit';
 
 /**
- * What goes on NEAR Social: the record's summary, enough to read the points and check them against
- * Petals' record by its hash; written by the person's own wallet.
+ * What goes on NEAR Social under the person's account (composition.md section 9): the record's hash, its
+ * points and the site that keeps it, so anyone can recompute the record there and compare; written by the
+ * person's own wallet.
  */
-export function creditSummary(record: CreditRecord, site: string) {
-  return {
-    petal: record.petal,
-    rule: record.rule,
-    as_of: record.as_of,
-    points: record.points,
-    layers: record.layers.map((l) => ({ layer: l.layer, about: l.about, points: l.points })),
-    hash: record.hash,
-    site,
-  };
-}
+export const creditSummary = (record: CreditRecord, site: string) => ({
+  hash: record.hash,
+  points: record.totals.points,
+  site,
+});
 
 /** Where publishing the record is. */
 export type PointsPublish =

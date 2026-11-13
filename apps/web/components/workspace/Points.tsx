@@ -70,7 +70,7 @@ export function Points({
                     <span className="min-w-0 flex-1 type-body wrap-anywhere">
                       {r.title ?? r.about.shown}
                     </span>
-                    <Badge tone="accent">{r.points}</Badge>
+                    {r.points && <Badge tone="accent">{r.points}</Badge>}
                   </div>
                   <div className="flex flex-wrap items-center gap-text-gap">
                     <span title={r.about.full}>
