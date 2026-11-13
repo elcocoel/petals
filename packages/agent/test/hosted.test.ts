@@ -142,7 +142,7 @@ describe('originFrom', () => {
   });
 });
 
-describe('the brain version at every door (step 4)', () => {
+describe('the brain version at every door', () => {
   test('/skill.md names the brain version it was served with, and where to start reading', () => {
     const skill = readFileSync(
       join(import.meta.dirname, '..', '..', '..', 'skill', 'petal', 'SKILL.md'),

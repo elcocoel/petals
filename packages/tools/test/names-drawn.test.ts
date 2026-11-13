@@ -1,4 +1,4 @@
-// A person's names on the petals drawn for them (annotation-layer.md step 6, the server's side): POST
+// A person's names on the petals drawn for them (the server's side): POST
 // /api/v1/render and the map's readings compose the signed-in person's named annotations (core's namePieces),
 // a visitor's carry none, and nothing that carries a person's is kept by a cache. The name is invented.
 import {

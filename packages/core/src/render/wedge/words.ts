@@ -5,7 +5,7 @@ import type { ReadingPetal } from '../../types/index.ts';
  * The mono type class: the design system's Mono, 11/16 (packages/tokens/source.ts). It was type-mono-small until
  * the type styles were consolidated on 5 Nov (094fb5c) and the flower kept the old name, so its words fell back
  * to the page's 18 px body type while every width and line here was measured for this one: notes ran off the
- * window's edge and a petal's band lines overlapped (WORKSPACE's walk and Elco's NEAR notes, 11 Nov).
+ * window's edge and a petal's band lines overlapped.
  */
 export const MONO = 'type-mono';
 /** Geist Mono at that class's 11px: 0.6em a character, plus 0.04em of tracking. No text measuring. */

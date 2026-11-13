@@ -419,7 +419,7 @@ test('the file holds public derived tables, and nothing about people', () => {
 });
 
 describe('an account a reading already wrote with its chain', () => {
-  test('is named with its chain once (LOOK, 12 Nov: eip155:1:eip155:1:0x… on GET /api/v1/relations/shared)', async () => {
+  test('is named with its chain once (never eip155:1:eip155:1:0x… on GET /api/v1/relations/shared)', async () => {
     const caip = (a: string) => `eip155:1:${a}`;
     const P = snap({
       id: 'erc20',

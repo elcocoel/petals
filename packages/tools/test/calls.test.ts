@@ -1,4 +1,4 @@
-// Petals' open-calls feed (Elco, 12 Nov): read keyless into the store, a source's replaced as a whole, one that
+// Petals' open-calls feed: read keyless into the store, a source's replaced as a whole, one that
 // doesn't answer keeping what it had; served from the store as list_calls, GET /api/v1/calls and its RSS.
 import { mkdtempSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';

@@ -1,13 +1,13 @@
-// The highlight (design/flower-art-direction/default-system-vnext.md and highlight-style-v1.json; Elco accepted
-// it on 11 Nov): one treatment, on or off, for the petals of a chosen group of wallets. A fine solid stroke inside
-// the petal, a little darker than its fill; softened corners; a gently inflated surface, light from the upper left
+// The highlight (the art direction's highlight style, v1): one treatment, on or off, for the petals of a chosen
+// group of wallets. A fine solid stroke inside the petal, a little darker than its fill; softened corners; a
+// gently inflated surface, light from the upper left
 // and shade from the lower right, both in the petal's own colour. Height, segments and colour stay as they are,
-// and the line between petals stays open. For /lab first (#76). Pure.
+// and the line between petals stays open. For /lab first. Pure.
 import { leftAt, type Ring, rightAt } from './ring.ts';
 
 /**
- * Figma's numbers, in px of the 800 px reference flower (node 201:2812). That flower is the world drawn at 1.1
- * (design/flower-art-direction/make-dimension-studies.mjs), so a world unit is REFERENCE px there.
+ * Figma's numbers, in px of the 800 px reference flower (node 201:2812). That flower is the world drawn at 1.1,
+ * so a world unit is REFERENCE px there.
  */
 export const HIGHLIGHT = {
   /** 1 px, inside, solid, the fill × 0.62 */
@@ -147,8 +147,8 @@ export function roundedPath(q: readonly Point[], r: number | readonly number[]):
 
 /**
  * The radii of a band's four corners (tip left, tip right, foot right, foot left) when only the petal's outside
- * is softened (Elco, 11 Nov: "radius and stroke only on the outside shape, so the colour separations and the
- * overall shape of the petal remain on straight lines"): the foot's corners on the first band, the tip's on the
+ * is softened (radius and stroke on the outside shape only, so the colour separations and the petal's overall
+ * shape stay on straight lines): the foot's corners on the first band, the tip's on the
  * last, none between.
  */
 export const outsideRadii = (first: boolean, last: boolean, r: number): number[] => [

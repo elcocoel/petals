@@ -1,4 +1,4 @@
-// The open-calls feed as RSS 2.0 (Elco, 12 Nov: the feed served as RSS, JSON and MCP): any feed reader
+// The open-calls feed as RSS 2.0 (the feed is served as RSS, JSON and MCP): any feed reader
 // becomes a watcher, with the filters in the address (?kind=, ?q=, ?closes_before=). Each item is one calls/v1.
 import type { Call } from '@petal/core';
 

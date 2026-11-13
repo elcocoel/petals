@@ -1,4 +1,4 @@
-// readTransfer and nearUsd (9 Nov): a NEAR transfer read back from the chain, and NEAR's price from NEAR
+// readTransfer and nearUsd: a NEAR transfer read back from the chain, and NEAR's price from NEAR
 // Intents. Faked HTTP only; the journey server walks a real testnet transfer.
 import { describe, expect, test } from 'vitest';
 import { nearUsd, readTransfer, yoctoToNear } from '../src/pay/index.ts';

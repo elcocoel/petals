@@ -1,4 +1,4 @@
-// Search by words and meaning (#105): the ranking on its own, then search_petals over a real stored map, offline,
+// Search by words and meaning: the ranking on its own, then search_petals over a real stored map, offline,
 // with the fake model (words hashed for meaning). What the real models find is scripts/search-eval.ts's.
 import type { Claim, Spec } from '@petal/core/types';
 import { modules } from '@petal/inputs';
@@ -292,7 +292,7 @@ describe('search_petals', () => {
     expect(embedded).toHaveLength(once);
   });
 
-  test('with no model running, it searches by words alone and says so (Elco: "Fall back to word search")', async () => {
+  test('with no model running, it searches by words alone and says so', async () => {
     // fake mode brings its own; a real site with no PETAL_SEARCH_URL has none
     r.ctx = { ...r.ctx, searchModel: undefined, config: { ...r.ctx.config, fake: false } };
     const off = await run({ q: 'founders guild' });

@@ -1,4 +1,4 @@
-// A Baal DAO's proposals (board #93): from its own events, each vote approved or not with its time, each
+// A Baal DAO's proposals: from its own events, each vote approved or not with its time, each
 // proposal passed, failed, rejected, cancelled, expired or in progress. Events built as the chain encodes them.
 import { validateProposals } from '@petal/core';
 import { describe, expect, test } from 'vitest';
@@ -136,7 +136,7 @@ describe('a Baal DAO', () => {
     );
     expect(validateProposals(p).ok).toBe(true);
     expect(p.petal).toBe('proposals/v3');
-    // its page on DAOhaus is where it was made (walk 3)
+    // its page on DAOhaus is where it was made
     expect(p.proposals[0]?.link).toEqual({
       url: `https://admin.daohaus.club/#/molochv3/0x64/${DAO.toLowerCase()}/proposal/${p.proposals[0]?.id}`,
       kind: 'where it was made',

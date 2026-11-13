@@ -1,5 +1,5 @@
-// Time as data (Elco, 12 Nov: "the dimension of time specifically is particularly absent ... last active, most
-// active ... color grade the [petals] that never voted"): each petal's activity in its map's proposals, as pieces
+// Time as data (last active, most active, and a grade for the petals that never voted): each petal's activity in
+// its map's proposals, as pieces
 // of data beside the reading's own, as valuePieces' dollars are. Over the proposals read (the card's period):
 //
 //   votes_cast    count     how many of them the account voted on

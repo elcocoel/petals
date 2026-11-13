@@ -498,7 +498,7 @@ async function fromPetal(l: Lookup, ctx: ToolContext, p: Parsed, rows: IndexRow[
 }
 
 /**
- * The views on this site's map that answer to these words (10 Nov): each with the stored snapshot it was
+ * The views on this site's map that answer to these words: each with the stored snapshot it was
  * drawn from, so drawing it again reuses that snapshot instead of a fresh read.
  */
 async function fromMap(l: Lookup, ctx: ToolContext, p: Parsed, rows: IndexRow[]): Promise<void> {

@@ -28,8 +28,8 @@ const OTHER_COLOUR_LABELS: Record<string, string> = {
 
 /**
  * The words for a colour key: a kind, `named`, `anonymous` or `single`; any other is a value of the piece of data
- * Colour shows (voted, never voted: SYSTEMS's activity), said as itself, so its key and the legend name it (12 Nov:
- * a category from given pieces read 'unknown').
+ * Colour shows (voted, never voted: the activity pieces), said as itself, so its key and the legend name it (a
+ * category from given pieces once read 'unknown').
  */
 export function colourLabel(key: string): string {
   return OTHER_COLOUR_LABELS[key] ?? KIND_LABELS[key as Kind] ?? key;

@@ -413,7 +413,7 @@ export interface AgentRow {
   /** the worker that asked, when it waits as one (migration 20): each window or sub-agent of this name */
   worker?: string | null;
   /**
-   * What it says it can do, in its own words (migration 26; Elco's swarm lean 2): kept with the worker that said
+   * What it says it can do, in its own words (migration 26): kept with the worker that said
    * it, or with the agent when it calls with no worker (a connector's take_job); the latest wins, null if unsaid.
    */
   can?: string | null;
@@ -510,7 +510,7 @@ export interface SearchDoc {
   at: string;
 }
 export type SearchHit = Omit<SearchDoc, 'owner'> & { snippet: string };
-/** An indexed document with its words, as search by meaning reads it (#105). */
+/** An indexed document with its words, as search by meaning reads it. */
 export type SearchText = Omit<SearchDoc, 'owner'> & { text: string };
 /** What marks a match inside a hit's snippet. Stripped from anything indexed, so no text can forge one. */
 export const SEARCH_HIT_OPEN = '\uE000';

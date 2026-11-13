@@ -1,12 +1,10 @@
-// What each map's token is worth, the run over the shared map (board #91; Elco, 11 Nov: "monetary estimates
-// of the value of these petals and the stakes and the supply"): its price from 1Click, its supply from its
+// What each map's token is worth, the run over the shared map: its price from 1Click, its supply from its
 // chain, and its newest reading's totals at that price, kept by the map's address. Each petal's own value is
 // drawn from it when a reading is made (valuePieces). scripts/map-values.ts runs it where the server runs.
 // Read again, a map's value is replaced.
-// value/v3 (12 Nov; Elco: "knowing the sizes of treasuries and all of the usual cap information, so
-// circulating supply, max cap"; "bias towards keyless"): also its circulating supply and market cap as
+// value/v3 (12 Nov, keyless first): also its circulating supply and market cap as
 // CoinGecko says them, its max from its chain where the chain proves one (else CoinGecko's), and its treasury.
-// A treasury read from the chain (the mapping waves' value/v2) is kept as it is; where none was, DefiLlama's,
+// A treasury read from the chain (the mapping runs' value/v2) is kept as it is; where none was, DefiLlama's,
 // read again each run. Each names where it came from.
 import {
   type MarkSaid,
@@ -160,14 +158,14 @@ export async function valueMaps(ctx: ToolContext, o: ValueRun = {}): Promise<Val
     const { card, newest, snapshot, reader, measure, asset, stored } = plan;
     const at = now().toISOString();
     const chain = chainOf(card);
-    // a value kept for another asset than this pass would pick (the mapping waves' own) stays whole, and
+    // a value kept for another asset than this pass would pick (the mapping runs' own) stays whole, and
     // gains only what value/v3 adds: its token as the markets count it, and a treasury where it has none
     const other = keptAsset(plan);
     if (other && stored) {
       const m = marketAsset(other);
-      // NEAR under a wave's name for it (near:native, near:mainnet:NEAR) is NEAR: today's price, as every NEAR map
-      // has it, with its totals' dollars at that price; the rest of the wave's value stays (Elco, 12 Nov: House of
-      // Stake at 3.40 beside Sputnik DAOs at 3.74, "which I actually don't know why")
+      // NEAR under a mapping run's name for it (near:native, near:mainnet:NEAR) is NEAR: today's price, as every
+      // NEAR map has it, with its totals' dollars at that price; the rest of the run's value stays (else House of
+      // Stake showed NEAR at 3.40 beside Sputnik DAOs at 3.74)
       const near = NEAR_FORMS.has(other) ? await prices.priceOf(chain, 'NEAR') : null;
       const price = near
         ? { usd: near.usd, source: near.source, ref: near.ref, at: near.at }
@@ -234,7 +232,7 @@ export async function valueMaps(ctx: ToolContext, o: ValueRun = {}): Promise<Val
     const market = marketOf(gecko.markets, chain, asset);
     const max =
       (pricedHere ? await readChainMax(fetchImpl, chain, asset, at) : null) ?? market?.max ?? null;
-    // a treasury the chain gave (the waves' value/v2) stays; else DefiLlama's, read again
+    // a treasury the chain gave (the mapping runs' value/v2) stays; else DefiLlama's, read again
     const kept: ValueTreasury | null =
       stored?.treasury && treasurySource(stored.treasury)?.source === 'chain'
         ? stored.treasury

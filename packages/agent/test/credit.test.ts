@@ -1,4 +1,4 @@
-// The credit contract on the server (9 Nov; proposal-payment.md, section 6), through petalApp, with a stand-in
+// The credit contract on the server (proposal-payment.md, section 6), through petalApp, with a stand-in
 // chain. A person's own credit is what the wallet they signed in with holds in the contract: read before each
 // chat, and charged in NEAR when the chat ends. The real contract is walked on testnet by hand.
 import { join } from 'node:path';

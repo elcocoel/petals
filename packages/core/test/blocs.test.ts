@@ -1,4 +1,4 @@
-// Voting blocs over a period (#94): pairs that voted on enough of the same proposals and alike on enough of
+// Voting blocs over a period: pairs that voted on enough of the same proposals and alike on enough of
 // them, the blocs they link, and each pair as an inferred claim: agreement, never proof of coordination.
 import { describe, expect, test } from 'vitest';
 import { BLOCS_DEFAULTS, blocClaims, votingBlocs } from '../src/blocs.ts';
