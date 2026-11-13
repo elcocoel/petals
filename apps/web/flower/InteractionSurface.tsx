@@ -506,13 +506,15 @@ function EmptyGround({
 }) {
   // measured, so it's painted as the boxes are, as the map's own room is
   const el = useRef<HTMLDivElement>(null);
+  const left = clear?.left ?? null;
+  const bottom = clear?.bottom ?? null;
   useLayoutEffect(() => {
     const s = el.current?.style;
     if (!s) return;
-    s.left = clear ? `${clear.left}px` : '';
-    s.bottom = clear ? `${clear.bottom}px` : '';
+    s.left = left === null ? '' : `${left}px`;
+    s.bottom = bottom === null ? '' : `${bottom}px`;
     s.paddingLeft = besideColumn ? `${PANEL_W + 2 * floatBox.inset}px` : '';
-  }, [clear?.left, clear?.bottom, besideColumn]);
+  }, [left, bottom, besideColumn]);
   return (
     <div ref={el} className="pointer-events-none absolute inset-0 flex items-center justify-center">
       <PowerQuote quote={quote} />
