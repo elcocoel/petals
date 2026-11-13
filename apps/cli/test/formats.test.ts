@@ -1,4 +1,4 @@
-// Petals' formats on the person's computer (#98): validate_data checks any document Petals keeps with core's
+// Petals' formats on the person's computer: validate_data checks any document Petals keeps with core's
 // own checks and writes nothing; keep_snapshot keeps a reading an agent made, here and in the project.
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -49,8 +49,8 @@ describe('validate_data', () => {
   });
 });
 
-describe("validate_data --public: what the shared map's loader says (SYSTEMS's mappingProblems)", () => {
-  // the L2 wave's own note on Gnars (research/dao-set-2026-11-11), which a private project takes
+describe("validate_data --public: what the shared map's loader says (mappingProblems)", () => {
+  // a mapping run's own note on Gnars, which a private project takes
   const NOTE = {
     petal: 'claim/v3',
     subject: 'eip155:8453:0x880fb3cf5c6cc2d7dfc13a993e839a9411200c17',
