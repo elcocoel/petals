@@ -187,6 +187,8 @@ export interface RouteAuth {
    * mainnet wallet, else their first; null for one with none. For a turn no request started.
    */
   accountOf?(person: string): Promise<string | null>;
+  /** Every wallet bound to a person, in CAIP-10: the authors they can publish as (composition.md, section 2). */
+  authorsOf(person: string): Promise<string[]>;
 }
 
 export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
@@ -265,7 +267,8 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
       try {
         const caip10 = d.cipher().open(w.caip10_encrypted);
         const account_id = caip10.split(':').slice(2).join(':');
-        return [{ caip10, network: w.network, account_id, proved_at: w.proved_at }];
+        // author: the account a publication names when this wallet signs it (wave 8)
+        return [{ caip10, author: caip10, network: w.network, account_id, proved_at: w.proved_at }];
       } catch {
         // sealed under another key: a throwaway from before a restart, on a development server
         return [];
@@ -578,6 +581,10 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
       const w = wallets.find((x) => x.network === 'mainnet') ?? wallets[0];
       return w ? byOf(w.network, w.account_id) : null;
     },
+    async authorsOf(person) {
+      return (await walletsOf(person)).map((w) => w.caip10);
+    },
+
     async personOf(c) {
       const s = await sessionOf(c);
       if (!s || !isPerson(s.subject)) return null;

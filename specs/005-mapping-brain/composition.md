@@ -173,16 +173,18 @@ A format not in this table can be published as a layer, but it gives no facts un
 
 ## 9. The API (answers, additive; the formats above are what's stored and signed)
 
-- **Before a press: `GET /api/v1/publish/data?map=`.** Each layer the press would publish: `{ sha256, petal, title, cases }`, where `cases` is `{ new_data: { whats }, new_moment: { states: [{ state, newest }] }, new_subjects: { count }, match: { count, authors }, differs: { count, authors } }`. `authors` are `[{ author, name }]`, the ones already credited. `totals` has the same `cases`, summed for the whole publication.
-- **Prepare: `POST /api/v1/publish/prepare { map, layers?, via? }`.**
-  - It answers `{ publication, sha256, text, recipient?, nonce? }`: the unsigned `publication/v1`, the hash of its canonical JSON, and the text the wallet signs (section 2).
-  - `via` comes from the page, as the person says it ("Mapped with Petals' agent"). It is inside what they sign.
+- **Before a press: `GET /api/v1/publish/data?map=`.** Each layer the press would publish: `{ sha256, petal, title, cases }`, where `cases` is `{ new_data: { whats }, new_moment: { states: [{ what, state, newest }] }, new_subjects: { count }, match: { count, authors }, differs: { count, authors } }`. `authors` are `[{ author, name }]`, the ones already credited. A state is `{ chain?, block?, at?, window? }`; `newest` is null when the map has none. `totals` has the same `cases`, summed for the whole publication. The layers are what this press adds: the readings the person drew, the claims that can go, and the documents they kept (values, proposals, marks, readings, vesting, payouts, layers), less what their latest version holds already. A layer built on one that isn't published stays back, in `adds` with why.
+- **Prepare: `POST /api/v1/publish/data/prepare { map, author }`** (built 13 Nov; `via` waits, Elco).
+  - `author` is one of the signed-in person's wallets, as `GET /api/v1/me`'s `wallets[].author` names it (CAIP-10). Any other is refused.
+  - It answers `{ publication, sha256, text, recipient?, nonce? }`: the unsigned `publication/v1`, the hash of its canonical JSON without `proof`, and the text the wallet signs (section 2). For a NEAR author, `recipient` is this site's hostname and `nonce` a fresh 32-byte base64, for NEP-413.
+  - The version's `layers` are the author's latest version's and what this press adds; its `parent` and `previous` are the author's latest publication about the map; `published_at` is the server's time.
 - **Publish: `POST /api/v1/publish/data { sha256, proof }`.**
-  - `proof` is `{ standard: 'nep413' | 'eip191' | 'ed25519', signature, public_key?, nonce? }`.
-  - It answers `{ publication, layers: [{ sha256, petal }], totals }`, where `publication` is the signed record's hash.
+  - `proof` is `{ standard: 'nep413' | 'eip191' | 'ed25519', signature, public_key?, nonce? }`: NEP-413 for NEAR (with `public_key` and the `nonce` given), EIP-191 for EVM, ed25519 for Solana (the signature in base64).
+  - It answers `{ publication, layers: [{ sha256, petal }], totals }`, where `publication` is the signed record's hash and `layers` what this press added.
+  - The claims show on the map at once, as before (Insights, each kept with the signature), and the readings the person drew are credited to the author.
 - **The map's layers: `GET /api/v1/maps/:id` adds three things:**
   - `layers: [{ sha256, petal, title, whats, states, collected_at, source, by, first }]`, newest state first, where `by` is the authors, first to last, and `first` is `{ author, publication, published_at }`;
-  - `authors: [{ author, name, imported }]`;
+  - `authors: [{ author, name, imported, first, confirmed, built_on }]`, on this map;
   - `differs`: how many slots.
 - **A composed reading: `GET /api/v1/maps/:id/reading?layers=&at=&view=`.**
   - The reading the map draws (`title`, `petals`, `given`), for the layers on (all by default) at a moment (the newest by default).
