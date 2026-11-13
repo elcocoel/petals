@@ -507,9 +507,9 @@ describe('liveness', () => {
     const seen: { event: string; data: unknown }[] = [];
     const { events } = run(slowRecorded(120), { opts: { heartbeatMs: 40 } });
     for await (const e of events) seen.push(e);
-    const done = seen.at(-1);
-    expect(done?.event).toBe('done');
-    const turns = (done?.data as { turns: number }).turns;
+    const done = seen.at(-1) as { event: string; data: { turns: number } };
+    expect(done.event).toBe('done');
+    const turns = done.data.turns;
     expect(turns).toBeGreaterThan(0);
     expect(seen.filter((e) => e.event === 'heartbeat').length).toBeGreaterThanOrEqual(turns);
   });
