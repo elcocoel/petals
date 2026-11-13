@@ -38,17 +38,20 @@ Elco, 9 Nov: "anyone can add, fork and use the prior."
 - **Building on prior work.** A layer names the layers it was built on (`from`): a share computed from shares, proposals per member matched to a reader's members. So credit and checking follow the chain back.
 - **Each author has their own latest version** of each dataset they've touched. A flower names the version it draws, so it never changes underneath anyone.
 
+**Since wave 8 (13 Nov), in `composition.md`:**
+- **Merging:** the shared map composes every author's published documents, fact by fact. Same data at the same block is one fact credited to every author who stated it; a different value there "differs", and both stand. Nothing overwrites; no one wins.
+- **Credit** for every author of every fact, in the order they published, in an append-only record each author signs (`publication/v1`).
+- **Comparing:** what a publication adds to the map: new data, a new moment, new subjects, or the same slot (a match, or a difference).
+
 **Later, not now:**
-- **Merging two versions** into one, and what to do when they disagree.
 - **Named branches.**
-- **Comparing versions** (what's new between two).
-- **Credit or points** for layers others build on (Elco's points idea, 004-workspace).
+- **Points or rewards** for credit (Elco's points idea, 004-workspace): the record they'd rest on is `composition.md`'s.
 
 ## Where layers live
 
 Elco's choice, 9 Nov: **private first, published when the author chooses.**
 - **Private layers and versions** live in Petals' database, against the author's account (TGT-006).
-- **Published ones** go to the shared map on NEAR, like flowers today, under the author's signature.
+- **Published ones** go to the shared map on NEAR, like flowers today, under the author's signature. Wave 8's record and composition: `composition.md`; anchoring each author's latest publication on NEAR comes next.
 - **A fork can only name a parent the forker can see:** a published version, or their own.
 
 **Built, 9 Nov:** `keep_layer`, `list_layers` and `fork_dataset`, through the project's link (migration 9). A project nobody has claimed holds its layers under itself, and they move to whoever claims it, and again when a session signs in. Publishing a version to the shared map isn't built, so for now a fork takes one's own versions only.
