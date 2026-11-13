@@ -85,7 +85,7 @@ export function Wallets({
               <Button
                 key={c.kind}
                 variant="pill"
-                aria-label={c.label}
+                label={c.label}
                 disabled={adding.kind === 'adding'}
                 onClick={() => onAdd(c.kind)}
               >
