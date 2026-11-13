@@ -110,9 +110,9 @@ describe('the cases, in words', () => {
   });
 
   test('a moment is its block, or its day, and its window; a first moment has no newest beside it', () => {
-    expect(stateWords({ block: '465695924' })).toBe('block 465,695,924');
+    expect(stateWords({ block: 465695924 })).toBe('block 465,695,924');
     expect(stateWords({ at: '2026-11-11T09:00:00Z' })).toBe('11 Nov');
-    expect(stateWords({ window: { from: '2026-11-01T00:00:00Z', to: 40500000 } })).toBe(
+    expect(stateWords({ window: { from: '2026-11-01T00:00:00Z', to: '40500000' } })).toBe(
       '1 Nov to block 40,500,000',
     );
     expect(caseWords.line.new_moment({ states: [{ state: { block: 7 }, newest: null }] })).toBe(

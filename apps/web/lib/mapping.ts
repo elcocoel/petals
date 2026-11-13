@@ -6,9 +6,9 @@
 // (specs/005-mapping-brain/composition.md §4): new data, a new moment, new subjects, a match credited to every
 // author who stated it, or a value that differs, both standing. No one's layer wins. Then what can't go yet and
 // why, and the press. The case words are written once, here; Information (OVERLAYS) says them too. Drafts.
+import type { State } from '@petal/core';
 import type {
-  ChainState,
-  Credited,
+  CreditedAuthor,
   LayerCases,
   MapCase,
   PublishAdds,
@@ -45,7 +45,7 @@ export const MAP_CASES: readonly MapCase[] = [
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
 /** Who a match or a difference meets on the map: alice.near, or alice.near and 2 others. */
-const whose = (authors: readonly Credited[]) => {
+const whose = (authors: readonly CreditedAuthor[]) => {
   const [first, ...rest] = authors;
   if (!first) return 'another author';
   return rest.length ? `${first.name} and ${plural(rest.length, 'other', 'others')}` : first.name;
@@ -75,7 +75,7 @@ export function whatWords(what: string): string {
 }
 
 /** When on the chain a fact holds, in words: block 465,695,924, or 11 Nov; and its window. */
-export function stateWords(s: ChainState): string {
+export function stateWords(s: State): string {
   const at = s.block !== undefined ? `block ${grouped(s.block)}` : s.at ? day(s.at) : null;
   const window = s.window ? `${pointWords(s.window.from)} to ${pointWords(s.window.to)}` : null;
   return [at, window].filter(Boolean).join(', ') || 'a moment';

@@ -2,7 +2,7 @@
 // Everything else gets plain values and agent events, so views and ViewModels hold no URLs, no status
 // codes and no `fetch`. layers.test.ts names this file as the only one in lib/ allowed to call it.
 
-import type { Blocs } from '@petal/core';
+import type { Blocs, State } from '@petal/core';
 import type {
   AgentEvent,
   ChatMessage,
@@ -247,17 +247,9 @@ export interface PublishableData {
 export type MapCase = 'new_data' | 'new_moment' | 'new_subjects' | 'match' | 'differs';
 
 /** An author already credited on the map: their account (CAIP-10) and the name the box says. */
-export interface Credited {
+export interface CreditedAuthor {
   author: string;
   name: string;
-}
-
-/** When on the chain a fact holds (composition.md §4, as core names it): a block on its chain, or an instant, and a window. */
-export interface ChainState {
-  chain?: string;
-  block?: number | string;
-  at?: string;
-  window?: { from: number | string; to: number | string };
 }
 
 /** What one layer, or a whole publication, adds to the map in front, by case. */
@@ -265,13 +257,13 @@ export interface LayerCases {
   /** the data the map has no fact of, as the facts name it: 'vesting/schedule' */
   new_data?: { whats: string[] };
   /** each moment it adds, of which data, beside the map's newest of it (null when the map has none) */
-  new_moment?: { states: { what?: string; state: ChainState; newest: ChainState | null }[] };
+  new_moment?: { states: { what?: string; state: State; newest: State | null }[] };
   /** how many subjects it states facts for that the map had none for */
   new_subjects?: { count: number };
   /** facts the same as ones on the map, and who they're credited to already */
-  match?: { count: number; authors: Credited[] };
+  match?: { count: number; authors: CreditedAuthor[] };
   /** facts in a slot the map has with another value, and whose that value is */
-  differs?: { count: number; authors: Credited[] };
+  differs?: { count: number; authors: CreditedAuthor[] };
 }
 
 /** A layer the press would publish: its name (sha256), its format, its title, and what it adds. */
