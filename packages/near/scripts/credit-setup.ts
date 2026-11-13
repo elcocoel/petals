@@ -262,6 +262,12 @@ async function finish(ownerKey: string): Promise<string> {
   }
 
   const config = await provider.callFunction({ contractId: CREDIT, method: 'config', args: {} });
+  // the server's two settings, as the container reads them from its secrets mount (scripts/container/entry.sh)
+  writeFileSync(
+    join(SECRETS, `credit.${network}.env`),
+    `PETAL_CREDIT_CONTRACT=${CREDIT}\nPETAL_CHARGER_KEY_FILE=/secrets/${CHARGER}.charge-only.json\n`,
+    { mode: 0o600 },
+  );
   const creditKeys = await keysOf(CREDIT);
   const chargerKeys = await keysOf(CHARGER);
   const chargeKey = chargerKeys.find((k) => k.public_key === chargeOnly.getPublicKey().toString());
@@ -273,7 +279,7 @@ async function finish(ownerKey: string): Promise<string> {
     `${CREDIT}: the contract (sha256 ${sha}), config ${JSON.stringify(config)}, keys: ${creditKeys.length === 0 ? 'none (locked)' : creditKeys.map((k) => k.public_key).join(', ')}`,
     `${CHARGER}: ${chargerKeys.length} keys: ${ownerHolds ? `${owner}'s wallet key` : `NOT ${owner}'s`}, and one that ${chargeKey ? `can only call ${JSON.stringify(chargeKey.access_key.permission)}` : 'IS MISSING'}`,
     `${FUNDER}: ${(await balanceOf(FUNDER)) === null ? `deleted, what was left back to ${owner}` : 'STILL THERE'}`,
-    `For the server: PETAL_CREDIT_CONTRACT=${CREDIT} PETAL_CHARGER_KEY_FILE=${keyOut}`,
+    `For the server: PETAL_CREDIT_CONTRACT=${CREDIT} PETAL_CHARGER_KEY_FILE=${keyOut} (the container's, in ${join(SECRETS, `credit.${network}.env`)})`,
   ].join('\n');
 }
 

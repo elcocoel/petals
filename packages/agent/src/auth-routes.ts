@@ -37,6 +37,7 @@ import { type ChainChat, type CreditChain, chainChat } from './credit.ts';
 import {
   CONNECT_HINT,
   CREDIT_SPENT,
+  drawOffchain,
   hashToken,
   INVITE_SPENT,
   inviteLedger,
@@ -627,11 +628,9 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
         return null;
       }
       let spent = 0;
-      const counted = chain
-        ? async (usd: number) => {
-            spent += usd;
-          }
-        : undefined;
+      const counted = async (usd: number) => {
+        spent += usd;
+      };
       return {
         subject,
         ownCredit: true,
@@ -640,7 +639,11 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
           usdPerChat: usdPerOwnChat,
           ledger: personLedger(store, subject, day, now, counted),
         },
-        ...(chain ? { onEnd: () => (chain as ChainChat).settle(spent) } : {}),
+        // on the contract, charged at the end; without it, spent from what's off the contract
+        onEnd: () =>
+          chain
+            ? (chain as ChainChat).settle(spent)
+            : drawOffchain(store, subject, spent, now()).then(() => {}),
       };
     },
 
@@ -687,20 +690,23 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
         session && isPerson(session.subject) ? await personCredit(store, session.subject) : null;
       if (session && own && own.left_usd > 0) {
         let spent = 0;
-        const counted = chain
-          ? async (usd: number) => {
-              spent += usd;
-            }
-          : undefined;
+        const counted = async (usd: number) => {
+          spent += usd;
+        };
+        const person = session.subject;
         return {
-          subject: session.subject,
+          subject: person,
           ownCredit: true,
           budget: {
             ...budget,
             usdPerChat: usdPerOwnChat,
-            ledger: personLedger(store, session.subject, day, now, counted),
+            ledger: personLedger(store, person, day, now, counted),
           },
-          ...(chain ? { onEnd: () => (chain as ChainChat).settle(spent) } : {}),
+          // on the contract, charged at the end; without it, spent from what's off the contract
+          onEnd: () =>
+            chain
+              ? (chain as ChainChat).settle(spent)
+              : drawOffchain(store, person, spent, now()).then(() => {}),
         };
       }
       const id = session?.invite;
