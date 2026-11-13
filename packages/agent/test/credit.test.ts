@@ -3,7 +3,7 @@
 // chat, and charged in NEAR when the chat ends. The real contract is walked on testnet by hand.
 import { join } from 'node:path';
 import { NearError } from '@petal/near';
-import { fakeRpcFor, testSigner } from '@petal/near/auth/testing';
+import { evmTestSigner, fakeRpcFor, testSigner } from '@petal/near/auth/testing';
 import type { Transfer } from '@petal/near/pay';
 import { describe, expect, test } from 'vitest';
 import { buildPetalApp } from '../src/app.ts';
@@ -97,7 +97,22 @@ function setup(balances: Record<string, bigint>, txs: Record<string, Partial<Tra
     };
     return call('POST', '/api/v1/me/wallets', { network: 'mainnet', proof: who.sign(c) });
   };
-  return { ...s, llm, call, signIn, addWallet };
+  /** Signs in with an Ethereum wallet instead (SIWE, EIP-191). */
+  const signInEvm = async (evm = evmTestSigner('credit')) => {
+    const c = (await (
+      await call('POST', '/api/v1/auth/challenge', { chain: 'eip155', address: evm.address })
+    ).json()) as { message: string };
+    return call('POST', '/api/v1/auth/verify', {
+      network: 'eip155',
+      proof: {
+        type: 'eip191',
+        address: evm.address,
+        message: c.message,
+        signature: evm.sign(c.message),
+      },
+    });
+  };
+  return { ...s, llm, call, signIn, addWallet, signInEvm };
 }
 
 /** Lets the chat's end (the charge) happen. */
@@ -263,5 +278,27 @@ describe('the credit contract', () => {
       ['alice.near', (4n * NEAR) / 1000n],
       ['bob.near', (6n * NEAR) / 1000n],
     ]);
+  });
+
+  test('an Ethereum person with a linked NEAR wallet: its deposit counts, the credit is what it holds, and a chat is charged there', async () => {
+    const w = setup({ 'alice.near': 0n }, { [HASH]: {} });
+    expect((await w.signInEvm()).status).toBe(200);
+    expect((await w.addWallet(alice)).status).toBe(200);
+    w.balances['alice.near'] = NEAR;
+    const paid = (await (
+      await w.call('POST', '/api/v1/pay', {
+        network: 'mainnet',
+        account_id: 'alice.near',
+        tx_hash: HASH,
+      })
+    ).json()) as { credit: { left_usd: number; balance_yocto: string } };
+    expect(paid.credit).toMatchObject({ left_usd: 3.5, balance_yocto: String(NEAR) });
+    const pay = (await (await w.call('GET', '/api/v1/pay')).json()) as {
+      credit: { left_usd: number };
+    };
+    expect(pay.credit.left_usd).toBe(3.5);
+    await (await w.call('POST', '/api/v1/agent/chat', QUESTION)).text();
+    await settled();
+    expect(w.charges).toEqual([['alice.near', NEAR / 100n]]);
   });
 });
