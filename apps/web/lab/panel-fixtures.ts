@@ -47,7 +47,7 @@ const FORTY: Line[] = [
   ['Treasury grants paid in Q3', 3 * D + 4 * H, 'p2', 'petals'],
   ['Exchanges holding NEAR', 3 * D + 9 * H, 'p1', 'own'],
   ['Moloch proposals that passed', 4 * D, 'p3', 'petals'],
-  ['Wallets behind the airdrop', 4 * D + 6 * H, null, 'petals'],
+  ['Wallets behind the token', 4 * D + 6 * H, null, 'petals'],
   ['SWEAT staking contracts', 5 * D, 'p5', 'petals'],
   ['Who runs the Aurora DAO', 5 * D + 5 * H, 'p4', 'own'],
   ['Unstaking queue this week', 6 * D, null, 'petals'],
