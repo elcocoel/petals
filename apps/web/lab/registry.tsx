@@ -72,6 +72,7 @@ import { ToMapLines } from '../components/ToMapLines.tsx';
 import { ActionRow } from '../components/ui/ActionRow.tsx';
 import { AskBlock } from '../components/ui/AskBlock.tsx';
 import { AskBox } from '../components/ui/AskBox.tsx';
+import { Avatar } from '../components/ui/Avatar.tsx';
 import { Badge } from '../components/ui/Badge.tsx';
 import { BarBox } from '../components/ui/BarBox.tsx';
 import { Button } from '../components/ui/Button.tsx';
@@ -1880,6 +1881,33 @@ export const registry: LabEntry[] = [
     states: [
       { name: 'neutral, a fact', render: () => <Badge>Declared</Badge> },
       { name: 'accent, a state that went well', render: () => <Badge tone="accent">Saved</Badge> },
+    ],
+  },
+  {
+    id: 'Avatar',
+    group: 'The workspace',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/ui/Avatar.tsx',
+    states: [
+      {
+        name: 'a picture, large, at the head of the lobby and the public page',
+        render: () => <Avatar src="/quotes/01-sunlight.webp" size="large" />,
+      },
+      {
+        name: 'the empty place for one',
+        render: () => <Avatar src={null} size="large" />,
+      },
+      {
+        name: "in the editor, and at an icon's size in the account menu",
+        render: () => (
+          <div className="flex items-center gap-block-gap">
+            <Avatar src="/quotes/01-sunlight.webp" size="medium" />
+            <Avatar src="/quotes/01-sunlight.webp" size="small" />
+            <Avatar src="/quotes/01-sunlight.webp" size="icon" />
+          </div>
+        ),
+      },
     ],
   },
   {
