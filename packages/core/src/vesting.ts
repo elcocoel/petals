@@ -280,3 +280,70 @@ export function vestingPieces(s: Snapshot, v: Vesting | null): SeamPiece[] {
     });
   return pieces;
 }
+
+/** One allocation's schedule at a moment, in whole tokens: unlocked, the next unlock and when, and what stays locked. */
+export interface AllocationAt {
+  name: string;
+  holder: string;
+  beneficiary: string | null;
+  total: string;
+  unlocked: string;
+  next_unlock: { at: string; amount: string } | null;
+  later: string;
+  known: Known;
+}
+
+/** A token's vesting at a moment, each allocation and all of them together, for an agent to say (get_map). */
+export interface VestingAt {
+  at: string;
+  read_at: string;
+  token: Vesting['token'];
+  totals: Omit<AllocationAt, 'name' | 'holder' | 'beneficiary' | 'known'>;
+  allocations: AllocationAt[];
+}
+
+/**
+ * The vesting at `t` (ms) by its schedules alone: what each allocation has unlocked, what unlocks at its next
+ * moment, and what stays locked after it; the totals' next unlock is the soonest of any allocation, and what
+ * all of them unlock then. Unlocked by the schedule, not what was withdrawn (an allocation's `released`).
+ */
+export function vestingAt(v: Vesting, t: number): VestingAt {
+  const texts = v.allocations.flatMap((a) => [a.total, ...a.schedule.map((r) => r.amount)]);
+  const scale = Math.max(v.token.decimals, ...texts.map((x) => parseDecimal(x).s));
+  const fmt = (n: bigint) => formatDecimal(n, scale);
+  const allocations = v.allocations.map((a): AllocationAt => {
+    const total = units(a.total, scale);
+    const unlocked = unlockedAt(a, t, scale);
+    const m = nextMoment([a], t);
+    const soon = m === null ? 0n : unlockedAt(a, m, scale) - unlocked;
+    return {
+      name: a.name,
+      holder: a.holder,
+      beneficiary: a.beneficiary,
+      total: fmt(total),
+      unlocked: fmt(unlocked),
+      next_unlock: m === null ? null : { at: isoOf(m), amount: fmt(soon) },
+      later: fmt(total - unlocked - soon),
+      known: a.known,
+    };
+  });
+  const total = v.allocations.reduce((n, a) => n + units(a.total, scale), 0n);
+  const unlocked = v.allocations.reduce((n, a) => n + unlockedAt(a, t, scale), 0n);
+  const m = nextMoment(v.allocations, t);
+  const soon =
+    m === null
+      ? 0n
+      : v.allocations.reduce((n, a) => n + unlockedAt(a, m, scale) - unlockedAt(a, t, scale), 0n);
+  return {
+    at: isoOf(t),
+    read_at: v.read_at,
+    token: v.token,
+    totals: {
+      total: fmt(total),
+      unlocked: fmt(unlocked),
+      next_unlock: m === null ? null : { at: isoOf(m), amount: fmt(soon) },
+      later: fmt(total - unlocked - soon),
+    },
+    allocations,
+  };
+}
