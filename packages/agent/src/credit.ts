@@ -114,11 +114,14 @@ export async function chainChat(
   store: Store,
   chain: CreditChain,
   person: string,
-  account: string,
+  /** the person's NEAR wallets on the contract's network: their credit there is what all of them hold */
+  wallets: string | readonly string[],
   nearUsd: number,
   now: () => Date,
 ): Promise<ChainChat> {
-  const yocto = await chain.balanceOf(account);
+  const accounts = typeof wallets === 'string' ? [wallets] : [...new Set(wallets)];
+  const held = await Promise.all(accounts.map((a) => chain.balanceOf(a)));
+  const yocto = held.reduce((n, y) => n + y, 0n);
   await ensureOffchain(store, person, now());
   await carry(store, person, now());
   const owed = await owedOf(store, person);
@@ -139,21 +142,29 @@ export async function chainChat(
       // all of it owed back, or more: nothing is charged, and what's left stays owed back
       if (total <= 0) return owe(store, person, spentUsd, now());
       const ask = usdToYocto(total, nearUsd);
-      try {
-        const { charged, tx_hash } = await chain.charge(account, ask);
-        if (charged < ask) {
+      // from each wallet in turn, what it held when the chat began, until it's covered
+      let charged = 0n;
+      for (const [i, a] of accounts.entries()) {
+        const want = ask - charged;
+        if (want <= 0n) break;
+        const from = held[i] ?? 0n;
+        const take = i === accounts.length - 1 ? want : want < from ? want : from;
+        if (take <= 0n) continue;
+        try {
+          const r = await chain.charge(a, take);
+          charged += r.charged;
+          if (r.charged < take)
+            console.warn(
+              `petal: charged ${r.charged} of ${take} yoctoNEAR to a balance in ${chain.contract.contract} (tx ${r.tx_hash}): it held less`,
+            );
+        } catch (e) {
           console.warn(
-            `petal: charged ${charged} of ${ask} yoctoNEAR to a balance in ${chain.contract.contract} (tx ${tx_hash}): it held less`,
+            `petal: couldn't charge ${take} yoctoNEAR in ${chain.contract.contract}: ${(e as Error).message}`,
           );
         }
-        // what the chain didn't take stays owed
-        await owe(store, person, total - yoctoToUsd(charged, nearUsd) - owedNow, now());
-      } catch (e) {
-        console.warn(
-          `petal: couldn't charge ${ask} yoctoNEAR in ${chain.contract.contract}: ${(e as Error).message}`,
-        );
-        await owe(store, person, spentUsd, now());
       }
+      // what the chain didn't take stays owed
+      await owe(store, person, total - yoctoToUsd(charged, nearUsd) - owedNow, now());
     },
   };
 }
