@@ -1,13 +1,13 @@
-// The landing map's moves, one after another (lib/landing-tour.ts): what the map shows now. They play while the map
-// is on the screen and stop when it's scrolled away; with reduced motion the map holds the first and never moves.
+// The landing map's moves, one after another (lib/landing-tour.ts): the move the map makes now, what it shows and
+// its card. They play while the map is on the screen and stop when it's scrolled away; with reduced motion the map
+// holds the first and never moves.
 import { type RefObject, useEffect, useState } from 'react';
-import type { MapShow } from '../landscape/LandscapeCanvas.tsx';
 import type { TourMove } from '../lib/landing-tour.ts';
 
 export function useTour(
   moves: readonly TourMove[],
   frame: RefObject<HTMLElement | null>,
-): MapShow | undefined {
+): TourMove | undefined {
   const [at, setAt] = useState(0);
   const [seen, setSeen] = useState(false);
   useEffect(() => {
@@ -27,5 +27,5 @@ export function useTour(
     const next = window.setTimeout(() => setAt((i) => (i + 1) % moves.length), move.hold * 1000);
     return () => window.clearTimeout(next);
   }, [seen, still, move, moves.length]);
-  return seen || still ? move?.show : undefined;
+  return seen || still ? move : undefined;
 }
