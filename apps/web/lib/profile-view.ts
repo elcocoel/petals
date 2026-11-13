@@ -22,6 +22,21 @@ export const profilePageWords = {
   connectEvm: 'Connect an Ethereum wallet',
   connectSolana: 'Connect a Solana wallet',
   adding: 'Waiting for your wallet…',
+  /** While a wallet is asked: which one, so the person knows where to answer. */
+  waitingFor: (wallet: string) => `Waiting for ${wallet}. Answer it there.`,
+  /** Stops waiting for a wallet that doesn't answer; the wallet's own request stays where it is. */
+  stop: 'Stop waiting',
+  /** Puts the pick of wallets away. */
+  cancel: 'Cancel',
+  /** Several wallets of one kind in this browser: the person picks one by name. */
+  whichWallet: 'Which wallet?',
+  /** The NEAR wallet, by the name its picker gives it. */
+  nearWallet: 'Your NEAR wallet',
+  /** What a wallet said, plainly: it was refused, it's busy, or its own words. */
+  declined: (wallet: string) => `${wallet} declined. Nothing was added.`,
+  busy: (wallet: string) =>
+    `${wallet} already has a request open. Open ${wallet}, answer it, then try again.`,
+  answered: (wallet: string, why: string) => `${wallet} answered: ${why}`,
   notAdded: 'That wallet wasn’t added. Try again.',
   claims: 'Claims',
   /** How many accounts the claims are about. */
@@ -37,11 +52,40 @@ export const profilePageWords = {
 /** Which wallet to add: NEAR, an EVM one, or a Solana one. */
 export type WalletKind = 'near' | 'evm' | 'solana';
 
-/** Where adding a wallet is: offered, waiting for the wallet, or it didn't go through and why. */
+/** One wallet in this browser, as the person picks it (lib/evm-wallet.ts). */
+export interface WalletPick {
+  id: string;
+  name: string;
+  icon: string | null;
+}
+
+/**
+ * Where adding a wallet is: offered; several wallets of one kind, to pick from by name; waiting for the one
+ * asked, named; or it didn't go through and why.
+ */
 export type AddWalletPhase =
   | { kind: 'ready' }
-  | { kind: 'adding' }
+  | { kind: 'choose'; chain: 'evm' | 'solana'; wallets: WalletPick[] }
+  | { kind: 'adding'; wallet: string }
   | { kind: 'failed'; why: string };
+
+/**
+ * What a wallet's refusal says, plainly, with the wallet's name: the person said no (EIP-1193's 4001, or a
+ * wallet's own words for it), it already has a request open (-32002), or whatever else it said, as it said it.
+ */
+export function walletRefusal(wallet: string, e: unknown): string {
+  const code = (e as { code?: unknown } | null)?.code;
+  const said =
+    e instanceof Error
+      ? e.message
+      : typeof (e as { message?: unknown } | null)?.message === 'string'
+        ? (e as { message: string }).message
+        : String(e);
+  if (code === 4001 || /reject|denied|declin|cancel|closed/i.test(said))
+    return profilePageWords.declined(wallet);
+  if (code === -32002) return profilePageWords.busy(wallet);
+  return profilePageWords.answered(wallet, said || profilePageWords.notAdded);
+}
 
 /** A wallet as GET /api/v1/me lists it. */
 export interface ProvenWallet {

@@ -69,14 +69,14 @@ export async function signIn(d: SessionDeps): Promise<void> {
 }
 
 /**
- * An EVM wallet's proof: the browser's own EVM wallet names its account, Petals' challenge gives the Sign-In
- * with Ethereum text for it, and the wallet signs that text. No transaction, no spend. It rejects when there's no
- * wallet or the person says no.
+ * An EVM wallet's proof: the browser's EVM wallet (the one picked by its id, lib/evm-wallet.ts, or the first)
+ * names its account, Petals' challenge gives the Sign-In with Ethereum text for it, and the wallet signs that
+ * text. No transaction, no spend. It rejects when there's no wallet or the person says no.
  */
-export async function evmProof(): Promise<EvmProof> {
-  const { address, chainId } = await evmAccount();
+export async function evmProof(wallet?: string): Promise<EvmProof> {
+  const { address, chainId } = await evmAccount(wallet);
   const { message } = await evmChallenge(address, chainId);
-  const signature = await evmSign(message, address);
+  const signature = await evmSign(message, address, wallet);
   return { type: 'eip191', address, message, signature };
 }
 
@@ -100,11 +100,14 @@ export async function signInEvm(arrived: () => void, failed: (words: string) => 
   }
 }
 
-/** A Solana wallet's proof: the browser's Solana wallet connects, Petals' challenge gives the text, the wallet signs it. */
-export async function solanaProof(): Promise<SolanaProof> {
-  const address = await solanaAccount();
+/**
+ * A Solana wallet's proof: the browser's Solana wallet (the one picked by its id, or the first) connects, Petals'
+ * challenge gives the text, the wallet signs it.
+ */
+export async function solanaProof(wallet?: string): Promise<SolanaProof> {
+  const address = await solanaAccount(wallet);
   const { message } = await solanaChallenge(address);
-  const signature = await solanaSign(message);
+  const signature = await solanaSign(message, wallet);
   return { type: 'ed25519', address, message, signature };
 }
 
