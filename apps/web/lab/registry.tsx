@@ -10,6 +10,7 @@
 // first state shows here until they take them as props, as the chat's views do. Their controls are
 // live on the page.
 
+import type { Credit } from '@petal/core';
 import { DEFAULT_VIEW, DIMENSIONS, EVERY_FLOWER, inUse } from '@petal/core/view';
 import { grades } from '@petal/core/wedge/keys';
 import type { SurfaceName } from '@petal/tokens';
@@ -54,6 +55,7 @@ import { MapLayers } from '../components/MapLayers.tsx';
 import { MapList } from '../components/MapList.tsx';
 import { MapProposal } from '../components/MapProposal.tsx';
 import { MapSearch } from '../components/MapSearch.tsx';
+import { MapStrata } from '../components/MapStrata.tsx';
 import { Markdown } from '../components/Markdown.tsx';
 import { NextSteps } from '../components/NextSteps.tsx';
 import { Oops } from '../components/Oops.tsx';
@@ -108,6 +110,7 @@ import { Wordmark } from '../components/ui/Wordmark.tsx';
 import { ViewLegend } from '../components/ViewLegend.tsx';
 import { WalletFacts } from '../components/WalletFacts.tsx';
 import { Claims } from '../components/workspace/Claims.tsx';
+import { Contribution } from '../components/workspace/Contribution.tsx';
 import { Conversations } from '../components/workspace/Conversations.tsx';
 import { FlowerShelf } from '../components/workspace/FlowerShelf.tsx';
 import { Funds } from '../components/workspace/Funds.tsx';
@@ -124,6 +127,7 @@ import { FlowerPanel } from '../flower/FlowerPanel.tsx';
 import type { PublishableData } from '../lib/agent-client.ts';
 import { ceremonyView } from '../lib/ceremony.ts';
 import type { AnnotationRow } from '../lib/claim-lines.ts';
+import { contributionView } from '../lib/contribution-view.ts';
 import type { DrawingKind } from '../lib/figures.ts';
 import { keysOf, oneKey, readingKey, svgImage } from '../lib/flower-view.ts';
 import { settledMs } from '../lib/hero-story.ts';
@@ -644,6 +648,43 @@ const LAB_CLAIMS: AnnotationRow[] = [
     added_at: '2026-11-10T18:00:00Z',
   },
 ];
+
+/** A credit record for the lab, in core's credit/v1 shape: two published layers. */
+const LAB_LAYER = {
+  petal: 'claim/v3',
+  publication: 'f7'.repeat(32),
+  seq: 2,
+  confirmed: 0,
+  built_on_by: [],
+  reused_by: [],
+  built_on: 0,
+};
+const LAB_CREDIT: Credit = {
+  petal: 'credit/v1',
+  author: 'near:mainnet:a-name.near',
+  rule: 'points/v1',
+  compose: 'compose/v1',
+  layers: [
+    {
+      ...LAB_LAYER,
+      sha256: 'a1'.repeat(32),
+      map: 'eip155:100:0xfe1084bc16427e5eb7f13fc19bcd4e641f7d571f',
+      title: 'RaidGuild: who holds the shares',
+      published_at: '2026-11-11T10:00:00Z',
+      first: 120,
+    },
+    {
+      ...LAB_LAYER,
+      sha256: 'b2'.repeat(32),
+      map: 'near:mainnet:astro-stakers.poolv1.near',
+      title: 'Astro Stakers: its delegators',
+      published_at: '2026-11-12T18:00:00Z',
+      first: 8,
+    },
+  ],
+  totals: { layers: 2, first: 128, confirmed: 35, built_on: 4 },
+  composed_from: ['f7'.repeat(32)],
+};
 
 /** The editor's view for the lab: every control does nothing. */
 const editorView = (over: Partial<ProfileEditorView>): ProfileEditorView => ({
@@ -2899,6 +2940,32 @@ export const registry: LabEntry[] = [
     ],
   },
   {
+    id: 'Contribution',
+    group: 'The workspace',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/workspace/Contribution.tsx',
+    states: [
+      {
+        name: 'three counts',
+        render: () => <Contribution contribution={contributionView(LAB_CREDIT)} />,
+      },
+      {
+        name: 'nothing yet',
+        render: () => (
+          <Contribution
+            contribution={contributionView({
+              ...LAB_CREDIT,
+              layers: [],
+              totals: { layers: 0, first: 0, confirmed: 0, built_on: 0 },
+            })}
+          />
+        ),
+      },
+      { name: 'still reading', render: () => <Contribution contribution="reading" /> },
+    ],
+  },
+  {
     id: 'Claims',
     group: 'The workspace',
     figmaName: null,
@@ -3534,6 +3601,108 @@ export const registry: LabEntry[] = [
                 ],
                 worth: { text: '$1,997.16 at $3.74 per NEAR', source: '1Click, 11 Nov 2026' },
               }}
+            />
+          </div>
+        ),
+      },
+    ],
+  },
+  {
+    id: 'MapStrata',
+    group: 'The flower',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/MapStrata.tsx',
+    states: [
+      {
+        name: 'a map made by three layers from two authors, all on, the newest just added in your name',
+        render: () => (
+          <div className="w-tile-width">
+            <MapStrata
+              layers={[
+                {
+                  id: 'a1',
+                  title: 'RaidGuild members and their shares',
+                  kind: 'a reading',
+                  standing: 'verified' as const,
+                  covers: 'Gnosis block 37,912,004 · 9 Nov 2026',
+                  authors: [{ name: "Petals' mapping", signed: false, published: '9 Nov' }],
+                  read: '9 Nov 2026',
+                  builtOn: 0,
+                },
+                {
+                  id: 'a2',
+                  title: 'RaidGuild proposals and how each member voted',
+                  kind: 'proposals',
+                  standing: 'verified' as const,
+                  covers: '3 Feb 2021 to 11 Nov 2026',
+                  authors: [{ name: "Petals' mapping", signed: false, published: '11 Nov' }],
+                  read: '11 Nov 2026',
+                  builtOn: 0,
+                },
+                {
+                  id: 'a3',
+                  title: 'Names for 14 members, from the DAO’s own records',
+                  kind: 'names',
+                  standing: 'inferred' as const,
+                  covers: 'as of 12 Nov 2026',
+                  authors: [
+                    { name: 'elco.near', signed: true, published: '12 Nov' },
+                    { name: 'raid.near', signed: true, published: '13 Nov' },
+                  ],
+                  read: '12 Nov 2026',
+                  builtOn: 1,
+                },
+              ]}
+              on={new Set(['a1', 'a2', 'a3'])}
+              onToggle={() => undefined}
+              joined={new Set(['a3'])}
+            />
+          </div>
+        ),
+      },
+      {
+        name: 'the proposals switched off',
+        render: () => (
+          <div className="w-tile-width">
+            <MapStrata
+              layers={[
+                {
+                  id: 'a1',
+                  title: 'RaidGuild members and their shares',
+                  kind: 'a reading',
+                  standing: 'verified' as const,
+                  covers: 'Gnosis block 37,912,004 · 9 Nov 2026',
+                  authors: [{ name: "Petals' mapping", signed: false, published: '9 Nov' }],
+                  read: '9 Nov 2026',
+                  builtOn: 0,
+                },
+                {
+                  id: 'a2',
+                  title: 'RaidGuild proposals and how each member voted',
+                  kind: 'proposals',
+                  standing: 'verified' as const,
+                  covers: '3 Feb 2021 to 11 Nov 2026',
+                  authors: [{ name: "Petals' mapping", signed: false, published: '11 Nov' }],
+                  read: '11 Nov 2026',
+                  builtOn: 0,
+                },
+                {
+                  id: 'a3',
+                  title: 'Names for 14 members, from the DAO’s own records',
+                  kind: 'names',
+                  standing: 'inferred' as const,
+                  covers: 'as of 12 Nov 2026',
+                  authors: [
+                    { name: 'elco.near', signed: true, published: '12 Nov' },
+                    { name: 'raid.near', signed: true, published: '13 Nov' },
+                  ],
+                  read: '12 Nov 2026',
+                  builtOn: 1,
+                },
+              ]}
+              on={new Set(['a1', 'a3'])}
+              onToggle={() => undefined}
             />
           </div>
         ),

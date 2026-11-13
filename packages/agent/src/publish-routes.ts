@@ -14,6 +14,7 @@ import type { Nep413Proof } from '@petal/core/types';
 import { type NonceStore, type Rpc, verifyNep413 } from '@petal/near/auth';
 import {
   bodyCap,
+  creditFor,
   fromThrown,
   mapIdOf,
   preparePublishData,
@@ -82,6 +83,17 @@ export function publishRoutes(d: PublishDeps): Hono {
         scored_by: p.scored_by,
         ...(p.unscored ? { unscored: p.unscored } : {}),
       });
+    } catch (e) {
+      return failed(c, e);
+    }
+  });
+
+  // The signed-in person's credit (credit/v1, wave 8), as the wallet they signed in with is credited: bare, with its hash
+  app.get('/api/v1/me/credit', async (c) => {
+    const who = await whoOf(c);
+    if (!who) return signIn(c);
+    try {
+      return ok(c, { ...(await creditFor(d.tools, who.by)) });
     } catch (e) {
       return failed(c, e);
     }

@@ -31,6 +31,7 @@ import { mapClaims } from '../mapping-claims.ts';
 import { mcpHttpHandler } from '../mcp/server.ts';
 import { payoutsOf } from '../payouts.ts';
 import { cardProposals, proposalsOf } from '../proposals.ts';
+import { compositionOf, creditFor, mapRecord, readingCredit } from '../record.ts';
 import { findTool } from '../registry.ts';
 import { brainOf } from '../tools/brain.ts';
 import { base, findSnapshot } from '../tools/shared.ts';
@@ -572,13 +573,69 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
     ).find((m) => m.id === id);
     // a map hidden from the Power Map (#96) still answers here, and says why
     const hidden = hiddenMap(id);
-    return respond(
-      c,
-      map
-        ? { map, ...(hidden ? { hidden: { why: hidden.why, decided: hidden.decided } } : {}) }
-        : versioned(toolError('not_found', 'No map under that address.')),
-    );
+    if (!map) return respond(c, versioned(toolError('not_found', 'No map under that address.')));
+    // its layers, their authors with their three counts, and how many slots differ (wave 8, composition.md)
+    const record = await mapRecord(ctx, id);
+    return respond(c, {
+      map,
+      ...(hidden ? { hidden: { why: hidden.why, decided: hidden.decided } } : {}),
+      layers: record.layers,
+      authors: record.authors,
+      differs: record.differs,
+    });
   });
+  // A map's composed reading (wave 8, composition.md section 9): the reading of the layers asked (all by default)
+  // at a moment (the newest by default), through the viewer's view, with who stated each value it draws.
+  app.get('/api/v1/maps/:id/reading', async (c) => {
+    const view = await viewAsked(ctx, c.req.query('view'));
+    if (!view) return respond(c, noView());
+    const id = aboutKey(c.req.param('id'));
+    const on = (c.req.query('layers') ?? '').split(',').filter((x) => /^[0-9a-f]{64}$/.test(x));
+    const at = c.req.query('at');
+    const until = at ? (/^\d+$/.test(at) ? null : Date.parse(at)) : null;
+    const block = at && /^\d+$/.test(at) ? Number(at) : null;
+    const views = (await mapViews(await forViewer(c), view, { hidden: true })).filter(
+      (v) => v.map === id,
+    );
+    const record = await mapRecord(ctx, id);
+    const published = new Set(record.layers.map((l) => l.sha256));
+    const chosen = views
+      .filter((v) =>
+        on.length ? on.includes(v.snapshot) : !published.size || published.has(v.snapshot),
+      )
+      .filter((v) => until === null || Date.parse(v.as_of) <= until)
+      .sort((a, b) => Date.parse(b.as_of) - Date.parse(a.as_of));
+    const snapshots = await Promise.all(chosen.map((v) => findSnapshot(ctx, v.snapshot)));
+    const pick = chosen.find(
+      (_, i) => block === null || (snapshots[i]?.snapshot.block_height ?? 0) <= block,
+    );
+    if (!pick)
+      return respond(
+        c,
+        versioned(
+          toolError('not_found', 'No reading of that map for those layers and that moment.'),
+        ),
+      );
+    const s = await findSnapshot(ctx, pick.snapshot);
+    const map = await compositionOf(ctx, id);
+    return respond(c, {
+      rule: record.rule,
+      composed_from: record.composed_from,
+      snapshot: pick.snapshot,
+      as_of: pick.as_of,
+      title: pick.reading.title,
+      petals: pick.reading.petals,
+      given: pick.given,
+      credit:
+        map && s
+          ? readingCredit(map, s)
+          : { pieces: {}, petals: {}, publications: {}, authors: {} },
+    });
+  });
+  // An author's credit (credit/v1, wave 8): computed from the whole record, with its hash, so anyone can check it.
+  app.get('/api/v1/credit/:account', async (c) =>
+    respond(c, await creditFor(ctx, c.req.param('account'))),
+  );
   // A view's still picture, as a flower's tile is drawn: with the view its address names. No per-address limit: a
   // gallery asks for every view's picture at once, and behind the site every visitor reaches this server
   // from the site's own address. Each picture is kept for a year wherever it's cached.
