@@ -137,7 +137,7 @@ import { FlowerPanel } from '../flower/FlowerPanel.tsx';
 import type { PublishableData } from '../lib/agent-client.ts';
 import { ceremonyView } from '../lib/ceremony.ts';
 import type { AnnotationRow } from '../lib/claim-lines.ts';
-import { contributionView } from '../lib/contribution-view.ts';
+import { contributionView, publicContributionWords } from '../lib/contribution-view.ts';
 import type { DrawingKind } from '../lib/figures.ts';
 import { keysOf, oneKey, readingKey, svgImage } from '../lib/flower-view.ts';
 import { settledMs } from '../lib/hero-story.ts';
@@ -3280,6 +3280,20 @@ export const registry: LabEntry[] = [
               source: 'petals',
               profile: { name: null, about: 'A bio set on Petals.', avatar: null, links: {} },
             }}
+          />
+        ),
+      },
+      {
+        name: 'with their contribution',
+        render: () => (
+          <PublicProfile
+            answer={{
+              account: 'a-name.near',
+              chain: 'near',
+              source: 'near-social',
+              profile: { name: 'A name', about: 'Maps who holds power.', avatar: null, links: {} },
+            }}
+            contribution={contributionView(LAB_CREDIT, publicContributionWords)}
           />
         ),
       },

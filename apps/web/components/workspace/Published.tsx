@@ -1,29 +1,36 @@
 // The Published card, in the lobby's Your work band: the layers the person published to the map, newest first,
 // what each is about and when, in a set height that scrolls. With none yet, what goes there. Props only:
 // viewmodels/useLobby.ts reads the record (credit/v1). Words from lib/contribution-view.ts.
-import { type ContributionView, contributionWords } from '../../lib/contribution-view.ts';
+import {
+  type ContributionView,
+  type ContributionWords,
+  contributionWords,
+} from '../../lib/contribution-view.ts';
 import { Badge } from '../ui/Badge.tsx';
 import { Card } from '../ui/Card.tsx';
 import { Mono } from '../ui/Mono.tsx';
 
 export function Published({
   contribution,
+  words = contributionWords,
 }: {
   contribution: ContributionView | 'reading' | 'unread';
+  /** The person's own words, or as anyone reads them on a public page. */
+  words?: ContributionWords;
 }) {
   const layers = typeof contribution === 'string' ? [] : contribution.layers;
   return (
     <Card
-      title={contributionWords.layers}
+      title={words.layers}
       labelledBy="lobby-published"
       badge={layers.length > 0 ? <Badge>{layers.length}</Badge> : undefined}
     >
       {typeof contribution === 'string' ? (
         <p className="my-0 type-caption text-muted">
-          {contribution === 'reading' ? contributionWords.reading : contributionWords.unread}
+          {contribution === 'reading' ? words.reading : words.unread}
         </p>
       ) : layers.length === 0 ? (
-        <p className="my-0 type-body text-muted">{contributionWords.none}</p>
+        <p className="my-0 type-body text-muted">{words.none}</p>
       ) : (
         <ul className="m-0 flex max-h-figure-height list-none flex-col overflow-y-auto overscroll-none p-0">
           {layers.map((l) => (
