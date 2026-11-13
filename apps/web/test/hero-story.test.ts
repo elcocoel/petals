@@ -1,6 +1,6 @@
 // The hero's motion (lib/hero-story.ts, lib/hero-shots.ts) is a pure function of the beat and its time, so its seams
-// can be read: each beat's last frame is the next one's first, the camera cuts on the one and holds (Elco, 12 Nov:
-// cut to the beat), a hit lands elastic, wobbling onto its mark, and nothing is dead still for long.
+// can be read: each beat's last frame is the next one's first, the camera cuts on the one and holds, cut to the
+// beat, a hit lands elastic, wobbling onto its mark, and nothing is dead still for long.
 import { describe, expect, test } from 'vitest';
 import { flowerAt, shotOf } from '../lib/hero-shots.ts';
 import {

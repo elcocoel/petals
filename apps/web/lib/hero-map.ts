@@ -1,6 +1,6 @@
-// The far map the hero opens and closes on (Elco, 12 Nov: "start in the beginning from a far away situation ...
-// where you can see the simplified version of things and then we zoom in into my community ... following to other
-// communities and then it zooms out to the same frame it started"). Made-up communities, unnamed: the hero stays a
+// The far map the hero opens and closes on: the story starts far away, where things show simplified, zooms in to
+// my community, follows on to other communities and zooms back out to the frame it started on. Made-up
+// communities, unnamed: the hero stays a
 // symbol, only closer to the real thing. Each is drawn from far as the real far map draws one
 // (@petal/core/wedge/far: a soft wave made from its own petals' heights, a hole for its mark), tallest at twelve
 // as the real petals are ordered. Positions are in the drawing's units, my community at 0, 0. Pure; built once.
@@ -23,8 +23,8 @@ export interface Community {
 }
 
 /**
- * A made-up token's mark (Elco, 12 Nov: "we are not going to have black dots in the center ... some kind of cute
- * simulated imaginary token symbols"): a simple glyph in white on a disc in one of the look's keys.
+ * A made-up token's mark, a friendly imaginary symbol in a community's centre rather than a black dot: a simple
+ * glyph in white on a disc in one of the look's keys.
  */
 export interface Token {
   glyph: 'ring' | 'tri' | 'diamond' | 'hex' | 'bars' | 'star' | 'half';
@@ -39,7 +39,7 @@ const tokenOf = (next: () => number): Token => ({
 
 /**
  * The whole far frame, in the drawing's units: the full width of a wide stage, the words' side included, since the
- * story runs under them too (Elco, 12 Nov); my community sits right of its middle, where the story happens.
+ * story runs under them too; my community sits right of its middle, where the story happens.
  */
 const FRAME = { x: MAP_CENTRE.x - 1000, y: MAP_CENTRE.y, w: 6600, h: 3600 };
 const HALF = { x: FRAME.w / 2, y: FRAME.h / 2 };
@@ -63,8 +63,8 @@ const waveOf = (inner: number, heights: readonly number[]) =>
   );
 
 /**
- * A community `size` times mine, its holders made up as real ones come (Elco, 12 Nov: "you are using the same shape
- * for things ... it looks completely unrealistic"): one whale and a tail, a few large holders, an even and ragged
+ * A community `size` times mine, its holders made up as real ones come, since one shape repeated looks unrealistic:
+ * one whale and a tail, a few large holders, an even and ragged
  * spread, or a long tail; anywhere from a handful of wallets to dozens; most ordered largest first, as the real
  * default orders them, some by when they last voted. So no two have the same outline.
  */
