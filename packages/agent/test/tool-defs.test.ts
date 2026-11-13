@@ -125,6 +125,8 @@ describe('forModel on the real tools (near-validators fixture)', () => {
     expect(r.view_url).toBe(draftLink(drawn.spec_sha256));
     expect(r.legend).toEqual(drawn.legend);
     expect(r).not.toHaveProperty('petals');
+    // but how many it drew, so the model never describes petals that aren't there
+    expect(r.petals_drawn).toBe(drawn.petals.length);
     expect(r.view_url.length).toBeLessThan(40);
 
     for (const out of [s, d, f, r]) expect(JSON.stringify(out)).not.toMatch(/"participants":\[/);
