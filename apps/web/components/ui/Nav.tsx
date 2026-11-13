@@ -27,7 +27,7 @@ export function Nav() {
         <div className="flex items-center gap-x-space-8 md:gap-x-space-32">
           <div className="hidden items-center gap-x-space-32 md:flex">{links}</div>
           {/* The one Connect, as the hero has it: the connected account in green once someone is connected. */}
-          <ConnectButton label={copy.ask} />
+          <ConnectButton label={copy.ask} bar />
           <details className="md:hidden">
             <summary
               aria-label={copy.menu}

@@ -1486,6 +1486,24 @@ export const registry: LabEntry[] = [
         render: () => <ConnectButtonView label="Connect" account="alice.near" />,
       },
       {
+        name: 'connected, its menu open',
+        render: () => (
+          <ConnectButtonView
+            label="Connect"
+            account="alice.near"
+            align="start"
+            menu={{
+              open: true,
+              onToggle: () => {},
+              onClose: () => {},
+              onEnter: () => {},
+              onSwitch: () => {},
+              onLeave: () => {},
+            }}
+          />
+        ),
+      },
+      {
         name: 'connected, long address',
         render: () => (
           <ConnectButtonView label="Connect" account="0x8ba1f109551bD432803012645Ac136ddd64DBA72" />

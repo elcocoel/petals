@@ -20,9 +20,12 @@ export function Menu({
   label,
   items,
   onClose,
+  align = 'end',
 }: {
   /** What a screen reader hears for the menu. */
   label: string;
+  /** Which edge of its button it lines up with: the end (right), or the start for a button at a column's left. */
+  align?: 'start' | 'end';
   items: MenuItem[];
   onClose: () => void;
 }) {
@@ -61,7 +64,7 @@ export function Menu({
       aria-label={label}
       tabIndex={-1}
       onKeyDown={step}
-      className="absolute top-full right-0 z-30 flex w-max flex-col border border-hairline bg-surface p-space-4"
+      className={`absolute top-full z-30 flex w-max flex-col border border-hairline bg-surface p-space-4 ${align === 'start' ? 'left-0' : 'right-0'}`}
     >
       {items.map((item) => (
         <div key={item.key} role="none">
