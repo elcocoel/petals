@@ -11,7 +11,7 @@
       "continues": [],
       "status": "ready",
       "file": "doctrine.md",
-      "sha256": "e882bd15b66e4c99046b1375f3c21f176dbab6472a9b7e126a44267cc9644fa1"
+      "sha256": "1c6813f7ae5cd7de2855169a41a43ff9cde9ddf1cd9c0e6583c2def955cba2c5"
     },
     {
       "id": "connecting",
@@ -87,7 +87,7 @@
       "id": "services",
       "kind": "department",
       "department": "services",
-      "for": "one-press deliverables, each a chapter an agent follows, all free (#101)",
+      "for": "one-press deliverables, each a chapter an agent follows, all free",
       "recognise": [
         "services"
       ],
@@ -95,7 +95,7 @@
       "continues": [],
       "status": "partial",
       "file": "services/README.md",
-      "sha256": "73655fcc46b5c0d5790d1dd9d06a76b2ceabd660d611d9dcf1e54000f5859799"
+      "sha256": "70cb6f579bbb5683f59d6f0584039cc67b321175b4188c53fae4be94bf655593"
     },
     {
       "id": "stewardship",
@@ -1659,7 +1659,7 @@
       "also": []
     },
     {
-      "task": "A one-press service (#101)",
+      "task": "A one-press service",
       "words": [
         "service",
         "deliverable"

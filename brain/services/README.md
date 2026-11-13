@@ -1,14 +1,14 @@
 ---
 id: services
 kind: department
-for: one-press deliverables, each a chapter an agent follows, all free (#101)
+for: one-press deliverables, each a chapter an agent follows, all free
 recognise: services
 status: partial
 ---
 
 # Services
 
-One-press deliverables, each a chapter an agent follows, all free (#101; Elco named all eight and a full DAO report).
+One-press deliverables, each a chapter an agent follows, all free: eight services and a full DAO report.
 
 ## When to use which chapter
 
