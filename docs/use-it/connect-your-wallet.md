@@ -4,7 +4,7 @@ title: Connect your wallet
 order: 10
 ---
 
-You don’t need one to browse the public Power Map. To use Petals’ agent, save your work and pay for its services, you’ll need to connect a wallet: NEAR, Ethereum or Solana. It’s how you sign in and return to your conversations, notes and maps.
+You don’t need one to browse the public Power Map. To use Petals’ agent, save your work and pay for its services, you sign up with a NEAR wallet. It’s how you sign in and return to your conversations, notes and maps. Ethereum and Solana wallets are linked afterwards, in your lobby.
 
 Signing in moves no funds and costs nothing. Payments are separate, and Petals never asks for your private key or seed phrase.
 
@@ -17,16 +17,16 @@ Signing in moves no funds and costs nothing. Payments are separate, and Petals n
 ## 2. Sign in
 
 - Open Petals and press **Connect**. Pick your wallet and approve the sign-in it shows.
-- Connect lists NEAR wallets. To sign in with an Ethereum or Solana wallet in your browser, open `/make`, which offers **Connect an Ethereum wallet** and **Connect a Solana wallet** beside **Connect a NEAR wallet**.
-- To add more wallets to the same account, use **Wallets** in your lobby. Each signs once to prove it’s yours.
+- Signing up is always with a NEAR wallet, so Connect lists NEAR wallets.
+- Then link your Ethereum and Solana wallets under **Wallets** in your lobby. Each signs once to prove it’s yours. A linked wallet can pay through NEAR Intents, has your work on its network credited to you, and signs you in too.
 - Signing in is a signature, not a payment.
 - Petals then opens your own space, where your conversations and maps are kept, private to you.
 
 ## 3. Credit for Petals’ agent
 
-Petals’ agent runs on NEAR AI, and each answer is paid as it goes, in dollars with NEAR beside. A flower costs a few cents. Until you have credit, the chat shows a row to add some, starting at 1 in **Dollars to add**:
+Petals’ agent runs on NEAR AI, and each answer is paid as it goes, in dollars with NEAR beside. A flower costs a few cents. Credit is added in your lobby: under **Balance**, press **Add funds**, enter the **Dollars to add**, and pay one of two ways:
 
-- **Add**, with the dollars and the NEAR they come to beside them (such as **Add $1.00 · 0.29 NEAR**): your wallet asks you to approve one plain transfer of that NEAR. This needs NEAR in the wallet. Signed in with Ethereum or Solana, a NEAR wallet first signs once to join your account, spending nothing, then approves the transfer.
+- **Add**, with the dollars and the NEAR they come to beside them (such as **Add $1.00 · 0.29 NEAR**): your wallet asks you to approve one plain transfer of that NEAR. This needs NEAR in the wallet.
 - **Pay with another token,** with no NEAR needed. Pick the token and its chain, and an address on that chain, where anything not swapped goes back; the dollars are the row’s. Then press **Get the address to send to**. Send exactly the amount shown, in one transfer from any wallet, to that address, with the memo if one is shown, before the time shown. The chat says when the credit is added. This goes through NEAR Intents.
 
 To have NEAR in your wallet, buy it on an exchange that lists NEAR and withdraw it to your wallet’s address.
