@@ -10,6 +10,7 @@ import { beforeEach, describe, expect, test } from 'vitest';
 import { privateStore } from '../src/drafts.ts';
 import {
   appendPublication,
+  authorOf,
   compositionOf,
   creditFor,
   mapRecord,
@@ -184,6 +185,11 @@ describe("the map from the record: its layers, its authors' three counts, a read
     const elcoCredit = await creditFor(r.ctx, ELCO);
     expect(elcoCredit.totals).toEqual({ layers: 1, first: 1, confirmed: 0, built_on: 0 });
     expect(elcoCredit.hash).toMatch(/^[0-9a-f]{64}$/);
+    // a bare NEAR account is the same author (LOBBY, 13 Nov: /credit/petals.near answered zeros)
+    expect(authorOf('petals.near')).toBe(ELCO);
+    expect(authorOf('alice.testnet')).toBe('near:testnet:alice.testnet');
+    expect(authorOf(ELCO)).toBe(ELCO);
+    expect((await creditFor(r.ctx, authorOf('petals.near'))).hash).toBe(elcoCredit.hash);
   });
 
   test('the record only grows: an entry appended twice is one entry', async () => {
