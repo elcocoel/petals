@@ -37,7 +37,8 @@ const { values, positionals } = parseArgs({
   },
 });
 const folder = positionals[0];
-if (!folder || !values.url) throw new Error('usage: search-eval.ts <folder> --url <oMLX> [--only maps|brain]');
+if (!folder || !values.url)
+  throw new Error('usage: search-eval.ts <folder> --url <oMLX> [--only maps|brain]');
 const model = searchModel(values.url, {
   ...(values.embedding ? { embedding: values.embedding } : {}),
   ...(values.reranker ? { reranker: values.reranker } : {}),
