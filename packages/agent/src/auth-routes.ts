@@ -510,6 +510,13 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
       return fail(c, 'unauthorised', 'Not signed in.');
     }
     const credit = await personCredit(store, session.subject);
+    // what's left on the invites a chat of theirs falls back on (admitOwner), so a person on an invite reads
+    // what they can spend, not zero (13 Nov: judges chat on invites and never pay)
+    let inviteLeft = 0;
+    for (const id of await store.session.invitesOf(session.subject, iso())) {
+      const state = await inviteBody(id);
+      if (!inviteRefusal(state)) inviteLeft += state?.left_usd ?? 0;
+    }
     return ok(c, {
       person_id: session.subject,
       network: session.network,
@@ -518,6 +525,8 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
       wallets: await walletsOf(session.subject),
       // null: no credit of their own, so a chat needs an invite like anyone else's
       credit: credit && { ...credit, usd_per_chat: usdPerOwnChat },
+      // additive (13 Nov): dollars left on their usable invites; 0 for none
+      invite_left_usd: Math.round(inviteLeft * 1e6) / 1e6,
     });
   });
 
