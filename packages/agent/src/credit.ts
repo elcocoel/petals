@@ -1,4 +1,4 @@
-// Petals' credit contract, on the server (9 Nov; proposal-payment.md, section 6). With PETAL_CREDIT_CONTRACT
+// Petals' credit contract, on the server (proposal-payment.md, section 6). With PETAL_CREDIT_CONTRACT
 // and PETAL_CHARGER_KEY_FILE set, a person's own credit is what they hold in the contract: read from the
 // chain before each chat, in dollars at NEAR's price then, and charged on chain for what the chat cost when
 // it ends, in NEAR at that same price. Without them, a person pays by a plain transfer (pay-routes.ts).
@@ -56,7 +56,7 @@ export interface ChainChat {
   settle(spentUsd: number): Promise<void>;
 }
 
-/** What a person owes Petals on the contract (Elco, 10 Nov: carry forward): positive owed, negative owed back. */
+/** What a person owes Petals on the contract (carried forward): positive owed, negative owed back. */
 export const owedAccount = (person: string) => `owed:${person}`;
 
 const usd = (n: number) => Math.round(n * 1e9) / 1e9;
@@ -96,7 +96,7 @@ async function carry(store: Store, person: string, at: Date): Promise<void> {
 
 /**
  * Reads `account`'s balance and sets the person's credit to it in dollars at `nearUsd`, less what they owe,
- * and says how to charge. Elco's choice, 10 Nov (a, carry forward): the contract can only charge, so what's
+ * and says how to charge. It carries forward: the contract can only charge, so what's
  * owed either way rides on the next charge: owed is charged with it, owed back takes from it.
  */
 export async function chainChat(

@@ -223,7 +223,7 @@ describe('fastDataWriter refuses before sending', () => {
     });
   });
 
-  test('mainnet is refused (writes there need Elco’s OK)', () => {
+  test('mainnet is refused (writes there need the operator’s OK)', () => {
     expect(() =>
       fastDataWriter({
         network: 'mainnet' as 'testnet',

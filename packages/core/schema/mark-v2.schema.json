@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:petal:schema:mark:v2",
   "title": "Petal mark v2",
-  "description": "mark/v2 (11 Nov, board #97) is mark/v1 with its organisation's types: each an is_a claim (claim/v4) about the map's own address or the DAO behind its token, with its kind and evidence, in the order they were found. What tells one organisation on the map from another: its name, its token's symbol and its logo, each with where it came from (Elco, 11 Nov: 'a better module or strategy to grab the names and the token symbols or any logos of these organizations'; board #85, research/org-names-logos-2026-11-11.md, strategy 2: the chain first, then curated lists). One per map, named by the map's address. Each part says whether the thing declared it itself (self-declared), a curated list holds it (verified), or Petals worked it out (inferred).",
+  "description": "mark/v2 (11 Nov) is mark/v1 with its organisation's types: each an is_a claim (claim/v4) about the map's own address or the DAO behind its token, with its kind and evidence, in the order they were found. What tells one organisation on the map from another: its name, its token's symbol and its logo, each with where it came from (the chain first, then curated lists). One per map, named by the map's address. Each part says whether the thing declared it itself (self-declared), a curated list holds it (verified), or Petals worked it out (inferred).",
   "type": "object",
   "additionalProperties": false,
   "required": [

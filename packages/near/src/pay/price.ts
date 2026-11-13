@@ -1,4 +1,4 @@
-// nearUsd (9 Nov, specs/003-target/proposal-payment.md): NEAR's price in dollars, from NEAR Intents' own
+// nearUsd (specs/003-target/proposal-payment.md): NEAR's price in dollars, from NEAR Intents' own
 // list of the tokens it swaps (1Click, keyless). A top-up becomes dollars at this price, because NEAR AI
 // bills in dollars.
 import { describe } from '../errors.ts';

@@ -43,7 +43,7 @@ const commandIn = (c: ConnectChapter, heading: string): string => {
 };
 
 /**
- * Each agent's own command to keep the file as its tools, as its connect chapter says it (step 4: one
+ * Each agent's own command to keep the file as its tools, as its connect chapter says it (one
  * source). They take effect in a new session.
  */
 export function keepCommands(): { claude: string; codex: string; hermes: string } {
@@ -78,7 +78,7 @@ function appSteps(origin: string): string {
   return out.join('\n');
 }
 
-/** What an agent works out for itself, so the person has nothing to understand (Elco, 6 Nov). */
+/** What an agent works out for itself, so the person has nothing to understand. */
 function setup(origin: string, fileSha?: string): string {
   const host = new URL(origin).host;
   const sha = fileSha ? `, sha256 \`${fileSha}\` (\`shasum -a 256 ${FILE_PATH}\`)` : '';

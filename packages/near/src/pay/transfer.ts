@@ -1,4 +1,4 @@
-// readTransfer (9 Nov, specs/003-target/proposal-payment.md): what a NEAR transaction moved, read back from
+// readTransfer (specs/003-target/proposal-payment.md): what a NEAR transaction moved, read back from
 // the chain. A person pays for Petals' agent with one plain NEAR transfer from their own wallet to Petals'
 // account. The server holds no key: it only looks the transaction up. It asks for the FINAL outcome, so a
 // transfer is counted only once it can't be undone, and an RPC node that hasn't seen it yet waits for it.
@@ -7,7 +7,7 @@ import { describe, NearError } from '../errors.ts';
 import type { NearNetwork } from '../network.ts';
 import { RPC_URLS } from '../network.ts';
 
-/** Where a person's NEAR goes, per network. Both are Elco's: petals.near since 4 Nov (T147). */
+/** Where a person's NEAR goes, per network: Petals' own accounts (T147). */
 export const PAY_RECEIVER: Record<NearNetwork, string> = {
   mainnet: 'petals.near',
   testnet: 'petals.testnet',

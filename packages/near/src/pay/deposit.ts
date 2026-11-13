@@ -1,10 +1,10 @@
-// A top-up through NEAR Intents, for real (Elco, 10 Nov: "let users pay with anything from anywhere";
-// coordinator/pricing-protocol.md, section 4). 1Click quotes a swap from any token it lists, on any chain it
+// A top-up through NEAR Intents, for real: pay with any token from any chain. 1Click quotes a swap from any
+// token it lists, on any chain it
 // lists, into USDC for Petals' account, and gives a deposit address: the person sends one plain transfer
 // there, from whatever wallet they have, and 1Click does the rest. The quote is asked for EXACT_OUTPUT, so
 // the dollars Petals receives are the dollars the person asked for, and delivered into NEAR Intents under
 // Petals' account (INTENTS), which needs no token storage on chain. The dry module (one-click.ts) stays dry.
-// With Petals' partner key (ONE_CLICK_API_KEY, Elco's, 10 Nov), sent as X-API-Key, 1Click takes 0.20%, and
+// With Petals' partner key (ONE_CLICK_API_KEY), sent as X-API-Key, 1Click takes 0.20%, and
 // 0.01% between stablecoins or the same token across chains; without one, 0.25% (its authentication page).
 import { describe, NearError } from '../errors.ts';
 import { NEAR_USDC, usdcUnits } from './one-click.ts';

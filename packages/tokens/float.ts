@@ -7,7 +7,7 @@ export const floatBox = {
   /** Where a box starts: how wide. */
   width: 480,
   /**
-   * The conversation's foot, the dark base its input is (design/conversation.md): where it starts, a few lines
+   * The conversation's foot, the dark base its input is: where it starts, a few lines
    * of the field over its controls and the run's line, and the least a hand can make it, one line and its
    * controls. The field fills the base, so a taller base is a taller field.
    */

@@ -1,4 +1,4 @@
-// One map (Elco, 10 Nov: "the workspace and the agent don't seem to be connected to the global power map"):
+// One map, the workspace and the agent both connected to the global power map:
 // every view stored on the site, named and with who made it, searched by list_flowers and find_target before
 // a fresh read, and handed over whole by GET /api/v1/map. On a real fixture snapshot, offline.
 import {
@@ -170,7 +170,7 @@ describe('the map', () => {
   });
 });
 
-describe('one map per address (Elco, 10 Nov)', () => {
+describe('one map per address', () => {
   /** A drawing on the map, with only what grouping reads. */
   const drawing = (
     sha: string,
@@ -227,7 +227,7 @@ describe('one map per address (Elco, 10 Nov)', () => {
     expect(maps[1]?.name).toBeNull();
   });
 
-  test("a map's card carries its mark (board #85): each part with where it came from, its logo on this site", async () => {
+  test("a map's card carries its mark: each part with where it came from, its logo on this site", async () => {
     await drawnView('Founders Guild v1', 'mapping.petals.near');
     const store = privateStore(r.ctx.config);
     const at = '2026-11-11T13:00:00.000Z';
@@ -269,7 +269,7 @@ describe('one map per address (Elco, 10 Nov)', () => {
         ...mark.logo,
         url: `${(r.ctx.config.apiBase ?? '').replace(/\/+$/, '')}/api/v1/media/${logo}.png`,
       },
-      // a mark/v1 has no types: none, and no words (#97)
+      // a mark/v1 has no types: none, and no words
       types: [],
       type_words: [],
       read_at: at,
@@ -278,7 +278,7 @@ describe('one map per address (Elco, 10 Nov)', () => {
     expect(((await one.json()) as Out).map.mark).toEqual(maps[0].mark);
   });
 
-  test('the map and its list are named by what they hold: asked again with the tag, a 304 (/map/data, 11 Nov)', async () => {
+  test('the map and its list are named by what they hold: asked again with the tag, a 304 (/map/data)', async () => {
     await drawnView('Founders Guild v1', 'mapping.petals.near');
     const app = new Hono();
     app.route(
@@ -301,7 +301,7 @@ describe('one map per address (Elco, 10 Nov)', () => {
     }
   });
 
-  test("a DAO map's voting blocs (#94): members as its reading's petal ids, over a period, beyond chance; kept nowhere", async () => {
+  test("a DAO map's voting blocs: members as its reading's petal ids, over a period, beyond chance; kept nowhere", async () => {
     await drawnView('Founders Guild v1', 'mapping.petals.near');
     const store = privateStore(r.ctx.config);
     const about = `eip155:1:${DAO}`;
@@ -364,7 +364,7 @@ describe('one map per address (Elco, 10 Nov)', () => {
     expect(((await at('?from=soon')) as Out).error).toMatchObject({ code: 'bad_input' });
     expect(((await at('?min_kappa=2')) as Out).error).toMatchObject({ code: 'bad_input' });
 
-    // said, and kept nowhere (META, 11 Nov)
+    // said, and kept nowhere
     expect(await blocMaps(r.ctx)).toEqual({ maps: 1, pairs: 1, blocs: 1 });
     expect(await store.annotation.list(MAPPING)).toEqual([]);
   });
@@ -400,7 +400,7 @@ describe('one map per address (Elco, 10 Nov)', () => {
     expect(Buffer.from(picture?.body ?? '', 'base64')).toEqual(Buffer.from(PNG));
   });
 
-  test('the logos pass (12 Nov, walk 3) adds only a logo to a kept mark without one; its words stay; --dry keeps nothing', async () => {
+  test('the logos pass adds only a logo to a kept mark without one; its words stay; --dry keeps nothing', async () => {
     await drawnView('Founders Guild v1', 'mapping.petals.near');
     const store = privateStore(r.ctx.config);
     const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 5, 5]);
@@ -441,7 +441,7 @@ describe('one map per address (Elco, 10 Nov)', () => {
     expect(await logoMaps(r.ctx, { fetch: fetchImpl })).toMatchObject({ without: 0, found: 0 });
   });
 
-  test("the types pass (#97) adds each kept mark's types and keeps its words; --dry keeps nothing", async () => {
+  test("the types pass adds each kept mark's types and keeps its words; --dry keeps nothing", async () => {
     await drawnView('Founders Guild v1', 'mapping.petals.near');
     const store = privateStore(r.ctx.config);
     const nothing = (async () => new Response('not found', { status: 404 })) as typeof fetch;
@@ -484,7 +484,7 @@ describe('one map per address (Elco, 10 Nov)', () => {
     expect(mark.types[0]).toMatchObject({ verb: 'is_a', kind: 'observed', petal: 'claim/v4' });
   });
 
-  test("the value run (#91): a token nothing prices says no price, with its reading's totals; a priced one is in dollars", async () => {
+  test("the value run: a token nothing prices says no price, with its reading's totals; a priced one is in dollars", async () => {
     await drawnView('Founders Guild v1', 'mapping.petals.near');
     const store = privateStore(r.ctx.config);
     // 1Click lists nothing here and DefiLlama prices nothing: Moloch's shares have no market
@@ -566,7 +566,7 @@ describe('one map per address (Elco, 10 Nov)', () => {
     });
     expect(v.treasury.items[1]).toMatchObject({ price: null, usd: null });
 
-    // a treasury the chain gave (a wave's value/v2) is kept as it is, not DefiLlama's
+    // a treasury the chain gave (a mapping run's value/v2) is kept as it is, not DefiLlama's
     const chainTreasury = {
       items: [
         {
@@ -591,7 +591,7 @@ describe('one map per address (Elco, 10 Nov)', () => {
     expect(again).toMatchObject({ petal: 'value/v3', treasury: chainTreasury });
   });
 
-  test("the value run keeps what's kept (12 Nov): a value for another asset stays whole and gains only value/v3's fields; a price read before stays when this read finds none", async () => {
+  test("the value run keeps what's kept: a value for another asset stays whole and gains only value/v3's fields; a price read before stays when this read finds none", async () => {
     await drawnView('Founders Guild v1', 'mapping.petals.near');
     const store = privateStore(r.ctx.config);
     const about = `eip155:1:${DAO}`;
@@ -605,7 +605,7 @@ describe('one map per address (Elco, 10 Nov)', () => {
       if (url.includes('api.coingecko.com')) return new Response('[]');
       return new Response(JSON.stringify({ coins: {} }));
     }) as typeof fetch;
-    // a wave's value for NEAR, as it wrote it
+    // a mapping run's value for NEAR, as it wrote it
     const wave = {
       petal: 'value/v1',
       about,
@@ -648,7 +648,7 @@ describe('one map per address (Elco, 10 Nov)', () => {
     expect(again.price).toEqual(wave.price);
   });
 
-  test("NEAR under a wave's name for it gets today's NEAR price, its totals' dollars at it, the rest kept (Elco, 12 Nov: 3.40 beside 3.74)", async () => {
+  test("NEAR under a mapping run's name for it gets today's NEAR price, its totals' dollars at it, the rest kept (no 3.40 beside 3.74)", async () => {
     await drawnView('Founders Guild v1', 'mapping.petals.near');
     const store = privateStore(r.ctx.config);
     const about = `eip155:1:${DAO}`;
@@ -694,7 +694,7 @@ describe('one map per address (Elco, 10 Nov)', () => {
     expect(v.price.ref).toMatch(/^NEAR, priced as wNEAR one to one/);
   });
 
-  test("a map's proposals (#93): its card says how many, and GET /api/v1/maps/:id/proposals gives each vote", async () => {
+  test("a map's proposals: its card says how many, and GET /api/v1/maps/:id/proposals gives each vote", async () => {
     await drawnView('Founders Guild v1', 'mapping.petals.near');
     const store = privateStore(r.ctx.config);
     const at = '2026-11-11T15:00:00.000Z';
@@ -733,7 +733,7 @@ describe('one map per address (Elco, 10 Nov)', () => {
       ],
       read_at: at,
     };
-    // the second proposal a day earlier: the card's period is the earliest to the latest (walk 3, 12 Nov)
+    // the second proposal a day earlier: the card's period is the earliest to the latest
     const earlier = new Date(Date.parse(at) - 86_400_000).toISOString();
     (proposals.proposals[1] as { at: string }).at = earlier;
     await store.proposals.put({ about, body: JSON.stringify(proposals), read_at: at });
@@ -805,7 +805,7 @@ describe('one map per address (Elco, 10 Nov)', () => {
     ]);
   });
 });
-describe("through the viewer's view (one-source.md, step 2)", () => {
+describe("through the viewer's view", () => {
   const IDENTITY = {
     ...DEFAULT_VIEW,
     dimensions: { ...DEFAULT_VIEW.dimensions, colour: { data: 'identity' } },
@@ -864,7 +864,7 @@ describe("through the viewer's view (one-source.md, step 2)", () => {
     expect(await drawn(path)).toBe(theDefault);
     expect(await drawn(`${path}?view=${viewHash(DEFAULT_VIEW)}`)).toBe(theDefault);
     // addresses made before view/v2 name the v1 default, and those made until 11 Nov the v2 one: each draws as
-    // it did (annotation-layer.md, step 6), the same picture, since v2's added only labels on identity
+    // it did, the same picture, since v2's added only labels on identity
     const former = (await run('render_flower', { spec, view: DEFAULT_VIEW_V2_0 })).render_sha256;
     expect(former).not.toBe(theDefault);
     expect(await drawn(`${path}?view=${viewHash(DEFAULT_VIEW_V1).slice(0, 12)}`)).toBe(former);

@@ -1,4 +1,4 @@
-// A map's token in dollars and its supply (board #91): 1Click's price, matched by chain and address, and the
+// A map's token in dollars and its supply: 1Click's price, matched by chain and address, and the
 // supply from the token's own chain. On a fake fetch.
 import { describe, expect, test } from 'vitest';
 import { ETHEREUM } from '../src/evm/chains.ts';
@@ -74,7 +74,7 @@ describe('prices from 1Click', () => {
   });
 });
 
-describe("1Click first, then DefiLlama (Elco's pick, 11 Nov)", () => {
+describe('1Click first, then DefiLlama', () => {
   const SKR = 'SKRbvo6Gf7GondiT3BbTfuRDPqLWei4j2Qy2NPGZhW3';
   const fetchImpl = (async (input: string | URL | Request) => {
     const url = String(input);

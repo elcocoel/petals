@@ -1,5 +1,5 @@
-// Layers kept on the site, and a dataset's versions (005, data.md; Elco, 9 Nov: "anyone can add, fork and use
-// the prior", private first). Over HTTP, through the project's link, as the pasted file and curl call them.
+// Layers kept on the site, and a dataset's versions (005, data.md: anyone can add, fork and use
+// a prior layer, private first). Over HTTP, through the project's link, as the pasted file and curl call them.
 import { Hono } from 'hono';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { httpApp } from '../src/http/app.ts';

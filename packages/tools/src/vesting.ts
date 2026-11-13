@@ -1,7 +1,6 @@
-// Each petal's vesting at its reading's date (core's vestingPieces; Elco, 12 Nov, wave 7: "it's vesting reader for
-// anything - the model has to know how to figure out a vesting schedule and have a strategy to deal with the petal
-// segmentation"), for every renderer: the map's views and render_flower. A map's vesting is parsed once for each
-// time it was read, so drawing the map stays as cheap as it was.
+// Each petal's vesting at its reading's date (core's vestingPieces: one reader for any vesting schedule, and how it
+// splits each petal), for every renderer: the map's views and render_flower. A map's vesting is parsed once for
+// each time it was read, so drawing the map stays as cheap as it was.
 import { mapOf, type SeamPiece, type Vesting, validateVesting, vestingPieces } from '@petal/core';
 import type { Snapshot } from '@petal/core/types';
 import { privateStore } from './drafts.ts';

@@ -1,28 +1,29 @@
-// Maps hidden from the Power Map (board #96; Elco approved DAO SET's review, 11 Nov): never deleted, each with
-// its reason, and the four the review protects stay shown.
+// Maps hidden from the Power Map by the curation review: never deleted, each with its reason, and the four the
+// review protects stay shown.
 import { describe, expect, test } from 'vitest';
 import { hiddenCount, hiddenMap, retiredClaim, retiredReading } from '../src/hidden.ts';
 import hidden from '../src/hidden-maps.json' with { type: 'json' };
 import retired from '../src/retired-readings.json' with { type: 'json' };
 
 describe('maps hidden from the Power Map', () => {
-  test('the 64 Elco approved and the six retired off-chain cards, each by its address in one form, with its reason and who decided', () => {
+  test('the 64 the review hid and the six retired off-chain cards, each by its address in one form, with its reason and decision', () => {
     expect(hiddenCount()).toBe(70);
     for (const h of hidden.hidden) {
       expect(h.about).toMatch(
         /^(eip155:\d+:0x[0-9a-f]{40}|solana:[A-Za-z0-9]+:[1-9A-HJ-NP-Za-km-z]{32,44}|none:[a-z0-9.-]+)$/,
       );
       expect(h.why.length).toBeGreaterThan(20);
+      expect(hiddenMap(h.about)?.decided).toMatch(/, 11 Nov 2026/);
     }
     expect(hiddenMap('eip155:1:0x9c8ff314c9bc7f6e59a9d9225fb22946427edc03')).toMatchObject({
       name: 'Nouns',
       why: expect.stringMatching(/^Hidden until an NFT reader can read it properly/),
-      decided: expect.stringContaining('#96'),
+      decided: 'Curation review of unverified and partial maps, 11 Nov 2026',
     });
     // a retired card says its own decision
     expect(hiddenMap('none:cow.eth-cip-91-voters')).toMatchObject({
       why: expect.stringMatching(/^Retired: Snapshot ballots/),
-      decided: expect.stringMatching(/^META, 11 Nov 2026: retire/),
+      decided: expect.stringMatching(/^Shared map curation, 11 Nov 2026: the 'none' card retired/),
     });
   });
 
@@ -37,7 +38,7 @@ describe('maps hidden from the Power Map', () => {
     expect(hiddenMap('eip155:100:0x372fc5a6b0b12ae174f09f6fc849a83de6b503b6')).toBeNull();
   });
 
-  test("the readings the waves replaced are retired, never deleted: each names its replacement and the wave's record", () => {
+  test('the readings mapping runs replaced are retired, never deleted: each names its replacement and what changed', () => {
     expect(retired.retired.length).toBe(149);
     for (const r of retired.retired) {
       expect(r.snapshot).toMatch(/^[0-9a-f]{64}$/);
@@ -48,7 +49,7 @@ describe('maps hidden from the Power Map', () => {
     const first = retired.retired[0] as { snapshot: string; from: string };
     expect(retiredReading(first.snapshot)).toMatchObject({
       from: first.from,
-      decided: expect.stringMatching(/^META, 11 Nov 2026/),
+      decided: expect.stringMatching(/^Shared map curation, 11 Nov 2026/),
     });
     expect(retiredReading('0'.repeat(64))).toBeNull();
   });
@@ -63,7 +64,7 @@ describe('maps hidden from the Power Map', () => {
       expect(retiredReading(old)?.replaced_by).toBe(onVenear);
   });
 
-  test("the claims a wave reissued are retired, never deleted: each names its replacement and the wave's record", () => {
+  test('the claims a mapping run reissued are retired, never deleted: each names its replacement and what changed', () => {
     const claims = (retired as { claims: { id: string; replaced_by: string; from: string }[] })
       .claims;
     expect(claims.length).toBe(3);

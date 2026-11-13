@@ -91,7 +91,7 @@ describe('the shape', () => {
     const v3 = schemas.claimV3 as Lists;
     expect(new Set(v3.properties.verb.enum)).toEqual(new Set(upToV3));
     expect(v3.properties.kind.enum).toEqual([...CLAIM_KINDS]);
-    // v4 (#97): v3 and is_a
+    // v4: v3 and is_a
     const v4 = schemas.claimV4 as Lists;
     expect(new Set(v4.properties.verb.enum)).toEqual(new Set(all));
     expect(v4.properties.kind.enum).toEqual([...CLAIM_KINDS]);

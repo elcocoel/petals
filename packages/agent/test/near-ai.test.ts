@@ -388,7 +388,7 @@ describe('nearAiClient', () => {
   });
 
   test("GLM's calls written into its words are read as calls, and its markup never reaches the person", () => {
-    // Elco's run 9c599a61, 10 Nov: GLM 5.3's answer was this markup, shown as words
+    // run 9c599a61, 10 Nov: GLM 5.3's answer was this markup, shown as words
     const t =
       '<tool_call>propose_spec<arg_key>choices</arg_key><arg_value>{"outline": "member_name"}</arg_value>' +
       '<arg_key>network</arg_key><arg_value>erc20-votes</arg_value><arg_key>sha256</arg_key>' +

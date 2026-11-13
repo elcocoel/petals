@@ -1,7 +1,7 @@
-// vesting/v1 (12 Nov, wave 7; Elco: "it's vesting reader for anything - the model has to know how to figure out a
-// vesting schedule and have a strategy to deal with the petal segmentation and that's it"): a token's vesting
-// schedules, one allocation each, as whoever found them wrote them (Petals' agent from the brain's method, a
-// person's agent, a mapping wave), kept by the token's map. Each allocation names the account its locked tokens
+// vesting/v1 (12 Nov), a vesting reader for any token: the model works out the vesting schedule, and the petal's
+// segments show it. A token's vesting schedules, one allocation each, as whoever found them wrote them (Petals'
+// agent from the brain's method, a person's agent, a mapping run), kept by the token's map. Each allocation
+// names the account its locked tokens
 // sit in, who can claim them, its total, how it releases (lumps at a moment and streams from one moment to
 // another, in steps or continuously), what was withdrawn when read, and how it's known: verified (read on chain),
 // published (the project's own table) or inferred (from the same pattern as one read on chain).

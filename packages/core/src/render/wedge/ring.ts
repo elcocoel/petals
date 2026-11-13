@@ -104,8 +104,8 @@ export const SHAPE: Shape = (() => {
 
 /**
  * Distance along a boundary's radial line at which a wedge reaches height h, measured to its corners, so a petal of
- * full height ends on the flower's circle however few petals share it (Elco, 11 Nov: flowers of fewer than 10
- * wallets looked "a little broken"; measured along the side's normal, a corner reached r0 + h / cos(half the
+ * full height ends on the flower's circle however few petals share it (flowers of fewer than 10 wallets looked
+ * broken: measured along the side's normal, a corner reached r0 + h / cos(half the
  * wedge), twice as far with three petals, far past the circle).
  */
 const reachAt = (ring: Ring, i: number, h: number): number =>
@@ -161,8 +161,7 @@ export function rightAt(ring: Ring, i: number, h: number): [number, number] {
 
 /**
  * A flower of fewer petals than this keeps each as wide as in a flower of this many, its petals evenly round the
- * circle with open circle between (Elco, 12 Nov: "we haven't yet figure out how to make those with a small group
- * number of people to show up. In a nice way"): two people are two petals, not two half discs.
+ * circle with open circle between, so a small group shows well: two people are two petals, not two half discs.
  */
 export const FEW = 5;
 
@@ -170,8 +169,8 @@ export const FEW = 5;
 /**
  * One wedge, put where it's told: from angle `a`, `w` wide (radians, before `rotation`), `height` tall. What `lay`
  * does for each petal in turn, and what a flower gliding from one reading to the next does for each petal at its
- * own angle, width and height (wave 8, Elco: "how different data layers from different people contribute to fuller
- * and fuller maps"; the map drawn from the layers on, petals moving, no jump).
+ * own angle, width and height (as layers from different people make a map fuller, the map is drawn from the
+ * layers on, petals moving, no jump).
  */
 export function placeAt(
   ring: Ring,
@@ -263,8 +262,8 @@ export function bandPath(ring: Ring, i: number, hA: number, hB: number): string 
 }
 
 /**
- * A whole wedge with its top following the circle (Elco, 11 Nov: "the top of the petals should be rounded to follow
- * whatever arch they would have"): its straight sides and fine gap as bandPath's, its end an arc round the
+ * A whole wedge with its top following the circle (the top of a petal rounded to its arc): its straight sides
+ * and fine gap as bandPath's, its end an arc round the
  * flower's centre through both tip corners, so it matches the arcs above it. For /lab first.
  */
 export function roundTopPath(ring: Ring, i: number, h: number): string {
@@ -283,7 +282,7 @@ export function polygonPath(ring: Ring): string {
     const { cx, cy } = SHAPE;
     return `M${n3(cx - rho)} ${n3(cy)}A${n3(rho)} ${n3(rho)} 0 1 1 ${n3(cx + rho)} ${n3(cy)}A${n3(rho)} ${n3(rho)} 0 1 1 ${n3(cx - rho)} ${n3(cy)}Z`;
   }
-  // round the circle: laid, the petals already are; gliding to a new order (wave 8), they're visited by angle, so
+  // round the circle: laid, the petals already are; gliding to a new order, they're visited by angle, so
   // the line never cuts across the middle
   const order = Array.from({ length: ring.n }, (_, i) => i);
   const angle = (i: number) => (((ring.start[i] as number) % TAU) + TAU) % TAU;

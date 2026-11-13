@@ -1,6 +1,6 @@
-// vesting/v1 (12 Nov, wave 7; Elco: "it's vesting reader for anything - the model has to know how to figure out a
-// vesting schedule and have a strategy to deal with the petal segmentation"): a token's schedules, and each petal
-// that holds them cut into unlocked, next unlock and later at its reading's date. TRUMP's numbers, worked apart.
+// vesting/v1 (12 Nov: one vesting reader for anything, which works out a schedule and cuts the petals by it): a
+// token's schedules, and each petal that holds them cut into unlocked, next unlock and later at its reading's
+// date. TRUMP's numbers, worked apart.
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, test } from 'vitest';

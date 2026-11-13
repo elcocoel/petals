@@ -1,5 +1,5 @@
-// The far wave (#84): one soft ring from a flower's own heights, smoothed round the circle so wallets merge, with
-// a hole for the organisation's mark. Drawn only by the map bench in /lab until Elco has seen it.
+// The far wave: one soft ring from a flower's own heights, smoothed round the circle so wallets merge, with
+// a hole for the organisation's mark. Drawn only by the map bench in /lab.
 import { describe, expect, test } from 'vitest';
 import { FAR_WAVE, farPath, farRuns, waveHeights, waveReach } from '../src/render/wedge/far.ts';
 import { modelOf } from '../src/render/wedge/model.ts';

@@ -1,5 +1,5 @@
-// What a token, a DAO or an account says of itself, read from its own chain: the first source of a mark
-// (research/org-names-logos-2026-11-11.md, strategy 2). Keyless, public endpoints only.
+// What a token, a DAO or an account says of itself, read from its own chain: the first source of a mark.
+// Keyless, public endpoints only.
 //   EVM:    the token's name() and symbol(); a Baal DAO's own profile, posted on chain through Poster;
 //           a Moloch v1 or v2 DAO's, as it gave it to DAOhaus
 //   Solana: the mint's Metaplex metadata (name, symbol, and the JSON its uri names, with its image)
@@ -27,7 +27,7 @@ export interface SelfSaid {
   symbol: Declared | null;
   /** a picture it points to: a URL, ipfs:// or ar:// */
   image: Declared | null;
-  /** the Baal DAO whose shares this token is, when its owner's sharesToken() names it back (#97) */
+  /** the Baal DAO whose shares this token is, when its owner's sharesToken() names it back */
   baal?: string;
 }
 const nothing = (): SelfSaid => ({ org: null, name: null, symbol: null, image: null });
@@ -307,7 +307,7 @@ export async function nearSaid(
 }
 
 /**
- * A Sputnik DAO's own logo (12 Nov, walk 3): get_config's metadata (base64 JSON) holds flagLogo, an address the
+ * A Sputnik DAO's own logo: get_config's metadata (base64 JSON) holds flagLogo, an address the
  * DAO set itself. Only a web or IPFS address is kept: Astro's 21-character file ids pointed at Astro's own store,
  * which is gone. Names stay as they are: only the picture.
  */

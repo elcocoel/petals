@@ -75,7 +75,7 @@ describe('payouts', () => {
   });
 });
 
-describe('a read again never knows less than the one kept (META, 12 Nov, after run 3)', () => {
+describe('a read again never knows less than the one kept', () => {
   test("a payout this read couldn't price or date keeps the kept read's; what this read found stands", () => {
     const kept = paid as Payouts;
     const first = kept.payouts.find((p) => p.usd !== null && p.when !== null) as Payout;
