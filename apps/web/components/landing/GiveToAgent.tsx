@@ -2,13 +2,15 @@
 // (design/section-4-illustration/). One button copies the one setup prompt (agentWords.setup, lib/agents.ts), which
 // any chatbot can follow before sign-in to walk the person to Petals' agent.
 // The band leads to that button: one large line and under it a glass card, the button first and the line that says
-// what it does under it, stacked and centred in the band's left. The drawing stands behind the band on the right,
-// out of any column, on the band's lower edge; its detached tint shapes and a white patch inside the ear, which
-// vanished into or stood out against the band's green, are cut out of the file (petals-leading-agents-clear.webp).
+// what it does under it, stacked in the band's left, the line set as the hero's headline is. The drawing stands
+// behind the band on the right, out of any column, on the band's lower edge; its detached tint shapes and a white
+// patch inside the ear, which vanished into or stood out against the band's green, are cut out of the file
+// (petals-leading-agents-clear.webp).
 import { landingCopy } from '../../lib/landing-copy.ts';
 import { publicOrigin } from '../../lib/site-links.ts';
 import { CopyPrompt } from '../CopyPrompt.tsx';
 import { Section } from '../ui/Section.tsx';
+import { SectionHead } from '../ui/SectionHead.tsx';
 import { Glass } from './HeroGlass.tsx';
 
 const copy = landingCopy.giveToAgent;
@@ -30,12 +32,16 @@ export function GiveToAgent() {
         />
         {/* Wide, the stack takes the band's left, centred there and against the drawing, which has the right. */}
         <div className="col-start-1 row-start-1 mx-auto flex w-full max-w-page-width px-block-gap md:px-page-inset lg:items-center">
-          <div className="flex w-full flex-col items-center gap-column-gap text-center lg:w-7/12">
-            <h2 className="my-0 text-balance type-title lg:type-display-compact">{copy.title}</h2>
+          <div className="flex w-full flex-col items-start gap-column-gap lg:w-7/12">
+            {/* set as the hero's headline is, since it does the same job: a section head at the display size, in a
+                column as wide as the hero's words (a third of the page; four sevenths of this stack) */}
+            <div className="lg:w-4/7">
+              <SectionHead size="compact" title={copy.title} />
+            </div>
             {/* the centre of the band: the button first, and what it does under it */}
             <div className="relative w-full max-w-conversation-width">
               <Glass tone="light" />
-              <div className="relative flex flex-col items-center gap-block-gap p-block-gap">
+              <div className="relative flex flex-col items-center gap-block-gap p-block-gap text-center">
                 <CopyPrompt
                   prompt={copy.prompt(publicOrigin)}
                   originIn={publicOrigin}
