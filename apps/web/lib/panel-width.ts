@@ -1,4 +1,4 @@
-// How wide the side panel may be (design/side-panel.md, lines 16 to 19): from its designed width, the
+// How wide the side panel may be: from its designed width, the
 // tokens' Sidebar width, to twice that, the default being the designed one. Pure.
 import { sizes } from '@petal/tokens';
 

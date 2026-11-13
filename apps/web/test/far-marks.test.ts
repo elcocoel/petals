@@ -1,4 +1,4 @@
-// The far wave's names and marks (#84, #85): each flower named and marked by its map's own mark, where its card has
+// The far wave's names and marks: each flower named and marked by its map's own mark, where its card has
 // one; what it had where it doesn't.
 import { describe, expect, test } from 'vitest';
 import { type BenchLandscape, withMarks } from '../landscape/land.ts';

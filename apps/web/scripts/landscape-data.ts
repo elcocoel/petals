@@ -1,5 +1,5 @@
 // node apps/web/scripts/landscape-data.ts: the map bench's copy of the night's data (specs/006-the-map, plan). Reads
-// the run's index (../research/mapping-run-2026-11-09/INDEX.md, or the path given), and for each saved
+// the run's index (a mapping run's INDEX.md outside the repo, or the path given), and for each saved
 // view takes its spec from its /d/ link and its reading from /api/v1/render, then every pair of groups
 // that share accounts from /api/v1/relations/overview. Read-only. The server allows 60 calls a minute,
 // so calls are a little over a second apart, and a view already in the fixture is never fetched again:

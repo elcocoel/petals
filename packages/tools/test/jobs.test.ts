@@ -1,4 +1,4 @@
-// Jobs in a project (Elco, 9 Nov, B with C): Petals' agent hands a job out, the person's own agent
+// Jobs in a project: Petals' agent hands a job out, the person's own agent
 // takes it with the project's continue link, does it on its machine and reports back; the page reads
 // the list with any link. Over HTTP, as the pasted file and curl call them.
 import { DEFAULT_VIEW } from '@petal/core';
@@ -131,7 +131,7 @@ describe('jobs over HTTP', () => {
   });
 });
 
-describe("a job's own conversation (swarm.md step 2)", () => {
+describe("a job's own conversation", () => {
   test('taken with the project link, its work goes in its own conversation, and its report lands there too', async () => {
     const { app, id, cont, read } = await project();
     const store = privateStore(r.ctx.config);
@@ -196,7 +196,7 @@ describe('the link the page hands the person’s agent', () => {
   });
 });
 
-// 10 Nov (research/cloud-agent-permissions-2026-11-10.md): an app at /mcp can't hold a wait open, so it takes
+// An app at /mcp can't hold a wait open, so it takes
 // the person's jobs with their agent key when they ask, from any of their projects, and works in the link.
 describe('take_job with the agent key', () => {
   const KEY = `petal_agent_${'k'.repeat(43)}`;
@@ -237,7 +237,7 @@ describe('take_job with the agent key', () => {
     expect((await store.job.list(id)).find((j) => j.id === 'job_1')?.taken_by).toBe('claude-app');
   });
 
-  test("a connector says what it can do with can (swarm lean 2): kept as the agent's own, the latest wins", async () => {
+  test("a connector says what it can do with can: kept as the agent's own, the latest wins", async () => {
     const { store, take } = await keyed();
     await take({
       agent_key: KEY,

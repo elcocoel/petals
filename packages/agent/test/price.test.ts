@@ -1,4 +1,4 @@
-// The price on Petals' agent (price/v2; Elco, 10 Nov: "there's three components to the price"): NEAR AI's
+// The price on Petals' agent (price/v2), in three components: NEAR AI's
 // bill, plus a base fee whose switches are all off live, plus the person's tip, a donation at a percent of
 // their usage, 0 by default. Each goes onto the credit as its own entry, naming the price.
 import { readFileSync } from 'node:fs';

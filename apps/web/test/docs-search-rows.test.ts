@@ -1,4 +1,4 @@
-// Search in /docs (Elco, 12 Nov: "the search function"): the answers that are pages /docs renders, as rows. SEARCH's
+// Search in /docs: the answers that are pages /docs renders, as rows.
 // docs-search.test.ts keeps its list of pages equal to the docs'.
 import { describe, expect, test } from 'vitest';
 import { docsRows, docsSearchStatus, docsSearchWords } from '../lib/docs-search.ts';

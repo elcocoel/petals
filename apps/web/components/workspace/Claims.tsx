@@ -1,9 +1,9 @@
-// The Claims card (#79, the profile page as the investigator's card; the annotations layer,
-// coordinator/annotation-layer.md): everything the person and their agents have kept about accounts, from
-// all their projects, by the account it's about, newest first. Over them, how many of each kind (observed,
-// sourced, stated, inferred: how each is known, never "verified"). Each claim as a petal's details say it:
-// what it says, how it's known, where it rests and who said it, with its source. Props only:
-// viewmodels/useLobby.ts reads it. Words from lib/profile-view.ts and lib/claim-lines.ts, drafts.
+// The Claims card (the profile page as the investigator's card; the annotations layer): everything the
+// person and their agents have kept about accounts, from all their projects, by the account it's about,
+// newest first. Over them, how many of each kind (observed, sourced, stated, inferred: how each is known,
+// never "verified"). Each claim as a petal's details say it: what it says, how it's known, where it rests
+// and who said it, with its source. Props only: viewmodels/useLobby.ts reads it. Words from
+// lib/profile-view.ts and lib/claim-lines.ts.
 import { claimWords } from '../../lib/claim-lines.ts';
 import type { PowerQuoteItem } from '../../lib/power-quotes.ts';
 import { type ClaimsView, profilePageWords } from '../../lib/profile-view.ts';
@@ -18,7 +18,7 @@ export function Claims({
   quote,
 }: {
   claims: ClaimsView | 'reading' | 'unread';
-  /** An illustrated power quote for when there's nothing yet (#89, wave 7). */
+  /** An illustrated power quote for when there's nothing yet. */
   quote?: PowerQuoteItem | null;
 }) {
   const view = typeof claims === 'string' ? null : claims;
@@ -54,8 +54,7 @@ export function Claims({
               <Badge key={k.kind}>{`${k.count} ${k.kind}`}</Badge>
             ))}
           </div>
-          {/* a set height, scrolling inside, as the map's claims box does (Elco, 11 Nov: "I don't like the
-              idea that the claims widget is infinite") */}
+          {/* a set height, scrolling inside, as the map's claims box does, so the widget is never endless */}
           <ul className="m-0 flex max-h-figure-height list-none flex-col overflow-y-auto overscroll-none p-0">
             {view.groups.map((g) => (
               <li

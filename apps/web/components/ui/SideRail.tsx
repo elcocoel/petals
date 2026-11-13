@@ -1,9 +1,9 @@
 'use client';
-// The side panel (specs/004-workspace; design/side-panel.md, every state and every click; Elco, 10 Nov:
-// "once the sidebar is open, I can see all of the sections one after the other"). Docked to the window's
-// left edge, the full height. A bar of icons is always there: first the one collapse control, which always
-// works, then one icon per section, with the person's own two (Profile, Settings) at its foot, as in VS
-// Code and every IDE; each icon's name shows in a tooltip. Open, under the wordmark, what's always in sight
+// The side panel (specs/004-workspace): once open, every section shows one after the other. Docked to the
+// window's left edge, the full height. A bar of icons is always there: first the one collapse control, which
+// always works, then the person's own place (`account`, a way to the page that holds the account), a
+// separator, and one icon per section, as in VS Code and every IDE; each icon's name shows in a tooltip.
+// Open, under the wordmark, what's always in sight
 // (`top`: connecting an agent, and what's connected); then the panel beside the bar is one column of
 // every section in order, scrolling as one under the wordmark; a section's icon scrolls it to that section,
 // and collapsed, opens it there. Its right edge is a sash that sizes it. It holds no state: open or
@@ -19,9 +19,14 @@ export interface RailSection {
   icon: IconName;
   /** Its name, read aloud and in its icon's tooltip. */
   label: string;
-  /** At the bar's foot: the person's own. */
-  foot?: boolean;
   content: ReactNode;
+}
+
+/** The person's own place, second in the bar: a way to its page, marked while it's the page open. */
+export interface RailAccount {
+  href: string;
+  label: string;
+  current: boolean;
 }
 
 /** The sash's hands and the column's: the ViewModel writes the width straight to the column. */
@@ -61,6 +66,7 @@ export function SideRail({
   jump,
   width,
   top,
+  account,
   over = false,
 }: {
   /** What a screen reader hears for the panel. */
@@ -77,6 +83,8 @@ export function SideRail({
   width: RailWidth;
   /** Under the wordmark, above every section, never folded or scrolled away. */
   top?: ReactNode;
+  /** The person's own place, under the collapse control and over the sections. */
+  account?: RailAccount;
   /** Opened, the panel lies over the page past the bar instead of beside it: a narrow window. */
   over?: boolean;
 }) {
@@ -93,8 +101,8 @@ export function SideRail({
       aria-label={label}
       className="relative flex h-full shrink-0 border-r border-hairline bg-surface"
     >
-      <div className="flex shrink-0 flex-col justify-between p-space-8">
-        <div className="flex flex-col gap-space-16">
+      <div className="flex shrink-0 flex-col gap-space-16 p-space-8">
+        <div className="flex flex-col gap-space-4">
           <IconButton
             icon="sidebar"
             label={toggleLabel}
@@ -102,9 +110,19 @@ export function SideRail({
             onClick={onToggle}
             expanded={open}
           />
-          <Icons sections={sections.filter((s) => !s.foot)} onJump={onJump} />
+          {account && (
+            <IconButton
+              icon="profile"
+              label={account.label}
+              tip="right"
+              href={account.href}
+              current={account.current}
+            />
+          )}
         </div>
-        <Icons sections={sections.filter((s) => s.foot)} onJump={onJump} />
+        {/* the person's own place above, the work below */}
+        <hr className="m-0 border-0 border-t border-hairline" />
+        <Icons sections={sections} onJump={onJump} />
       </div>
       {open && (
         <div
@@ -119,8 +137,7 @@ export function SideRail({
             ref={column}
             className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-none px-space-8 pb-block-gap"
           >
-            {/* the last section takes at least the column's height, so any head can come to the top
-                (design/side-panel.md, lines 7 and 8) */}
+            {/* the last section takes at least the column's height, so any head can come to the top */}
             {sections.map((s, i) => (
               <div
                 key={s.key}
@@ -131,7 +148,7 @@ export function SideRail({
               </div>
             ))}
           </div>
-          {/* the sash (design/side-panel.md, lines 16 to 19 and 33): drag to size, double-click for the
+          {/* the sash: drag to size, double-click for the
               usual width; under the pointer, and while it's dragged, the line shows in the accent */}
           <span
             aria-hidden="true"

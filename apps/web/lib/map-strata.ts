@@ -1,9 +1,9 @@
-// A map is made by many people (Elco, 13 Nov, wave 8: "how different data layers from different people contribute
-// to fuller and fuller maps"; specs/005-mapping-brain/data.md: a dataset is the layers anyone adds, each one set of
+// A map is made by many people, their data layers adding up to fuller maps (specs/005-mapping-brain/data.md:
+// a dataset is the layers anyone adds, each one set of
 // facts from one author at one time, never changed after). Its layers as strata, the newest on top: what each holds,
 // how it stands (read from the chain, inferred, or a lead), what it covers (a block, a date or a window), who kept it
 // and when, how it was read, what it was built on, and whether it's on in the map you see. 'Not recorded' wherever
-// the record has nothing. Pure. The words are drafts.
+// the record has nothing. Pure.
 
 import type { State } from '@petal/core';
 import { chainLabel } from './flower-view.ts';
@@ -102,7 +102,7 @@ export function strataLine(l: StrataLayer): string {
     .join(' · ');
 }
 
-/** A map's layers as SYSTEMS's GET /api/v1/maps/:id gives them (composition.md §9). */
+/** A map's layers as GET /api/v1/maps/:id gives them (composition.md §9). */
 export interface CardLayer {
   sha256: string;
   petal: string;
@@ -120,14 +120,14 @@ export interface CardAuthor {
   author: string;
   name?: string | null;
   imported?: boolean;
-  /** on this map, from credit/v1 (Elco, wave 8: "who's helping a lot or a little"): facts they added first, facts
+  /** on this map, from credit/v1, how much each one helps: facts they added first, facts
    * they confirmed, and accounts that built on their work */
   first?: number;
   confirmed?: number;
   built_on?: number;
 }
 
-/** What each kind of document is, in people's words (composition.md §1). Drafts. */
+/** What each kind of document is, in people's words (composition.md §1). */
 const KIND_WORDS: Record<string, string> = {
   snapshot: 'a reading',
   value: 'a price and treasury',

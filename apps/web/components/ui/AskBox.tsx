@@ -28,8 +28,8 @@ const SIZES = {
 } as const;
 
 /**
- * The conversation's base (design/conversation.md, lines 14 and 15): the field is the dark glass itself, with
- * no well of its own, on whatever surface holds it. It fills what holds it, so a taller base is a taller field.
+ * The conversation's base: the field is the dark glass itself, with no well of its own, on whatever surface
+ * holds it. It fills what holds it, so a taller base is a taller field.
  */
 const DEVICE = {
   form: 'flex min-h-0 w-full flex-1 flex-col gap-space-8',

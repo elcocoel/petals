@@ -223,15 +223,15 @@ describe('fastDataWriter refuses before sending', () => {
     });
   });
 
-  test('mainnet is refused (writes there need Elco’s OK)', () => {
+  test('a mainnet writer is made like a testnet one (its key is read only when it first writes)', () => {
     expect(() =>
       fastDataWriter({
-        network: 'mainnet' as 'testnet',
+        network: 'mainnet',
         receiver: 'petals.near',
-        writer: 'writer.petals.near',
+        writer: 'petals-writer.near',
         keyFile: '/nowhere',
       }),
-    ).toThrow(/testnet only/);
+    ).not.toThrow();
   });
 });
 

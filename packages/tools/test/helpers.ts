@@ -2,7 +2,7 @@
 // (fileStore, near-validators, core) with fakes only where the outside world would be (fakeMap,
 // the test NEP-413 signer and fake RPC, the recorded dry quote), and MCP clients over HTTP and
 // in-memory stdio.
-import { mkdtempSync, readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -22,7 +22,7 @@ import { fakeRpcFor, type TestSigner, testSigner } from '@petal/near/auth/testin
 import { fakeMap } from '@petal/near/map';
 import { fakeQuote } from '@petal/near/pay';
 import type { Hono } from 'hono';
-import { expect } from 'vitest';
+import { afterAll, expect } from 'vitest';
 import { serveOn } from '../src/mcp/stdio.ts';
 import { findTool } from '../src/registry.ts';
 import type { ToolContext } from '../src/types.ts';
@@ -149,8 +149,15 @@ export const NOW = '2026-11-04T12:00:00.000Z';
  * holding the two test snapshots), the real near-validators module, fakeMap, the test NEP-413
  * signer with a fake RPC, and the recorded dry quote.
  */
+/** The temp folders this test file's rigs made, removed when it ends. */
+const made: string[] = [];
+afterAll(() => {
+  for (const d of made.splice(0)) rmSync(d, { recursive: true, force: true, maxRetries: 3 });
+});
+
 export async function rig(): Promise<TestRig> {
   const stateDir = mkdtempSync(join(tmpdir(), 'petal-tools-'));
+  made.push(stateDir);
   const store = fileStore({
     fixtures: join(FIXTURES, 'snapshots'),
     cache: join(stateDir, 'cache'),

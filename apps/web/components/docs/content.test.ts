@@ -8,7 +8,7 @@ import { byDepartment } from './groups.ts';
 test('all eleven sections and canonical files have navigable, unique pages', async () => {
   const pages = catalog();
   assert.equal(pages.filter((p) => p.overview).length, 11);
-  // What Petals is comes first (card 110: the docs are for people)
+  // What Petals is comes first (the docs are for people)
   assert.equal(pages[0]?.slug, 'what-petals-is');
   assert.equal(new Set(pages.map((p) => p.slug)).size, pages.length);
   for (const source of [
@@ -122,7 +122,7 @@ test("the site's own pictures render where the site serves them, and only those 
   assert.equal((result.html.match(/<img/g) ?? []).length, 1);
 });
 
-test('the brand kit reads its colours and type from the design tokens (card 110, part 4)', async () => {
+test('the brand kit reads its colours and type from the design tokens', async () => {
   const pages = catalog();
   const page = pages.find((p) => p.slug === 'brand-kit/assets');
   assert.ok(page);
@@ -157,7 +157,7 @@ test('/docs/brain is grouped by department, each hub first, with the routing tab
   assert.equal(groups.filter((g) => g.department).length, 7);
 });
 
-test('an empty slot is a space with no words in it (card 110)', async () => {
+test('an empty slot is a space with no words in it', async () => {
   const { html } = await renderMarkdown('## Why\n\n{slot}\n\nAfter.', 'docs/x/index.md', []);
   assert.match(html, /<div data-slot=""><\/div>/);
   assert.ok(!html.includes('{slot}'));

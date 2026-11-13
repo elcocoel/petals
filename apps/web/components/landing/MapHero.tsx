@@ -1,5 +1,4 @@
-// LANDING's lean for a new hero (Elco, 11 Nov: "We will need a new hero entirely, that is leftovers"), in
-// /lab/landing-hero until Elco has seen it: the approved eyebrow, headline and subline across the page, Connect and
+// A candidate hero, shown only in /lab/landing-hero: the eyebrow, headline and subline across the page, Connect and
 // the way into the whole map under them, and the live Power Map below, out to the window's edges, with the key
 // to its colours, so the map is the first thing a visitor sees and the chapters' typing box goes. The map section
 // further down ("Start with a network you know.") folds into it, so the map shows once.

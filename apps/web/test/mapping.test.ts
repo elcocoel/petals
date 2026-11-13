@@ -1,5 +1,5 @@
-// /make's two states (Elco, 12 Nov): what mapping says the person would add to the map in front. Wave 8 (13 Nov):
-// each layer says what it adds to that map, by the cases of SYSTEMS's composition (composition.md §5).
+// /make's two states: what mapping says the person would add to the map in front. Each layer says what it
+// adds to that map, by the cases of the server's composition (composition.md §5).
 import { describe, expect, test } from 'vitest';
 import type { PublishableData } from '../lib/agent-client.ts';
 import {
@@ -130,6 +130,18 @@ describe('the cases, in words', () => {
         differs: { count: 0, authors: [] },
       }).map((l) => `${l.tag}: ${l.words}`),
     ).toEqual(['New data: The map has no token balance TRUMP, proposals outcome yet']);
+  });
+
+  test('a unit its name already says isn’t said twice: votes cast, not votes cast votes', () => {
+    expect(
+      toMapLines({
+        new_data: { whats: ['snapshot/proposals_made proposals', 'snapshot/votes_cast votes'] },
+        new_moment: { states: [] },
+        new_subjects: { count: 0 },
+        match: { count: 0, authors: [] },
+        differs: { count: 0, authors: [] },
+      }).map((l) => l.words),
+    ).toEqual(['The map has no proposals made, votes cast yet']);
   });
 
   test('the summary counts kinds of data, moments, subjects and facts, and says nothing of what’s zero', () => {

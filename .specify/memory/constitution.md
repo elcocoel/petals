@@ -3,9 +3,9 @@ Sync Impact Report
 - Version change: 1.2.0 → 1.2.1 (PATCH: licence decided, MIT; publication boundary stated). Before that, 1.1.0 → 1.2.0 (MINOR: principle I's geometry made explicit; principle IV gains the keep-what-was-gathered rule; a NEAR showcase constraint is added)
 - Modified principles: I (a flower is a polygon of straight-edged bars, not a circle of rounded petals; width may not distort the polygon), IV (data final on its chain is kept and reused; facts are permanent, labels and interpretations are separate, versioned layers)
 - Added: Hackathon constraint "NEAR showcase"
-- Reason: Elco's decisions of 2026-11-04 after the step 1 and step 2 tries (see spec Clarifications, Session 2026-11-04)
+- Reason: the decisions of 2026-11-04 after the step 1 and step 2 tries (see spec Clarifications, Session 2026-11-04)
 - Templates requiring updates: none (plan/spec/tasks read this at runtime)
-- Resolved TODO: licence is MIT (Elco, 2026-11-04)
+- Resolved TODO: licence is MIT (2026-11-04)
 - Previous amendment: 1.0.0 → 1.1.0 (open vocabulary of primitives, mission; principles II, IV, VII expanded)
 -->
 # Petal Constitution
@@ -75,11 +75,11 @@ Rationale: about a week of build time, one builder. Depth beats breadth.
 ## Hackathon Constraints
 
 - Build window: 1 Nov 2026 00:00 UTC to 14 Nov 2026 23:59 UTC. All application code is written inside the window, after planning is complete. Specs, plans and designs (some written in October) are declared openly in the README.
-- The repository is created when planning is complete (target 5 Nov) with a clean commit history and the MIT licence (decided 2026-11-04). Only what Elco chooses to share for the hackathon goes into the public repository; exploration documents stay out.
+- The repository is created when planning is complete (target 5 Nov) with a clean commit history and the MIT licence (decided 2026-11-04). Only what the publication boundary allows goes into the public repository; exploration documents stay out.
 - The README follows the official guide: what Petal is and the problem it solves, "do X, see Y" steps, no marketing, and the NEAR features that match each entered track.
 - No secrets, keys or submission personal data are ever committed.
 - NEAR showcase: the build uses as much of NEAR as is genuinely useful, and each NEAR piece is real and sits on the user journey (the README explains the mechanism, not a claim). Non-NEAR alternatives are documented for later, not built.
-- Never without Elco's explicit confirmation: making the repo public, pushing, posting on X, deploying to mainnet, signing transactions, spending tokens, sending the submission.
+- Never without the maintainer's explicit confirmation: making the repo public, pushing, posting on X, deploying to mainnet, signing transactions, spending tokens, sending the submission.
 - Feature freeze on 12 Nov; the demo is recorded from the frozen version; submission on 13 Nov.
 
 ## Development Workflow
@@ -91,7 +91,7 @@ Rationale: about a week of build time, one builder. Depth beats breadth.
 
 ## Governance
 
-- This constitution supersedes other practices in this project. Elco is the final authority on it.
+- This constitution supersedes other practices in this project. The maintainer is the final authority on it.
 - Amendments are written down with a reason and versioned semantically: MAJOR for removing or redefining a principle, MINOR for a new principle or section, PATCH for wording.
 - Plans and task lists are checked against the principles before work starts; any justified exception is recorded in the plan.
 

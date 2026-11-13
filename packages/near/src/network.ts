@@ -6,6 +6,15 @@ export const RPC_URLS = {
   mainnet: 'https://rpc.mainnet.fastnear.com',
 } as const;
 
+/**
+ * Archival nodes: they keep every transaction. A regular node forgets one after about five epochs (two or
+ * three days), so a transfer confirmed later than that (the server was down, the tab came back) is read here.
+ */
+export const ARCHIVAL_RPC_URLS = {
+  testnet: 'https://archival-rpc.testnet.fastnear.com',
+  mainnet: 'https://archival-rpc.mainnet.fastnear.com',
+} as const;
+
 export const KV_URLS = {
   testnet: 'https://kv.test.fastnear.com',
   mainnet: 'https://kv.main.fastnear.com',

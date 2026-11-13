@@ -1,6 +1,6 @@
 # Intents: let people pay with the assets they already have
 
-Research date: **8 November 2026**. RESEARCH follow-up to Elco's clarification. Public sources only; no account creation, signatures, quotes reserving funds, transactions or spending. **Read in docs** means documentation/source inspection; **Tested** means an actual request or execution; **Inferred** means our interpretation. Undated pages below were accessed on the research date.
+Research date: **8 November 2026**. Public sources only; no account creation, signatures, quotes reserving funds, transactions or spending. **Read in docs** means documentation/source inspection; **Tested** means an actual request or execution; **Inferred** means our interpretation. Undated pages below were accessed on the research date.
 
 ## Answer
 
@@ -55,6 +55,6 @@ The post-testing trial should answer one concrete question: can a person startin
 
 ## Evidence boundary
 
-**Tested — this pass:** unauthenticated read requests to the live token endpoint and full OpenAPI URL returned HTTP 403 from this environment. Public documentation and its embedded quote schema were readable. Therefore this report does **not** claim a fresh token count, executable-route list, live quote, settled payment or working contract callback. The 5 November token counts/minimums remain dated prior observations, not today's facts. Read-only source snapshots and request outcomes are in project `research/spikes/intents-current-2026-11-08/`.
+**Tested — this pass:** unauthenticated read requests to the live token endpoint and full OpenAPI URL returned HTTP 403 from this environment. Public documentation and its embedded quote schema were readable. Therefore this report does **not** claim a fresh token count, executable-route list, live quote, settled payment or working contract callback. The 5 November token counts/minimums remain dated prior observations, not today's facts.
 
 No new accounts, keys or financial approvals were requested. Public claims and permanent-storage design remain parked until testing and basic usability are satisfactory.

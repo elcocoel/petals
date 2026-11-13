@@ -35,7 +35,7 @@ export function FlowerCanvas({
   relations?: FakeRelations | null;
   /** A look of the page's own (the lab's benches); with none, the flower's own (core lookFills). */
   look?: PetalLook | null;
-  /** Its map's proposals on the ring (#93), where it has any. */
+  /** Its map's proposals on the ring, where it has any. */
   votes?: VoteRing | null;
   scatter?: boolean;
   probe?: boolean;

@@ -1,6 +1,7 @@
-// The person's money, the one balance (Elco, 9 and 10 Nov; "the balance hasn't updated", 10 Nov): the credit
+// The person's money, the one balance, kept up to date: the credit
 // they hold (GET /api/v1/me's credit, which plain transfers to Petals and credit given by hand both go onto,
-// in NEAR at today's price; with the contract, what it holds, read from the chain). It's read once, in the
+// in NEAR at today's price; with the contract, what it holds, read from the chain), and what's left on the
+// invites a chat of theirs falls back on, so a person on an invite reads what they can spend (13 Nov). It's read once, in the
 // layout (viewmodels/useWorkPanel.ts), and again whenever `cue` changes: after each turn and on every move,
 // and after a payment (reread). /make's composer, the panel's Lobby section and the
 // lobby's Balance card all show this one value. And Withdraw, which takes everything out of the contract
@@ -11,16 +12,21 @@ import { useCallback, useEffect, useState } from 'react';
 import { confirmPay, readCredit, readPay } from '../lib/agent-client.ts';
 import { type HeldCredit, WITHDRAW_ALL, type WithdrawPhase, withdrawn } from '../lib/lobby-view.ts';
 import { type Credit, type Money, money, type PayInfo, sentBy } from '../lib/pay.ts';
-import { sendAction } from '../lib/wallet.ts';
+import { profilePageWords, walletRefusal } from '../lib/profile-view.ts';
+import { connectWallet, sendAction } from '../lib/wallet.ts';
 
 export function useFunds(cue: string) {
   const [info, setInfo] = useState<PayInfo | null>(null);
   /** The person's credit, as /make reads it. */
   const [credit, setCredit] = useState<Credit | null>(null);
+  /** Dollars left on their usable invites (GET /api/v1/me's invite_left_usd). */
+  const [inviteLeft, setInviteLeft] = useState(0);
   /** What the contract holds for the person, in yoctoNEAR; null when there's no contract to hold it. */
   const [held, setHeld] = useState<string | null>(null);
   const [phase, setPhase] = useState<WithdrawPhase>('ready');
   const [withdrew, setWithdrew] = useState<string | null>(null);
+  /** Why the last withdrawal didn't go through, as the wallet or Petals said it. */
+  const [failedWhy, setFailedWhy] = useState<string | null>(null);
   /** Bumped by reread(), so the read runs again with the same cue. */
   const [again, setAgain] = useState(0);
 
@@ -32,7 +38,8 @@ export function useFunds(cue: string) {
         if (gone) return;
         setInfo(p);
         // with the contract, what it holds now, read from the chain, is the truer balance (as usePay)
-        setCredit(p?.credit ?? c);
+        setCredit(p?.credit ?? c.credit);
+        setInviteLeft(c.inviteLeftUsd);
         setHeld((p?.credit as HeldCredit | null | undefined)?.balance_yocto ?? null);
       },
       // no answer shows no balance
@@ -50,10 +57,21 @@ export function useFunds(cue: string) {
     if (!info || held === null) return;
     const before = held;
     setPhase('withdrawing');
+    setFailedWhy(null);
     void (async () => {
+      // the person's own NEAR wallet sends it: connected first (its picker opens when none is), and what it
+      // says, a no included, is said as it said it
+      let sent: ReturnType<typeof sentBy>;
       try {
-        const sent = sentBy(await sendAction(info.network, info.receiver, WITHDRAW_ALL));
+        await connectWallet(info.network);
+        sent = sentBy(await sendAction(info.network, info.receiver, WITHDRAW_ALL));
         if (!sent) throw new Error('The wallet named no transaction.');
+      } catch (e) {
+        setFailedWhy(walletRefusal(profilePageWords.nearWallet, e));
+        setPhase('failed');
+        return;
+      }
+      try {
         const after = await confirmPay({
           network: info.network,
           account_id: sent.account,
@@ -64,7 +82,8 @@ export function useFunds(cue: string) {
         setCredit(after.credit);
         setHeld(left);
         setPhase('withdrew');
-      } catch {
+      } catch (e) {
+        setFailedWhy(e instanceof Error && e.message ? e.message : null);
         setPhase('failed');
       }
     })();
@@ -74,13 +93,17 @@ export function useFunds(cue: string) {
     /** Where a payment goes and NEAR's price (GET /api/v1/pay), read with the credit: the pay step's too. */
     where: info,
     /**
-     * What's left, dollars first and NEAR beside at today's price (Elco, 10 Nov); nothing given yet is
-     * none. Null until Petals has said.
+     * What's left, dollars first and NEAR beside at today's price , their own and on their
+     * invites; nothing given yet is none. Null until Petals has said.
      */
-    balance: (info ? money(credit?.left_usd ?? 0, info.near_usd) : null) as Money | null,
+    balance: (info
+      ? money((credit?.left_usd ?? 0) + inviteLeft, info.near_usd)
+      : null) as Money | null,
     held,
     phase,
     withdrew,
+    /** Why the last withdrawal didn't go through; null for the plain words. */
+    failedWhy,
     withdraw,
     reread,
   };

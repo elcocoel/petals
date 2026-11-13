@@ -1,4 +1,4 @@
-// One map (Elco, 10 Nov: "the workspace and the agent don't seem to be connected to the global power map"):
+// One map, the global Power Map that the workspace and the agent both read:
 // every view stored on this site, each with its reading, its name, its date and who made it. Read-only and
 // public: GET /api/v1/map hands it over whole, list_flowers and find_target search it before a fresh read.
 // A view's spec is content-addressed, so its reading never changes: each is read once per process.
@@ -71,7 +71,7 @@ export interface MapView {
   /** the colours that picture draws, as its legend has them: colour's keys, then the tail's */
   keys: { label: string; swatch: string }[];
   /**
-   * the pieces of data its reading has, as core's piecesOf gives them (OVERLAYS, 12 Nov, wave 3: Tools offers only
+   * the pieces of data its reading has, as core's piecesOf gives them (Tools offers only
    * what draws): the four every flower has, its holdings' measures, backers where it has delegations, its dollar
    * values where priced, its activity where its proposals were read, and the viewer's own names and types
    */
@@ -79,7 +79,7 @@ export interface MapView {
   /**
    * the pieces given beside the reading, as readFlower took them (the viewer's names and types, the dollars, the
    * activity), their values only for the petals drawn: what the page redraws with when a view changes, without
-   * reading again (LOOK, wave 4)
+   * reading again
    */
   given: SeamPiece[];
   /** who made it (a NEAR account), when that's recorded */
@@ -116,7 +116,7 @@ export const namesKey = (names: readonly Claim[]): string =>
   sha256Hex(canonicalJson(names.map((c) => c.id).sort()));
 
 /**
- * A view's picture. For a person with names, its address also names their set (annotation step 6), so it's
+ * A view's picture. For a person with names, its address also names their set, so it's
  * theirs alone, changes when their names do, and is never the public picture a cache keeps.
  */
 export const pictureOf = (ctx: ToolContext, sha: string, view: View = DEFAULT_VIEW) =>
@@ -136,16 +136,16 @@ async function readOf(
     const spec = JSON.parse(body) as Spec;
     const snapshot = await findSnapshot(ctx, spec.snapshot.sha256);
     if (!snapshot) return null;
-    // through the viewer's view, never the flower's own choices (one-source.md, step 2), with the viewer's
-    // own names on the petals they name (annotation step 6)
+    // through the viewer's view, never the flower's own choices, with the viewer's
+    // own names on the petals they name
     const extra = [
       ...(ctx.names?.length ? namePieces(snapshot, ctx.names) : []),
       ...(ctx.names?.length ? typePieces(snapshot, ctx.names) : []),
-      // each petal's value in dollars, from its map's stored value (#91): none with no price
+      // each petal's value in dollars, from its map's stored value: none with no price
       ...valuePieces(snapshot, values.get(mapOf(snapshot)) ?? null),
-      // each petal's activity in its map's proposals (activity.ts, 12 Nov): none where none were read
+      // each petal's activity in its map's proposals (activity.ts): none where none were read
       ...(await activityOf(ctx, snapshot, stamps)),
-      // each petal's vesting at the reading's date (vesting.ts, wave 7): none where its map's wasn't read
+      // each petal's vesting at the reading's date (vesting.ts): none where its map's wasn't read
       ...(await vestingOf(ctx, snapshot, vested)),
     ];
     const reading = readFlower(spec, snapshot, view, extra);
@@ -184,14 +184,14 @@ async function readOf(
 export async function mapViews(
   ctx: ToolContext,
   view: View = DEFAULT_VIEW,
-  /** with the maps hidden from the Power Map (#96): only a hidden map's own card asks */
+  /** with the maps hidden from the Power Map: only a hidden map's own card asks */
   o: { hidden?: boolean } = {},
 ): Promise<MapView[]> {
   const out: MapView[] = [];
   const through = viewHash(view);
   // keyed by the viewer's names too, so one person's never reach another's, nor a visitor's, reading
   const named = ctx.names?.length ? `:${namesKey(ctx.names)}` : '';
-  // and by when the map's values were read, so a new price reads again (#91)
+  // and by when the map's values were read, so a new price reads again
   const values = await valuesOf(ctx);
   const priced = values.size
     ? `:${sha256Hex([...values.values()].map((v) => `${v.about}@${v.read_at}`).join(','))}`
@@ -224,7 +224,7 @@ export async function mapViews(
       made_by: row.made_by ?? null,
     });
   }
-  // a map hidden from the Power Map (#96) is in no list of it, nor is a reading a wave replaced
+  // a map hidden from the Power Map is in no list of it, nor is a reading a mapping run replaced
   const shown = out.filter((v) => !retiredReading(v.snapshot));
   return o.hidden ? shown : shown.filter((v) => !hiddenMap(v.map));
 }
@@ -250,14 +250,14 @@ export interface MapReading {
 }
 
 /**
- * What tells one organisation from another on its card (board #85): its name, its token's symbol and its logo,
+ * What tells one organisation from another on its card: its name, its token's symbol and its logo,
  * each saying where it came from (mark/v1), the logo with where this site serves it.
  */
 export interface CardMark {
   name: MarkSaid | null;
   symbol: MarkSaid | null;
   logo: (MarkLogo & { url: string }) | null;
-  /** its types, each an is_a claim with its kind and evidence, in the order found (#97) */
+  /** its types, each an is_a claim with its kind and evidence, in the order found */
   types: Claim[];
   /** the same words, each once, in that order: what a badge says ('DAO' once, however many claims say it) */
   type_words: string[];
@@ -294,7 +294,7 @@ export function cardMark(m: Mark, site: string): CardMark {
   };
 }
 
-/** One map: everything read about one address (Elco, 10 Nov), as one card. */
+/** One map: everything read about one address, as one card. */
 export interface MapCard {
   /** the address, in one form: chain:address, or chain:population for a whole network */
   id: string;
@@ -309,11 +309,11 @@ export interface MapCard {
   picture: string;
   view_url: string;
   keys: MapView['keys'];
-  /** its organisation's name, symbol and logo, each with where it came from; null until it's read (#85) */
+  /** its organisation's name, symbol and logo, each with where it came from; null until it's read */
   mark: CardMark | null;
-  /** its token in dollars, its supply and its reading's totals, each with where and when; null until read (#91) */
+  /** its token in dollars, its supply and its reading's totals, each with where and when; null until read */
   value: CardValue | null;
-  /** how many proposals it has and how many have votes, read from its DAO (#93); null for a map with none read */
+  /** how many proposals it has and how many have votes, read from its DAO; null for a map with none read */
   proposals: CardProposals | null;
   /** its sediments, the newest first by their date */
   readings: MapReading[];

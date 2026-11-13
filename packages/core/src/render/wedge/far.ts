@@ -1,11 +1,9 @@
-// A flower from very far away (#84; coordinator/one-source.md, "Levels", the nano petal). Elco, 11 Nov: "at a
-// very far away zoom we can have a focus on helping you identify which organization it is not the data itself
-// ... an abbreviated version of the graph where all the cells kind of combine to a more simplified wave like
-// circular shape that is actually coming from the data that doesn't try to be as precise and would actually
-// respond to whatever the settings the user are on ... you don't have to see the separation between each
-// individual wallet". So: one ring with a soft wavy outer edge, made from the petals' own heights (which the
-// person's view decides), smoothed round the circle so neighbours merge, and a hole where the organisation's
-// mark sits. For /lab first (/lab/map?far=wave): nothing on /map draws it until Elco has seen it. Pure.
+// A flower from very far away (the nano petal). At a far zoom the focus is on telling which organisation it is,
+// not the data itself: an abbreviated, simpler wave-like circle that still comes from the data and follows the
+// person's settings, with no separation between wallets. So: one ring with a soft wavy outer edge, made from
+// the petals' own heights (which the person's view decides), smoothed round the circle so neighbours merge, and
+// a hole where the organisation's mark sits. For /lab first (/lab/map?far=wave): nothing on /map draws it yet.
+// Pure.
 import type { Rest, Shape } from './ring.ts';
 import { n3 } from './ring.ts';
 
@@ -25,7 +23,7 @@ export interface FarWave {
 
 /**
  * The lean: 180 points and a spread of about a thirtieth of the circle, so groups of petals show as waves rather than
- * one bean (Elco, 11 Nov: "it could be more wavey instead of one bean shape - still very minimalistic"); peaks kept.
+ * one bean, still minimal; peaks kept.
  */
 export const FAR_WAVE: FarWave = { points: 180, spread: 0.22, keep: 1.8 };
 
@@ -98,7 +96,7 @@ export function farPath(
 /**
  * The wave in its colours: one closed shape per run of the circle whose petals share a colour, each from the
  * polygon's circle out to the wave's edge, so a flower of several kinds shows them as bands of its one shape
- * (Elco, 11 Nov: "more interesting visually than a grey shadow"). `fills` is each petal's colour, in order.
+ * rather than a grey shadow. `fills` is each petal's colour, in order.
  */
 export function farRuns(
   rest: Pick<Rest, 'mid' | 'height' | 'ring'>,
@@ -111,6 +109,8 @@ export function farRuns(
   const { cx, cy, r0 } = shape;
   const { start } = rest.ring;
   const n = fills.length;
+  // no petals, no bands of colour
+  if (n === 0) return [];
   // whose angle each point is in
   const owner = (a: number) => {
     let lo = 0;

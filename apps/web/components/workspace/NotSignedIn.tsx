@@ -1,7 +1,7 @@
-// /make for someone not logged in (Elco, 11 Nov, #78: "i dont think signed out make has a reason to exist? if
-// should be a oops, your no logged in with some illustration of petals shrugging and a bouncer… + a button to
-// copy the setup prompt to the agent"). The bouncer (components/Oops.tsx), then Connect and the setup prompt
-// the landing's section 4 copies. Props only; the words are drafts (lib/door-words.ts).
+// /make for someone not logged in: a signed-out workspace has nothing to show, so it says so with the bouncer
+// illustration (components/Oops.tsx), then offers Connect and the same setup prompt the landing's setup band
+// copies, for a person's own agent to walk them in. Props only; the words live in lib/door-words.ts.
+import type { ReactNode } from 'react';
 import { doorWords, notSignedInWords } from '../../lib/door-words.ts';
 import { landingCopy } from '../../lib/landing-copy.ts';
 import { publicOrigin } from '../../lib/site-links.ts';
@@ -18,6 +18,7 @@ export function NotSignedIn({
   onConnect,
   onConnectEvm,
   onConnectSolana,
+  ask,
 }: {
   /** a question that came with the link: it waits in the conversation once they're in */
   question: string;
@@ -25,10 +26,12 @@ export function NotSignedIn({
   /** why the last try didn't work */
   failed: string | null;
   onConnect: () => void;
-  /** an Ethereum wallet's way in, where the page has one (wave 5) */
+  /** an Ethereum wallet's way in, where the page has one */
   onConnectEvm?: (() => void) | undefined;
-  /** a Solana wallet's way in, where the page has one (wave 5) */
+  /** a Solana wallet's way in, where the page has one */
   onConnectSolana?: (() => void) | undefined;
+  /** which wallet, or the one being asked (WalletAsk) */
+  ask?: ReactNode;
 }) {
   return (
     <Oops
@@ -42,7 +45,7 @@ export function NotSignedIn({
       }
       note={question && <p className="my-0 type-ui wrap-anywhere text-muted">{question}</p>}
       primary={
-        // the one Connect, as everywhere else: primary, with its arrow (Elco, 10 Nov)
+        // the one Connect, as everywhere else: primary, with its arrow
         <span className="flex flex-wrap items-center gap-text-gap">
           <Button arrow disabled={busy} onClick={onConnect}>
             {onConnectEvm || onConnectSolana ? notSignedInWords.near : doorWords.connect}
@@ -67,12 +70,18 @@ export function NotSignedIn({
             originIn={publicOrigin}
             label={setup.copy}
             copied={setup.copied}
+            next={setup.next}
             variant="quiet"
             bare
           />
         </span>
       }
-      after={failed && <p className="error my-0">{failed}</p>}
+      after={
+        <>
+          {ask}
+          {failed && <p className="error my-0">{failed}</p>}
+        </>
+      }
     />
   );
 }

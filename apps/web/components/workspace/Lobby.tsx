@@ -1,13 +1,10 @@
-// The lobby, one page with the profile (Elco, 11 Nov, on /profile: "this is closer to what I wanted the
-// lobby to be ... we might want to unify them and use this overall"; #79's investigator's card, with the
-// lobby's map). /lobby and /profile both show it. Beside the side panel, which is the layout's
-// (app/(work)/WorkPanel.tsx, PANEL's), from the top, the person (ProfileHead); then the widgets in rows of
-// two, each pair the same height: their Profile card beside the Wallets they've proven, their Contribution to
-// the map (wave 8: three counts) beside their Balance, the Claims they and their agents keep about accounts beside their
-// Conversations, and the map across the page. Each card
-// has one title and one job (components/ui/Card.tsx); a list that grows keeps a set height and scrolls
-// inside (Elco: "I don't like the idea that the claims widget is infinite"). The editor opens over the
-// whole row, the width of the page.
+// The lobby, one page with the profile (the investigator's card, with the lobby's map). /lobby and
+// /profile both show it. Beside the side panel, which is the layout's (app/(work)/WorkPanel.tsx), from the top,
+// the person (ProfileHead, with Disconnect at its end); then the widgets in rows of two, each pair the same height: their Profile card
+// beside the Wallets they've proven, their Contribution to the map (three counts) beside their Balance (with the tip), the
+// Claims they and their agents keep about accounts beside their Conversations, and the map across the page. Each
+// card has one title and one job (components/ui/Card.tsx); a list that grows keeps a set height and scrolls
+// inside, never endless. The editor opens over the whole row, the width of the page.
 // Props only: app/(work)/lobby/LobbySurface.tsx wires useLobby to it. Words from lib/lobby-view.ts and
 // lib/profile-view.ts.
 
@@ -39,10 +36,10 @@ import { Funds } from './Funds.tsx';
 import { Profile } from './Profile.tsx';
 import { ProfileEditor } from './ProfileEditor.tsx';
 import { ProfileHead } from './ProfileHead.tsx';
+import type { TipView } from './TipControl.tsx';
 import { Wallets } from './Wallets.tsx';
 
-/** The one map, a row per address, as the Power Map lists it. No colour key over it (Elco, 12 Nov: "having
- * this hard coded legend on the top. Probably not going to stay this way"). */
+/** The one map, a row per address, as the Power Map lists it. No hard-coded colour key over it. */
 export interface LobbyMap {
   tiles: MapTile[];
 }
@@ -55,15 +52,20 @@ export function Lobby({
   wallets,
   adding,
   addWallet,
+  stopAdding,
   claims,
   conversations,
   map,
   contribution,
   quotes,
+  tip,
+  leave,
 }: {
   /** The wallet this session signed in with, and the profile Petals keeps or NEAR Social's. */
   profile: {
     account: string | null;
+    /** The chain the account is on, by name; null until it's read. */
+    chain: string | null;
     social: SocialState;
     edit?: () => void;
     saved: boolean;
@@ -76,30 +78,42 @@ export function Lobby({
     held: string | null;
     phase: WithdrawPhase;
     withdrew: string | null;
+    failedWhy?: string | null;
     withdraw: () => void;
   };
   /** Every call charged to them (usage/v1), in the Balance widget. */
   usage: UsageView | 'reading' | 'unread';
   wallets: WalletRow[] | 'reading' | 'unread';
   adding: AddWalletPhase;
-  addWallet: (kind: WalletKind) => void;
+  /** Asks a wallet to sign; with several of one kind, the one picked by its id. */
+  addWallet: (kind: WalletKind, pick?: string) => void;
+  /** Stops waiting for a wallet, or puts the pick away. */
+  stopAdding: () => void;
   claims: ClaimsView | 'reading' | 'unread';
   conversations: ConversationRow[];
   map: LobbyMap;
-  /** The person's contribution to the map, three counts (wave 8, SYSTEMS's credit/v1). */
+  /** The person's contribution to the map, three counts (credit/v1). */
   contribution: ContributionView | 'reading' | 'unread';
-  /** An illustrated power quote for each widget with nothing in it yet (#89, wave 7). */
+  /** An illustrated power quote for each widget with nothing in it yet. */
   quotes: Record<
     'profile' | 'claims' | 'usage' | 'conversations' | 'contribution',
     PowerQuoteItem | null
   >;
+  /** The person's tip, in the Balance widget. */
+  tip: TipView;
+  /** Signs out, at the top of the page. */
+  leave: () => void;
 }) {
   return (
     <main aria-label={lobbyWords.page} data-surface="ground" className="flex h-dvh bg-surface">
       <div className="flex min-w-0 flex-1 flex-col gap-space-32 overflow-y-auto px-page-inset py-column-gap">
-        <ProfileHead account={profile.account} social={profile.social} />
-        {/* rows of two widgets, each pair the same height, titles on one line (Elco, 11 Nov: "the profile
-            card is unaligned with the balance card") */}
+        <ProfileHead
+          account={profile.account}
+          chain={profile.chain}
+          social={profile.social}
+          onLeave={leave}
+        />
+        {/* rows of two widgets, each pair the same height, titles on one line, so cards side by side align */}
         <div className="grid grid-cols-1 gap-block-gap lg:grid-cols-3">
           <div className={`grid min-w-0 ${editor ? 'lg:col-span-3' : 'lg:col-span-2'}`}>
             {editor ? (
@@ -114,7 +128,7 @@ export function Lobby({
               />
             )}
           </div>
-          <Wallets wallets={wallets} adding={adding} onAdd={addWallet} />
+          <Wallets wallets={wallets} adding={adding} onAdd={addWallet} onStop={stopAdding} />
           <div className="grid min-w-0 lg:col-span-2">
             <Contribution contribution={contribution} quote={quotes.contribution} />
           </div>
@@ -123,9 +137,11 @@ export function Lobby({
             held={funds.held}
             phase={funds.phase}
             withdrew={funds.withdrew}
+            failedWhy={funds.failedWhy ?? null}
             onWithdraw={funds.withdraw}
             usage={usage}
             quote={quotes.usage}
+            tip={tip}
           />
           <div className="grid min-w-0 lg:col-span-2">
             <Claims claims={claims} quote={quotes.claims} />

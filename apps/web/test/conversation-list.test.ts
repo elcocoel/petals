@@ -110,7 +110,7 @@ describe('projects', () => {
     expect(byProject(rows, projects).loose.map((r) => r.key)).toEqual(['c', 'd']);
   });
 
-  // swarm step 2 (SYSTEMS's 0426b0a; design/side-panel.md, line 44): hand_job opens a conversation in the
+  // swarm step 2: hand_job opens a conversation in the
   // handing one's project, titled by the job, listed as another door's work
   test("a job's own conversation sits in the project with the one that handed it out, named by the job", () => {
     const withJob = conversationRows(

@@ -3,7 +3,7 @@
 // Eight public calls: FastData KV reads (testnet and mainnet) and one 1Click DRY quote. No key,
 // no signature, no transaction, no deposit address. Mainnet reads use near.social's public
 // profile of mob.near (the near.social author) for row shapes, paging and metadata, because
-// petals.testnet holds nothing until Elco creates it (T043).
+// petals.testnet holds nothing until it's created (T043).
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';

@@ -1,4 +1,4 @@
-// Offline import of the step 1 and step 2 spike data (research/data/FORMAT.md, spike v0) into
+// Offline import of the step 1 and step 2 spike data (spike v0 format) into
 // snapshot/v1 (T017). W0 seeded it; W2 owns it after T023. Run by scripts/import-spike-data.ts.
 //
 // - Tables named by a string in the spike JSON are CSV sidecars next to it; they are streamed.
@@ -193,7 +193,7 @@ interface Delegation {
 
 /**
  * Read a spike v0 file (and its CSV sidecars) and return a snapshot/v1 document.
- * `path` is the spike JSON, e.g. research/data/near/producers.json.
+ * `path` is the spike JSON, e.g. data/near/producers.json.
  */
 export async function importSpike(path: string, rules: GroupingRules): Promise<Snapshot> {
   const spike = JSON.parse(await readFile(path, 'utf8')) as Row & {

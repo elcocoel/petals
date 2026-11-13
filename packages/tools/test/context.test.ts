@@ -29,7 +29,7 @@ describe('configFromEnv', () => {
         PETAL_MAP_NETWORK: 'testnet',
         PETAL_MAP_RECEIVER: 'petals.testnet',
         PETAL_WRITER_ACCOUNT: 'petals-writer.testnet',
-        PETAL_WRITER_KEY_FILE: '../.secrets/petal-writer.testnet.json',
+        PETAL_WRITER_KEY_FILE: '/path/to/keys/petal-writer.testnet.json',
         PETAL_TRUSTED_WRITERS: 'petals-writer.testnet, other.testnet',
         FASTNEAR_API_KEY: 'f',
         PETAL_PAYOUT_ACCOUNT: 'petal-demo.near',
@@ -46,7 +46,7 @@ describe('configFromEnv', () => {
         network: 'testnet',
         receiver: 'petals.testnet',
         writer: 'petals-writer.testnet',
-        keyFile: '../.secrets/petal-writer.testnet.json',
+        keyFile: '/path/to/keys/petal-writer.testnet.json',
         trustedWriters: ['petals-writer.testnet', 'other.testnet'],
       },
       fastnearApiKey: 'f',
@@ -139,7 +139,7 @@ describe('createContext', () => {
     });
   });
 
-  test('a configured testnet map gets a writer only with a key file; mainnet never writes', () => {
+  test('a configured map gets a writer only with a key file, on testnet or mainnet', () => {
     const base = { network: 'testnet' as const, receiver: 'petals.testnet', trustedWriters: [] };
     const withKey = createContext({
       root: REPO,
@@ -155,13 +155,14 @@ describe('createContext', () => {
       map: {
         network: 'mainnet',
         receiver: 'petals.near',
-        writer: 'writer.petals.near',
+        writer: 'petals-writer.near',
         keyFile: '/k',
-        trustedWriters: ['writer.petals.near'],
+        trustedWriters: ['petals-writer.near'],
       },
     });
-    expect(mainnet.map.writer).toBeNull();
+    expect(mainnet.map.writer).not.toBeNull();
     expect(mainnet.map.receiver).toBe('petals.near');
+    expect(mainnet.map.trustedWriters).toEqual(['petals-writer.near']);
   });
 
   test('deferred builds on first use and binds methods', () => {

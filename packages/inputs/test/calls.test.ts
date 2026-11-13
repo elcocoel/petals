@@ -1,4 +1,4 @@
-// Open calls read keyless (Elco, 12 Nov): Karma's active programs and NEAR's Infrastructure Committee RFPs, as
+// Open calls read keyless: Karma's active programs and NEAR's Infrastructure Committee RFPs, as
 // calls/v1, every field as the source says it. Stubbed sources: nothing here reads the web.
 import { validateCall } from '@petal/core';
 import { describe, expect, test } from 'vitest';

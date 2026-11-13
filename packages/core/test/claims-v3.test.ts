@@ -1,6 +1,6 @@
-// claim/v3 (11 Nov, Elco: "make sure that the DATA LAYER contains space for discovered, inferred, osint gathered
-// claims and their evidence"): every piece of evidence says what it is, who found it and when, and the open web's
-// keeps its platform, its words, its content hash and an archived copy. Every account, name and URL is invented.
+// claim/v3 (11 Nov: the data layer has room for discovered, inferred and open-source-gathered claims and their
+// evidence): every piece of evidence says what it is, who found it and when, and the open web's keeps its
+// platform, its words, its content hash and an archived copy. Every account, name and URL is invented.
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, test } from 'vitest';

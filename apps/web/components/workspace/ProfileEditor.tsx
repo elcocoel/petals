@@ -1,10 +1,11 @@
-// The profile's editor (Elco, 10 Nov: people create and edit their profile inside Petals, in NEAR Social's
-// shape, "and have a publish button"; the Figma frame "Lobby · editing the public profile", approved): the
-// picture, the name, the bio and the links on the left, each link's service picked by name (X, GitHub, …) so
-// what's picked is what shows; on the right a preview. Then Save, the one main action, Cancel, and Publish
-// as its own button, off until it's set up on mainnet, and under them the one line on where it's kept (the
-// walk, 11 Nov: it was said four times). The Profile card opens into this.
-// Props only: viewmodels/useProfileEditor.ts holds it. Words from lib/lobby-view.ts, drafts.
+// The profile's editor (people create and edit their profile inside Petals, in NEAR Social's shape, with
+// a publish button; the Figma frame "Lobby · editing the public profile"): the picture, the name, the bio
+// and the links on the left, each link's service picked by name (X, GitHub, …) so what's picked is what
+// shows; on the right a preview. Then Save, the one main action, Cancel, and Publish as its own button, off
+// until it's set up on mainnet, and under them the one line on where it's kept, said once; for someone
+// signed in with an Ethereum or Solana wallet and no NEAR wallet yet, that line says publishing needs one
+// and leads to Wallets. The Profile card opens into this.
+// Props only: viewmodels/useProfileEditor.ts holds it. Words from lib/lobby-view.ts.
 import {
   busyPhase,
   type EditPhase,
@@ -18,6 +19,7 @@ import { Card } from '../ui/Card.tsx';
 import { ChooseFile } from '../ui/ChooseFile.tsx';
 import { Field } from '../ui/Field.tsx';
 import { Mono } from '../ui/Mono.tsx';
+import { TextLink } from '../ui/TextLink.tsx';
 
 /** Publish's words while it works, step by step. */
 const PUBLISHING: Partial<Record<EditPhase, string>> = {
@@ -70,7 +72,7 @@ export function ProfileEditor({ view }: { view: ProfileEditorView }) {
           <div className="flex flex-col gap-space-8">
             <span className="type-label">{editorWords.links}</span>
             {draft.links.length > 0 && (
-              // what each column is, once, over the rows (the walk, 11 Nov: two blank boxes said nothing)
+              // what each column is, once, over the rows, so the blank boxes say what they're for
               <div aria-hidden="true" className="flex items-center gap-text-gap">
                 <span className="w-1/4 shrink-0 type-caption text-muted">
                   {editorWords.service}
@@ -162,9 +164,18 @@ export function ProfileEditor({ view }: { view: ProfileEditorView }) {
           </span>
         )}
       </div>
-      <p className="my-0 type-caption text-muted">
-        {view.publish ? editorWords.publicNote : editorWords.keptNote}
-      </p>
+      {view.needsNearWallet ? (
+        <p className="my-0 flex flex-wrap items-center gap-text-gap">
+          <span className="type-caption">{editorWords.needsNear}</span>
+          <TextLink variant="quiet" href="#profile-wallets">
+            {editorWords.goToWallets}
+          </TextLink>
+        </p>
+      ) : (
+        <p className="my-0 type-caption text-muted">
+          {view.publish ? editorWords.publicNote : editorWords.keptNote}
+        </p>
+      )}
     </Card>
   );
 }

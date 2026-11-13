@@ -1,4 +1,4 @@
-// Mapping something new, as a ceremony (Elco, 12 Nov): what will be read, who reads it, that it becomes a new
+// Mapping something new, as a ceremony: what will be read, who reads it, that it becomes a new
 // data packet in the person's name, and one press that starts it. Nothing expensive runs before the press.
 // Props only; the words and the decision are lib/ceremony.ts's.
 import type { CeremonyView } from '../../lib/ceremony.ts';

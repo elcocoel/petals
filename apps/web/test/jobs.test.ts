@@ -170,6 +170,8 @@ describe('minimally good, in the workspace', () => {
     const { readableAgent } = await import('../lib/agents.ts');
     expect(readableAgent('claude-code')).toBe('Claude Code');
     expect(readableAgent('codex')).toBe('Codex');
+    expect(readableAgent('chatgpt')).toBe('ChatGPT');
+    expect(readableAgent('claude-app')).toBe('Claude app');
     expect(readableAgent('my-helper')).toBe('My Helper');
     expect(readableAgent('Claude Code')).toBe('Claude Code');
   });

@@ -43,8 +43,8 @@ export interface PetalAppOptions extends AgentRouteOptions {
   /** NEAR RPC per network, for sign-in; default the public RPC, or the context's in fake mode */
   rpcFor?: (network: Network) => Rpc;
   /** for tests: how a payment is read on chain, NEAR's price, and the credit contract */
-  pay?: Pick<PayDeps, 'readTransfer' | 'nearUsd' | 'credit' | 'oneClick'>;
-  /** for tests: search's models (#105); default the ones at PETAL_SEARCH_URL */
+  pay?: Pick<PayDeps, 'readTransfer' | 'readIntentsWithdraw' | 'nearUsd' | 'credit' | 'oneClick'>;
+  /** for tests: search's models; default the ones at PETAL_SEARCH_URL */
   searchModel?: SearchModel;
 }
 
@@ -107,7 +107,7 @@ export function buildPetalApp(cfg: Config, o: PetalAppOptions = {}): Hono {
 
   const env = o.env ?? process.env;
   const usdPerOwnChat = personUsdPerChat(env);
-  // The credit contract (Elco, 9 Nov), when PETAL_CREDIT_CONTRACT is set; none in fake mode.
+  // The credit contract, when PETAL_CREDIT_CONTRACT is set; none in fake mode.
   const credit =
     o.pay?.credit !== undefined
       ? o.pay.credit
@@ -119,7 +119,7 @@ export function buildPetalApp(cfg: Config, o: PetalAppOptions = {}): Hono {
     (config.fake
       ? async () => null
       : () => nearUsd({ onWarning: (m: string) => console.warn(`petal: ${m}`) }));
-  // A public site runs Petals' agent too (9 Nov): for a person who has paid for it, or holds an invite.
+  // A public site runs Petals' agent too: for a person who has paid for it, or holds an invite.
   const access = agentAccess(env);
   const auth = createAuth({
     store,
@@ -161,7 +161,7 @@ export function buildPetalApp(cfg: Config, o: PetalAppOptions = {}): Hono {
       headers,
     });
   });
-  // A person's own page reading who they are settles their top-ups that haven't landed (wave 5): closing the tab
+  // A person's own page reading who they are settles their top-ups that haven't landed: closing the tab
   // before NEAR Intents finished never loses a credit. Before the auth routes, which answer /api/v1/me.
   const pay = {
     store,
@@ -194,14 +194,18 @@ export function buildPetalApp(cfg: Config, o: PetalAppOptions = {}): Hono {
       ...(o.clock ? { clock: o.clock } : {}),
       // fakes everywhere: no chain is read
       ...(config.fake
-        ? { readTransfer: () => Promise.reject(new Error('fake mode reads no chain')) }
+        ? {
+            readTransfer: () => Promise.reject(new Error('fake mode reads no chain')),
+            readIntentsWithdraw: () => Promise.reject(new Error('fake mode reads no chain')),
+          }
         : {}),
       ...(o.pay?.readTransfer ? { readTransfer: o.pay.readTransfer } : {}),
+      ...(o.pay?.readIntentsWithdraw ? { readIntentsWithdraw: o.pay.readIntentsWithdraw } : {}),
       // Petals' 1Click partner key, when it's set (never printed)
       oneClick: pay.oneClick,
     }),
   );
-  // a person's own view and profile (Elco, 10 Nov), and the pictures in profiles
+  // a person's own view and profile, and the pictures in profiles
   app.route(
     '/',
     meRoutes({
@@ -214,7 +218,7 @@ export function buildPetalApp(cfg: Config, o: PetalAppOptions = {}): Hono {
       ...(o.clock ? { clock: o.clock } : {}),
     }),
   );
-  // publishing what a person kept about a map to the shared map, signed by their wallet (12 Nov)
+  // publishing what a person kept about a map to the shared map, signed by their wallet
   app.route(
     '/',
     publishRoutes({
@@ -236,19 +240,19 @@ export function buildPetalApp(cfg: Config, o: PetalAppOptions = {}): Hono {
       full: () => overDataBudget(config, ctx.now()),
     }),
   );
-  // A person's agents across their projects (9 Nov, agent-house): a job handed out wakes their waiting agents,
+  // A person's agents across their projects: a job handed out wakes their waiting agents,
   // and a report is taken up at once in its run.
   const bell = new JobBell();
   const takeUp: { current?: (job: JobRow) => Promise<void> } = {};
-  // one live hub for the site: a job's conversation hears who took it (swarm.md step 2)
+  // one live hub for the site: a job's conversation hears who took it
   const live = new LiveHub();
   app.route('/', agentLinkRoutes({ store, gate: auth.gate, tools: { ...ctx, live }, bell }));
   // The agent's runs read fresh data apart from the doors, so strangers there can't starve a run. On a
-  // public site its runs read the chain, pages and search from here too (Elco, 9 Nov: "yes"): every run that
+  // public site its runs read the chain, pages and search from here too: every run that
   // reaches the model is paid for, by the person or an invite. The site's own doors still read nothing.
   const agentCtx = config.public ? createContext({ ...cfg, public: false }) : ctx;
   if (o.searchModel) agentCtx.searchModel = o.searchModel;
-  // the brain's receipts (12 Nov, step 5): one brain-receipt/v1 each time a door serves the brain's text
+  // the brain's receipts: one brain-receipt/v1 each time a door serves the brain's text
   const onBrainServed = async (r: BrainReceipt) => {
     await store.brainReceipt.add({
       id: r.id,
@@ -258,7 +262,7 @@ export function buildPetalApp(cfg: Config, o: PetalAppOptions = {}): Hono {
       body: JSON.stringify(r),
     });
   };
-  // Petals' own agent reads the brain too (step 10), and its reads are kept like everyone else's
+  // Petals' own agent reads the brain too, and its reads are kept like everyone else's
   const tools = { ...agentCtx, fresh: freshGate(agentCtx), onBrainServed };
   app.route(
     '/',
@@ -269,7 +273,7 @@ export function buildPetalApp(cfg: Config, o: PetalAppOptions = {}): Hono {
       .current?.(job)
       .catch((e) => console.warn(`petal: a report's turn failed: ${(e as Error).message}`));
   };
-  // and the counts, worked out from them when asked (12 Nov, step 7: brain_usage)
+  // and the counts, worked out from them when asked (brain_usage)
   const brainUsage = async (since?: string) => ({
     receipts: (await store.brainReceipt.since(since)).map(
       (r) => JSON.parse(r.body) as BrainReceipt,

@@ -1,4 +1,4 @@
-// The flower bench (design/flower-language.md): one real flower, filling the window, no site around it.
+// The flower bench: one real flower, filling the window, no site around it.
 // Chosen with the URL: ?flower=, ?hover=dock|lift, ?relations=1, ?order=scatter and ?names=sample (made-up
 // names on a flower read from a snapshot, with labels on them). In production it stays hidden unless
 // PETAL_LAB=1, like the lab, and it's read on each request so a build doesn't freeze the choice.

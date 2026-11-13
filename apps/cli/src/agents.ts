@@ -1,11 +1,11 @@
-// One prompt, several agents (Elco, 9 Nov, agent-house-test.md). A person's agent joins their Petals
-// with an agent key, then waits for the jobs Petals' agent hands out, in any of their projects:
+// One prompt, several agents. A person's agent joins their Petals with an agent key, then waits for the
+// jobs Petals' agent hands out, in any of their projects:
 //   node petal.mjs join <agent key> --as <name>   keeps the key and the name in PETALS_HOME, as a new
 //                                                 worker, and answers with its id
 //   node petal.mjs jobs wait --worker <id> [--for <seconds>]
 //                                                 asks the site again and again, and comes back with
 //                                                 the next job, or with none just before --for ends
-// Several workers per agent (Elco's swarm, 10 Nov; coordinator/swarm.md step 1): each window and each
+// Several workers per agent (a swarm): each window and each
 // sub-agent joins once and waits with its own worker id, so the page lists them apart and each holds
 // its own job. Each worker is a file of its own, so two joining at once never overwrite each other.
 // The waiting lives only in the command the agent's own session runs: nothing stays behind it. It
@@ -42,7 +42,7 @@ export const workerFile = (env: NodeJS.ProcessEnv, id: string) =>
 
 /**
  * Keeps the key and the name as a new worker, for `jobs wait`. The key stays on this machine. `can` is what
- * the agent says it can do for a job, in its own words (Elco's lean 2, 11 Nov): each wait tells Petals'
+ * the agent says it can do for a job, in its own words: each wait tells Petals'
  * agent, which hands out jobs by it.
  */
 export function joinAgent(env: NodeJS.ProcessEnv, key: string, as: string, can?: string): Json {
@@ -84,7 +84,7 @@ interface Joined {
   as: string;
   /** null for an agent joined before workers */
   worker: string | null;
-  /** what it said it can do, when it joined (lean 2) */
+  /** what it said it can do, when it joined */
   can?: string;
 }
 

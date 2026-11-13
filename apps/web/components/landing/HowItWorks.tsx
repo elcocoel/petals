@@ -1,11 +1,11 @@
 'use client';
-// How it works: Elco's seven illustrated scenes (Figma 181:2343, 10 Nov), as a row of cards (Elco: "a row of
-// cards") that keeps time (Elco: "automated cycling on a loop and the focused card could be highlighted").
+// How it works: seven illustrated scenes (Figma 181:2343), as a row of cards that keeps time, cycling on a loop
+// with the focused card highlighted.
 // The scene in focus sits in the middle of a row that runs to the window's edges, and comes forward; the
 // others step back either side. Under version 2 a line fills under it and the row
 // moves on, round and round, while no hand is on it (viewmodels/useSceneCycle.ts). Under the row, a tick
-// for each scene and the two arrows move the focus. It has no Connect of its own (Elco, 11 Nov: remove it):
-// the nav's and the hero's stay.
+// for each scene and the two arrows move the focus. It has no Connect of its own: the nav's and the hero's
+// are the ways in.
 import { landingCopy } from '../../lib/landing-copy.ts';
 import { useSceneCycle } from '../../viewmodels/useSceneCycle.ts';
 import { Button } from '../ui/Button.tsx';
@@ -25,11 +25,10 @@ export function HowItWorks() {
       </div>
       <div data-paused={cycle.held ? '' : undefined} {...cycle.holder}>
         {/* The row runs out to the window's edges, past the page's column, with one scene in focus in its
-            middle and the next ones either side, stepped back (Elco, 10 Nov: "it should go to the edges of
-            the composition and perhaps one clearly focused card is better"). A spacer at each end lets the
-            first and the last scene come to the middle too. It leaves room under the cards, so the scene in
-            focus can lift and its shadow fade out before the row ends, and the ticks and arrows under it
-            are its scrollbar, so it shows none of its own. */}
+            middle and the next ones either side, stepped back, so one card is clearly in focus. A spacer at
+            each end lets the first and the last scene come to the middle too. It leaves room under the cards,
+            so the scene in focus can lift and its shadow fade out before the row ends, and the ticks and
+            arrows under it are its scrollbar, so it shows none of its own. */}
         <ul
           ref={cycle.row}
           className="relative left-1/2 -mt-column-gap -mb-section-padding flex w-screen -translate-x-1/2 list-none snap-x snap-mandatory gap-block-gap overflow-x-auto px-0 lg:gap-column-gap pt-column-gap pb-section-padding [scrollbar-width:none]" /* token-exempt: no scrollbar of its own, the ticks and arrows are its scrollbar */

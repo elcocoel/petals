@@ -309,7 +309,7 @@ describe('a box that floats', () => {
   });
 });
 
-// A card is read, not pressed (the small set, 10 Nov): it takes the glass and rises in, and never lifts,
+// A card is read, not pressed (the small set): it takes the glass and rises in, and never lifts,
 // swells or follows the pointer, so it never reads as something to click.
 describe('a card', () => {
   const rules = parse(SHEET).rules;

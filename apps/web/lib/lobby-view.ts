@@ -1,6 +1,5 @@
-// The lobby (specs/004-workspace, W3): where a person's work sits when they come back. A skeleton, built so
-// Elco can sense what's needed. Pure: its words and where each thing goes are decided here, and the view
-// only lays them out. Every word below is a proposal, listed in design/journey-strings.md, "The lobby".
+// The lobby (specs/004-workspace, W3): where a person's work sits when they come back. A skeleton. Pure: its
+// words and where each thing goes are decided here, and the view only lays them out.
 import type { ProfileDraft, SocialProfile } from './near-social.ts';
 import { type Credit, type PayAction, payWords } from './pay.ts';
 
@@ -9,41 +8,39 @@ export const lobbyWords = {
   page: 'Lobby',
   /** The flowers on the shared map, each opening on the canvas. */
   map: 'On the map',
-  /** The map with nothing on it yet: what goes there, and how. LOBBY's draft. */
+  /** The map with nothing on it yet: what goes there, and how. */
   mapEmpty: 'Nothing on the map yet. A network you map in a conversation shows here.',
+  /** Signing out, at the top of the lobby: the one way out of the account. */
+  disconnect: 'Disconnect',
 } as const;
 
 /**
- * The Balance card (Elco, 9 Nov: the Withdraw button lives in the lobby, "more specifically, profile part of
- * it"; 10 Nov, the redo's frame: "Build it"): the credit the person holds, in NEAR, and taking everything
- * out of the contract while it holds something. Drafts, shipped on Elco's word ("ship drafts, change later").
+ * The Balance card (the Withdraw button lives in the lobby, by the profile): the credit the person holds, in
+ * NEAR, and taking everything out of the contract while it holds something.
  */
 export const fundsWords = {
   title: 'Balance',
   /** NEAR beside the dollars, at today's price. */
   near: (amount: string) => `${amount} NEAR`,
-  /** Under the amount: what it is. LOBBY's draft. */
+  /** Under the amount: what it is. */
   note: 'Credit for Petals’ agent, at today’s price.',
-  /** The credit or NEAR's price couldn't be read. LOBBY's draft. */
+  /** The credit or NEAR's price couldn't be read. */
   unread: 'Your balance can’t be read right now.',
-  /** Elco's draft. */
   withdraw: 'Withdraw',
   waiting: payWords.paying,
-  /** Elco's draft, with the amount that came out. */
+  /** With the amount that came out. */
   withdrew: (near: string) => `Withdrew ${near} NEAR.`,
-  /** LOBBY's draft, after the pay step's own. */
+  /** After the pay step's own. */
   failed: "That withdrawal didn't go through. Try again.",
 } as const;
 
 /**
- * The person at the top of the page, and the Profile card (Elco, 9 and 10 Nov; the redo's frame, "Build
- * it"; and "hold the same data shape as near.social in our DB ... and have a publish button"): the
- * profile is kept in Petals, in NEAR Social's shape, and goes onto NEAR Social only when it's published.
- * Its links are the account's own declaration, so their badge says only that. LOBBY's drafts.
+ * The person at the top of the page, and the Profile card, with a Publish button: the profile is kept in
+ * Petals, in NEAR Social's shape, and goes onto NEAR Social only when it's published.
+ * Its links are the account's own declaration, so their badge says only that.
  */
 export const profileWords = {
-  /** The badges beside the account: the chain it's on, and where its profile is. */
-  chain: 'NEAR',
+  /** The badges beside the account where its profile is (the chain's badge is its name, lib/profile-view.ts). */
   social: 'NEAR Social',
   inPetals: 'In Petals',
   noProfile: 'No profile',
@@ -66,9 +63,9 @@ export const profileWords = {
 } as const;
 
 /**
- * The profile's editor (Elco, 10 Nov): it saves into Petals, which costs nothing; Publish is its own
+ * The profile's editor: it saves into Petals, which costs nothing; Publish is its own
  * button, which puts the profile on NEAR Social, and stays off until it's set up on mainnet, so the line
- * beside it says so. LOBBY's drafts, from the Figma frame Elco approved.
+ * beside it says so.
  */
 export const editorWords = {
   edit: 'Edit your profile',
@@ -87,8 +84,7 @@ export const editorWords = {
   /** The link's service, before one is picked. */
   pick: 'Pick one',
   /**
-   * Where it's kept, said once, under the buttons (the walk, 11 Nov: it was said four times): with Publish
-   * off, and with it on.
+   * Where it's kept, said once, under the buttons, not repeated: with Publish off, and with it on.
    */
   keptNote:
     'Save keeps it in Petals, for you only, and costs nothing. Publishing it to NEAR Social, where anyone can see it, comes later.',
@@ -105,8 +101,7 @@ export const editorWords = {
   checking: 'Checking NEAR Social has it…',
   saved: 'Saved',
   savedLine: 'Saved in Petals.',
-  /** After Publish went through: NEAR Social has it (Elco, 12 Nov: "make sure that we are connected to near
-   * social that it's not test net anymore"). */
+  /** After Publish went through: NEAR Social has it, on mainnet. */
   published: 'Published',
   publishedLine: 'On NEAR Social now, where anyone can see it.',
   notSaved: 'Not saved',
@@ -117,12 +112,15 @@ export const editorWords = {
   otherWallet: (wallet: string, account: string) =>
     `Your wallet is on ${wallet}. Switch it to ${account} to publish.`,
   tryAgain: 'Try again',
+  /** Signed in with an Ethereum or Solana wallet and no NEAR wallet added: what publishing needs. */
+  needsNear:
+    'NEAR Social is on NEAR, so publishing needs a NEAR wallet. Add one in Wallets, then publish.',
+  goToWallets: 'Go to Wallets',
 } as const;
 
 /**
- * Publish to NEAR Social, on or off (Elco, 10 Nov: "test look and feel for free and then rig to mainnet
- * effortlessly later"): on since 12 Nov, on mainnet (Elco: "make sure that we are connected to near social
- * that it's not test net anymore"), the person's own wallet signing each write.
+ * Publish to NEAR Social, on or off, so the look can be tried for free before mainnet: on, on mainnet, the
+ * person's own wallet signing each write.
  */
 export const PUBLISH_TO_NEAR_SOCIAL = true;
 
@@ -136,6 +134,19 @@ export type EditPhase =
   | 'checking'
   | 'failed';
 
+/**
+ * The NEAR account a profile is published as: the account signed in, when it's a NEAR one; otherwise the
+ * person's first NEAR wallet added in Wallets; or none.
+ */
+export function nearAccountOf(
+  signedIn: { network: string; account: string } | null,
+  wallets: readonly { network: string; account_id: string }[],
+): string | null {
+  if (signedIn && (signedIn.network === 'mainnet' || signedIn.network === 'testnet'))
+    return signedIn.account;
+  return wallets.find((w) => w.network === 'mainnet')?.account_id ?? null;
+}
+
 /** The phases in which the editor waits and nothing can be changed. */
 export const busyPhase = (p: EditPhase) => p !== 'editing' && p !== 'failed';
 
@@ -145,6 +156,11 @@ export interface ProfileEditorView {
   creating: boolean;
   /** The account it's kept for and would publish as, as shown, and in full. */
   account: { shown: string; full: string };
+  /**
+   * Publishing to NEAR Social needs a NEAR account: someone signed in with an Ethereum or
+   * Solana wallet and no NEAR wallet added yet; the editor says so and leads them to Wallets.
+   */
+  needsNearWallet: boolean;
   draft: ProfileDraft;
   /** The picture shown: the one chosen, or the one there now. */
   picture: string | null;

@@ -8,7 +8,7 @@ import { VIEW_VERSION } from '../versions.ts';
 
 /**
  * The handful of dimensions, fixed: the visual primitives a view can give a piece of data to. view/v2 added
- * labels, the words that name each petal (annotation-layer.md, section 3).
+ * labels, the words that name each petal.
  */
 export const DIMENSIONS = [
   'height',
@@ -37,14 +37,14 @@ export interface Piece {
 export const ACCEPTS: Record<Dimension, readonly DataKind[]> = {
   height: ['amount', 'count', 'share'],
   width: ['amount', 'count', 'share'],
-  // a date orders newest first ('Last active'), a count most first ('Votes cast'); Elco, 12 Nov: "the dimension of
-  // time specifically is particularly absent ... it always looks like a shell, like a nautilus"
+  // a date orders newest first ('Last active'), a count most first ('Votes cast'), so time can order the petals
+  // too, and not only size, which always draws a nautilus-like shell
   order: ['amount', 'count', 'share', 'category', 'date'],
   // a category's values, each in its key; an amount, a count, a share or a date as a grade of one hue, lightest to
-  // darkest (Elco, 12 Nov, wave 4: "color graded by a number or a date")
+  // darkest
   colour: ['category', 'amount', 'count', 'share', 'date'],
   outline: ['flag', 'category'],
-  // texture and markings take no data until the look draws them: a choice draws, or isn't offered (Elco, 12 Nov)
+  // texture and markings take no data until the look draws them: a choice draws, or isn't offered
   texture: [],
   markings: [],
   segments: ['parts'],
@@ -66,14 +66,13 @@ export const EVERY_FLOWER: readonly Piece[] = [
 
 /**
  * The pieces of data some flowers' readings have (reading/view.ts piecesOf): a petal cut into who backs it, where
- * its reading has delegations. The only data of parts today, so the only data Segments can show (Elco, 12 Nov,
- * walk 3: "I don't have any choices on label segments").
+ * its reading has delegations. The only data of parts today, so the only data Segments can show.
  */
 export const BACKERS: Piece = { name: 'backers', kind: 'parts' };
 
 /**
- * Each petal's activity, where its map's proposals were read (activity.ts; Elco, 12 Nov: "the dimension of time
- * specifically is particularly absent"): how many it voted on, when it last voted, and whether it ever did.
+ * Each petal's activity, where its map's proposals were read (activity.ts), time as data: how many it voted
+ * on, when it last voted, and whether it ever did.
  */
 export const ACTIVITY: readonly Piece[] = [
   { name: 'votes_cast', kind: 'count' },
@@ -82,8 +81,8 @@ export const ACTIVITY: readonly Piece[] = [
 ];
 
 /**
- * Each petal's vesting, where its map's vesting schedules were read (vesting.ts; Elco, 12 Nov, wave 7: "it's vesting
- * reader for anything"): what it holds cut into unlocked, next unlock and later; its next unlock; and, where it
+ * Each petal's vesting, where its map's vesting schedules were read (vesting.ts, a reader for any token's
+ * vesting): what it holds cut into unlocked, next unlock and later; its next unlock; and, where it
  * holds one allocation, which.
  */
 export const VESTING: readonly Piece[] = [
@@ -121,7 +120,7 @@ export const DEFAULT_VIEW_V1: ViewV1 = {
   },
 };
 
-/** view/v3 (12 Nov, wave 4): view/v2 with colour's keys, the key each value takes as the person chose it. */
+/** view/v3 (12 Nov): view/v2 with colour's keys, the key each value takes as the person chose it. */
 export const VIEW_KEYS_VERSION = 'view/v3';
 
 /**
@@ -144,9 +143,9 @@ export function latestView(view: View): ViewV2 | ViewV3 {
 export const DEFAULT_VIEW_V2_0 = latestView(DEFAULT_VIEW_V1) as ViewV2;
 
 /**
- * The default since 11 Nov, the art direction's (design/flower-art-direction/default-system-vnext.md, V1; #76,
- * Elco: the lab into the product): heights straight, so twice as much is twice as tall, everyone else too, with
- * no minimum (the linear scale, reading/encodings.ts); every petal as wide. The rest as before.
+ * The default since 11 Nov, the art direction's (V1): heights straight, so twice as much is twice as tall,
+ * everyone else too, with no minimum (the linear scale, reading/encodings.ts); every petal as wide. The rest
+ * as before.
  */
 export const DEFAULT_VIEW: ViewV2 = {
   petal: VIEW_VERSION,
@@ -178,8 +177,8 @@ export const DEFAULT_HASHES: readonly string[] = [
  * fallback: a missing fact shows nothing.
  */
 /**
- * The pieces a dimension draws, where it draws only some of what fits (Elco, 12 Nov: a choice draws, or isn't
- * offered): an outline says how a petal's identity is known (asserted or inferred), and nothing else yet.
+ * The pieces a dimension draws, where it draws only some of what fits (a choice draws, or isn't offered): an
+ * outline says how a petal's identity is known (asserted or inferred), and nothing else yet.
  */
 export const DRAWS_ONLY: Partial<Record<Dimension, readonly string[]>> = { outline: ['identity'] };
 
@@ -210,7 +209,7 @@ export function colourKeysOf(view: View): Readonly<Record<string, ColourKey>> {
 }
 
 /**
- * The view with colour's keys as given (Elco, 12 Nov, wave 4: "choosing which colour a value gets"): a view/v3
+ * The view with colour's keys as given, the colour a person chose for each value: a view/v3
  * when any key is chosen, a view/v2 when none is, so a view with nothing chosen keeps the hash it had.
  */
 export function withColourKeys(

@@ -1,4 +1,4 @@
-// The one shared map as a list (SYSTEMS, 10 Nov: GET /api/v1/map/views, Elco's fix 2): every view on the map,
+// The one shared map as a list (GET /api/v1/map/views): every view on the map,
 // oldest first, with the picture the server draws for it in the default view and the address that opens it.
 // The web uses both as given, so a view looks and opens the same everywhere it's listed.
 import { api } from './api.ts';
@@ -41,7 +41,7 @@ export function viewTile(v: MapViewRow) {
   const name = viewName(v);
   return {
     title: name,
-    // A date stays on one line (design/minimally-good.md, rule 7).
+    // A date stays on one line.
     where: [v.title !== name ? v.title : null, dateLabel(v.as_of).replaceAll(' ', '\u00a0')]
       .filter(Boolean)
       .join('   /   '),

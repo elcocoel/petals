@@ -59,7 +59,7 @@ const NOT_FOR_THE_AGENT = new Set([
   'start_exploration',
   'save_step',
   'add_note',
-  // The person's agent's side of a job (9 Nov, C). Petals' agent hands jobs out with its own hand_job and
+  // The person's agent's side of a job. Petals' agent hands jobs out with its own hand_job and
   // reads where they stand in its system message (hand-job.ts), so these would only add bytes.
   'take_job',
   'report_job',
@@ -75,11 +75,11 @@ const NOT_FOR_THE_AGENT = new Set([
   'keep_layer',
   'list_layers',
   'fork_dataset',
-  // annotations (annotation-layer.md step 2): the person's agent adds them; Petals' agent gets its own way
-  // in step 3, with prompt words, saving what the person says in the same turn
+  // annotations: the person's agent adds them; Petals' agent gets its own way, with prompt words, saving
+  // what the person says in the same turn
   'add_annotation',
   'list_annotations',
-  // what a person's agents keep in the project (#98): Petals' agent doesn't
+  // what a person's agents keep in the project: Petals' agent doesn't
   'keep_data',
   'list_data',
 ]);

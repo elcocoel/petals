@@ -27,12 +27,12 @@ export interface NightView {
   snapshot: string;
   /** the map it's on, its reading's address, when the live map says (GET /api/v1/map) */
   map?: string;
-  /** the pieces of data its reading has, by name, when the live map says (core's piecesOf; SYSTEMS, wave 3) */
+  /** the pieces of data its reading has, by name, when the live map says (core's piecesOf) */
   pieces?: readonly string[];
   reading: Pick<Reading, 'title' | 'petals'>;
   /**
-   * The pieces of data its reading got (SYSTEMS's 'given': names, dollars, activity), values for its drawn petals:
-   * what the browser dresses it again with when Tools changes the view (core redress; Elco, wave 4)
+   * The pieces of data its reading got ('given': names, dollars, activity), values for its drawn petals:
+   * what the browser dresses it again with when Tools changes the view (core redress)
    */
   given?: SeamPiece[];
 }

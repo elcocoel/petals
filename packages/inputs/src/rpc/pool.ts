@@ -1,4 +1,4 @@
-// Keyless NEAR mainnet RPC pool (T034; research R7; ../research/data/near-dao/NOTES.md).
+// Keyless NEAR mainnet RPC pool (T034; research R7).
 //
 // Endpoints in priority order, each paced to what was measured on 2026-11-04:
 //   dRPC      near.drpc.org              ~2,700 calls at 2.5/s, no 429s: the workhorse

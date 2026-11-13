@@ -1,10 +1,8 @@
-// The bouncer (Elco, 11 Nov: "i made this illustration for when you're not logged in on /make and other
-// errors or 404 etc"): Petals' agent behind a velvet rope, palms up (design/illustrations/
-// oops-not-logged-in-v1.png, Figma 233:2359; public/illustrations/oops.webp, 960 px for up to 480 on screen).
-// The drawing is the page's subject and the words its caption (Elco, 11 Nov: "the whole gestalt is just
-// off"): large, beside the words on a wide window and above them on a phone; a heading, one line, one main
-// action and a quieter one, close together with room around them. The signed-out workspace, the 404 and the
-// error pages. Props only.
+// The bouncer, for when you're not signed in on /make and for errors and the 404: Petals' agent behind a velvet
+// rope, palms up (Figma 233:2359; public/illustrations/oops.webp, 960 px for up to 480 on screen).
+// The drawing is the page's subject and the words its caption: large, beside the words on a wide window and
+// above them on a phone; a heading, one line, one main action and a quieter one, close together with room
+// around them. The signed-out workspace, the 404 and the error pages. Props only.
 import type { ReactNode } from 'react';
 
 export function Oops({

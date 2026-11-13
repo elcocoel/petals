@@ -1,4 +1,4 @@
-// A visitor's own view, kept by its hash in their browser (Elco, 12 Nov, walk 3): the cookie says the hash and
+// A visitor's own view, kept by its hash in their browser: the cookie says the hash and
 // nothing else, and only a hash is read back from it.
 import { describe, expect, test } from 'vitest';
 import { VISITOR_VIEW_COOKIE, visitorViewCookie, visitorViewOf } from '../lib/visitor-view.ts';

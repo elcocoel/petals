@@ -50,6 +50,7 @@ import { MapHero } from '../components/landing/MapHero.tsx';
 import { Questions } from '../components/landing/Questions.tsx';
 import { Scene } from '../components/landing/Scene.tsx';
 import { StoryFlower } from '../components/landing/StoryFlower.tsx';
+import { SystemGraph } from '../components/landing/SystemGraph.tsx';
 import { MapClaims } from '../components/MapClaims.tsx';
 import { MapLayers } from '../components/MapLayers.tsx';
 import { MapList } from '../components/MapList.tsx';
@@ -77,6 +78,7 @@ import { Callout } from '../components/ui/Callout.tsx';
 import { Card } from '../components/ui/Card.tsx';
 import { ChooseFile } from '../components/ui/ChooseFile.tsx';
 import { ColourPick } from '../components/ui/ColourPick.tsx';
+import { ConnectButton, ConnectButtonView } from '../components/ui/ConnectButton.tsx';
 import { Drawing } from '../components/ui/Drawing.tsx';
 import { EmptySlot } from '../components/ui/EmptySlot.tsx';
 import { FaqItem } from '../components/ui/FaqItem.tsx';
@@ -122,7 +124,8 @@ import { ProfileEditor } from '../components/workspace/ProfileEditor.tsx';
 import { ProfileHead } from '../components/workspace/ProfileHead.tsx';
 import { ReadingKey } from '../components/workspace/ReadingKey.tsx';
 import { TipControl } from '../components/workspace/TipControl.tsx';
-import { DimensionChoices, ViewControls } from '../components/workspace/ViewControls.tsx';
+import { DimensionChoices } from '../components/workspace/ViewControls.tsx';
+import { WalletAsk } from '../components/workspace/WalletAsk.tsx';
 import { Wallets } from '../components/workspace/Wallets.tsx';
 import { FlowerPanel } from '../flower/FlowerPanel.tsx';
 import type { PublishableData } from '../lib/agent-client.ts';
@@ -691,6 +694,7 @@ const LAB_CREDIT: Credit = {
 const editorView = (over: Partial<ProfileEditorView>): ProfileEditorView => ({
   creating: false,
   account: { shown: 'a-name.near', full: 'a-name.near' },
+  needsNearWallet: false,
   draft: {
     name: 'A name on NEAR Social',
     about: 'A short bio, in the account’s own words.',
@@ -786,8 +790,8 @@ export const registry: LabEntry[] = [
     figmaName: null,
     figmaNode: null,
     source: 'apps/web/components/landing/HeroStory.tsx',
-    // HERO ART's V2, approved by Elco (11 Nov); with its lab controls at /lab/landing-hero
-    states: [{ name: 'as approved', wide: true, render: () => <HeroStory /> }],
+    // the landing's hero as the page draws it; its lab controls are at /lab/landing-hero
+    states: [{ name: 'on the landing', wide: true, render: () => <HeroStory /> }],
   },
   {
     id: 'StoryFlower',
@@ -893,15 +897,8 @@ export const registry: LabEntry[] = [
       () => <BackIt />,
     ),
     states: [
-      {
-        name: 'as designed',
-        wide: true,
-        figmaName: 'Join the community',
-        figmaNode: '66:2346',
-        render: () => <BackIt />,
-      },
-      // LANDING's lean for the split's empty half (11 Nov), in place at /lab/landing-hero
-      { name: 'columns', wide: true, render: () => <BackIt layout="columns" /> },
+      // Petal Mania: four cards in a line, the cards the links
+      { name: 'Petal Mania', wide: true, render: () => <BackIt /> },
     ],
   },
   section(
@@ -911,6 +908,26 @@ export const registry: LabEntry[] = [
     '66:2316',
     () => <BuildWithUs />,
   ),
+  {
+    id: 'SystemGraph',
+    group: 'Sections',
+    // from the system map, Figma "Systems map" (119:2271)
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/landing/SystemGraph.tsx',
+    // Build it with us's system graph, on the ink band it sits in
+    states: [
+      {
+        name: 'on the ink band',
+        wide: true,
+        render: () => (
+          <Section kind="ink">
+            <SystemGraph />
+          </Section>
+        ),
+      },
+    ],
+  },
   {
     id: 'Footer',
     group: 'Sections',
@@ -983,17 +1000,16 @@ export const registry: LabEntry[] = [
       {
         name: 'a way in, on paper',
         render: () => (
-          <PlateLink href="#platelink" action={landingCopy.backIt.ways[0].action}>
-            <span className="type-title">{landingCopy.backIt.ways[0].title}</span>
-            <span className="type-body">{landingCopy.backIt.ways[0].body}</span>
+          <PlateLink href="#platelink">
+            <span className="type-heading">{landingCopy.backIt.ways[2].title}</span>
           </PlateLink>
         ),
       },
       {
         name: 'a slot with no address yet',
         render: () => (
-          <PlateLink action={landingCopy.backIt.ways[3].action}>
-            <span className="type-title">{landingCopy.backIt.ways[3].title}</span>
+          <PlateLink>
+            <span className="type-heading">{landingCopy.backIt.ways[1].title}</span>
           </PlateLink>
         ),
       },
@@ -1320,7 +1336,7 @@ export const registry: LabEntry[] = [
           <ActionRow gap="tight">
             <Button href="#actionrow">{landingCopy.nav.ask}</Button>
             <Button variant="secondary" href="#actionrow">
-              {landingCopy.builders.actions.docs}
+              {landingCopy.builders.doors[0].title}
             </Button>
           </ActionRow>
         ),
@@ -1450,6 +1466,34 @@ export const registry: LabEntry[] = [
     ],
   },
   {
+    id: 'ConnectButtonView',
+    group: 'Controls',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/ui/ConnectButton.tsx',
+    states: [
+      { name: 'visitor', render: () => <ConnectButtonView label="Connect" account={null} /> },
+      {
+        name: 'connected, named account',
+        render: () => <ConnectButtonView label="Connect" account="alice.near" />,
+      },
+      {
+        name: 'connected, long address',
+        render: () => (
+          <ConnectButtonView label="Connect" account="0x8ba1f109551bD432803012645Ac136ddd64DBA72" />
+        ),
+      },
+    ],
+  },
+  {
+    id: 'ConnectButton',
+    group: 'Controls',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/ui/ConnectButton.tsx',
+    states: [{ name: 'as the page reads it', render: () => <ConnectButton label="Connect" /> }],
+  },
+  {
     id: 'Button',
     group: 'Controls',
     figmaName: 'Petals / Button',
@@ -1492,6 +1536,17 @@ export const registry: LabEntry[] = [
             Support Petals
           </Button>
         ),
+      },
+      {
+        name: 'done',
+        closedIn: 'Actions',
+        render: () => <Button variant="done">Copied</Button>,
+      },
+      {
+        name: 'done, edged',
+        closedIn: 'Actions',
+        ...SECONDARY,
+        render: () => <Button variant="doneEdged">Copied</Button>,
       },
       {
         name: 'square, link',
@@ -1983,50 +2038,6 @@ export const registry: LabEntry[] = [
     ],
   },
   {
-    id: 'ViewControls',
-    group: 'The workspace',
-    figmaName: null,
-    figmaNode: null,
-    source: 'apps/web/components/workspace/ViewControls.tsx',
-    states: [
-      {
-        name: 'the default, colour open (all of it, live: /lab/panel?state=settings)',
-        render: () => (
-          <ViewControls
-            dimensions={DIMENSIONS}
-            view={DEFAULT_VIEW}
-            defaults={DEFAULT_VIEW}
-            choices={viewChoices()}
-            pieces={EVERY_FLOWER}
-            open="colour"
-            onOpen={() => {}}
-            onPick={() => {}}
-            onScale={() => {}}
-            failed={null}
-          />
-        ),
-      },
-      {
-        name: 'height open on a number, with its scale, and the default to put back',
-        render: () => (
-          <ViewControls
-            dimensions={DIMENSIONS}
-            view={withScale(DEFAULT_VIEW, 'height', 'linear')}
-            defaults={DEFAULT_VIEW}
-            choices={viewChoices()}
-            pieces={EVERY_FLOWER}
-            open="height"
-            onOpen={() => {}}
-            onPick={() => {}}
-            onScale={() => {}}
-            onReset={() => {}}
-            failed={null}
-          />
-        ),
-      },
-    ],
-  },
-  {
     id: 'DimensionChoices',
     group: 'The workspace',
     figmaName: null,
@@ -2034,7 +2045,7 @@ export const registry: LabEntry[] = [
     source: 'apps/web/components/workspace/ViewControls.tsx',
     states: [
       {
-        name: 'height’s choices, with its scale (Settings and the legend open these)',
+        name: 'height’s choices, with its scale (the legend opens these)',
         render: () => (
           <DimensionChoices
             dimension="height"
@@ -2057,7 +2068,7 @@ export const registry: LabEntry[] = [
     source: 'apps/web/components/workspace/TipControl.tsx',
     states: [
       {
-        name: 'folded, at 5% (live with the panel: /lab/panel?state=settings)',
+        name: 'folded, at 5%',
         render: () => (
           <TipControl
             percent={5}
@@ -2535,6 +2546,37 @@ export const registry: LabEntry[] = [
     ],
   },
   {
+    id: 'WalletAsk',
+    group: 'The conversation',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/workspace/WalletAsk.tsx',
+    states: [
+      {
+        name: 'which wallet',
+        wide: true,
+        render: () => (
+          <WalletAsk
+            pick={[
+              { id: 'a', name: 'MetaMask', icon: null },
+              { id: 'b', name: 'SafePal', icon: null },
+            ]}
+            waitingFor={null}
+            onChoose={() => {}}
+            onStop={() => {}}
+          />
+        ),
+      },
+      {
+        name: 'waiting for one',
+        wide: true,
+        render: () => (
+          <WalletAsk pick={null} waitingFor="SafePal" onChoose={() => {}} onStop={() => {}} />
+        ),
+      },
+    ],
+  },
+  {
     id: 'ConnectWallet',
     group: 'The conversation',
     figmaName: null,
@@ -2545,6 +2587,20 @@ export const registry: LabEntry[] = [
         name: 'nothing waiting',
         wide: true,
         render: () => <ConnectWallet question="" busy={false} failed={null} onConnect={() => {}} />,
+      },
+      {
+        name: 'NEAR, Ethereum and Solana, as /make has it',
+        wide: true,
+        render: () => (
+          <ConnectWallet
+            question=""
+            busy={false}
+            failed={null}
+            onConnect={() => {}}
+            onConnectEvm={() => {}}
+            onConnectSolana={() => {}}
+          />
+        ),
       },
       {
         name: 'a question waiting, and the last try failed',
@@ -2651,6 +2707,7 @@ export const registry: LabEntry[] = [
         render: () => (
           <ProfileHead
             account="a-name.near"
+            chain="NEAR"
             social={{
               kind: 'profile',
               profile: { name: 'A name', about: null, avatar: null, links: [] },
@@ -2664,6 +2721,17 @@ export const registry: LabEntry[] = [
         render: () => (
           <ProfileHead
             account="02b85f8c8bbfbcc34f4d30b55724f36336768f05c27c2d7f97936e5d699018fc"
+            chain="NEAR"
+            social={{ kind: 'none' }}
+          />
+        ),
+      },
+      {
+        name: 'signed in with an Ethereum wallet',
+        render: () => (
+          <ProfileHead
+            account="0xd50ef448246cfaac93b37733b6fbe27aa1707b6b"
+            chain="Ethereum"
             social={{ kind: 'none' }}
           />
         ),
@@ -2692,6 +2760,17 @@ export const registry: LabEntry[] = [
       {
         name: 'saving',
         render: () => <ProfileEditor view={editorView({ phase: 'saving' })} />,
+      },
+      {
+        name: 'signed in with an Ethereum wallet, no NEAR wallet yet',
+        render: () => (
+          <ProfileEditor
+            view={editorView({
+              account: { shown: '0x3f…f0be', full: '0x3f5ce5fbfe3e9af3971dd833d26ba9b5c936f0be' },
+              needsNearWallet: true,
+            })}
+          />
+        ),
       },
       {
         name: "NEAR Social didn't take it",

@@ -65,7 +65,7 @@ describe('chat', () => {
   test('a refusal throws code and message', async () => {
     serve(json({ error: { code: 'rate_limited', message: 'slow down' } }, 429));
     const refused = await events(agentClient.chat({ messages: [] })).catch((e: unknown) => e);
-    // the code travels apart from the words, so the chat can answer a refusal for what it is (B)
+    // the code travels apart from the words, so the chat can answer a refusal for what it is
     expect(refusalCode(refused)).toBe('rate_limited');
     expect((refused as Error).message).toBe('slow down');
   });

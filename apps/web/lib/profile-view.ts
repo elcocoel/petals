@@ -1,8 +1,7 @@
-// The profile page (#79; Elco, 9 Nov: "a profile area where people gain credibility as investigators and
-// researchers"; 11 Nov: "our profile page needs work"; META, 11 Nov: build LOBBY's lean, the investigator's
+// The profile page, where people gain credibility as investigators and researchers (the investigator's
 // card): the person and what backs them. The wallets they proved by signing in, the claims they and their
 // agents have kept about accounts, by how each is known, and their conversations. Pure: the words and the
-// arithmetic are here, and the views only lay them out. LOBBY's drafts, listed in design/journey-strings.md.
+// arithmetic are here, and the views only lay them out.
 import { type AnnotationRow, type ClaimLine, claimLines } from './claim-lines.ts';
 import { shortWhen } from './conversation-list.ts';
 import { chainLabel, dateLabel, shortId } from './flower-view.ts';
@@ -16,13 +15,28 @@ export const profilePageWords = {
   /** Under a wallet: when it signed. */
   provedOn: (date: string) => `Signed in on ${date}`,
   walletsNote: 'Each one signed a message with its own key, so it’s proven yours.',
-  /** The Wallets widget's one action (Elco, 11 Nov: "have the wallets one allow me to add more wallets"). */
+  /** The Wallets widget's one action: adding more wallets. */
   addWallet: 'Add a wallet',
-  /** The two ways to add one (wave 5; buttons say Connect; WORKSPACE's door says the same). */
+  /** The two ways to add one (buttons say Connect; /make's door says the same). */
   connectNear: 'Connect a NEAR wallet',
   connectEvm: 'Connect an Ethereum wallet',
   connectSolana: 'Connect a Solana wallet',
   adding: 'Waiting for your wallet…',
+  /** While a wallet is asked: which one, so the person knows where to answer. */
+  waitingFor: (wallet: string) => `Waiting for ${wallet}. Answer it there.`,
+  /** Stops waiting for a wallet that doesn't answer; the wallet's own request stays where it is. */
+  stop: 'Stop waiting',
+  /** Puts the pick of wallets away. */
+  cancel: 'Cancel',
+  /** Several wallets of one kind in this browser: the person picks one by name. */
+  whichWallet: 'Which wallet?',
+  /** The NEAR wallet, by the name its picker gives it. */
+  nearWallet: 'Your NEAR wallet',
+  /** What a wallet said, plainly: it was refused, it's busy, or its own words. */
+  declined: (wallet: string) => `${wallet} declined. Nothing was added.`,
+  busy: (wallet: string) =>
+    `${wallet} already has a request open. Open ${wallet}, answer it, then try again.`,
+  answered: (wallet: string, why: string) => `${wallet} answered: ${why}`,
   notAdded: 'That wallet wasn’t added. Try again.',
   claims: 'Claims',
   /** How many accounts the claims are about. */
@@ -35,21 +49,54 @@ export const profilePageWords = {
   reading: 'Reading…',
 } as const;
 
-/** Which wallet to add: NEAR, an EVM one, or a Solana one (wave 5). */
+/** Which wallet to add: NEAR, an EVM one, or a Solana one. */
 export type WalletKind = 'near' | 'evm' | 'solana';
 
-/** Where adding a wallet is: offered, waiting for the wallet, or it didn't go through and why. */
+/** One wallet in this browser, as the person picks it (lib/evm-wallet.ts). */
+export interface WalletPick {
+  id: string;
+  name: string;
+  icon: string | null;
+}
+
+/**
+ * Where adding a wallet is: offered; several wallets of one kind, to pick from by name; waiting for the one
+ * asked, named; or it didn't go through and why.
+ */
 export type AddWalletPhase =
   | { kind: 'ready' }
-  | { kind: 'adding' }
+  | { kind: 'choose'; chain: 'evm' | 'solana'; wallets: WalletPick[] }
+  | { kind: 'adding'; wallet: string }
   | { kind: 'failed'; why: string };
+
+/**
+ * What a wallet's refusal says, plainly, with the wallet's name: the person said no (EIP-1193's 4001, or a
+ * wallet's own words for it), it already has a request open (-32002), or whatever else it said, as it said it.
+ */
+export function walletRefusal(
+  wallet: string,
+  e: unknown,
+  /** what a no says, where the page asked for something other than adding a wallet */
+  declined: (wallet: string) => string = profilePageWords.declined,
+): string {
+  const code = (e as { code?: unknown } | null)?.code;
+  const said =
+    e instanceof Error
+      ? e.message
+      : typeof (e as { message?: unknown } | null)?.message === 'string'
+        ? (e as { message: string }).message
+        : String(e);
+  if (code === 4001 || /reject|denied|declin|cancel|closed/i.test(said)) return declined(wallet);
+  if (code === -32002) return profilePageWords.busy(wallet);
+  return profilePageWords.answered(wallet, said || profilePageWords.notAdded);
+}
 
 /** A wallet as GET /api/v1/me lists it. */
 export interface ProvenWallet {
   network: string;
   account_id: string;
   proved_at: string;
-  /** the wallet in CAIP-10, as a publication names its author (SYSTEMS, wave 8) */
+  /** the wallet in CAIP-10, as a publication names its author */
   author?: string;
 }
 
@@ -64,20 +111,23 @@ export interface WalletRow {
   when: string;
 }
 
+/** A proven wallet's chain, by name, from the network the server names it on. */
+export const walletChain = (network: string) =>
+  network === 'eip155'
+    ? 'Ethereum'
+    : network === 'solana'
+      ? 'Solana'
+      : network === 'testnet'
+        ? 'NEAR testnet'
+        : 'NEAR';
+
 export function walletRows(wallets: readonly ProvenWallet[]): WalletRow[] {
   return wallets.map((w) => ({
     key: `${w.network}:${w.account_id}`,
     ...(w.network === 'eip155' || w.network === 'solana'
       ? { shown: shortId(w.account_id), full: w.account_id }
       : shownAccount(w.account_id)),
-    chain:
-      w.network === 'eip155'
-        ? 'Ethereum'
-        : w.network === 'solana'
-          ? 'Solana'
-          : w.network === 'testnet'
-            ? 'NEAR testnet'
-            : 'NEAR',
+    chain: walletChain(w.network),
     when: profilePageWords.provedOn(dateLabel(w.proved_at)),
   }));
 }
@@ -130,9 +180,9 @@ export function claimsView(rows: readonly AnnotationRow[]): ClaimsView {
 }
 
 /**
- * The Balance widget's usage (Elco, 11 Nov: "turn the balance widget into like a full-blown professional
- * usages widget"): every model call charged to the person (usage/v1, GET /api/v1/me/usage), newest first,
- * with its tokens, what it cost, and whether NEAR AI's own bill has confirmed it. LOBBY's drafts.
+ * The Balance widget's usage, a full usage widget: every model call charged to the person (usage/v1,
+ * GET /api/v1/me/usage), newest first,
+ * with its tokens, what it cost, and whether NEAR AI's own bill has confirmed it.
  */
 export const usageWords = {
   title: 'Usage',

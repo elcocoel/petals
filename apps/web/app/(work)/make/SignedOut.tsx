@@ -1,7 +1,8 @@
 'use client';
-// /make for someone not logged in (#78, 11 Nov): the oops page, wired to signing in. Connecting reloads the
+// /make for someone not logged in: the oops page, wired to signing in. Connecting reloads the
 // page, which then holds the conversation, with a question that came with the link waiting in it.
 import { NotSignedIn } from '../../../components/workspace/NotSignedIn.tsx';
+import { WalletAsk } from '../../../components/workspace/WalletAsk.tsx';
 import { useSession } from '../../../viewmodels/useSession.ts';
 
 export function SignedOut({ question }: { question: string }) {
@@ -13,10 +14,18 @@ export function SignedOut({ question }: { question: string }) {
         busy={session.busy}
         failed={session.failed}
         onConnect={session.connect}
-        // an Ethereum wallet's way in, beside NEAR's (wave 5, LOBBY's connectEvm)
-        onConnectEvm={session.connectEvm}
-        // and a Solana wallet's (wave 5, LOBBY's connectSolana)
-        onConnectSolana={session.connectSolana}
+        // an Ethereum wallet's way in, beside NEAR's
+        onConnectEvm={() => session.connectEvm()}
+        // and a Solana wallet's
+        onConnectSolana={() => session.connectSolana()}
+        ask={
+          <WalletAsk
+            pick={session.pick?.wallets ?? null}
+            waitingFor={session.waitingFor}
+            onChoose={session.choose}
+            onStop={session.stop}
+          />
+        }
       />
     </div>
   );

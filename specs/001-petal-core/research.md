@@ -2,9 +2,9 @@
 
 **Feature**: `001-petal-core` | **Date**: 2026-11-04 | **Plan**: [plan.md](./plan.md)
 
-Each item gives the decision, why, and what else was looked at. Decisions are **proposed**; Elco reviews them at the task gate. Non-NEAR alternatives are recorded for later, not built (constitution, NEAR showcase).
+Each item gives the decision, why, and what else was looked at. Decisions are **proposed** and reviewed at the task gate. Non-NEAR alternatives are recorded for later, not built (constitution, NEAR showcase).
 
-Inputs: the step 1 and step 2 research (`research/data-sources.md`, `research/near-fit.md`, `research/near-map-pay.md`, `research/data/near-dao/NOTES.md`, `research/spikes/agent/RESULTS.md`), plus two desk checks run today (docs, npm, GitHub, keyless GETs; sources at the end). Nothing was signed, sent or paid.
+Inputs: the step 1 and step 2 research (data sources, NEAR's fit, the map and payments, NEAR DAO data, an agent spike), plus two desk checks run today (docs, npm, GitHub, keyless GETs; sources at the end). Nothing was signed, sent or paid.
 
 ## R1. Language, runtime, workspace
 
@@ -16,7 +16,7 @@ Inputs: the step 1 and step 2 research (`research/data-sources.md`, `research/ne
   - TypeScript 7.0.2 (the native compiler) works with Next 16.4.5 and `tsc -b`.
   - Traps, folded into T002, T003, T006, T011, T013–T015, T022 and T051: Vitest 5 ignores `vitest.workspace.ts`; noble 2.x needs `.js` subpaths; strict Ajv needs `ajv-formats`; both schemas emit `Datetime`; the login shell's `node` is v22.
   - `petals.testnet`, `writer.petals.testnet` and `petals.near` were all free.
-- **Alternatives**: keep Python (the spikes) for inputs and TypeScript for the web (two runtimes, two test stacks, renderer duplicated); Rust (slow to build in a week); Bun or Deno (less certain support from NEAR and MCP libraries). Python spikes stay in `research/` and are not product code.
+- **Alternatives**: keep Python (the spikes) for inputs and TypeScript for the web (two runtimes, two test stacks, renderer duplicated); Rust (slow to build in a week); Bun or Deno (less certain support from NEAR and MCP libraries). Python spikes stay outside the repo and are not product code.
 
 ## R2. Package split
 
@@ -38,10 +38,10 @@ Inputs: the step 1 and step 2 research (`research/data-sources.md`, `research/ne
 
 ## R5. Renderer
 
-- **Decision**: a pure TypeScript function, spec + snapshot → SVG string, in `core`. Port the geometry of `research/spikes/flower/index.html` (polygon, straight bars, stacked segments, width band). Fixed 2-decimal coordinates, fixed element order, ids from the spec, colours as CSS custom properties so light and dark share bytes. Contract: [contracts/renderer.md](./contracts/renderer.md).
-- **Why**: SVG is deterministic, diffable, testable byte for byte (SC-005), exports to an image, and is easy for judges to inspect. The spike already proved the look Elco approved. The canonical render runs in Node; the browser uses the same code for instant redraws.
+- **Decision**: a pure TypeScript function, spec + snapshot → SVG string, in `core`. Port the geometry of the flower spike (polygon, straight bars, stacked segments, width band). Fixed 2-decimal coordinates, fixed element order, ids from the spec, colours as CSS custom properties so light and dark share bytes. Contract: [contracts/renderer.md](./contracts/renderer.md).
+- **Why**: SVG is deterministic, diffable, testable byte for byte (SC-005), exports to an image, and is easy for judges to inspect. The spike already proved the look. The canonical render runs in Node; the browser uses the same code for instant redraws.
 - **Risk**: `Math.sin` and `Math.log` can differ in the last bit between JavaScript engines. Rounding to 2 decimals hides this almost always; the server's `render_sha256` is the reference.
-- **Alternatives**: Three.js or WebGL (Elco's stated preference for rendering in code; the right tool for extrusion and 3D, so it becomes a *view* over the same geometry in Phase B or later, not the canonical render); D3 (adds a dependency for what is simple trigonometry); Canvas (no byte-level determinism, no vector export).
+- **Alternatives**: Three.js or WebGL (rendering in code is preferred; the right tool for extrusion and 3D, so it becomes a *view* over the same geometry in Phase B or later, not the canonical render); D3 (adds a dependency for what is simple trigonometry); Canvas (no byte-level determinism, no vector export).
 
 ## R6. Counting
 
@@ -111,7 +111,7 @@ The two `low` runs that missed the limit lost most of their time before the mode
 
 ## R11. Tools: one core, five thin doors
 
-- **Decision** (Elco, 2026-11-04): tools are plain async functions with JSON Schemas in `packages/tools`, and every door is thin over them:
+- **Decision** (2026-11-04): tools are plain async functions with JSON Schemas in `packages/tools`, and every door is thin over them:
   1. **HTTP API**, the base, which the web app uses: a Hono 4 app. Tool routes come from `@petal/tools` (`httpApp`); the agent's routes (chat, runs, attestation reports) come from `@petal/agent` (`agentRoutes`), and `petalApp` joins them. Keeping the agent's routes on the agent side keeps the dependency one way (agent → tools).
   2. **Agent Skill**: `skill/petal/SKILL.md` in the Agent Skills format, as NEAR's official dev pack `near/agent-skills` ships them. The main bring-your-own-agent door.
   3. **MCP server**: `@modelcontextprotocol/server` v2, stateless Streamable HTTP at `/mcp`, stdio for local use.
@@ -126,7 +126,7 @@ The two `low` runs that missed the limit lost most of their time before the mode
 
 - **Decision**: Next.js (App Router) in `apps/web`. The Hono API (`petalApp`) mounts at `/api/[[...route]]` with `@hono/vercel` (the `hono/vercel` helper is deprecated). Pages: gallery `/`, flower `/f/[id]`, draft view `/draft?spec=`, maker chat `/make`, publish `/publish/[draft]`.
 - **Why**: one deploy for site and API, server rendering for share links and previews, first-class streaming, familiar to coding agents.
-- **UI polish**: parked until Phase B (Elco: architecture before polish; comments stay in `design/ui-notes.md`). M6 holds the beauty pass (constitution VI).
+- **UI polish**: parked until Phase B (architecture before polish). M6 holds the beauty pass (constitution VI).
 - **Alternatives**: Vite SPA with a separate Hono server (lighter, two deploys); SvelteKit; Astro.
 
 ## R13. The skill and IronClaw
@@ -134,11 +134,11 @@ The two `low` runs that missed the limit lost most of their time before the mode
 - **Decision**: one `skill/petal/SKILL.md`, in the Agent Skills format, for Claude Code, Codex and IronClaw. It calls the HTTP API with `curl`, or MCP where configured. The system prompt for Petal's agent and the skill share one source text.
 - **Why**: the step 2 test showed a skill file is enough for a capable agent. IronClaw loads skills from `~/.ironclaw/skills/`; its MCP needs a packaged extension and hosted IronClaw needs a login, so the demo never depends on it.
 - **Phase B**: build the small IronClaw package (`skill/ironclaw/`: extension manifest over `/mcp`, plus the skill) and try it in a local IronClaw; an IronHub listing only if time allows (review time unknown).
-- **Hedge, not core**: IronClaw's main branch has had no commits since 2026-09-10 and its last release was 2026-09-29 (coordinator, 2026-11-04). The demo never depends on it.
+- **Hedge, not core**: IronClaw's main branch has had no commits since 2026-09-10 and its last release was 2026-09-29 (checked 2026-11-04). The demo never depends on it.
 
 ## R14. Payments
 
-- **Decision**: Phase A shows a dry NEAR Intents 1Click quote for "sponsor a refresh" (`dry: true`, `EXACT_OUTPUT`, 1 USDC from Base). No deposit address, no money. Phase B, only with Elco's explicit OK: one real quote and a ~$1 mainnet payment; MPP / HTTP 402 for agents as the next step.
+- **Decision**: Phase A shows a dry NEAR Intents 1Click quote for "sponsor a refresh" (`dry: true`, `EXACT_OUTPUT`, 1 USDC from Base). No deposit address, no money. Phase B, only with explicit approval: one real quote and a ~$1 mainnet payment; MPP / HTTP 402 for agents as the next step.
 - **Alternatives**: Stripe; x402 on Base (PingPay facilitator, needs an account); free when the maker brings their own agent.
 
 ## R15. Testing
@@ -148,14 +148,14 @@ The two `low` runs that missed the limit lost most of their time before the mode
 
 ## R16. Hosting
 
-- **Decision**: local first. Propose Vercel for web and API (Hobby allows 300 s per function with Fluid compute, enough for a 120 s agent chat). Deploying anything public needs Elco's OK. The writer key and NEAR AI key go in the host's secret settings, never in the repo.
+- **Decision**: local first. Propose Vercel for web and API (Hobby allows 300 s per function with Fluid compute, enough for a 120 s agent chat). Deploying anything public needs explicit approval. The writer key and NEAR AI key go in the host's secret settings, never in the repo.
 - **Alternatives**: Fly.io or a small VPS (lasting disk for the cache); Cloudflare Workers (Node compatibility of NEAR libraries uncertain).
 
-## R17. Hero set (proposal for Elco)
+## R17. Hero set (proposal)
 
 Five flowers from at least four kinds of systems, all with complete data already pulled:
 
-1. **NEAR validators**, segments = who backs each pool (closest to Elco's vision).
+1. **NEAR validators**, segments = who backs each pool (closest to the product's vision).
 2. **Bitcoin mining pools**, last month vs a year ago (proof of work, time segments).
 3. **Ethereum staking**, Lido split into its operators (liquid staking).
 4. **Ethereum miners before the Merge** (Sept 2022; a moment in history).

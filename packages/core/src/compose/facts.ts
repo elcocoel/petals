@@ -22,6 +22,12 @@ export interface State {
 export interface Fact {
   subject: string;
   what: string;
+  /**
+   * What, within its subject, the fact is of, where one subject holds several at one moment: a holding's asset (a
+   * voter's community and council deposits), a payout's recipient and asset (one transaction paying many). Part of
+   * the slot, never of `what`, so the words for a kind of data stay the same.
+   */
+  of?: string;
   state: State;
   value: string;
 }
@@ -39,7 +45,8 @@ export function stateKey(s: State): string {
 }
 
 /** A fact's slot: what it is about, what it says, and when. Two facts in one slot are the same question. */
-export const slotOf = (f: Fact) => `${f.subject}\u0000${f.what}\u0000${stateKey(f.state)}`;
+export const slotOf = (f: Pick<Fact, 'subject' | 'what' | 'of' | 'state'>) =>
+  `${f.subject}\u0000${f.what}\u0000${f.of ?? ''}\u0000${stateKey(f.state)}`;
 
 /** An instant in one form, so two spellings of one moment are one moment. */
 function iso(t: string): string {
@@ -95,10 +102,12 @@ function snapshotFacts(d: Doc): Fact[] {
     measure: string;
     unit: string;
     amount: string;
+    asset?: string;
   }[])
     out.push({
       subject: account(chain, h.participant),
       what: `snapshot/${h.measure} ${h.unit}`,
+      ...(h.asset ? { of: h.asset } : {}),
       state,
       value: decimal(h.amount),
     });
@@ -223,6 +232,7 @@ function payoutsFacts(d: Doc): Fact[] {
   const chain = chainOf(about);
   return (
     (d.payouts ?? []) as {
+      to: string;
       asset: { id: string };
       raw: string;
       when: string | null;
@@ -232,6 +242,7 @@ function payoutsFacts(d: Doc): Fact[] {
   ).map((p) => ({
     subject: p.evidence ? `${chain}:tx/${p.evidence.tx}` : `proposal:${about}:${p.proposal.id}`,
     what: 'payouts/paid',
+    of: `${p.to} ${p.asset.id}`,
     state: p.evidence ? { chain, block: p.evidence.block } : p.when ? { at: p.when } : {},
     value: `${p.asset.id} ${p.raw}`,
   }));

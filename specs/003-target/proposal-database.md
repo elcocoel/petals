@@ -1,12 +1,12 @@
 # Proposal: Petals' database
 
 **Created**: 2026-11-08
-**Status**: An architecture proposal, to explain to Elco and agree on before anything is implemented. Nothing in it is built. The backup, restore and Postgres trial in section 6 really ran, on throwaway data. Exactly what ran is in `trial-database/RUN.md`.
-**Brief**: Elco, 8 Nov:
-- "My intention is to self-host a portable Petals system. During the hackathon, my Mac provides the application hosting and database hosting."
-- "Separate the application from its database through a clear interface", "asynchronous operation", "slow operations should not unnecessarily block other users".
-- "Accounts, linked wallets and workspaces must survive application restarts and container replacement."
-- "I already know we're gonna have to convert the main DB to PostgreSQL."
+**Status**: An architecture proposal, to explain and agree on before anything is implemented. Nothing in it is built. The backup, restore and Postgres trial in section 6 really ran, on throwaway data. Exactly what ran is in `trial-database/RUN.md`.
+**Brief**, 8 Nov:
+- A portable, self-hosted Petals system. During the hackathon, one host machine provides the application hosting and database hosting.
+- The application is separated from its database through a clear interface, with asynchronous operation, so slow operations don't block other users.
+- Accounts, linked wallets and workspaces survive application restarts and container replacement.
+- The main database moves to PostgreSQL.
 
 **Measured against** `spec.md`:
 - TGT-010: everything a person makes survives restarts, a move to another host, and the loss of a disk.
@@ -16,7 +16,7 @@
 
 ## In one page
 
-**Postgres is the destination, and it can run on this Mac now, in its own container beside the application.** Postgres is a database that runs as its own program, and other programs talk to it over a connection. A container is a sealed box that runs one program with only what it needs.
+**Postgres is the destination, and it can run on the host now, in its own container beside the application.** Postgres is a database that runs as its own program, and other programs talk to it over a connection. A container is a sealed box that runs one program with only what it needs.
 
 The application stops knowing that its data is a file in its folder. It asks a **store** for things by name: "the account for this wallet", "add this step". The store answers later, **asynchronously**: the application asks, carries on with other work, and picks the answer up when it's ready. So one slow answer no longer stops everyone else. Postgres's own container keeps its data on its own **volume**, a storage area the container runtime keeps outside any one container.
 
@@ -66,7 +66,7 @@ With Postgres, none of those can work. The store has to be the only way in. The 
  └──────────────────────────────┘                         └───────────────────────┘
 ```
 
-**How that keeps them apart, even on one Mac:**
+**How that keeps them apart, even on one machine:**
 - They're two containers, each with only its own job.
 - The application holds no database files at all. It reaches Postgres only over a private container network, by the connection address.
 - Postgres can't be reached from outside: it has no published port. It needs a password, and it holds nothing of the application's code.
@@ -108,11 +108,11 @@ Both can sit behind the same asynchronous store. The question is what each gives
 | **The road to Supabase** | A migration still to do | Already Postgres. The connection address changes |
 | **Nothing to steal** (TGT-041) | No password, nothing listening | A database password is a new secret. Nothing listens outside the private network |
 | **What runs** | One program | Two containers, and Postgres's upgrades |
-| **Cost** | $0 | $0: the official image, on this Mac |
+| **Cost** | $0 | $0: the official image, on the host |
 
 **What a trigger is:** a rule inside the database that runs on every change and can refuse it. **What permissions are:** which database user may do what.
 
-**Where it leaves us.** Because Postgres is the destination, running it locally now does the migration once, on this Mac, while the data is small. Later the move to Supabase or any host is only a change of address. SQLite's gain would be one less program to run for a while. Its cost is a second migration later, with more data.
+**Where it leaves us.** Because Postgres is the destination, running it locally now does the migration once, on the host, while the data is small. Later the move to Supabase or any host is only a change of address. SQLite's gain would be one less program to run for a while. Its cost is a second migration later, with more data.
 
 ## 4. Migrating to it
 
@@ -146,7 +146,7 @@ Each of these is real work, named so it can be understood. They aren't timed.
 
 ### The data
 
-The trial did each of these on a copy of throwaway data (section 6). On real data, it would run first on a copy made from inside the running container, never by opening Elco's live file.
+The trial did each of these on a copy of throwaway data (section 6). On real data, it would run first on a copy made from inside the running container, never by opening the live file.
 
 1. **Load the schema into an empty Postgres.**
 2. **Copy every row of every table in one transaction:** all of it, or nothing. Then set the automatic numbering to continue after the highest id copied.
@@ -162,7 +162,7 @@ The trial did each of these on a copy of throwaway data (section 6). On real dat
    - restart the application;
    - read back what a person sees.
 
-   The SQLite file is kept as it was, as the way back, until Elco is satisfied.
+   The SQLite file is kept as it was, as the way back, until the switch is confirmed.
 6. **The posted readings** (snapshot files) aren't in the database. They stay files on the application's own volume, and backups include them (choice D6).
 
 ## 5. Surviving restarts and container replacement
@@ -171,7 +171,7 @@ The trial did each of these on a copy of throwaway data (section 6). On real dat
 
 | | The data lives | Restart | Replace the container | Lose the disk |
 |---|---|---|---|---|
-| **Today: SQLite** | A folder on the Mac (`Petals/data`), lent to the application's container (a "bind mount") | Kept | Kept (shown: the same answers from a new container) | Gone, unless copied elsewhere |
+| **Today: SQLite** | A folder on the host, lent to the application's container (a "bind mount") | Kept | Kept (shown: the same answers from a new container) | Gone, unless copied elsewhere |
 | **Proposed: Postgres here** | A named volume, lent to the Postgres container. The application holds none of it | Kept | Kept (shown: a new Postgres container on the same volume, all 24 tables identical) | Gone, unless copied elsewhere |
 | **Later: Supabase** | Supabase's machines | Kept | Nothing of ours to replace | Supabase's backups, on a paid plan |
 
@@ -186,7 +186,7 @@ Losing any one of the three loses something. The trial showed what losing only t
 
 All of this ran on 8 Nov:
 - on throwaway test data, made by Petals' own sign-in and workspace routes;
-- in throwaway containers, from the same image 3090 runs;
+- in throwaway containers, from the same image the live server runs;
 - on a private network, deleted afterwards.
 
 Commands and output are in `trial-database/RUN.md`, and the scripts beside it. The test data was one person, signed in with a test wallet, with:
@@ -228,13 +228,13 @@ Commands and output are in `trial-database/RUN.md`, and the scripts beside it. T
 
 ## 7. Moving the system to another host, step by step
 
-The other host could be a VPS (a rented server), another Mac, or any machine that runs containers.
+The other host could be a VPS (a rented server), another computer, or any machine that runs containers.
 
 1. **Prepare the new host:**
    - a container runtime;
    - a firewall that lets in only what the server needs;
    - the same private network layout: one for the application, one for its database.
-2. **Bring the image:** build it there from the same commit, or copy the image itself. It's the same image this Mac runs, and nothing in it is tied to this Mac (TGT-040).
+2. **Bring the image:** build it there from the same commit, or copy the image itself. It's the same image the current host runs, and nothing in it is tied to one machine (TGT-040).
 3. **Bring the secrets, by a safe channel, never with the backups:**
    - the wallet-sealing key;
    - the database password.
@@ -250,21 +250,21 @@ The other host could be a VPS (a rented server), another Mac, or any machine tha
    - the row-for-row check against the old host;
    - a person's account, linked wallets and workspace read back through the API.
 9. **Point the traffic at the new host:** the tunnel, or the address Vercel forwards to (Q7).
-10. **Keep the old host as it was until Elco is satisfied,** then retire it, and wipe its disk.
+10. **Keep the old host as it was until the new one is confirmed,** then retire it, and wipe its disk.
 
 **With Supabase later,** steps 5 and 6 happen once, into Supabase. After that, moving the application to another host is only steps 1 to 3 and 7 to 9, because the database doesn't move.
 
-## 8. The choices for Elco
+## 8. The choices
 
 | # | Choice | Options | Lean, and why |
 |---|---|---|---|
-| D1 | Where Postgres runs for the hackathon | In its own container on this Mac · Supabase now | **Its own container on this Mac.** It's self-hosted and $0, as the brief asks. Supabase later is a change of address |
-| D2 | Where the backups go: the database dump, the reading files, and later the continuous copies | Cloudflare R2, Cloudflare's file storage (an outside service with a free tier) · another machine Elco owns · the Runner-4TB drive (covers a dead internal disk, not a lost Mac) | **Off this machine:** another machine Elco owns, or R2 if one outside service for copies is acceptable. Encrypted either way, with Runner-4TB as an extra copy. This is the one choice that decides whether TGT-010's "loss of a disk" is met |
-| D3 | How often to back up, and to test a restore | A nightly dump, plus a restore test on a schedule · continuous copies (Postgres's own write-ahead-log archiving, sent off the machine as it happens) | **A nightly dump and a regular restore test first, continuous copies next.** A nightly dump can lose up to a day. Continuous copies lose seconds, and can go back to a moment before a mistake. Anything that runs by itself is Elco's call (`coordinator/automation.md`) |
+| D1 | Where Postgres runs for the hackathon | In its own container on the host · Supabase now | **Its own container on the host.** It's self-hosted and $0, as the brief asks. Supabase later is a change of address |
+| D2 | Where the backups go: the database dump, the reading files, and later the continuous copies | Cloudflare R2, Cloudflare's file storage (an outside service with a free tier) · another machine the operator owns · an external drive (covers a dead internal disk, not a lost host) | **Off this machine:** another machine the operator owns, or R2 if one outside service for copies is acceptable. Encrypted either way, with the external drive as an extra copy. This is the one choice that decides whether TGT-010's "loss of a disk" is met |
+| D3 | How often to back up, and to test a restore | A nightly dump, plus a restore test on a schedule · continuous copies (Postgres's own write-ahead-log archiving, sent off the machine as it happens) | **A nightly dump and a regular restore test first, continuous copies next.** A nightly dump can lose up to a day. Continuous copies lose seconds, and can go back to a moment before a mistake |
 | D4 | The order of the change | The asynchronous store on SQLite first, then switch · the asynchronous store and the Postgres store together, then switch | **Together, then switch.** SQLite is only the starting point, so it doesn't need its own asynchronous version beyond what the tests use |
 | D5 | Dates and JSON during the migration | Move them as text, as today · convert them now to Postgres's own date and JSON types | **Move as text.** One change at a time. Converting later is its own small migration |
 | D6 | The posted-reading files | Files on the application's volume, in the backups · inside Postgres · in file storage | **Files on the volume, in the backups.** They never change once written, so they're easy to copy, and the database stays small |
-| D7 | The wallet-sealing key | Only in the server's secrets · also in Elco's password manager | **Also in the password manager, never beside the backups.** Without it, a perfect restore can't find anyone's account |
+| D7 | The wallet-sealing key | Only in the server's secrets · also in the operator's password manager | **Also in the password manager, never beside the backups.** Without it, a perfect restore can't find anyone's account |
 | D8 | Search on Postgres | Full-text search with accent-folding (`unaccent`) · fuzzy matching on parts of words (`pg_trgm`) | **Full-text with accent-folding.** It's closest to today's search |
 
 ## What I checked, and what I didn't

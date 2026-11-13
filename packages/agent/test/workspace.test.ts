@@ -1,4 +1,4 @@
-// The workspace (W1; design/workspace-data.md), through petalApp over HTTP shapes: conversations, work
+// The workspace (W1), through petalApp over HTTP shapes: conversations, work
 // from other doors, the catalogue, following, a person's notes and search. Browsers are cookie jars. No
 // model is called: answers come from a scripted client.
 import { createHash } from 'node:crypto';
@@ -1077,7 +1077,7 @@ describe('folders (004-workspace, W4)', () => {
   });
 });
 
-describe('archive and delete (Elco, 10 Nov)', () => {
+describe('archive and delete', () => {
   test("another door's work is archived and back, as a run is", async () => {
     const { app, invite, store } = setup();
     const b = await signedIn(app, invite);

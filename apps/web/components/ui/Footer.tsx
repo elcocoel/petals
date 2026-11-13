@@ -1,48 +1,94 @@
-// Figma's Footer (66:2360), styled in the system (11 Nov, board card 104): the big wordmark and, across from it,
-// the site's own pages in two short groups, Petals and Build, their tops on one line; the small print closes it at
-// the bottom. Tall and spacious on the mint ground (Elco, 12 Nov: "cozy, like a sensation of conclusion"). Only
-// links that go somewhere: GitHub joins Build once the repo is public.
+// Figma's Footer (66:2360), a band on the FAQ's grey with two section paddings above its content. On the left, the
+// wordmark a third of the band's width (mark.fill) with the small print under it in the links' type; on the right,
+// three groups of links (Petals, Build, Community), their last lines level with the wordmark's foot. Every
+// destination is listed: one whose address is still empty shows as its name, in the links' type, until the
+// address is set in siteLinks. The content sits one block gap from the window's left and bottom edges and a column
+// gap from its right.
 import type { ReactNode } from 'react';
 import { landingCopy } from '../../lib/landing-copy.ts';
 import { siteLinks } from '../../lib/site-links.ts';
 import { Mono } from './Mono.tsx';
-import { Section } from './Section.tsx';
 import { TextLink } from './TextLink.tsx';
 import { Wordmark } from './Wordmark.tsx';
 
-function Group({ name, children }: { name: string; children: ReactNode }) {
+type Destination = { name: string; href: string };
+
+function Group({ name, links }: { name: string; links: Destination[] }): ReactNode {
   return (
     <nav aria-label={name} className="flex flex-col items-start gap-text-gap">
       <Mono>{name}</Mono>
-      {children}
+      {links.map((link) =>
+        link.href ? (
+          <TextLink key={link.name} href={link.href}>
+            {link.name}
+          </TextLink>
+        ) : (
+          <span key={link.name} className="type-label text-primary">
+            {link.name}
+          </span>
+        ),
+      )}
     </nav>
   );
 }
 
 export function Footer() {
   const copy = landingCopy.footer;
+  const socials = landingCopy.hero.socials;
+  const groups: { name: string; links: Destination[] }[] = [
+    {
+      name: copy.groups.petals,
+      links: [
+        { name: copy.links.map, href: siteLinks.map },
+        { name: copy.links.gallery, href: siteLinks.gallery },
+        { name: copy.links.leaderboard, href: siteLinks.leaderboard },
+      ],
+    },
+    {
+      name: copy.groups.build,
+      links: [
+        { name: copy.links.docs, href: siteLinks.docs },
+        { name: copy.links.github, href: siteLinks.github },
+        { name: copy.links.api, href: siteLinks.api },
+        { name: copy.links.brandKit, href: siteLinks.brandKit },
+      ],
+    },
+    {
+      name: copy.groups.community,
+      links: [
+        { name: socials.telegram, href: siteLinks.socials.telegram },
+        { name: socials.twitter, href: siteLinks.socials.twitter },
+        { name: socials.youtube, href: siteLinks.socials.youtube },
+        { name: copy.links.merch, href: siteLinks.merch },
+      ],
+    },
+  ];
   return (
-    <Section as="footer" kind="mint">
-      <div className="flex flex-col gap-section-padding md:py-section-padding">
-        <div className="flex flex-col gap-column-gap lg:flex-row lg:items-start lg:justify-between">
-          <Wordmark size="footer" />
-          <div className="flex flex-wrap gap-x-section-padding gap-y-column-gap">
-            <Group name={copy.groups.petals}>
-              <TextLink href={siteLinks.map}>{copy.links.gallery}</TextLink>
-              <TextLink href={siteLinks.howItWorks}>{copy.links.howItWorks}</TextLink>
-              <TextLink href={siteLinks.lobby}>{copy.links.connect}</TextLink>
-            </Group>
-            <Group name={copy.groups.build}>
-              <TextLink href={siteLinks.docs}>{copy.links.docs}</TextLink>
-              <TextLink href={`${siteLinks.docs}/connect-your-agent`}>{copy.links.agent}</TextLink>
-              <TextLink href={`${siteLinks.docs}/build-it-with-us/contributing`}>
-                {copy.links.contribute}
-              </TextLink>
-            </Group>
+    <footer
+      data-surface="ground"
+      data-tone="stone"
+      data-b="surface"
+      className="@container relative overflow-hidden border-t border-hairline pt-section-padding"
+    >
+      <div className="grid grid-cols-1 gap-column-gap px-block-gap pt-section-padding pb-block-gap antialiased md:grid-cols-2 md:pr-column-gap">
+        <div className="@container md:col-start-1 md:row-start-1 md:self-end">
+          <div className="@container w-full md:w-2/3">
+            <Wordmark size="fill" />
           </div>
         </div>
-        <Mono>{copy.built}</Mono>
+        <p className="my-0 type-label text-primary md:col-start-1 md:row-start-2">
+          {copy.built.split(copy.by)[0]}
+          <TextLink href={siteLinks.elementaryComplexity} variant="inline">
+            {copy.by}
+          </TextLink>
+          {copy.built.split(copy.by)[1]}
+        </p>
+        <div className="flex flex-wrap gap-x-column-gap gap-y-column-gap md:col-start-2 md:row-start-1 md:self-end md:justify-self-end">
+          {groups.map((group) => (
+            <Group key={group.name} name={group.name} links={group.links} />
+          ))}
+        </div>
       </div>
-    </Section>
+    </footer>
   );
 }

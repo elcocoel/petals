@@ -1,6 +1,6 @@
 # The data protocol: a dataset per address
 
-SYSTEMS leads this side. It knows nothing of drawing: no channels, no colours, no petals. What it hands the visual side is in `seam.md`.
+This is the data side. It knows nothing of drawing: no channels, no colours, no petals. What it hands the visual side is in `seam.md`.
 
 ## A dataset
 
@@ -18,7 +18,7 @@ Its format is `layer/v1`, a JSON Schema at `packages/core/schema/layer.schema.js
 | `kind` | `measures` (a value per participant), `relations` (lines between participants) or `leads` (directions of research) |
 | `measures` | Per measure: a name, a unit and a kind (amount, count, share, category or flag, a yes or no), then a value per participant |
 | `relations` | Per line: from, to, a kind (sent to, delegated to, voted with, sponsored), a weight and a unit |
-| `leads` | Per lead: the participant, what was found, and its source links. How much a person trusts a lead belongs to the notes and claims chapter, not here (Elco, 9 Nov) |
+| `leads` | Per lead: the participant, what was found, and its source links. How much a person trusts a lead belongs to the notes and claims chapter, not here |
 | `how` | The recipe it was read with (by its hash), or the agent's own method and its sources |
 | `from` | The layers it was built on, by hash, if any |
 | `when` | A block, a date or a window |
@@ -27,9 +27,9 @@ Its format is `layer/v1`, a JSON Schema at `packages/core/schema/layer.schema.js
 
 **Who made it is kept the git way, outside the hash,** as git keeps a commit's author apart from the files: whoever stores a layer keeps, beside it, the author (the account that owns the project, TGT-005), the credential that authorised it (their wallet, or the link it came by), the time, the brain version the site served, and the recipe it was read with. On the site that's the `layer` table (migrations 9 and 10), and `list_layers` shows it as `by`, with the author as `owner` or the link, never an account id. So the same facts from two people are the same layer, with two records of who kept it. A reader run by someone's agent has that person as its author.
 
-## Git-like, as Elco asked
+## Git-like
 
-Elco, 9 Nov: "anyone can add, fork and use the prior."
+Anyone can add, fork and build on prior work.
 
 **Now:**
 - **Content-addressed.** A layer is named by its hash, so the same facts always have the same name, and nobody can change a layer without it becoming another one.
@@ -38,7 +38,7 @@ Elco, 9 Nov: "anyone can add, fork and use the prior."
 - **Building on prior work.** A layer names the layers it was built on (`from`): a share computed from shares, proposals per member matched to a reader's members. So credit and checking follow the chain back.
 - **Each author has their own latest version** of each dataset they've touched. A flower names the version it draws, so it never changes underneath anyone.
 
-**Since wave 8 (13 Nov), in `composition.md`:**
+**Since 13 Nov, in `composition.md`:**
 - **Merging:** the shared map composes every author's published documents, fact by fact. Same data at the same block is one fact credited to every author who stated it; a different value there "differs", and both stand. Nothing overwrites; no one wins.
 - **Credit** for every author of every fact, in the order they published, in an append-only record each author signs (`publication/v1`).
 - **Comparing:** what a publication adds to the map: new data, a new moment, new subjects, or the same slot (a match, or a difference).
@@ -49,16 +49,16 @@ Elco, 9 Nov: "anyone can add, fork and use the prior."
 
 ## Where layers live
 
-Elco's choice, 9 Nov: **private first, published when the author chooses.**
+**Private first, published when the author chooses.**
 - **Private layers and versions** live in Petals' database, against the author's account (TGT-006).
-- **Published ones** go to the shared map on NEAR, like flowers today, under the author's signature. Wave 8's record and composition: `composition.md`; anchoring each author's latest publication on NEAR comes next.
+- **Published ones** go to the shared map on NEAR, like flowers today, under the author's signature. The record and composition: `composition.md`; anchoring each author's latest publication on NEAR comes next.
 - **A fork can only name a parent the forker can see:** a published version, or their own.
 
 **Built, 9 Nov:** `keep_layer`, `list_layers` and `fork_dataset`, through the project's link (migration 9). A project nobody has claimed holds its layers under itself, and they move to whoever claims it, and again when a session signs in. Publishing a version to the shared map isn't built, so for now a fork takes one's own versions only.
 
 ## Readers: a few shapes in code, frameworks as recipe files
 
-Elco asked "why do DAO frameworks need specific readers?". **They mostly don't.** Elco, 9 Nov: "let's not default to a one module per DAO type". The brain's `where-power-lives` chapter teaches the shapes, and `a-new-system` teaches writing a recipe.
+Why would DAO frameworks need specific readers? **They mostly don't**, so there's no module per DAO type. The brain's `where-power-lives` chapter teaches the shapes, and `a-new-system` teaches writing a recipe.
 
 There's no universal "list the members" call on any chain. But a few shapes cover most frameworks. A framework is then a **recipe**: a short file that names its contract's events and calls, and which shape reads each one.
 

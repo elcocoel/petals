@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:petal:schema:usage:v1",
   "title": "Petal usage v1",
-  "description": "One model call, as it was counted and charged (coordinator/pricing-protocol.md; Elco, 10 Nov: \"count usage like pros\"): NEAR AI's own id for the call, the tokens it reported, the list price they were counted at, what the person was charged, and NEAR AI's own bill once it's known. Kept for every call; only billed_usd and reconciled_at are filled in later.",
+  "description": "One model call, as it was counted and charged: NEAR AI's own id for the call, the tokens it reported, the list price they were counted at, what the person was charged, and NEAR AI's own bill once it's known. Kept for every call; only billed_usd and reconciled_at are filled in later.",
   "type": "object",
   "additionalProperties": false,
   "required": ["petal", "call", "completion", "run", "at", "model", "tokens", "list_price", "computed_usd", "failed_usd", "charged_usd", "billed_usd", "reconciled_at"],

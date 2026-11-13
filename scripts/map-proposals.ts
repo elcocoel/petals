@@ -1,4 +1,4 @@
-// A DAO's proposals and how each account voted on each (board #93): each DAO map on the shared map that Petals
+// A DAO's proposals and how each account voted on each: each DAO map on the shared map that Petals
 // reads proposals for (a Sputnik DAO, and a token map whose token is a Baal's shares), its proposals/v1, kept by the map's address. With --add-sputnik,
 // it first draws that DAO's map and names it, so it's on the shared map. It writes to the server's own store,
 // so run it where the server runs:
