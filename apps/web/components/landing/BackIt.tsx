@@ -1,62 +1,50 @@
-// Back it, on what was Figma's Join the community (66:2346): the ways to help, v1 drafts (Elco, 9 Nov). Since
-// 12 Nov (Elco's walk: "it's the one that needs the most work", "the sensation of a real project that people can
-// join", less text, whatever leads to action) the landing lays them out as tiles you press: each a glass plate
-// with its few words, and under it where it goes. The community and the merch pre-sale wait for Elco's
-// addresses: until then their tiles show without a link, so nothing goes nowhere. `split`, the old list beside
-// an empty half, stays for the lab.
+// Petal Mania, what was Make Petals stronger (Figma's Join the community, 66:2346). Elco, 13 Nov: four cards in one
+// line, "the card themselves should be the buttons and the thing that does the thing", far less text; the actions
+// that matter, in an order that grows in power, with a leaderboard only hinted. Each card is a plate you press
+// (PlateLink: it rises and tilts); a card whose address isn't in yet shows without a link. The section's name is
+// in the logo's face (SectionName); its hint is Elco's words.
 import { landingCopy } from '../../lib/landing-copy.ts';
+import { siteLinks } from '../../lib/site-links.ts';
+import { Icon } from '../ui/Icon.tsx';
 import { PlateLink } from '../ui/PlateLink.tsx';
 import { Section } from '../ui/Section.tsx';
-import { SectionHead } from '../ui/SectionHead.tsx';
 import { SectionName } from '../ui/SectionName.tsx';
 
 const copy = landingCopy.backIt;
-type WayCopy = (typeof copy.ways)[number];
 
-function Way({ way }: { way: WayCopy }) {
-  return (
-    <>
-      <h3 className="my-0 type-heading">{way.title}</h3>
-      {way.body && <p className="mt-space-16 mb-0 type-body">{way.body}</p>}
-    </>
-  );
+/** Where a card goes: the site's own page, the repo, or a social whose address may not be in yet. */
+function hrefOf(link: string): string | undefined {
+  if (link === 'lobby') return siteLinks.lobby;
+  if (link === 'github') return siteLinks.github;
+  if (link === 'telegram') return siteLinks.socials.telegram || undefined;
+  return undefined;
 }
 
-/** A way as a tile: its words on the plate, and under it where it goes. */
-function WayTile({ way }: { way: WayCopy }) {
+export function BackIt() {
   return (
-    <PlateLink href={way.href || undefined} action={way.action}>
-      <span className="min-h-drawing-144 type-title">{way.title}</span>
-      {way.body && <span className="type-body">{way.body}</span>}
-    </PlateLink>
-  );
-}
-
-export function BackIt({ layout = 'split' }: { layout?: 'split' | 'columns' }) {
-  if (layout === 'columns')
-    return (
-      <Section head={<SectionName name={copy.title} look="signed" />}>
-        <ul className="m-0 grid list-none grid-cols-1 gap-column-gap p-0 md:grid-cols-2 lg:grid-cols-3">
-          {copy.ways.map((way) => (
+    <Section
+      head={
+        <div className="flex flex-col gap-block-gap">
+          <SectionName name={copy.title} />
+          <p className="my-0 max-w-content-width type-lead">{copy.hint}</p>
+        </div>
+      }
+    >
+      <ul className="m-0 grid list-none grid-cols-1 gap-block-gap p-0 md:grid-cols-2 lg:grid-cols-4">
+        {copy.ways.map((way) => {
+          const href = hrefOf(way.link);
+          return (
             <li key={way.title} className="min-w-0">
-              <WayTile way={way} />
+              <PlateLink href={href}>
+                <span className="flex min-h-drawing-144 items-end justify-between gap-block-gap">
+                  <span className="type-heading">{way.title}</span>
+                  {href && <Icon name="arrow" />}
+                </span>
+              </PlateLink>
             </li>
-          ))}
-        </ul>
-      </Section>
-    );
-  return (
-    <Section layout="split">
-      <div>
-        <SectionHead title={copy.title} />
-        <ul className="mt-column-gap mb-0 flex list-none flex-col gap-block-gap p-0">
-          {copy.ways.map((way) => (
-            <li key={way.title}>
-              <Way way={way} />
-            </li>
-          ))}
-        </ul>
-      </div>
+          );
+        })}
+      </ul>
     </Section>
   );
 }

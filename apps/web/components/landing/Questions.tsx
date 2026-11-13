@@ -17,7 +17,7 @@ export function Questions() {
       <div className="grid grid-cols-1 gap-column-gap lg:grid-cols-6">
         <div>
           <div className="lg:sticky lg:top-section-padding">
-            <SectionName name={copy.title} look="pixel" />
+            <SectionName name={copy.title} />
           </div>
         </div>
         <div className="border-t border-hairline lg:col-span-5">

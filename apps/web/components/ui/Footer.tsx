@@ -2,8 +2,8 @@
 // "one of those hipster footers where it's a calm moment of reflection") on the FAQ's grey: the wordmark
 // "obnoxiously bigger", in the band's greys and pressed into it (mark.fill, mark.mono), the small print under it
 // considerably bigger, both bottom left; the site's own pages in two short groups bottom right. Room above, about
-// four fifths of before, everything settling to the bottom. Only links that go somewhere; the addresses for
-// Elco's name and Elementary Complexity, and the socials, come from Elco.
+// four fifths of before, everything settling to the bottom. Elco's name, Elementary Complexity, links to Elco's
+// site. Only links that go somewhere; the socials come from Elco.
 import type { ReactNode } from 'react';
 import { landingCopy } from '../../lib/landing-copy.ts';
 import { siteLinks } from '../../lib/site-links.ts';
@@ -28,7 +28,11 @@ export function Footer() {
       <div className="flex flex-col gap-column-gap md:pt-page-inset lg:flex-row lg:items-end lg:justify-between lg:gap-section-padding">
         <div className="@container flex min-w-0 flex-1 flex-col gap-block-gap">
           <Wordmark size="fill" mono />
-          <p className="my-0 type-lead">{copy.built}</p>
+          <p className="my-0 type-lead">
+            {copy.built.split(copy.by)[0]}
+            <TextLink href={siteLinks.elementaryComplexity}>{copy.by}</TextLink>
+            {copy.built.split(copy.by)[1]}
+          </p>
         </div>
         <div className="flex shrink-0 flex-wrap gap-x-section-padding gap-y-column-gap">
           <Group name={copy.groups.petals}>

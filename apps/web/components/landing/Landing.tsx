@@ -24,7 +24,7 @@ export function Landing() {
         <HowItWorks />
         <GiveToAgent />
         <GallerySection />
-        <BackIt layout="columns" />
+        <BackIt />
         <Questions />
         <BuildWithUs />
       </main>

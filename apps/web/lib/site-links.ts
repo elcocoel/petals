@@ -30,6 +30,8 @@ export const siteLinks = {
   howItWorks: '/#how-it-works',
   /** Petals' code on GitHub: the hero's star gives it one (Elco, 13 Nov; it works once the repo is public). */
   github: 'https://github.com/elcocoel/petals',
+  /** Elco's: the footer's name links here (Elco, 13 Nov: "it's elementarycomplexity.com and it is my name"). */
+  elementaryComplexity: 'https://elementarycomplexity.com',
   /** The socials under the hero's buttons, in Elco's order; their addresses come later (Elco, 13 Nov: "don't worry about the links yet"). */
   socials: { github: '', telegram: '', twitter: '', youtube: '' },
   liveShape: `/f/${LIVE_SHAPE}`,

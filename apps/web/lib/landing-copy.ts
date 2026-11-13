@@ -309,48 +309,21 @@ const written = {
     ],
   },
   backIt: {
-    /** Elco, 11 Nov: "Make Petals stronger", punctuated like the other headlines. */
-    title: 'Make Petals stronger.',
+    /** Elco, 13 Nov: "we can call it petal mania. Doesn't matter if it's cheesy." */
+    title: 'Petal Mania',
+    /** Elco's words: points and a leaderboard only hinted, never money, tokens or rewards. */
+    hint: 'Right now there is no leaderboard. But if there was, these are the things that would take you to the top.',
     /**
-     * Each way is a tile you press (Elco, 12 Nov: "whatever we foresee that would lead people to action",
-     * "the sensation of a real project that people can join"). `href` is where it goes; an empty one is a slot
-     * waiting for Elco's address, and its tile shows without a link. `action` and the last two ways are
-     * LANDING's drafts, for Elco, from Elco's words: "a small merch pre-sale", "a community front such as a
-     * Telegram chat".
+     * Four cards in one line, the cards the buttons (Elco, 13 Nov), in an order that grows in power (Elco: "we
+     * want to grow in power"; LANDING's order, for Elco). `link` is where a card goes: `lobby` is Connect (mapping,
+     * the agent and publishing are one card), `github` the repo; an empty one is a slot waiting for its address
+     * (the community's links, the merch), so its card shows without a link. The names are Elco's words.
      */
     ways: [
-      {
-        title: 'Map a network you care about.',
-        body: 'Every layer your agent adds makes the map better for the next person.',
-        action: 'Connect',
-        href: '/lobby',
-      },
-      {
-        title: 'Teach Petals a new system.',
-        body: "Write a recipe for a kind of DAO Petals can't read yet, and share it with a pull request.",
-        action: 'In the docs',
-        href: '/docs/build-it-with-us/contributing',
-      },
-      {
-        title: "Talk to Petals' agent.",
-        body: 'What you pay in NEAR keeps it reading.',
-        action: 'Connect',
-        href: '/lobby',
-      },
-      {
-        title: 'Join the community.',
-        body: '',
-        action: 'Telegram',
-        /** Elco's address, when there is one. */
-        href: '',
-      },
-      {
-        title: 'Merch pre-sale.',
-        body: '',
-        action: 'Pre-order',
-        /** Elco's address, when there is one. */
-        href: '',
-      },
+      { title: 'Join the community', link: 'telegram' },
+      { title: 'The merch', link: '' },
+      { title: 'Map a network', link: 'lobby' },
+      { title: 'Develop with us', link: 'github' },
     ],
   },
   builders: {
@@ -377,6 +350,8 @@ const written = {
       contribute: 'Contribute',
     },
     built: 'Built for the NEAR Hackathon, November 2026. By Elementary Complexity.',
+    /** The words in `built` that link to Elco's site (siteLinks.elementaryComplexity): Elco's name. */
+    by: 'Elementary Complexity',
   },
 } as const;
 

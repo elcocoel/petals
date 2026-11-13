@@ -45,7 +45,8 @@ describe('the landing page', () => {
       if (href.startsWith('/#')) expect(anchors, href).toContain(href.slice(2));
       else if (href.startsWith(`${siteLinks.docs}/`)) expect(docs, href).toContain(href);
       // off the site, only Petals' own code on GitHub (the hero's star, Elco, 13 Nov)
-      else if (href.startsWith('https://')) expect(href).toBe(siteLinks.github);
+      else if (href.startsWith('https://'))
+        expect([siteLinks.github, siteLinks.elementaryComplexity]).toContain(href);
       else expect(routes[href.split(/[?#]/)[0] as string], href).toBeDefined();
     }
   });
