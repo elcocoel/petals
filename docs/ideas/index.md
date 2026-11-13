@@ -9,5 +9,6 @@ order: 0.5
 - [Claims](/docs/ideas/claims): what was read, what someone said, and what was inferred.
 - [Data layers](/docs/ideas/data-layers): chain readings, calculations and annotations.
 - [Authorship](/docs/ideas/authorship): who made a layer or said a claim, and how work builds on prior work.
+- [Collective mapping](/docs/ideas/collective-mapping): who's helping build the map, in three counts, and how layers from many authors add up.
 - [The brain and its departments](/docs/ideas/brain): the methods agents use to read and investigate a network.
 - [How the interface stays manageable](/docs/ideas/interface): one home for each design value, behaviour and data shape.

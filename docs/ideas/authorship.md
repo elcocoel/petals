@@ -24,4 +24,4 @@ A claim you publish to the shared map is signed by your own wallet and credited 
 
 A claim never changes. Changing your mind is a new claim. An author can replace or retract their claim; another writer can challenge it with a claim of their own.
 
-Read [claims](/docs/ideas/claims) for the distinction between an account's own declaration, a source and an inference.
+Read [claims](/docs/ideas/claims) for the distinction between an account's own declaration, a source and an inference, and [collective mapping](/docs/ideas/collective-mapping) for how every author of a published fact is credited.

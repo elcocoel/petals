@@ -26,12 +26,12 @@ test('all eleven sections and canonical files have navigable, unique pages', asy
 
 test('schema docs include actual nested fields and pinned fixtures', async () => {
   const pages = catalog();
-  const page = pages.find((p) => p.schemaId === 'urn:petal:schema:view:v2');
+  const page = pages.find((p) => p.schemaId === 'urn:petal:schema:view:v3');
   assert.ok(page);
   const result = await content(page, pages);
   assert.match(result.markdown, /dimensions.labels/);
   const fixture = JSON.parse(
-    readFileSync(`${repoRoot()}/packages/core/schema/fixtures/view.v2.json`, 'utf8'),
+    readFileSync(`${repoRoot()}/packages/core/schema/fixtures/view.v3.json`, 'utf8'),
   );
   assert.ok(result.markdown.includes(JSON.stringify(fixture, null, 2)));
 });
@@ -83,7 +83,7 @@ test('all registered schemas have nested fields and at least one original pinned
         file,
       );
   }
-  const view = pages.find((p) => p.schemaId === 'urn:petal:schema:view:v2');
+  const view = pages.find((p) => p.schemaId === 'urn:petal:schema:view:v3');
   assert.ok(view);
   assert.ok((await content(view, pages)).html.includes('&#x3C;layer>:&#x3C;name>'));
 });
@@ -92,7 +92,7 @@ test('authored guides are distinct from canonical system reference', () => {
   const pages = catalog();
   assert.equal(pages.find((p) => p.slug === 'getting-started')?.kind, 'guide');
   assert.equal(pages.find((p) => p.source === 'brain/doctrine.md')?.kind, 'reference');
-  assert.equal(pages.find((p) => p.schemaId === 'urn:petal:schema:view:v2')?.kind, 'reference');
+  assert.equal(pages.find((p) => p.schemaId === 'urn:petal:schema:view:v3')?.kind, 'reference');
 });
 
 test('authored Markdown children appear automatically with frontmatter titles', () => {
