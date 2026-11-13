@@ -662,8 +662,20 @@ export async function readComposed(
 export async function readMapCard(map: string): Promise<LayerCard | null> {
   const res = await fetch(`/api/v1/maps/${encodeURIComponent(map)}`).catch(() => null);
   if (!res?.ok) return null;
-  const json = (await res.json().catch(() => ({}))) as { map?: LayerCard };
-  return json.map ?? null;
+  const json = (await res.json().catch(() => ({}))) as {
+    map?: LayerCard;
+    layers?: LayerCard['layers'];
+    authors?: LayerCard['authors'];
+    differs?: number;
+  };
+  if (!json.map) return null;
+  // wave 8's record comes beside the card (SYSTEMS's GET /api/v1/maps/:id): its layers, authors and differences
+  return {
+    ...json.map,
+    ...(json.layers ? { layers: json.layers } : {}),
+    ...(json.authors ? { authors: json.authors } : {}),
+    ...(json.differs !== undefined ? { differs: json.differs } : {}),
+  };
 }
 
 /** What a map's token is worth (#91), from its card: null when it has none, or it can't be read. */

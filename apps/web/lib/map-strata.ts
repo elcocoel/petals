@@ -137,6 +137,7 @@ const KIND_WORDS: Record<string, string> = {
   payouts: 'payouts',
   layer: 'a layer',
   claims: 'claims',
+  claim: 'a claim',
 };
 const kindOf = (petal: string) => KIND_WORDS[petal.split('/')[0] ?? petal] ?? petal;
 
@@ -168,6 +169,13 @@ function coversOf(states: CardLayer['states']): string | null {
   const said = [...new Set(words.filter((w): w is string => Boolean(w)))];
   return said.length > 0 ? said.join(', ') : null;
 }
+
+/** Long addresses in a title, said by their ends, their chain prefix dropped. */
+const shortAddresses = (title: string) =>
+  title.replace(
+    /(?:[a-z0-9-]+:[a-zA-Z0-9-]+:)?(0x[0-9a-fA-F]{40}|[1-9A-HJ-NP-Za-km-z]{32,44})/g,
+    (_, a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`,
+  );
 
 /** An account as people read it: a NEAR name whole, a long address at its ends. */
 const accountWords = (a: string) => {
@@ -204,7 +212,8 @@ export function strataOf(
     )
     .map((l) => ({
       id: l.sha256,
-      title: l.title ?? kindOf(l.petal),
+      // a long address said by its ends, as Insights says it ('named 0x35b2…36f1')
+      title: l.title ? shortAddresses(l.title) : kindOf(l.petal),
       kind: kindOf(l.petal),
       standing: null,
       covers: coversOf(l.states),

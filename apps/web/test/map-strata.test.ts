@@ -83,3 +83,21 @@ describe('a map’s layers as strata', () => {
     expect(sw.get('near:mainnet:elco.near')).toBe('key-mint');
   });
 });
+
+describe('a layer’s title as the record gives it', () => {
+  test('a long address said by its ends, its chain dropped; a claim named plainly', () => {
+    const [l] = strataOf(
+      [
+        {
+          sha256: 'd'.repeat(64),
+          petal: 'claim/v3',
+          title: 'named eip155:100:0x35b248d06bf280e17d8cbff63c56a58e52a936f1',
+          by: ['near:mainnet:petals.near'],
+        },
+      ],
+      [],
+    );
+    expect(l?.title).toBe('named 0x35b2…36f1');
+    expect(l?.kind).toBe('a claim');
+  });
+});
