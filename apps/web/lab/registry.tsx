@@ -96,6 +96,7 @@ import { NavItem } from '../components/ui/NavItem.tsx';
 import { OrgBadge } from '../components/ui/OrgBadge.tsx';
 import { Overlay } from '../components/ui/Overlay.tsx';
 import { PlateLink } from '../components/ui/PlateLink.tsx';
+import { Quote } from '../components/ui/Quote.tsx';
 import { Ramp } from '../components/ui/Ramp.tsx';
 import { Range } from '../components/ui/Range.tsx';
 import { RowField } from '../components/ui/RowField.tsx';
@@ -124,7 +125,6 @@ import { Profile } from '../components/workspace/Profile.tsx';
 import { ProfileEditor } from '../components/workspace/ProfileEditor.tsx';
 import { ProfileHead } from '../components/workspace/ProfileHead.tsx';
 import { Published } from '../components/workspace/Published.tsx';
-import { QuoteBand } from '../components/workspace/QuoteBand.tsx';
 import { ReadingKey } from '../components/workspace/ReadingKey.tsx';
 import { TipControl } from '../components/workspace/TipControl.tsx';
 import { Usage } from '../components/workspace/Usage.tsx';
@@ -3190,15 +3190,31 @@ export const registry: LabEntry[] = [
     ],
   },
   {
-    id: 'QuoteBand',
-    group: 'The workspace',
+    id: 'Quote',
+    group: 'Blocks',
     figmaName: null,
     figmaNode: null,
-    source: 'apps/web/components/workspace/QuoteBand.tsx',
-    states: POWER_QUOTES.slice(0, 2).map((q) => ({
-      name: q.id,
-      render: () => <QuoteBand quote={q} />,
-    })),
+    source: 'apps/web/components/ui/Quote.tsx',
+    // the same quote with room for both sides, and narrow, the drawing over the words
+    states: [
+      ...POWER_QUOTES.slice(0, 2).map((q) => ({
+        name: `${q.id}, with room`,
+        wide: true,
+        render: () => (
+          <Section tone="mist" rule="top">
+            <Quote quote={q} />
+          </Section>
+        ),
+      })),
+      ...POWER_QUOTES.slice(2, 3).map((q) => ({
+        name: `${q.id}, narrow`,
+        render: () => (
+          <div className="w-1/3">
+            <Quote quote={q} />
+          </div>
+        ),
+      })),
+    ],
   },
   {
     id: 'Claims',
