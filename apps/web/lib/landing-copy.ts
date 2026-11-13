@@ -336,18 +336,8 @@ const written = {
     ],
   },
   footer: {
-    /** Drafts (LANDING, 11 Nov, board card 104), for Elco: the two groups' names; the links are the site's own. */
-    groups: { petals: 'Petals', build: 'Build', elsewhere: 'Elsewhere' },
-    links: {
-      gallery: 'Power Map',
-      howItWorks: 'How it works',
-      connect: 'Connect',
-      docs: 'Docs',
-      agent: 'Connect your agent',
-      contribute: 'Contribute',
-      github: 'GitHub',
-      elementaryComplexity: 'Elementary Complexity',
-    },
+    /** The links that leave the landing; the socials take their names from hero.socials. */
+    links: { docs: 'Docs', github: 'GitHub' },
     built: 'Built for the NEAR Hackathon, November 2026. By Elementary Complexity.',
     /** The words in `built` that link to Elementary Complexity's site (siteLinks.elementaryComplexity). */
     by: 'Elementary Complexity',

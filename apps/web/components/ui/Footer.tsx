@@ -1,32 +1,22 @@
-// Figma's Footer (66:2360), a band on the FAQ's grey with two section paddings above its content: on the
-// left, the wordmark a third of the band's width (mark.fill) with the small print under it in the links' type; bottom right, the site's
-// pages and the outside links. The content sits one block gap from the window's own edges (left, right, bottom),
-// not on the page's inset column. Only links that go somewhere: an outside link shows once its address is set.
-import type { ReactNode } from 'react';
+// Figma's Footer (66:2360), a band on the FAQ's grey with two section paddings above its content. On the left, the
+// wordmark a third of the band's width (mark.fill) with the small print under it in the links' type; on the right,
+// the links that leave the landing, their last line level with the wordmark's foot. The site's own pages are in the
+// nav, so they aren't repeated here. A social shows once its address is set. The content sits one block gap from the
+// window's left and bottom edges and a column gap from its right.
 import { landingCopy } from '../../lib/landing-copy.ts';
 import { siteLinks } from '../../lib/site-links.ts';
-import { Mono } from './Mono.tsx';
 import { TextLink } from './TextLink.tsx';
 import { Wordmark } from './Wordmark.tsx';
-
-function Group({ name, children }: { name: string; children: ReactNode }) {
-  return (
-    <nav aria-label={name} className="flex flex-col items-start gap-text-gap">
-      <Mono>{name}</Mono>
-      {children}
-    </nav>
-  );
-}
 
 export function Footer() {
   const copy = landingCopy.footer;
   const socials = landingCopy.hero.socials;
-  const elsewhere = [
+  const links = [
+    { name: copy.links.docs, href: siteLinks.docs },
     { name: copy.links.github, href: siteLinks.github },
     { name: socials.telegram, href: siteLinks.socials.telegram },
     { name: socials.twitter, href: siteLinks.socials.twitter },
     { name: socials.youtube, href: siteLinks.socials.youtube },
-    { name: copy.links.elementaryComplexity, href: siteLinks.elementaryComplexity },
   ].filter((link) => link.href);
   return (
     <footer
@@ -35,40 +25,26 @@ export function Footer() {
       data-b="surface"
       className="@container relative overflow-hidden border-t border-hairline pt-section-padding"
     >
-      <div className="flex flex-col gap-column-gap px-block-gap pt-section-padding pb-block-gap antialiased md:flex-row md:items-end md:justify-between">
-        <div className="@container flex w-full flex-col gap-column-gap md:w-1/2">
+      <div className="grid grid-cols-1 gap-column-gap px-block-gap pt-section-padding pb-block-gap antialiased md:grid-cols-2 md:pr-column-gap">
+        <div className="@container md:col-start-1 md:row-start-1 md:self-end">
           <div className="@container w-full md:w-2/3">
             <Wordmark size="fill" />
           </div>
-          <p className="my-0 type-label text-primary">
-            {copy.built.split(copy.by)[0]}
-            <TextLink href={siteLinks.elementaryComplexity} variant="inline">
-              {copy.by}
-            </TextLink>
-            {copy.built.split(copy.by)[1]}
-          </p>
         </div>
-        <div className="flex flex-wrap gap-x-column-gap gap-y-column-gap md:justify-end">
-          <Group name={copy.groups.petals}>
-            <TextLink href={siteLinks.map}>{copy.links.gallery}</TextLink>
-            <TextLink href={siteLinks.howItWorks}>{copy.links.howItWorks}</TextLink>
-            <TextLink href={siteLinks.lobby}>{copy.links.connect}</TextLink>
-          </Group>
-          <Group name={copy.groups.build}>
-            <TextLink href={siteLinks.docs}>{copy.links.docs}</TextLink>
-            <TextLink href={`${siteLinks.docs}/connect-your-agent`}>{copy.links.agent}</TextLink>
-            <TextLink href={`${siteLinks.docs}/build-it-with-us/contributing`}>
-              {copy.links.contribute}
+        <p className="my-0 type-label text-primary md:col-start-1 md:row-start-2">
+          {copy.built.split(copy.by)[0]}
+          <TextLink href={siteLinks.elementaryComplexity} variant="inline">
+            {copy.by}
+          </TextLink>
+          {copy.built.split(copy.by)[1]}
+        </p>
+        <nav className="flex flex-col items-start gap-text-gap md:col-start-2 md:row-start-1 md:self-end md:justify-self-end">
+          {links.map((link) => (
+            <TextLink key={link.name} href={link.href}>
+              {link.name}
             </TextLink>
-          </Group>
-          <Group name={copy.groups.elsewhere}>
-            {elsewhere.map((link) => (
-              <TextLink key={link.name} href={link.href}>
-                {link.name}
-              </TextLink>
-            ))}
-          </Group>
-        </div>
+          ))}
+        </nav>
       </div>
     </footer>
   );
