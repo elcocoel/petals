@@ -17,6 +17,7 @@ export {
   addDaoMap,
   blocMaps,
   createContext,
+  importRecord,
   loadMapping,
   logoMaps,
   markMaps,
