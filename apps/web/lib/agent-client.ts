@@ -302,7 +302,7 @@ export async function readPublishable(map: string): Promise<PublishableData | nu
 }
 
 /**
- * One press, prepared (POST /api/v1/publish/prepare, composition.md §2 and §9): the unsigned publication/v1, the
+ * One press, prepared (POST /api/v1/publish/data/prepare, composition.md §2 and §9): the unsigned publication/v1, the
  * hash of its canonical JSON, and the two lines the wallet signs, which name that hash. A NEAR wallet signs them
  * with NEP-413 to this site's recipient and the nonce given.
  */
@@ -319,7 +319,7 @@ export async function preparePublication(o: {
   /** the wallet that signs, CAIP-10: the author the publication names */
   author: string;
 }): Promise<PreparedPublication> {
-  const res = await fetch('/api/v1/publish/prepare', {
+  const res = await fetch('/api/v1/publish/data/prepare', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify(o),
