@@ -1,5 +1,5 @@
 // Figma's "A flower, already read" (66:2232), now a real one: the published shape, drawn by the API, with
-// the findings of its own reading. The placeholder strip of hero drawings is gone (Elco, 9 Nov).
+// the findings of its own reading, in place of the earlier placeholder strip of hero drawings.
 import type { View } from '@petal/core/types';
 import { landingCopy } from '../../lib/landing-copy.ts';
 import { siteLinks } from '../../lib/site-links.ts';

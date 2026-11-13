@@ -896,15 +896,8 @@ export const registry: LabEntry[] = [
       () => <BackIt />,
     ),
     states: [
-      {
-        name: 'as designed',
-        wide: true,
-        figmaName: 'Join the community',
-        figmaNode: '66:2346',
-        render: () => <BackIt />,
-      },
-      // LANDING's lean for the split's empty half (11 Nov), in place at /lab/landing-hero
-      { name: 'columns', wide: true, render: () => <BackIt layout="columns" /> },
+      // Petal Mania: four cards in a line, the cards the links
+      { name: 'Petal Mania', wide: true, render: () => <BackIt /> },
     ],
   },
   section(
@@ -1006,17 +999,16 @@ export const registry: LabEntry[] = [
       {
         name: 'a way in, on paper',
         render: () => (
-          <PlateLink href="#platelink" action={landingCopy.backIt.ways[0].action}>
-            <span className="type-title">{landingCopy.backIt.ways[0].title}</span>
-            <span className="type-body">{landingCopy.backIt.ways[0].body}</span>
+          <PlateLink href="#platelink">
+            <span className="type-heading">{landingCopy.backIt.ways[2].title}</span>
           </PlateLink>
         ),
       },
       {
         name: 'a slot with no address yet',
         render: () => (
-          <PlateLink action={landingCopy.backIt.ways[3].action}>
-            <span className="type-title">{landingCopy.backIt.ways[3].title}</span>
+          <PlateLink>
+            <span className="type-heading">{landingCopy.backIt.ways[1].title}</span>
           </PlateLink>
         ),
       },
@@ -1343,7 +1335,7 @@ export const registry: LabEntry[] = [
           <ActionRow gap="tight">
             <Button href="#actionrow">{landingCopy.nav.ask}</Button>
             <Button variant="secondary" href="#actionrow">
-              {landingCopy.builders.actions.docs}
+              {landingCopy.builders.doors[0].title}
             </Button>
           </ActionRow>
         ),

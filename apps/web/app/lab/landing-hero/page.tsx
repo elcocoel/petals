@@ -36,7 +36,7 @@ export default async function HeroLab() {
         <GiveToAgent />
         <GallerySection />
         <Questions />
-        <BackIt layout="columns" />
+        <BackIt />
         <BuildWithUs />
       </main>
       <Footer />

@@ -785,6 +785,32 @@
   opacity: 1;
 }
 
+/* Under the wordmark's three layers, one more in mint with its cells solid: the small name reads, and the
+   layers over it still open as the pointer nears (mark.open). Hidden in version 1. */
+/* mark.base */
+:root[data-version="2"] [data-b="mark"][data-kind="wordmark"] > [data-layer="base"] {
+  display: block;
+  grid-area: 1 / 1;
+  text-box: inherit;
+  color: var(--figure-accent);
+  font-variation-settings: var(--joy-move-mark-base-axes);
+}
+
+/* mark.fill */
+:root[data-version="2"] [data-b="mark"][data-kind="wordmark"][data-size="fill"] {
+  font-size: var(--joy-move-wordmark-fill);
+}
+
+/* row.answer */
+:root[data-version="2"] [data-b="row"] [data-answer] {
+  line-height: var(--joy-move-answer-leading);
+}
+
+/* row.answer */
+:root[data-version="2"] [data-b="row"] [data-answer] strong {
+  font-weight: var(--joy-move-answer-bold);
+}
+
 /* row.sign */
 :root[data-version="2"] [data-b="row"] [data-sign] {
   position: relative;
