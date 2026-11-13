@@ -1,5 +1,5 @@
-// Figma's Hero (66:2188). Its flower is a real one in the one look, with the key to its colours (Elco, 10 Nov:
-// the landing's first flower draws like the rest, not the old grey bars). A flower the server can't draw is
+// Figma's Hero (66:2188). Its flower is a real one in the one look, with the key to its colours, so the landing's
+// first flower draws like every other one. A flower the server can't draw is
 // left out, as on the Power Map.
 import { landingCopy } from '../../lib/landing-copy.ts';
 import type { PowerMapTile } from '../../lib/power-map.ts';

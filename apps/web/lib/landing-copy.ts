@@ -1,9 +1,9 @@
 // The landing page's words, in one file, so a copy pass touches one file. The source is the "Landing copy
-// (v7)" tab of the "Petals — Copy" doc. Elco's approved words and v6's drafts stay word for word. Everything
-// that was an empty slot is a v1 draft by LANDING (Elco, 9 Nov: "lets try to get everything to be 'v1' with no
-// placeholders as much as possible than we critique by looking at the page"). Only the line breaks are ours.
+// (v7)" tab of the "Petals — Copy" doc. Approved words and v6's drafts stay word for word. Everything that was an
+// empty slot is a v1 draft, so the page has no placeholders and is critiqued by looking at it. Only the line
+// breaks are ours.
 // The arrows aren't here: Geist Mono and our Mona Sans subset have neither U+2192 nor U+2190, so the
-// components draw them (components/ui/Arrow.tsx). The words Elco types on the page itself (?edit=1 on a
+// components draw them (components/ui/Arrow.tsx). The words typed on the page itself (?edit=1 on a
 // local server, app/edit/CopyEditor.tsx) are kept in landing-copy.edits.json and win over these.
 import { agentWords } from './agents.ts';
 import { withEdits } from './copy-edits.ts';
@@ -15,7 +15,7 @@ const written = {
     gallery: 'Power Map',
     docs: 'Docs',
     ask: 'Connect',
-    /** Draft (LANDING, 11 Nov), for Elco: the phone's button that unfolds the links, read aloud. */
+    /** The phone's button that unfolds the links, read aloud. */
     menu: 'Menu',
   },
   hero: {
@@ -104,10 +104,10 @@ const written = {
   howItWorks: {
     title: 'How it works',
     /**
-     * Elco's seven scenes, word for word from Figma's "Section 3 · V1 original · working baseline"
-     * (181:2343), each with its illustration (public/landing/how-it-works/). Three fixes on Elco's OK
-     * (10 Nov): "aks" to "ask", "get's" to "gets", "Near.Social" to "NEAR Social". Case as Figma draws it.
-     * `tick` is the word under each scene's tick in the pager (Elco, 10 Nov, by voice; two corrected on 11 Nov).
+     * The seven scenes, word for word from Figma's "Section 3 · V1 original · working baseline"
+     * (181:2343), each with its illustration (public/landing/how-it-works/), with three spelling fixes:
+     * "aks" to "ask", "get's" to "gets", "Near.Social" to "NEAR Social". Case as Figma draws it.
+     * `tick` is the word under each scene's tick in the pager.
      */
     scenes: [
       {
@@ -160,7 +160,7 @@ const written = {
         body: 'Browsing the Power Map is free. Top up your Petals account to use its agent and mapping tools, paying as you go. Connected agents use their own resources for the work they take on.',
       },
     ],
-    /** Drafts (LANDING, 10 Nov), for Elco: the arrows' names, read aloud only. */
+    /** The arrows' names, read aloud only. */
     back: 'Back',
     next: 'Next',
   },

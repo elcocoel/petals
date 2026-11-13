@@ -1,7 +1,6 @@
-// The landing's sections in Elco's order (11 Nov, board card 100): the hero, How it works, give this to your agent,
-// the Power Map, Make Petals stronger, the questions, Build it with us. "A reading, summarised" went (Elco:
-// "kill it"); the one-click deliverables (board card 101) will sit before the Power Map once they're designed. It only
-// assembles. On a local server it also carries Elco's copy editor (?edit=1).
+// The landing's sections in order: the hero, How it works, the agent setup, the Power Map, Petal Mania, the FAQ and
+// Build Petals with us, then the footer. It only assembles. On a local server it also carries the copy editor
+// (?edit=1).
 
 import { CopyEditor } from '../../app/edit/CopyEditor.tsx';
 import { Footer } from '../ui/Footer.tsx';
@@ -30,7 +29,7 @@ export function Landing() {
       </main>
       <Footer />
       <FrontDoor />
-      {/* Elco's copy editor: only on a local server, with ?edit=1 (app/edit/CopyEditor.tsx) */}
+      {/* The copy editor: only on a local server, with ?edit=1 (app/edit/CopyEditor.tsx) */}
       {process.env.NODE_ENV !== 'production' && <CopyEditor />}
     </>
   );
