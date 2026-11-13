@@ -7,13 +7,8 @@ cd "$(dirname "$0")/.." || exit 1
 
 # Frozen byte for byte by the system-v1.5 tag (packages/tokens/test/versions.test.ts), so its text can't change.
 frozen=(packages/tokens/source.ts)
-# Still being reworded on open branches; each leaves this list once it's clean.
-pending=(
-  apps/web/components/landing/GallerySection.tsx
-  apps/web/components/landing/LandingMap.tsx
-)
 skip=()
-for p in "${frozen[@]}" "${pending[@]}"; do skip+=(":(exclude)$p"); done
+for p in "${frozen[@]}"; do skip+=(":(exclude)$p"); done
 
 pattern='Elco[,:]? +(on +)?[0-9]{1,2} (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)'
 hits=$(git ls-files --cached --others --exclude-standard -z -- . "${skip[@]}" 2>/dev/null |
