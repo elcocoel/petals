@@ -1,8 +1,8 @@
 // Browser only. The person's own EVM wallets, the ones in this browser (MetaMask, SafePal, Rabby, Coinbase
 // Wallet's extension and the like), for signing in and adding a wallet with one signed message, as a NEAR
-// wallet does. Several extensions can sit in one browser and fight over window.ethereum (SafePal takes it and
+// wallet does. Several extensions can sit in one browser and fight over globalThis.ethereum (SafePal takes it and
 // says it's MetaMask too), so each is found by name through EIP-6963: every wallet announces itself, and the
-// person's pick is the one asked. With none announced, window.ethereum is the one. A wallet asked for the
+// person's pick is the one asked. With none announced, globalThis.ethereum is the one. A wallet asked for the
 // account, then for a personal_sign of the text Petals' challenge gives; nothing else, so no transaction and
 // no spend. Pure of React; viewmodels call it.
 
@@ -27,12 +27,12 @@ interface Announced {
   provider: Eip1193;
 }
 
-/** The id of window.ethereum, when no wallet announced itself. */
+/** The id of globalThis.ethereum, when no wallet announced itself. */
 const INJECTED = 'injected';
 
 const announced = new Map<string, Announced>();
-if (typeof window !== 'undefined') {
-  window.addEventListener('eip6963:announceProvider', (e) => {
+if (typeof globalThis.addEventListener === 'function') {
+  globalThis.addEventListener('eip6963:announceProvider', (e) => {
     const detail = (e as CustomEvent<Announced>).detail;
     if (detail?.info?.uuid && detail.provider) announced.set(detail.info.uuid, detail);
   });
@@ -40,7 +40,7 @@ if (typeof window !== 'undefined') {
 
 const injected = (): Eip1193 | null => (globalThis as { ethereum?: Eip1193 }).ethereum ?? null;
 
-/** What the wallet at window.ethereum calls itself; SafePal also says it's MetaMask, so it's asked first. */
+/** What the wallet at globalThis.ethereum calls itself; SafePal also says it's MetaMask, so it's asked first. */
 const injectedName = (eth: Eip1193) =>
   eth.isSafePal
     ? 'SafePal'
@@ -54,9 +54,9 @@ const injectedName = (eth: Eip1193) =>
 
 /** The EVM wallets in this browser, each by its own name; none when there's none. */
 export function evmWallets(): WalletChoice[] {
-  if (typeof window === 'undefined') return [];
+  if (typeof globalThis.dispatchEvent !== 'function') return [];
   // a wallet announces itself again whenever it's asked, at once
-  window.dispatchEvent(new Event('eip6963:requestProvider'));
+  globalThis.dispatchEvent(new Event('eip6963:requestProvider'));
   const list = [...announced.values()].map((a) => ({
     id: a.info.uuid,
     name: a.info.name,

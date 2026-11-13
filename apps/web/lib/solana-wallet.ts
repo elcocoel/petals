@@ -1,8 +1,8 @@
 // Browser only. The person's own Solana wallets, the ones in this browser, for signing in and adding a wallet
 // with one signed message, as a NEAR or an EVM wallet does. Wallets register themselves through the Wallet
 // Standard (MetaMask and SafePal both do, each by its own name and icon), so the person picks one by name and a
-// refusal says which wallet refused. A browser whose wallets only inject a Phantom-shaped object (window.phantom,
-// window.solana and the like) still works: each is found where it put itself and named by what it says it is
+// refusal says which wallet refused. A browser whose wallets only inject a Phantom-shaped object (globalThis's
+// phantom, solana and the like) still works: each is found where it put itself and named by what it says it is
 // (SafePal's also says it's Phantom, so it's asked first). It asks to connect, then to sign the text Petals'
 // challenge gives; nothing else, so no transaction and no spend. Pure of React.
 import type { WalletChoice } from './evm-wallet.ts';
@@ -52,14 +52,14 @@ const register = (...wallets: StandardWallet[]) => {
   for (const w of wallets) if (!registered.includes(w)) registered.push(w);
   return () => {};
 };
-if (typeof window !== 'undefined') {
+if (typeof globalThis.addEventListener === 'function') {
   // the Wallet Standard's handshake, both ways: wallets that loaded first answer app-ready, later ones
   // register themselves
-  window.addEventListener('wallet-standard:register-wallet', (e) => {
+  globalThis.addEventListener('wallet-standard:register-wallet', (e) => {
     const callback = (e as CustomEvent<(api: { register: typeof register }) => void>).detail;
     if (typeof callback === 'function') callback({ register });
   });
-  window.dispatchEvent(new CustomEvent('wallet-standard:app-ready', { detail: { register } }));
+  globalThis.dispatchEvent(new CustomEvent('wallet-standard:app-ready', { detail: { register } }));
 }
 
 /** A registered wallet that can connect and sign a message on Solana. */
