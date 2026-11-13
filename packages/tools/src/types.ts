@@ -64,16 +64,16 @@ export interface Config {
    * additive (PETAL_PUBLIC=1): a public site. It does no work for a visitor that reaches outside it:
    * no chain reads, web reads, searches, model calls or chain writes. A person's own agent does those
    * on their machine and posts what it made. Tools marked onTheirMachine refuse, with
-   * not_on_this_site, and the shared map is the copies of published rows the site ships. Since 9 Nov
-   * (TGT-030, amended for the hackathon), Petals' own agent runs on it, on NEAR AI, for a person who pays
+   * not_on_this_site, and the shared map is the copies of published rows the site ships. Under
+   * TGT-030 (amended for the hackathon), Petals' own agent runs on it, on NEAR AI, for a person who pays
    * for it in NEAR or holds an invite.
    */
   public?: boolean;
-  /** additive (9 Nov, PETAL_BRAIN_DIR): the brain/ the site serves, a copy of the repo that follows main */
+  /** additive (PETAL_BRAIN_DIR): the brain/ the site serves, a copy of the repo that follows main */
   brainDir?: string;
   /**
-   * additive (11 Nov, #105, PETAL_SEARCH_URL): where search's models answer, Qwen3-Embedding and Qwen3-Reranker
-   * behind oMLX on Elco's Mac (coordinator/search_model_up.sh). Unset: search_petals says it has no model.
+   * additive (PETAL_SEARCH_URL): where search's models answer, Qwen3-Embedding and Qwen3-Reranker
+   * behind oMLX on the host machine. Unset: search_petals says it has no model.
    */
   searchUrl?: string;
 }
@@ -89,7 +89,7 @@ export interface Caller {
   /** what the app at the other end calls itself, when its request says so (T404). Its own words */
   client?: string;
   /**
-   * additive (10 Nov, annotation-layer.md): who answers for what this caller writes, as a claim names them:
+   * additive: who answers for what this caller writes, as a claim names them:
    * the signed-in person's account (`near:mainnet:alice.near`). Set by a door that knows it.
    */
   by?: string | null;
@@ -111,34 +111,34 @@ export interface ToolContext {
   fresh?: FreshGate;
   /** additive (T404): told when an exploration changes, for a page that's following it */
   live?: LiveHub;
-  /** additive (9 Nov, agent-house): told when a job is reported, so Petals' agent takes it up at once */
+  /** additive: told when a job is reported, so Petals' agent takes it up at once */
   onJobReported?: (job: JobRow) => void;
   /**
-   * additive (12 Nov, the brain's receipts): told each time a door serves the brain's text, set by the server
+   * additive (the brain's receipts): told each time a door serves the brain's text, set by the server
    * that holds the store, which keeps it. None: nothing is kept, and the answer's receipt is null.
    */
   onBrainServed?: (receipt: BrainReceipt) => Promise<void>;
-  /** additive (12 Nov, step 10): what a brain read happens in, for its receipt: Petals' agent's run */
+  /** additive: what a brain read happens in, for its receipt: Petals' agent's run */
   consumer?: { run?: string; job?: string; exploration?: string };
   /**
-   * additive (12 Nov, brain_usage): the receipts from a time on and the layers' coverage, read from the server's
+   * additive (brain_usage): the receipts from a time on and the layers' coverage, read from the server's
    * store. None: this site keeps no receipts.
    */
   brainUsage?: (
     since?: string,
   ) => Promise<{ receipts: BrainReceipt[]; layers: { total: number; with_brain: number } }>;
   /**
-   * additive (10 Nov, one-source.md step 2): the viewer's view, the glasses every drawing without a view of
+   * additive: the viewer's view, the glasses every drawing without a view of
    * its own is drawn through: the person's, or the default. A flower's own choices never draw it.
    */
   view?: View;
   /**
-   * additive (11 Nov, annotation-layer.md step 6): the viewer's own names (named annotations), which a
+   * additive: the viewer's own names (named annotations), which a
    * drawing for them shows on the petals they name (core's namePieces). Set by a door that knows the
    * person, never taken from what a caller sends; a visitor has none.
    */
   names?: readonly Claim[];
-  /** additive (11 Nov, #105): search's models, when a test brings its own; else Config.searchUrl's */
+  /** additive: search's models, when a test brings its own; else Config.searchUrl's */
   searchModel?: SearchModel;
 }
 
