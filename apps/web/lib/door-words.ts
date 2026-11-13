@@ -4,6 +4,8 @@ export const doorWords = {
   // The landing's and the navbar's word for the same thing (Connect, never Ask).
   connect: 'Connect',
   disconnect: 'Disconnect',
+  /** Leaves the account and connects again, with whichever wallet the person picks next. */
+  switchWallet: 'Switch wallet',
   badSignature: "That signature didn't work. Connect your wallet again.",
   /** a wallet the person said no in, by its name */
   declined: (wallet: string) => `${wallet} declined.`,
