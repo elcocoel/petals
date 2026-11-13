@@ -12,8 +12,6 @@ The Power Map is a collective construction: its people build it together, and no
 - **Facts you confirmed:** facts someone had published that you read again and matched, independently.
 - **Accounts that built on your work:** each other account that built on a layer of yours or reused it. These are your points.
 
-Points aren't money, and there's no token. Anyone can work all three counts out again from the record.
-
 RaidGuild's map shows it today: two authors, Petals' own mapping, imported and unsigned, and petals.near, whose names for RaidGuild's accounts were signed by its wallet. Each has its own counts.
 
 Results read from a chain are deterministic. So the question isn't whose map wins: it's how layers from different people add up to a fuller map.
@@ -42,7 +40,7 @@ Credit is kept per fact, for every author who stated it, in the order they publi
 - **Two values for the same block.** Both stand. The qualifier's verdict, recorded by the server when it added the layer, then the record's order, decide which shows first; the others are options you can switch to. A read at a block is deterministic, so for chain data a difference is flagged as a probable read error. Anyone can read that block again, and their read matches one of them.
 - **Backdating, to be first.** Order is the record's own: the server sets each entry's place and time as it adds it, and nobody can choose them.
 - **Copying a popular layer.** A use's point goes only to the authors who published the layer before that use. A copy earns a confirmation, never earlier points.
-- **Many wallets, one person.** Named, not solved. Each account counts once per layer, and its own use never counts. Before any reward, someone confirms usefulness and attribution, and that decision is recorded too.
+- **Many wallets, one person.** Named, not solved. Each account counts once per layer, and its own use never counts.
 - **Claims that disagree,** such as two names for one account. A claim is an interpretation, not a chain read: all are shown side by side, and none wins. A fuller treatment comes later.
 - **What came before.** What Petals loaded before the record began is one import by `mapping.petals.near`, said plainly as imported and unsigned, never shown as signed.
 
