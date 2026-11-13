@@ -4,7 +4,7 @@
 
 The skill calls Petals' HTTP API with `curl`, which works in all three agents. Where the `petal` MCP server is configured, the agent calls the same tools by name instead.
 
-In the commands below, `<repo>` is the root of your clone of the Petals repo (locally, the `build/` folder).
+In the commands below, `<repo>` is the root of your clone of the Petals repo.
 
 ## Before you start
 

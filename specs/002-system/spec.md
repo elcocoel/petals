@@ -1,8 +1,8 @@
 # Feature Specification: The system behind the app
 
 **Created**: 2026-11-05
-**Status**: Draft. A map, not a final definition: it names the shape and the seams, and `open-questions.md` lists what's undecided. Amended 2026-11-08 with Story 7 and SYS-080 to SYS-087 (the website and its server): proposed, for Elco's go, with the choices in `research.md`.
-**Input**: Elco: "connecting agents, accounts, login in with wallet, the user's own workspace and how they come back to the work they were doing, where it's saved and its tradeoffs, serverless or server, db or not."
+**Status**: Draft. A map, not a final definition: it names the shape and the seams, and `open-questions.md` lists what's undecided. Amended 2026-11-08 with Story 7 and SYS-080 to SYS-087 (the website and its server): proposed, with the choices in `research.md`.
+**Input**: Connecting agents, accounts and wallet sign-in; the person's own workspace and how they come back to the work they were doing; where it's saved and its trade-offs; serverless or a server; a database or none.
 
 This spec covers what's behind the app. It defines data, rules and contracts, and no screens. Surfaces are designed separately, and any page needed to test this stays out of the product until then.
 
@@ -83,7 +83,7 @@ A mapping that spends needs a yes from the wallet.
 
 ### Story 7: The website and its server (P1)
 
-Elco, 8 Nov: the website on Vercel, and the server in a container, on this Mac for now but built as if it were a VPS. A person signs in on the website with a wallet and connects their own agent. Then they watch its work appear, while everything they've saved lives on the server. The choices, with their trade-offs and leans, are in `research.md`. The seam is in `contracts/site-server.md`.
+The website runs on Vercel, and the server in a container, on one host machine for now but built as if it were a VPS. A person signs in on the website with a wallet and connects their own agent. Then they watch its work appear, while everything they've saved lives on the server. The choices, with their trade-offs and leans, are in `research.md`. The seam is in `contracts/site-server.md`.
 
 **Independent test:** run the website on a preview address in front of the server at its own name. Then:
 - a test wallet signs in
@@ -177,7 +177,7 @@ Elco, 8 Nov: the website on Vercel, and the server in a container, on this Mac f
 - **SYS-082**: The website MUST reach the server only through the HTTP API and the agent doors, never in process. Its page code MUST go through one function, `lib/api.ts`.
 - **SYS-083**: Live updates MUST come from the server. After a dropped stream, a page MUST catch up by reading again. Forwarded streams MUST carry a heartbeat [NEEDS CLARIFICATION: `research.md` C5; long-polling if forwarding cuts streams].
 - **SYS-084**: The server MUST trust a visitor's forwarded address only from the website, proven by the site key, and MUST refuse calls without the key, except its health check [NEEDS CLARIFICATION: `research.md` C4].
-- **SYS-085**: The server MUST be built as for any host: one container, whose address, data folder and secrets all come from the environment, with nothing tied to this Mac.
+- **SYS-085**: The server MUST be built as for any host: one container, whose address, data folder and secrets all come from the environment, with nothing tied to the host machine.
 - **SYS-086**: The store MUST stay behind interfaces that don't name an engine, and new SQL MUST stay within what Postgres also runs [NEEDS CLARIFICATION: `research.md` C8, async now or later; the lean is later].
 - **SYS-087**: Sign-in MUST stay on the server. The website shows the wallet and passes the signature on. Other chains are added on the server's verify route (SYS-020).
 

@@ -1,12 +1,12 @@
-# Publication boundary for build/ (T010). Only what Elco approves enters the public repo.
+# Publication boundary for the repo (T010). Only what it allows enters the public repo.
 # scripts/check-boundary.sh enforces this file: in scripts/check.sh, as the git pre-commit
 # hook (core.hooksPath = scripts/git-hooks) and before every push.
 #
 # A path must match an [allow] line and no [deny] line. Patterns are bash globs matched on the
 # whole repo-relative path, case-insensitive; `*` also crosses `/`. A line ending in `/` means
-# "anything under this folder". Any addition to [allow] needs Elco's OK.
+# "anything under this folder". Additions to [allow] are reviewed.
 # [deny-content] lines are fixed strings that must not appear in any file outside
-# [deny-content-exempt] (the approved planning docs may name what stays out).
+# [deny-content-exempt] (the planning docs may name what stays out).
 # Besides these lines, the check refuses any file byte-identical to a file in ../research/,
 # ../design/ or ../submission/ (when those folders exist next to the repo).
 

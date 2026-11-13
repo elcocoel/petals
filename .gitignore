@@ -13,7 +13,7 @@ out/
 .next/
 .vercel/
 
-# secrets: keys live in ../.secrets/, outside the repo
+# secrets: keys live outside the repo
 .env*
 !.env.example
 *.key

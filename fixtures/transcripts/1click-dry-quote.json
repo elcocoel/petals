@@ -1,7 +1,7 @@
 {
   "petal": "recorded-quote/v1",
   "recorded_on": "2026-11-04",
-  "note": "One NEAR Intents 1Click DRY quote: 1 USDC (EXACT_OUTPUT) received on NEAR, paid from Base USDC. Reconstructed from the measured values in research/near-map-pay.md (Try 2): the spike printed the response but did not save it. Measured: deposit 1.010219 USDC, minimum 1.000116, about 35 s, refund fee 0.0024 USDC, platform fee 1 bp, no depositAddress (dry). Not measured, so placeholders: correlationId, signature, timestamp seconds; amountInUsd and amountOutUsd assume 1 USDC = 1 USD. No money moved; dry quotes create no deposit address.",
+  "note": "One NEAR Intents 1Click DRY quote: 1 USDC (EXACT_OUTPUT) received on NEAR, paid from Base USDC. Reconstructed from the measured values of the 1Click spike's second try: the spike printed the response but did not save it. Measured: deposit 1.010219 USDC, minimum 1.000116, about 35 s, refund fee 0.0024 USDC, platform fee 1 bp, no depositAddress (dry). Not measured, so placeholders: correlationId, signature, timestamp seconds; amountInUsd and amountOutUsd assume 1 USDC = 1 USD. No money moved; dry quotes create no deposit address.",
   "request": {
     "method": "POST",
     "url": "https://1click.chaindefuser.com/v0/quote",

@@ -1,6 +1,6 @@
 # Petals' protocols: one rule for every format
 
-Elco, 9 Nov, asked for the data protocol, the visual protocol and the brain to be versioned protocols, so work improves on solid ground instead of "lost versions scattered". Elco's go: "1, yes". This page is that rule. It holds for every side: data and the brain (SYSTEMS), the look (LOOK, for `view/v1`).
+The data protocol, the visual protocol and the brain are versioned protocols, so work improves on solid ground instead of scattered, lost versions. This page is that rule. It holds for every side: data and the brain, and the look (for `view/v1`).
 
 ## What a format is
 
@@ -32,7 +32,7 @@ A format that's stored or hashed refuses fields it doesn't know, so a new field 
 
 ## Who decides
 
-The side that owns a format proposes its next version: SYSTEMS for data and the brain, LOOK for the look, with the other side when it crosses the seam. A new version that changes what people see waits for Elco's go.
+The side that owns a format proposes its next version: the data side for data and the brain, the look's side for the look, with the other side when it crosses the seam. A new version that changes what people see is reviewed before it ships.
 
 ## Adding a format
 
