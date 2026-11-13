@@ -1,6 +1,6 @@
-// What the agent says first (M-Talk). Written text with real maps from the one shared map (GET /api/v1/maps;
-// one map per address), not a model call: a person opening the app should cost nothing. It
-// goes to the model with the first question, so the agent knows what it already said.
+// Where a new conversation starts: the readiest maps on the one shared map (GET /api/v1/maps; one map per
+// address), offered by the page itself, not by the agent, so opening the app costs nothing and nothing written
+// here poses as the agent or reaches the model.
 import { viewName } from './map-views.ts';
 import { type MapCard, mapHref } from './maps.ts';
 
@@ -30,21 +30,18 @@ export function firstCases<M extends Pick<MapCard, 'readings' | 'name' | 'title'
     .slice(0, MAX_SHOWN);
 }
 
-export function openingMessage(maps: readonly MapCard[]): string {
-  const links = firstCases(maps).map(
-    (m) => `[${viewName(m).replace(/[[\]]/g, '')}](${mapHref(m.id)})`,
-  );
-  const mapped = links.length
-    ? `Or start from what's already mapped: ${links.join(', ')}, or the whole [Power Map](/map).`
-    : '';
+/** An empty conversation's own words: the page's, not the agent's (components/chat/NewConversation.tsx). */
+export const newConversationWords = {
+  heading: 'What are you curious about?',
+  powerMap: 'The whole Power Map',
+} as const;
+
+/** Where an empty conversation offers to start: the readiest maps, then the whole Power Map. */
+export function newConversationStarts(maps: readonly MapCard[]): { label: string; href: string }[] {
   return [
-    "Hi. I'm Petals. I dig into who holds power in a network, then draw what I find as a flower.",
-    'Give me somewhere to start: a DAO, a token or a contract address. Moloch DAO and UNI on Base are good first cases.',
-    mapped,
-    'What are you curious about?',
-  ]
-    .filter(Boolean)
-    .join('\n\n');
+    ...firstCases(maps).map((m) => ({ label: viewName(m), href: mapHref(m.id) })),
+    { label: newConversationWords.powerMap, href: '/map' },
+  ];
 }
 
 /** The room beside the conversation while the Power Map is on its way (megabytes). */
