@@ -691,11 +691,11 @@ const LAB_PUBLISH: PublishableData = {
       sha256: 'b2',
       petal: 'vesting/v1',
       title: 'TRUMP vesting',
-      cases: { new_data: { whats: ['vesting schedule'] } },
+      cases: { new_data: { whats: ['vesting/schedule'] } },
     },
   ],
   totals: {
-    new_data: { whats: ['vesting schedule'] },
+    new_data: { whats: ['vesting/schedule'] },
     new_moment: { states: [{ state: { block: 465695924 }, newest: { block: 465600000 } }] },
     new_subjects: { count: 212 },
     match: { count: 60, authors: [LAB_PETALS] },
@@ -3011,7 +3011,7 @@ export const registry: LabEntry[] = [
         render: () => (
           <ToMapLines
             lines={toMapLines({
-              new_data: { whats: ['vesting schedule'] },
+              new_data: { whats: ['vesting/schedule'] },
               new_moment: {
                 states: [{ state: { block: 465695924 }, newest: { block: 465600000 } }],
               },

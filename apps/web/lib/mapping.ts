@@ -63,6 +63,17 @@ const pointWords = (p: number | string) =>
     ? day(p)
     : `block ${grouped(p)}`;
 
+/** The formats whose name says nothing a person needs: their data reads by its own name. */
+const PLAIN = new Set(['snapshot', 'layer', 'value', 'mark']);
+
+/** A fact's data, in words (composition.md §8): vesting/schedule → vesting schedule; snapshot/token_balance TRUMP → token balance TRUMP. */
+export function whatWords(what: string): string {
+  const cut = what.indexOf('/');
+  const format = cut < 0 ? '' : what.slice(0, cut);
+  const rest = (cut < 0 ? what : what.slice(cut + 1)).replaceAll('_', ' ');
+  return PLAIN.has(format) || !format ? rest : `${format} ${rest}`;
+}
+
 /** When on the chain a fact holds, in words: block 465,695,924, or 11 Nov; and its window. */
 export function stateWords(s: ChainState): string {
   const at = s.block !== undefined ? `block ${grouped(s.block)}` : s.at ? day(s.at) : null;
@@ -82,15 +93,17 @@ export const caseWords = {
   /** a layer's line: what it brings, in words */
   line: {
     new_data: (c: NonNullable<LayerCases['new_data']>) =>
-      `The map has no ${c.whats.join(', ')} yet`,
+      `The map has no ${c.whats.map(whatWords).join(', ')} yet`,
     new_moment: (c: NonNullable<LayerCases['new_moment']>) =>
-      c.states
-        .map(({ state, newest }) =>
-          newest
-            ? `${stateWords(state)}; the map’s newest is ${stateWords(newest)}`
-            : stateWords(state),
-        )
-        .join(' · '),
+      [
+        ...new Set(
+          c.states.map(({ state, newest }) =>
+            newest
+              ? `${stateWords(state)}; the map’s newest is ${stateWords(newest)}`
+              : stateWords(state),
+          ),
+        ),
+      ].join(' · '),
     new_subjects: (c: NonNullable<LayerCases['new_subjects']>) =>
       `${plural(c.count, 'subject', 'subjects')} the map had no facts for`,
     match: (c: NonNullable<LayerCases['match']>) =>
@@ -135,16 +148,16 @@ export interface ToMapLine {
   words: string;
 }
 
+/** How many a case holds: its data, its moments, its subjects or its facts; a case with none isn't said. */
+const sizeOf = (c: LayerCases, k: MapCase): number => countsOf(c)[k] ?? 0;
+
 export function toMapLines(c: LayerCases): ToMapLine[] {
-  const out: ToMapLine[] = [];
-  for (const k of MAP_CASES) {
-    const got = c[k];
-    if (!got) continue;
+  return MAP_CASES.filter((k) => sizeOf(c, k) > 0).map((k) => ({
+    key: k,
+    tag: caseWords.tag[k],
     // each case's words take its own part of the cases
-    const words = (caseWords.line[k] as (x: typeof got) => string)(got);
-    out.push({ key: k, tag: caseWords.tag[k], words });
-  }
-  return out;
+    words: (caseWords.line[k] as (x: unknown) => string)(c[k]),
+  }));
 }
 
 /** A publication that just landed on the map, as the press hands it to the map (LOOK) and Information (OVERLAYS). */

@@ -262,10 +262,10 @@ export interface ChainState {
 
 /** What one layer, or a whole publication, adds to the map in front, by case. */
 export interface LayerCases {
-  /** the data the map has no fact of, in words: 'vesting schedule' */
+  /** the data the map has no fact of, as the facts name it: 'vesting/schedule' */
   new_data?: { whats: string[] };
-  /** each moment it adds, beside the map's newest of that data (null when the map has none) */
-  new_moment?: { states: { state: ChainState; newest: ChainState | null }[] };
+  /** each moment it adds, of which data, beside the map's newest of it (null when the map has none) */
+  new_moment?: { states: { what?: string; state: ChainState; newest: ChainState | null }[] };
   /** how many subjects it states facts for that the map had none for */
   new_subjects?: { count: number };
   /** facts the same as ones on the map, and who they're credited to already */

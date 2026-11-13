@@ -38,11 +38,11 @@ const data: PublishableData = {
       sha256: 'b2',
       petal: 'vesting/v1',
       title: 'TRUMP vesting',
-      cases: { new_data: { whats: ['vesting schedule'] } },
+      cases: { new_data: { whats: ['vesting/schedule'] } },
     },
   ],
   totals: {
-    new_data: { whats: ['vesting schedule'] },
+    new_data: { whats: ['vesting/schedule'] },
     new_moment: { states: [{ state: { block: 465695924 }, newest: { block: 465600000 } }] },
     new_subjects: { count: 212 },
     match: { count: 60, authors: [petals] },
@@ -118,6 +118,18 @@ describe('the cases, in words', () => {
     expect(caseWords.line.new_moment({ states: [{ state: { block: 7 }, newest: null }] })).toBe(
       'block 7',
     );
+  });
+
+  test('a case with nothing in it isn’t said, and data reads by its own name', () => {
+    expect(
+      toMapLines({
+        new_data: { whats: ['snapshot/token_balance TRUMP', 'proposals/outcome'] },
+        new_moment: { states: [] },
+        new_subjects: { count: 0 },
+        match: { count: 0, authors: [] },
+        differs: { count: 0, authors: [] },
+      }).map((l) => `${l.tag}: ${l.words}`),
+    ).toEqual(['New data: The map has no token balance TRUMP, proposals outcome yet']);
   });
 
   test('the summary counts kinds of data, moments, subjects and facts, and says nothing of what’s zero', () => {
