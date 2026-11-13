@@ -2,13 +2,16 @@
 // lobby to be ... we might want to unify them and use this overall"; #79's investigator's card, with the
 // lobby's map). /lobby and /profile both show it. Beside the side panel, which is the layout's
 // (app/(work)/WorkPanel.tsx, PANEL's), from the top, the person (ProfileHead); then the widgets in rows of
-// two, each pair the same height: their Profile card beside the Wallets they've proven, the Claims they and
-// their agents keep about accounts beside their Balance, and the map beside their Conversations. Each card
+// two, each pair the same height: their Profile card beside the Wallets they've proven, their Contribution to
+// the map (wave 8: three counts) beside their Balance, the Claims they and their agents keep about accounts beside their
+// Conversations, and the map across the page. Each card
 // has one title and one job (components/ui/Card.tsx); a list that grows keeps a set height and scrolls
 // inside (Elco: "I don't like the idea that the claims widget is infinite"). The editor opens over the
 // whole row, the width of the page.
 // Props only: app/(work)/lobby/LobbySurface.tsx wires useLobby to it. Words from lib/lobby-view.ts and
 // lib/profile-view.ts.
+
+import type { ContributionView } from '../../lib/contribution-view.ts';
 import type { ConversationRow } from '../../lib/conversation-list.ts';
 import {
   lobbyWords,
@@ -30,6 +33,7 @@ import { MapList } from '../MapList.tsx';
 import { Badge } from '../ui/Badge.tsx';
 import { Card } from '../ui/Card.tsx';
 import { Claims } from './Claims.tsx';
+import { Contribution } from './Contribution.tsx';
 import { Conversations } from './Conversations.tsx';
 import { Funds } from './Funds.tsx';
 import { Profile } from './Profile.tsx';
@@ -54,6 +58,7 @@ export function Lobby({
   claims,
   conversations,
   map,
+  contribution,
   quotes,
 }: {
   /** The wallet this session signed in with, and the profile Petals keeps or NEAR Social's. */
@@ -81,8 +86,13 @@ export function Lobby({
   claims: ClaimsView | 'reading' | 'unread';
   conversations: ConversationRow[];
   map: LobbyMap;
+  /** The person's contribution to the map, three counts (wave 8, SYSTEMS's credit/v1). */
+  contribution: ContributionView | 'reading' | 'unread';
   /** An illustrated power quote for each widget with nothing in it yet (#89, wave 7). */
-  quotes: Record<'profile' | 'claims' | 'usage' | 'conversations', PowerQuoteItem | null>;
+  quotes: Record<
+    'profile' | 'claims' | 'usage' | 'conversations' | 'contribution',
+    PowerQuoteItem | null
+  >;
 }) {
   return (
     <main aria-label={lobbyWords.page} data-surface="ground" className="flex h-dvh bg-surface">
@@ -106,7 +116,7 @@ export function Lobby({
           </div>
           <Wallets wallets={wallets} adding={adding} onAdd={addWallet} />
           <div className="grid min-w-0 lg:col-span-2">
-            <Claims claims={claims} quote={quotes.claims} />
+            <Contribution contribution={contribution} quote={quotes.contribution} />
           </div>
           <Funds
             balance={funds.balance}
@@ -118,6 +128,10 @@ export function Lobby({
             quote={quotes.usage}
           />
           <div className="grid min-w-0 lg:col-span-2">
+            <Claims claims={claims} quote={quotes.claims} />
+          </div>
+          <Conversations rows={conversations} quote={quotes.conversations} />
+          <div className="grid min-w-0 lg:col-span-3">
             <Card
               title={lobbyWords.map}
               labelledBy="lobby-map"
@@ -132,7 +146,6 @@ export function Lobby({
               )}
             </Card>
           </div>
-          <Conversations rows={conversations} quote={quotes.conversations} />
         </div>
       </div>
     </main>
