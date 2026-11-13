@@ -19,6 +19,7 @@ import {
   ROTATION,
   WIDTH,
 } from './feel.ts';
+import { type Glide, stepGlide } from './glide.ts';
 import { type HoverWay, heightOf, hoverTargets, reachOf } from './hover.ts';
 import { bandUnder, type Model, type Picked, pick } from './model.ts';
 import { FEW, insideWedge, lay, newRing, pointIn, type Ring } from './ring.ts';
@@ -94,6 +95,8 @@ export interface Live {
   heights: Float64Array;
   target: { width: Float64Array; height: Float64Array; flare: Float64Array };
   reach: (r: number) => number;
+  /** Gliding from the reading it drew before to this one (wave 8), or null. */
+  glide: Glide | null;
 }
 
 export function newLive(
@@ -148,6 +151,7 @@ export function newLive(
       flare: new Float64Array(n),
     },
     reach: reachOf(m),
+    glide: null,
   };
   lay(live.ring, live.widths, live.heights, 0);
   return live;
@@ -309,9 +313,17 @@ export function stepLive(l: Live, dt: number, view?: View): Stepped {
   const rotationMoved = advance(l.rotation, snap ? SNAP : stepOf(ROTATION, dt));
 
   const ringMoved =
-    movedWidth || movedFlare || movedHeight || movedOpen || rotationMoved || l.age <= BLOOM + dt;
+    movedWidth ||
+    movedFlare ||
+    movedHeight ||
+    movedOpen ||
+    rotationMoved ||
+    l.age <= BLOOM + dt ||
+    l.glide !== null;
   if (ringMoved) {
     lay(ring, l.widths, l.heights, l.rotation.x);
+    // from the reading it drew before: each petal from where it was toward where this one puts it
+    if (l.glide && !stepGlide(l.glide, ring, dt)) l.glide = null;
     for (let i = 0; i < m.n; i++) ring.flare[i] = Math.max(0, l.flare.x[i] as number);
   }
 

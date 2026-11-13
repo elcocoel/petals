@@ -32,6 +32,7 @@ import {
   PRESENCE,
   ZOOM_LIMITS,
 } from '../flower/feel.ts';
+import { type Drawn, drawnOf, glideBetween } from '../flower/glide.ts';
 import { clickedAt } from '../flower/live.ts';
 import { SHAPE } from '../flower/ring.ts';
 import type { PetalLook } from '../flower/scene.ts';
@@ -187,6 +188,8 @@ interface Kept {
   layout: string | undefined;
   /** where each flower stood, by its map, so a new arrangement glides in from there */
   places: Map<string, { x: number; y: number }>;
+  /** each flower as it was drawn, by its map, so one whose reading changed glides from there (wave 8) */
+  drawn: Map<string, Drawn>;
 }
 
 /** How long a new arrangement takes to glide in, in seconds (Elco, 12 Nov walk 3: "if it was animated"). */
@@ -213,6 +216,10 @@ export function useLandscape(
     // while the camera moves to it (Elco, 12 Nov walk 3: "the camera should move to it and the other ones should be
     // organized around it. If it was animated would be much more elegant"); with reduced motion, it's there at once.
     const prior = kept.current;
+    // a flower whose reading changed (a layer switched on or off, a slice chosen, a layer published, a change in
+    // Tools) glides from what it drew to what the new one draws (wave 8, Elco: "fuller and fuller maps")
+    const priorDrawn = prior?.drawn ?? null;
+    const builtAt = performance.now();
     const earlyFocus = at?.current?.focus ?? -1;
     const glideFrom =
       prior &&
@@ -593,6 +600,20 @@ export function useLandscape(
           // (#87) and the chosen group's (#94) take the highlight
           look: lookOf(i),
         });
+        const was = priorDrawn?.get(idOf(flowers[i]) ?? '');
+        if (was && !motion.matches && performance.now() - builtAt < GLIDE * 1000) {
+          const g = glideBetween(
+            was,
+            d.m.petals.map((p) => p.id),
+            { width: d.m.width, height: d.m.height },
+          );
+          if (g) {
+            d.live.glide = g;
+            d.live.rotation.x = was.rotation;
+            d.live.ox.x = was.ox;
+            d.live.oy.x = was.oy;
+          }
+        }
         lives.set(i, d);
         node.insertBefore(d.scene.root, scene.top);
       }
@@ -1195,6 +1216,22 @@ export function useLandscape(
           focus: focusId,
           layout: data.layout,
           places: new Map(flowers.map((f) => [idOf(f) ?? '', { x: f.place.x, y: f.place.y }])),
+          drawn: new Map(
+            flowers.map((f, i) => {
+              const d = lives.get(i);
+              const m = d ? d.m : f.model;
+              const { fills } = lookFills(m.petals, data.keyed);
+              return [
+                idOf(f) ?? '',
+                drawnOf(
+                  d ? d.live.ring : m.ring,
+                  m.petals.map((p) => p.id),
+                  m.petals.map((p) => fills[p.id] ?? ''),
+                  { width: m.width, height: m.height },
+                ),
+              ];
+            }),
+          ),
         };
       }
       if (raf) cancelAnimationFrame(raf);

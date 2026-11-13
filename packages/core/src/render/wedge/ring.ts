@@ -167,9 +167,71 @@ export function rightAt(ring: Ring, i: number, h: number): [number, number] {
 export const FEW = 5;
 
 /** Lays the ring out from widths (any scale, they share the circle) and heights (world units). */
-export function lay(ring: Ring, widths: Float64Array, heights: Float64Array, rotation: number) {
+/**
+ * One wedge, put where it's told: from angle `a`, `w` wide (radians, before `rotation`), `height` tall. What `lay`
+ * does for each petal in turn, and what a flower gliding from one reading to the next does for each petal at its
+ * own angle, width and height (wave 8, Elco: "how different data layers from different people contribute to fuller
+ * and fuller maps"; the map drawn from the layers on, petals moving, no jump).
+ */
+export function placeAt(
+  ring: Ring,
+  i: number,
+  a: number,
+  w: number,
+  rotation: number,
+  height: number,
+) {
   const { cx, cy, r0 } = SHAPE;
-  const { n, start, end, ux, uy, vx, vy, cw, sw, gut, ax, ay, bx, by, nx, ny, len, h } = ring;
+  const { start, end, ux, uy, vx, vy, cw, sw, gut, ax, ay, bx, by, nx, ny, len, h } = ring;
+  start[i] = a;
+  const a1 = a + w;
+  const sin0 = Math.sin(a + rotation);
+  const cos0 = Math.cos(a + rotation);
+  const sin1 = Math.sin(a1 + rotation);
+  const cos1 = Math.cos(a1 + rotation);
+  end[i] = a1;
+  vx[i] = sin1;
+  vy[i] = -cos1;
+  const mid = a + w / 2 + rotation;
+  ux[i] = sin0;
+  uy[i] = -cos0;
+  const half = w / 2;
+  const c = Math.cos(half);
+  const s = Math.sin(half);
+  cw[i] = c;
+  sw[i] = s;
+  const x0 = cx + r0 * sin0;
+  const y0 = cy - r0 * cos0;
+  const x1 = cx + r0 * sin1;
+  const y1 = cy - r0 * cos1;
+  const dx = x1 - x0;
+  const dy = y1 - y0;
+  const l = Math.sqrt(dx * dx + dy * dy);
+  // the line between wedges, capped at 22% of the side, as layout() caps its gap
+  const g = Math.min(GUTTER, l * 0.22) / 2;
+  gut[i] = g;
+  // where a side half a line in from the boundary meets the polygon's side: g / c along it
+  const along = g / c / (l || 1);
+  ax[i] = x0 + dx * along;
+  ay[i] = y0 + dy * along;
+  bx[i] = x1 - dx * along;
+  by[i] = y1 - dy * along;
+  nx[i] = Math.sin(mid);
+  ny[i] = -Math.cos(mid);
+  len[i] = l;
+  h[i] = height;
+}
+
+/** Closes a ring laid petal by petal: where the last side ends, and the first boundary again. */
+export function closeRing(ring: Ring) {
+  const { n, start, end, ux, uy } = ring;
+  start[n] = n > 0 && n < FEW ? (start[0] as number) + TAU : n > 0 ? (end[n - 1] as number) : 0;
+  ux[n] = ux[0] as number;
+  uy[n] = uy[0] as number;
+}
+
+export function lay(ring: Ring, widths: Float64Array, heights: Float64Array, rotation: number) {
+  const { n } = ring;
   let total = 0;
   for (let i = 0; i < n; i++) total += widths[i] as number;
   // few: each petal as wide as in a flower of FEW, at most its own slot of the circle, the slots evenly round
@@ -184,48 +246,10 @@ export function lay(ring: Ring, widths: Float64Array, heights: Float64Array, rot
       : (widths[i] as number) * scale;
     // few: each petal in the middle of its slot, the first at twelve
     if (few) a = i * slot - w / 2;
-    start[i] = a;
-    const a1 = a + w;
-    const sin0 = Math.sin(a + rotation);
-    const cos0 = Math.cos(a + rotation);
-    const sin1 = Math.sin(a1 + rotation);
-    const cos1 = Math.cos(a1 + rotation);
-    end[i] = a1;
-    vx[i] = sin1;
-    vy[i] = -cos1;
-    const mid = a + w / 2 + rotation;
-    ux[i] = sin0;
-    uy[i] = -cos0;
-    const half = w / 2;
-    const c = Math.cos(half);
-    const s = Math.sin(half);
-    cw[i] = c;
-    sw[i] = s;
-    const x0 = cx + r0 * sin0;
-    const y0 = cy - r0 * cos0;
-    const x1 = cx + r0 * sin1;
-    const y1 = cy - r0 * cos1;
-    const dx = x1 - x0;
-    const dy = y1 - y0;
-    const l = Math.sqrt(dx * dx + dy * dy);
-    // the line between wedges, capped at 22% of the side, as layout() caps its gap
-    const g = Math.min(GUTTER, l * 0.22) / 2;
-    gut[i] = g;
-    // where a side half a line in from the boundary meets the polygon's side: g / c along it
-    const along = g / c / (l || 1);
-    ax[i] = x0 + dx * along;
-    ay[i] = y0 + dy * along;
-    bx[i] = x1 - dx * along;
-    by[i] = y1 - dy * along;
-    nx[i] = Math.sin(mid);
-    ny[i] = -Math.cos(mid);
-    len[i] = l;
-    h[i] = heights[i] as number;
-    a = a1;
+    placeAt(ring, i, a, w, rotation, heights[i] as number);
+    a += w;
   }
-  start[n] = few ? (start[0] as number) + TAU : a;
-  ux[n] = ux[0] as number;
-  uy[n] = uy[0] as number;
+  closeRing(ring);
 }
 
 /** Numbers for a path: three decimals, because the world is seen at up to 48x. */
@@ -259,11 +283,21 @@ export function polygonPath(ring: Ring): string {
     const { cx, cy } = SHAPE;
     return `M${n3(cx - rho)} ${n3(cy)}A${n3(rho)} ${n3(rho)} 0 1 1 ${n3(cx + rho)} ${n3(cy)}A${n3(rho)} ${n3(rho)} 0 1 1 ${n3(cx - rho)} ${n3(cy)}Z`;
   }
-  let d = '';
-  for (let i = 0; i < ring.n; i++) {
-    d += `${i ? 'L' : 'M'}${n3(ring.ax[i] as number)} ${n3(ring.ay[i] as number)}`;
-    d += `L${n3(ring.bx[i] as number)} ${n3(ring.by[i] as number)}`;
+  // round the circle: laid, the petals already are; gliding to a new order (wave 8), they're visited by angle, so
+  // the line never cuts across the middle
+  const order = Array.from({ length: ring.n }, (_, i) => i);
+  const angle = (i: number) => (((ring.start[i] as number) % TAU) + TAU) % TAU;
+  for (let i = 1; i < ring.n; i++) {
+    if (angle(order[i] as number) < angle(order[i - 1] as number)) {
+      order.sort((x, y) => angle(x) - angle(y));
+      break;
+    }
   }
+  let d = '';
+  order.forEach((i, at) => {
+    d += `${at ? 'L' : 'M'}${n3(ring.ax[i] as number)} ${n3(ring.ay[i] as number)}`;
+    d += `L${n3(ring.bx[i] as number)} ${n3(ring.by[i] as number)}`;
+  });
   return `${d}Z`;
 }
 

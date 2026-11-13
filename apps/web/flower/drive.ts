@@ -110,6 +110,9 @@ export function driveFlower(
     bandsMoved: stepped.bandsMoved,
     band: focus ? (focus.band ?? -1) : -1,
     taken,
+    ghosts: live.glide
+      ? { ring: live.glide.ghosts, fills: live.glide.ghostFills, done: live.glide.e }
+      : null,
   });
   d.last = mk;
   return stepped.moving;
