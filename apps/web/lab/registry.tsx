@@ -2548,6 +2548,20 @@ export const registry: LabEntry[] = [
         render: () => <ConnectWallet question="" busy={false} failed={null} onConnect={() => {}} />,
       },
       {
+        name: 'NEAR, Ethereum and Solana, as /make has it',
+        wide: true,
+        render: () => (
+          <ConnectWallet
+            question=""
+            busy={false}
+            failed={null}
+            onConnect={() => {}}
+            onConnectEvm={() => {}}
+            onConnectSolana={() => {}}
+          />
+        ),
+      },
+      {
         name: 'a question waiting, and the last try failed',
         wide: true,
         render: () => (
