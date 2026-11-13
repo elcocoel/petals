@@ -5,7 +5,7 @@
 //       opens a page on http://127.0.0.1:3189 where the owner's own wallet approves one plain transfer,
 //       then does the rest by itself
 //   PETAL_KEYS_DIR=<folder> node packages/near/scripts/credit-setup.ts --network testnet --owner <account>
-//       --owner-key-file <file> --credit <name> --charger <name>
+//       --owner-key-file <file> --credit <name> --charger <name> --writer <name>
 //       a rehearsal, with that account's key file making the transfer instead of a wallet
 //
 // The wallet is asked for one thing only: a plain NEAR transfer to a new account this script made on this
@@ -16,7 +16,9 @@
 //      key: nobody can change it after, and people can always withdraw;
 //   3. gives the charger one key that can call `charge` and nothing else (written to PETAL_KEYS_DIR, never
 //      printed), and the owner's own wallet key, then deletes its own;
-//   4. deletes the account it was paid into, so what's left goes back to the owner.
+//   4. makes the shared map's writer, and gives it one key that can call `__fastdata_kv` on the owner's account
+//      (the map's receiver) and nothing else (written to PETAL_KEYS_DIR), and the owner's wallet key;
+//   5. deletes the account it was paid into, so what's left goes back to the owner.
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:http';
@@ -39,11 +41,14 @@ const CREDIT_NEAR = (13n * NEAR) / 10n;
 /** The charger's account: a little storage, and gas for about 1,400 charges at 0.00018 NEAR each. */
 const CHARGER_NEAR = (3n * NEAR) / 10n;
 const ALLOWANCE = (25n * NEAR) / 100n;
+/** The writer's account: a little storage, and gas for thousands of shared-map writes (a whole testnet run used 0.004). */
+const WRITER_NEAR = NEAR / 10n;
+const WRITER_ALLOWANCE = (9n * NEAR) / 100n;
 /**
  * Both, plus the gas the script's transactions hold up front (0.03 NEAR each at testnet's price, most of it
  * refunded); what's left comes back. 0.02 fell short in the first testnet rehearsal.
  */
-const SENT = CREDIT_NEAR + CHARGER_NEAR + NEAR / 10n;
+const SENT = CREDIT_NEAR + CHARGER_NEAR + WRITER_NEAR + NEAR / 10n;
 const GAS = 30_000_000_000_000n;
 
 const { values } = parseArgs({
@@ -53,6 +58,7 @@ const { values } = parseArgs({
     'owner-key-file': { type: 'string' },
     credit: { type: 'string' },
     charger: { type: 'string' },
+    writer: { type: 'string' },
   },
 });
 const network = values.network === 'testnet' ? 'testnet' : 'mainnet';
@@ -61,12 +67,14 @@ const REGISTRAR = network === 'mainnet' ? 'near' : 'testnet';
 const owner = values.owner ?? (network === 'mainnet' ? 'petals.near' : 'petals.testnet');
 const CREDIT = values.credit ?? `petals-credit.${REGISTRAR}`;
 const CHARGER = values.charger ?? `petals-charger.${REGISTRAR}`;
-for (const name of [CREDIT, CHARGER]) {
+const WRITER = values.writer ?? `petals-writer.${REGISTRAR}`;
+for (const name of [CREDIT, CHARGER, WRITER]) {
   if (!name.endsWith(`.${REGISTRAR}`) || name.slice(0, -REGISTRAR.length - 1).includes('.')) {
     throw new Error(`${name} must be a name the registrar makes: <name>.${REGISTRAR}`);
   }
 }
 const keyOut = join(SECRETS, `${CHARGER}.charge-only.json`);
+const writerOut = join(SECRETS, `${WRITER}.write-only.json`);
 const provider = new JsonRpcProvider({ url: RPC_URLS[network] });
 const nearOf = (y: bigint) => (Number(y / 10n ** 18n) / 1e6).toString();
 
@@ -118,6 +126,8 @@ interface State {
   tempCredit: string;
   tempCharger: string;
   chargeOnly: string;
+  tempWriter: string;
+  writeOnly: string;
   /** the owner's wallet key, once the transfer is made */
   ownerKey?: string;
 }
@@ -129,6 +139,8 @@ const state: State = resuming
       tempCredit: KeyPair.fromRandom('ed25519').toString(),
       tempCharger: KeyPair.fromRandom('ed25519').toString(),
       chargeOnly: KeyPair.fromRandom('ed25519').toString(),
+      tempWriter: KeyPair.fromRandom('ed25519').toString(),
+      writeOnly: KeyPair.fromRandom('ed25519').toString(),
     };
 const save = () => writeFileSync(STATE, JSON.stringify(state), { mode: 0o600 });
 const pair = (k: string) => KeyPair.fromString(k as `ed25519:${string}`);
@@ -137,6 +149,8 @@ const FUNDER = Buffer.from(funder.getPublicKey().data).toString('hex');
 const tempCredit = pair(state.tempCredit);
 const tempCharger = pair(state.tempCharger);
 const chargeOnly = pair(state.chargeOnly);
+const tempWriter = pair(state.tempWriter);
+const writeOnly = pair(state.writeOnly);
 
 const has = await balanceOf(owner);
 if (has === null) fail(`${owner} doesn't exist on ${network}.`);
@@ -145,7 +159,9 @@ if (resuming) {
 } else {
   if ((await balanceOf(CREDIT)) !== null) fail(`${CREDIT} exists already.`);
   if ((await balanceOf(CHARGER)) !== null) fail(`${CHARGER} exists already.`);
+  if ((await balanceOf(WRITER)) !== null) fail(`${WRITER} exists already.`);
   if (existsSync(keyOut)) fail(`${keyOut} exists already.`);
+  if (existsSync(writerOut)) fail(`${writerOut} exists already.`);
   if ((has as bigint) < SENT) {
     fail(
       `${owner} holds ${nearOf(has as bigint)} NEAR; this sends ${nearOf(SENT)} and gives back what's left.`,
@@ -206,6 +222,7 @@ async function finish(ownerKey: string): Promise<string> {
   for (const [account, near, temp] of [
     [CREDIT, CREDIT_NEAR, tempCredit],
     [CHARGER, CHARGER_NEAR, tempCharger],
+    [WRITER, WRITER_NEAR, tempWriter],
   ] as const) {
     if ((await balanceOf(account)) !== null) continue;
     const paid = await balanceOf(FUNDER);
@@ -256,6 +273,33 @@ async function finish(ownerKey: string): Promise<string> {
     }
     await send(as(CHARGER, tempCharger), CHARGER, list);
   }
+  if (!existsSync(writerOut)) {
+    writeFileSync(
+      writerOut,
+      JSON.stringify({
+        account_id: WRITER,
+        public_key: writeOnly.getPublicKey().toString(),
+        private_key: writeOnly.toString(),
+      }),
+      { mode: 0o600 },
+    );
+  }
+  if (await hasKey(WRITER, tempWriter)) {
+    console.log(`credit-setup: giving ${WRITER} its write-only key and ${owner}'s wallet key`);
+    const list = [actions.deleteKey(tempWriter.getPublicKey())];
+    if (!(await hasKey(WRITER, writeOnly))) {
+      list.unshift(
+        actions.addFunctionCallAccessKey(
+          writeOnly.getPublicKey(),
+          owner,
+          ['__fastdata_kv'],
+          WRITER_ALLOWANCE,
+        ),
+        actions.addFullAccessKey(PublicKey.fromString(ownerKey)),
+      );
+    }
+    await send(as(WRITER, tempWriter), WRITER, list);
+  }
   if ((await balanceOf(FUNDER)) !== null) {
     console.log(`credit-setup: giving back to ${owner} what's left`);
     await send(f, FUNDER, [actions.deleteAccount(owner)], { gone: FUNDER });
@@ -270,6 +314,11 @@ async function finish(ownerKey: string): Promise<string> {
   );
   const creditKeys = await keysOf(CREDIT);
   const chargerKeys = await keysOf(CHARGER);
+  const writerKeys = await keysOf(WRITER);
+  const writeKey = writerKeys.find((k) => k.public_key === writeOnly.getPublicKey().toString());
+  const ownerWrites = writerKeys.some(
+    (k) => k.public_key === ownerKey && k.access_key.permission === 'FullAccess',
+  );
   const chargeKey = chargerKeys.find((k) => k.public_key === chargeOnly.getPublicKey().toString());
   const ownerHolds = chargerKeys.some(
     (k) => k.public_key === ownerKey && k.access_key.permission === 'FullAccess',
@@ -278,7 +327,9 @@ async function finish(ownerKey: string): Promise<string> {
     `Done on ${network}.`,
     `${CREDIT}: the contract (sha256 ${sha}), config ${JSON.stringify(config)}, keys: ${creditKeys.length === 0 ? 'none (locked)' : creditKeys.map((k) => k.public_key).join(', ')}`,
     `${CHARGER}: ${chargerKeys.length} keys: ${ownerHolds ? `${owner}'s wallet key` : `NOT ${owner}'s`}, and one that ${chargeKey ? `can only call ${JSON.stringify(chargeKey.access_key.permission)}` : 'IS MISSING'}`,
+    `${WRITER}: ${writerKeys.length} keys: ${ownerWrites ? `${owner}'s wallet key` : `NOT ${owner}'s`}, and one that ${writeKey ? `can only call ${JSON.stringify(writeKey.access_key.permission)}` : 'IS MISSING'}`,
     `${FUNDER}: ${(await balanceOf(FUNDER)) === null ? `deleted, what was left back to ${owner}` : 'STILL THERE'}`,
+    `For the shared map: PETAL_MAP_NETWORK=${network} PETAL_MAP_RECEIVER=${owner} PETAL_WRITER_ACCOUNT=${WRITER} PETAL_WRITER_KEY_FILE=${writerOut}`,
     `For the server: PETAL_CREDIT_CONTRACT=${CREDIT} PETAL_CHARGER_KEY_FILE=${keyOut} (the container's, in ${join(SECRETS, `credit.${network}.env`)})`,
   ].join('\n');
 }
