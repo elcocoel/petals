@@ -129,6 +129,8 @@ const n3 = (x: number): string => `${Math.round(x * 1000) / 1000}`;
  */
 export function roundedPath(q: readonly Point[], r: number | readonly number[]): string {
   const n = q.length;
+  // no corners, no shape: an empty path, never a lone 'Z'
+  if (n === 0) return '';
   let d = '';
   for (let j = 0; j < n; j++) {
     const c = q[j] as Point;
