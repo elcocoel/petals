@@ -289,7 +289,7 @@
       ],
       "status": "ready",
       "file": "connecting/connect-codex.md",
-      "sha256": "70acb6700264ba7218f2bb75a29701b6a795f8d0ad1227f199e11f7b0f5e7295"
+      "sha256": "06f5a0a7a3f2b4e94bcc904ac259b6401a1afb25696316135d915c3e8448f5df"
     },
     {
       "id": "connect-hermes",
@@ -744,7 +744,7 @@
       ],
       "status": "ready",
       "file": "connecting/setup.md",
-      "sha256": "220799a8e9b6931d0ba222881689a50f6884bc47026e11eeb951e11225231603"
+      "sha256": "03f9e62c3cd51235c05174b4a8663f9a3fdc61956a2b0e8b9bfc04a1948daa27"
     },
     {
       "id": "stake-behind-the-network",
