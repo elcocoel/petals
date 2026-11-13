@@ -55,6 +55,7 @@ import { MapLayers } from '../components/MapLayers.tsx';
 import { MapList } from '../components/MapList.tsx';
 import { MapProposal } from '../components/MapProposal.tsx';
 import { MapSearch } from '../components/MapSearch.tsx';
+import { MapStrata } from '../components/MapStrata.tsx';
 import { Markdown } from '../components/Markdown.tsx';
 import { NextSteps } from '../components/NextSteps.tsx';
 import { Oops } from '../components/Oops.tsx';
@@ -3550,6 +3551,116 @@ export const registry: LabEntry[] = [
                 ],
                 worth: { text: '$1,997.16 at $3.74 per NEAR', source: '1Click, 11 Nov 2026' },
               }}
+            />
+          </div>
+        ),
+      },
+    ],
+  },
+  {
+    id: 'MapStrata',
+    group: 'The flower',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/MapStrata.tsx',
+    states: [
+      {
+        name: 'a map made by three layers from two authors, all on, the newest just added in your name',
+        render: () => (
+          <div className="w-tile-width">
+            <MapStrata
+              layers={[
+                {
+                  id: 'a1',
+                  title: 'RaidGuild members and their shares',
+                  kind: 'a reading',
+                  standing: 'verified' as const,
+                  covers: 'Gnosis block 37,912,004 · 9 Nov 2026',
+                  authors: [{ name: "Petals' mapping", signed: false, published: '9 Nov' }],
+                  read: '9 Nov 2026',
+                  builtOn: 0,
+                },
+                {
+                  id: 'a2',
+                  title: 'RaidGuild proposals and how each member voted',
+                  kind: 'proposals',
+                  standing: 'verified' as const,
+                  covers: '3 Feb 2021 to 11 Nov 2026',
+                  authors: [{ name: "Petals' mapping", signed: false, published: '11 Nov' }],
+                  read: '11 Nov 2026',
+                  builtOn: 0,
+                },
+                {
+                  id: 'a3',
+                  title: 'Names for 14 members, from the DAO’s own records',
+                  kind: 'names',
+                  standing: 'inferred' as const,
+                  covers: 'as of 12 Nov 2026',
+                  authors: [
+                    { name: 'elco.near', signed: true, published: '12 Nov' },
+                    { name: 'raid.near', signed: true, published: '13 Nov' },
+                  ],
+                  read: '12 Nov 2026',
+                  builtOn: 1,
+                },
+              ]}
+              on={new Set(['a1', 'a2', 'a3'])}
+              onToggle={() => undefined}
+              upTo={3}
+              onUpTo={() => undefined}
+              replaying={false}
+              onReplay={() => undefined}
+              joined={new Set(['a3'])}
+            />
+          </div>
+        ),
+      },
+      {
+        name: 'the map up to its first layer, the proposals switched off',
+        render: () => (
+          <div className="w-tile-width">
+            <MapStrata
+              layers={[
+                {
+                  id: 'a1',
+                  title: 'RaidGuild members and their shares',
+                  kind: 'a reading',
+                  standing: 'verified' as const,
+                  covers: 'Gnosis block 37,912,004 · 9 Nov 2026',
+                  authors: [{ name: "Petals' mapping", signed: false, published: '9 Nov' }],
+                  read: '9 Nov 2026',
+                  builtOn: 0,
+                },
+                {
+                  id: 'a2',
+                  title: 'RaidGuild proposals and how each member voted',
+                  kind: 'proposals',
+                  standing: 'verified' as const,
+                  covers: '3 Feb 2021 to 11 Nov 2026',
+                  authors: [{ name: "Petals' mapping", signed: false, published: '11 Nov' }],
+                  read: '11 Nov 2026',
+                  builtOn: 0,
+                },
+                {
+                  id: 'a3',
+                  title: 'Names for 14 members, from the DAO’s own records',
+                  kind: 'names',
+                  standing: 'inferred' as const,
+                  covers: 'as of 12 Nov 2026',
+                  authors: [
+                    { name: 'elco.near', signed: true, published: '12 Nov' },
+                    { name: 'raid.near', signed: true, published: '13 Nov' },
+                  ],
+                  read: '12 Nov 2026',
+                  builtOn: 1,
+                },
+              ]}
+              on={new Set(['a1', 'a3'])}
+              onToggle={() => undefined}
+              upTo={1}
+              onUpTo={() => undefined}
+              replaying={false}
+              onReplay={() => undefined}
             />
           </div>
         ),
