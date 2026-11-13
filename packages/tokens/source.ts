@@ -146,9 +146,9 @@ export const sizes = {
   'Figure height': 288,
   'Icon size': 18,
   /**
-   * The app's sizes, like a professional tool's side panel: the landing's sizes read as a page, and a tool
-   * needs to show forty minutes of work at a glance. One row of the side panel, the panel open, and an icon
-   * beside UI text.
+   * The app's sizes (Elco, 10 Nov: "like the side of a professional software like Orca"): the landing's
+   * sizes read as a page, and a tool needs to show forty minutes of work at a glance. One row of the side
+   * panel, the panel open, and an icon beside UI text.
    */
   'Row height': 32,
   'Sidebar width': 264,
@@ -270,7 +270,7 @@ export const chart = {
   'ink-2': '#52514e',
   hair: '#e1e0d9',
   unknown: '#c9c7bf',
-  // "Everyone else" a mid grey, clearly apart from "unknown" in a key.
+  // "Everyone else" a mid grey, clearly apart from "unknown" in a key (META, 10 Nov, fix 4).
   tail: '#8a8880',
   'k-pool': '#2a78d6',
   'k-exchange': '#eb6834',
@@ -281,7 +281,7 @@ export const chart = {
   'k-org': '#4a3aa7',
   'k-delegator': '#e34948',
   'k-group': '#a0673a',
-  // The art direction's keys (core render/wedge/keys.ts), common to rare, and grey for context.
+  // The art direction's keys (#76; core render/wedge/keys.ts), common to rare, and grey for context.
   'key-mint': '#8bc9bd',
   'key-blue': '#96d4e3',
   'key-coral': '#eb9c94',
