@@ -152,8 +152,9 @@ const Intro = memo(function Intro() {
       <div className={`order-4 mt-column-gap ${GUTTER}`}>
         {/* Connect the one dark button, first; beside it, lighter, the setup prompt to copy and a smaller one
             with a star for GitHub */}
-        <div className="flex flex-wrap items-center gap-space-8">
-          <ConnectButton label={hero.ask.action} />
+        {/* one row on a wide screen, running past the words' column if it must rather than dropping the star */}
+        <div className="flex flex-wrap items-center gap-space-8 lg:flex-nowrap lg:*:shrink-0">
+          <ConnectButton label={hero.ask.action} align="start" />
           <CopyPrompt
             prompt={setup.prompt(publicOrigin)}
             originIn={publicOrigin}
@@ -417,16 +418,14 @@ export function HeroStoryView({
             {/* Under the words, the world fades into the page, so what runs beneath them never fights them. */}
             <div className="pointer-events-none absolute inset-y-0 left-0 hidden w-1/2 bg-linear-to-r from-surface from-35% to-transparent lg:block" />
           </div>
-          {/* The way on to the rest of the page, at the stage's foot, nodding with the beat: a small arrow
-              pointing down, so people go on to read the rest of the site. */}
+          {/* The way on to the rest of the page, at the stage's foot, nodding with the beat: a lighter button
+              that names the next section beside its arrow, so the hero never reads as the whole site. */}
           <div className="absolute inset-x-0 bottom-0 z-10 hidden justify-center lg:flex">
             <div style={{ translate: `0 ${n2(4 * pulse(t))}px` }}>
-              <IconButton
-                icon="down"
-                label={landingCopy.nav.howItWorks}
-                href={siteLinks.howItWorks}
-                tip="right"
-              />
+              <Button variant="secondary" href={siteLinks.howItWorks}>
+                {landingCopy.nav.howItWorks}
+                <Icon name="down" />
+              </Button>
             </div>
           </div>
           {/* In front: the call and the response, on either side of the flower. */}

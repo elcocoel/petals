@@ -1,5 +1,5 @@
 // Petal Mania, the band of ways to take part (Figma's Join the community, 66:2346): a short hint about a
-// leaderboard, then four cards in one line, ordered from the lightest way in to the most involved. Each card is
+// leaderboard, then four cards in one line, in the order a person takes part (map, join, develop, the drop). Each card is
 // itself the link, a plate you press (PlateLink: it rises and tilts), with no text beyond its name; a card whose
 // address isn't set yet shows without a link. The section's name is in the logo's face (SectionName).
 import { landingCopy } from '../../lib/landing-copy.ts';
@@ -11,11 +11,12 @@ import { SectionName } from '../ui/SectionName.tsx';
 
 const copy = landingCopy.backIt;
 
-/** Where a card goes: the site's own page, the repo, or a social whose address may not be in yet. */
+/** Where a card goes: the site's own page, the repo, or an address that may not be in yet. */
 function hrefOf(link: string): string | undefined {
   if (link === 'lobby') return siteLinks.lobby;
   if (link === 'github') return siteLinks.github;
   if (link === 'telegram') return siteLinks.socials.telegram || undefined;
+  if (link === 'merch') return siteLinks.merch || undefined;
   return undefined;
 }
 

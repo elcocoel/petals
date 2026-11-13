@@ -36,6 +36,7 @@ describe('the landing page', () => {
       [siteLinks.gallery]: '(site)/gallery/page.tsx',
       [siteLinks.map]: '(canvas)/map/page.tsx',
       [siteLinks.docs]: '(site)/docs/[[...slug]]/page.tsx',
+      [siteLinks.brandKit]: 'lab/page.tsx',
       [siteLinks.liveShape]: '(canvas)/f/[id]/page.tsx',
     };
     for (const path of Object.values(routes)) expect(existsSync(join(app, path)), path).toBe(true);
