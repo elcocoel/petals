@@ -1,24 +1,22 @@
-// The Profile card (the profile kept in Petals): the profile Petals keeps, or the account's NEAR Social profile
-// before it keeps one, with its bio and the links it declares, each with a badge that says only that, and a
-// line saying where it is and who sees it; or, with none anywhere, what goes there and the one thing to do; or
-// that it's still being read, or that it couldn't be read. NEAR Social's words are the account's own, shown as
-// plain text; the links are never followed, checked or trusted. Edit and Create show only when there's
-// something to open them.
+// The profile under the lobby's head (the profile kept in Petals), as a section's paragraph and its links: the
+// profile Petals keeps, or the account's NEAR Social profile before it keeps one, with its bio in the lead's
+// size and the links it declares, each with a badge that says only that, and a line saying where it is and who
+// sees it; or, with none anywhere, what goes there. Then its one action, as the landing's: Create your profile,
+// or Edit. Or that it's still being read, or that it couldn't be read. NEAR Social's words are the account's
+// own, shown as plain text; the links are never followed, checked or trusted. Edit and Create show only when
+// there's something to open them.
 // Props only: viewmodels/useProfile.ts reads it. Words from lib/lobby-view.ts.
 import { editorWords, profileWords, type SocialState } from '../../lib/lobby-view.ts';
 import { serviceName } from '../../lib/near-social.ts';
-import type { PowerQuoteItem } from '../../lib/power-quotes.ts';
-import { PowerQuote } from '../PowerQuote.tsx';
+import { ActionRow } from '../ui/ActionRow.tsx';
 import { Badge } from '../ui/Badge.tsx';
 import { Button } from '../ui/Button.tsx';
-import { Card } from '../ui/Card.tsx';
 
 export function Profile({
   social,
   onEdit,
   saved,
   published,
-  quote,
 }: {
   social: SocialState;
   /** Opens the editor: Edit with a profile, Create without one. */
@@ -27,31 +25,24 @@ export function Profile({
   saved?: boolean;
   /** The person just published it and NEAR Social took it. */
   published?: boolean;
-  /** An illustrated power quote for when there's no profile yet. */
-  quote?: PowerQuoteItem | null;
 }) {
   const profile = social.kind === 'profile' ? social.profile : null;
   return (
-    <Card
-      title={profileWords.title}
-      labelledBy="lobby-profile"
-      action={
-        profile && onEdit ? (
-          <Button variant="secondary" onClick={onEdit}>
-            {profileWords.edit}
-          </Button>
-        ) : undefined
-      }
-    >
+    <div className="flex flex-col gap-block-gap">
       {profile?.about && (
-        <p className="my-0 type-body whitespace-pre-wrap wrap-anywhere">{profile.about}</p>
+        <p className="my-0 max-w-content-width type-lead whitespace-pre-wrap wrap-anywhere">
+          {profile.about}
+        </p>
+      )}
+      {social.kind === 'none' && (
+        <p className="my-0 max-w-content-width type-lead">{profileWords.none}</p>
       )}
       {profile && profile.links.length > 0 && (
         <ul className="m-0 flex list-none flex-col p-0">
           {profile.links.map((l) => (
             <li
               key={l.service}
-              className="flex items-center gap-text-gap border-t border-hairline py-text-gap"
+              className="flex items-center gap-text-gap border-t border-hairline py-text-gap last:border-b"
             >
               <span className="w-1/5 shrink-0 type-caption text-muted wrap-anywhere">
                 {serviceName(l.service)}
@@ -63,7 +54,7 @@ export function Profile({
         </ul>
       )}
       {social.kind === 'profile' && (
-        <p className="my-0 type-caption text-muted">
+        <p className="my-0 max-w-content-width type-caption text-muted">
           {social.source === 'petals' ? profileWords.notePetals : profileWords.noteSocial}
         </p>
       )}
@@ -79,29 +70,25 @@ export function Profile({
           <span className="type-caption">{editorWords.publishedLine}</span>
         </p>
       )}
-      {social.kind === 'none' && (
-        <>
-          <p className="my-0 type-body">{profileWords.none}</p>
-          {onEdit && (
-            <div>
-              <Button variant="primary" onClick={onEdit}>
-                {profileWords.create}
-              </Button>
-            </div>
-          )}
-          {quote && (
-            <div className="flex justify-center">
-              <PowerQuote quote={quote} />
-            </div>
-          )}
-        </>
-      )}
       {social.kind === 'reading' && (
         <p className="my-0 type-caption text-muted">{profileWords.reading}</p>
       )}
       {social.kind === 'unread' && (
         <p className="my-0 type-caption text-muted">{profileWords.unread}</p>
       )}
-    </Card>
+      {onEdit && (social.kind === 'profile' || social.kind === 'none') && (
+        <ActionRow>
+          {profile ? (
+            <Button variant="secondary" onClick={onEdit}>
+              {editorWords.edit}
+            </Button>
+          ) : (
+            <Button variant="primary" arrow onClick={onEdit}>
+              {profileWords.create}
+            </Button>
+          )}
+        </ActionRow>
+      )}
+    </div>
   );
 }

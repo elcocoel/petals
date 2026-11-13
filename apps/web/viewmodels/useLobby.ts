@@ -3,9 +3,11 @@
 // same; their conversations, the panel's own list; and, read here when the page opens, the wallets they proved
 // by signing in (GET /api/v1/me) and the claims they and their agents keep about accounts (GET
 // /api/v1/me/annotations), every model call charged to them (usage/v1, GET /api/v1/me/usage), and their tip
-// (useTip). Disconnect signs out (the session's own). Add a wallet signs Petals' challenge with another
-// wallet, as signing in does, and binds it to this person (POST /api/v1/me/wallets); the session stays as it
-// is. There is no timer.
+// (useTip). Disconnect signs out (the session's own), from the account menu. Add funds is the pay row's own
+// flow (usePay, useTopUp), open under the balance, and /lobby#add arrives with it open. Add a wallet signs
+// Petals' challenge with another wallet, as signing in does, and binds it to this person (POST
+// /api/v1/me/wallets); the session stays as it is. One illustrated quote per visit, for its own band. There
+// is no timer.
 
 import type { Credit } from '@petal/core';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -33,10 +35,17 @@ import {
 import { hasSolanaWallet, NO_SOLANA_WALLET } from '../lib/solana-wallet.ts';
 import { tipLine } from '../lib/tip.ts';
 import { connectWallet, SIGN_IN_NETWORK, signPrepared } from '../lib/wallet.ts';
+import { usePay } from './usePay.ts';
 import { usePowerQuote } from './usePowerQuote.ts';
 import { evmProof, solanaProof } from './useSession.ts';
 import { useTip } from './useTip.ts';
+import { useTopUp } from './useTopUp.ts';
 import { useWorkPanel } from './useWorkPanel.ts';
+
+/** The pay row's key while Add funds is open: the pay flow's one home is the Balance band. */
+const ADDING = 'lobby-add';
+/** The address that opens the lobby with Add funds unfolded: where /make sends a person who needs credit. */
+const ADD_HASH = '#add';
 
 const why = (e: unknown) =>
   e instanceof Error && e.message ? e.message : profilePageWords.notAdded;
@@ -80,14 +89,33 @@ export function useLobby() {
     };
   }, []);
 
-  // one illustrated power quote per empty widget, each its own
-  const quotes = {
-    profile: usePowerQuote(0),
-    claims: usePowerQuote(1),
-    usage: usePowerQuote(2),
-    conversations: usePowerQuote(3),
-    contribution: usePowerQuote(4),
-  };
+  // the visit's one illustrated quote, in a band of its own
+  const quote = usePowerQuote(0);
+
+  // the account menu, top right
+  const [menuOpen, setMenuOpen] = useState(false);
+  const toggleMenu = useCallback(() => setMenuOpen((now) => !now), []);
+  const closeMenu = useCallback(() => setMenuOpen(false), []);
+
+  // Add funds: the pay row's own flow, unfolded under the balance; /lobby#add arrives with it open, scrolled to
+  // the Balance band
+  const [addOpen, setAddOpen] = useState(false);
+  useEffect(() => {
+    const arrive = () => {
+      if (window.location.hash !== ADD_HASH) return;
+      setAddOpen(true);
+      requestAnimationFrame(() => document.getElementById('balance')?.scrollIntoView());
+    };
+    arrive();
+    window.addEventListener('hashchange', arrive);
+    return () => window.removeEventListener('hashchange', arrive);
+  }, []);
+  const toggleAdd = useCallback(() => setAddOpen((now) => !now), []);
+  const asking = addOpen ? ADDING : null;
+  const paid = funds.reread;
+  const pay = usePay(funds.where ?? null, asking, paid);
+  // or any other token, from any chain, through NEAR Intents, beside it in the same row
+  const topUp = useTopUp(asking, paid, pay);
   const nearUsd = funds.where?.near_usd ?? null;
   const usageShown = useMemo(
     () => (typeof usage === 'string' ? usage : usageView(usage.calls, usage.spent, nearUsd)),
@@ -168,7 +196,22 @@ export function useLobby() {
     claims,
     conversations: bus.rows,
     contribution: typeof credit === 'string' ? credit : contributionView(credit),
-    quotes,
+    quote,
+    menu: { open: menuOpen, toggle: toggleMenu, close: closeMenu },
+    add: {
+      open: addOpen,
+      toggle: toggleAdd,
+      row: {
+        phase: pay.phase,
+        added: pay.added,
+        onPay: pay.pay,
+        topUp,
+        label: pay.label,
+        amount: pay.amount,
+        failedWords: pay.failedWords,
+        canPay: pay.canPay,
+      },
+    },
     tip: {
       percent: tipped.percent,
       scale: tipped.scale,

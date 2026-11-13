@@ -110,6 +110,7 @@ import { Transcript } from '../components/ui/Transcript.tsx';
 import { Wordmark } from '../components/ui/Wordmark.tsx';
 import { ViewLegend } from '../components/ViewLegend.tsx';
 import { WalletFacts } from '../components/WalletFacts.tsx';
+import { AccountMenu } from '../components/workspace/AccountMenu.tsx';
 import { Claims } from '../components/workspace/Claims.tsx';
 import { Contribution } from '../components/workspace/Contribution.tsx';
 import { Conversations } from '../components/workspace/Conversations.tsx';
@@ -120,8 +121,11 @@ import { NotSignedIn } from '../components/workspace/NotSignedIn.tsx';
 import { Profile } from '../components/workspace/Profile.tsx';
 import { ProfileEditor } from '../components/workspace/ProfileEditor.tsx';
 import { ProfileHead } from '../components/workspace/ProfileHead.tsx';
+import { Published } from '../components/workspace/Published.tsx';
+import { QuoteBand } from '../components/workspace/QuoteBand.tsx';
 import { ReadingKey } from '../components/workspace/ReadingKey.tsx';
 import { TipControl } from '../components/workspace/TipControl.tsx';
+import { Usage } from '../components/workspace/Usage.tsx';
 import { DimensionChoices } from '../components/workspace/ViewControls.tsx';
 import { Wallets } from '../components/workspace/Wallets.tsx';
 import { FlowerPanel } from '../flower/FlowerPanel.tsx';
@@ -2792,7 +2796,7 @@ export const registry: LabEntry[] = [
     source: 'apps/web/components/workspace/Funds.tsx',
     states: [
       {
-        name: 'with its usage, call by call',
+        name: 'Add funds, open',
         render: () => (
           <Funds
             balance={{ usd: '1.52', near: '0.42' }}
@@ -2800,31 +2804,30 @@ export const registry: LabEntry[] = [
             phase="ready"
             withdrew={null}
             onWithdraw={() => {}}
-            usage={usageView(
-              [
-                {
-                  call: 'a',
-                  completion: 'a',
-                  at: '2026-11-11T18:00:00Z',
-                  model: 'deepseek-ai/DeepSeek-V4.1-Flash-1017',
-                  tokens: { in: 12034, cached: 0, out: 812 },
-                  charged_usd: 0.0031,
-                  reconciled_at: '2026-11-11T18:05:00Z',
-                },
-                {
-                  call: 'b',
-                  completion: 'b',
-                  at: '2026-11-11T17:40:00Z',
-                  model: 'zai-org/GLM-4.6',
-                  tokens: { in: 8001, cached: 2000, out: 1203 },
-                  charged_usd: 0.012,
-                  reconciled_at: null,
-                },
-              ],
-              0.0151,
-              3.6,
-              new Date('2026-11-11T20:00:00Z'),
-            )}
+            adding
+            onAdd={() => {}}
+            add={
+              <PayRow
+                first
+                phase="ready"
+                added={null}
+                onPay={() => {}}
+                label="Add $1.00 (0.28 NEAR)"
+              />
+            }
+          />
+        ),
+      },
+      {
+        name: 'Add funds beside Withdraw',
+        render: () => (
+          <Funds
+            balance={{ usd: '3.04', near: '0.84' }}
+            held="840000000000000000000000"
+            phase="ready"
+            withdrew={null}
+            onWithdraw={() => {}}
+            onAdd={() => {}}
           />
         ),
       },
@@ -2904,6 +2907,90 @@ export const registry: LabEntry[] = [
             withdrew={null}
             onWithdraw={() => {}}
           />
+        ),
+      },
+    ],
+  },
+  {
+    id: 'Usage',
+    group: 'The workspace',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/workspace/Usage.tsx',
+    states: [
+      {
+        name: 'call by call',
+        render: () => (
+          <Usage
+            usage={usageView(
+              [
+                {
+                  call: 'a',
+                  completion: 'a',
+                  at: '2026-11-11T18:00:00Z',
+                  model: 'deepseek-ai/DeepSeek-V4.1-Flash-1017',
+                  tokens: { in: 12034, cached: 0, out: 812 },
+                  charged_usd: 0.0031,
+                  reconciled_at: '2026-11-11T18:05:00Z',
+                },
+                {
+                  call: 'b',
+                  completion: 'b',
+                  at: '2026-11-11T17:40:00Z',
+                  model: 'zai-org/GLM-4.6',
+                  tokens: { in: 8001, cached: 2000, out: 1203 },
+                  charged_usd: 0.012,
+                  reconciled_at: null,
+                },
+              ],
+              0.0151,
+              3.6,
+              new Date('2026-11-11T20:00:00Z'),
+            )}
+          />
+        ),
+      },
+      { name: 'none yet', render: () => <Usage usage={usageView([], 0, 3.6)} /> },
+      { name: 'still reading', render: () => <Usage usage="reading" /> },
+    ],
+  },
+  {
+    id: 'AccountMenu',
+    group: 'The workspace',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/workspace/AccountMenu.tsx',
+    states: [
+      {
+        name: 'closed',
+        render: () => (
+          <AccountMenu
+            name="0xd50e…7b6b"
+            full="0xd50ef448246cfaac93b37733b6fbe27aa1707b6b"
+            avatar={null}
+            open={false}
+            onToggle={() => {}}
+            onClose={() => {}}
+            onEdit={() => {}}
+            onLeave={() => {}}
+          />
+        ),
+      },
+      {
+        name: 'open',
+        render: () => (
+          <div className="flex min-h-figure-height justify-end">
+            <AccountMenu
+              name="A name"
+              full="a-name.near"
+              avatar={null}
+              open
+              onToggle={() => {}}
+              onClose={() => {}}
+              onEdit={() => {}}
+              onLeave={() => {}}
+            />
+          </div>
         ),
       },
     ],
@@ -2990,6 +3077,43 @@ export const registry: LabEntry[] = [
       },
       { name: 'still reading', render: () => <Contribution contribution="reading" /> },
     ],
+  },
+  {
+    id: 'Published',
+    group: 'The workspace',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/workspace/Published.tsx',
+    states: [
+      {
+        name: 'what they published',
+        render: () => <Published contribution={contributionView(LAB_CREDIT)} />,
+      },
+      {
+        name: 'nothing yet',
+        render: () => (
+          <Published
+            contribution={contributionView({
+              ...LAB_CREDIT,
+              layers: [],
+              totals: { layers: 0, first: 0, confirmed: 0, built_on: 0 },
+            })}
+          />
+        ),
+      },
+      { name: 'still reading', render: () => <Published contribution="reading" /> },
+    ],
+  },
+  {
+    id: 'QuoteBand',
+    group: 'The workspace',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/workspace/QuoteBand.tsx',
+    states: POWER_QUOTES.slice(0, 2).map((q) => ({
+      name: q.id,
+      render: () => <QuoteBand quote={q} />,
+    })),
   },
   {
     id: 'Claims',
