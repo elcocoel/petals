@@ -35,3 +35,5 @@ Petals reads these with a few shapes, and a recipe names which shape reads what:
 | members from events, lines from events, view calls, an off-chain list | today these are the Moloch v1, ERC20Votes, House of Stake and Snapshot readers; they become shapes as recipes need them |
 
 `get_snapshot` with a recipe's id reads a system it knows (`moloch-v3` with `dao` and `chain`). One reading is one layer. To show two things at once, such as shares as size and proposals written as height, read each, keep any you gathered yourself with `add_layer`, join them with `compose_view`, and draw with `propose_spec` and `height: m:<measure>`.
+
+A measure nobody holds draws nothing: a DAO whose members never voted has no petals by votes cast. `describe_snapshot` and `compute_figures` show it before you draw, and `render_flower` says `petals_drawn` and, with none, `nothing_drawn` and the measures someone holds. Say plainly that nobody holds it, and draw by a measure they do hold, such as role membership. Never describe petals the flower doesn't have.
