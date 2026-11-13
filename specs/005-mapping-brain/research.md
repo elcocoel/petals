@@ -1,23 +1,23 @@
 # Research behind the mapping-brain proposal
 
-SYSTEMS, 9 Nov. These are the facts `spec.md` rests on, with paths and sources, so RESEARCH can check them independently. Paths are relative to `build/` unless they start with `~` or `/`. The first draft of `spec.md` is in git (`0065189`); its routes, tool set and doors are kept at the end of this file.
+9 Nov. These are the facts `spec.md` rests on, with paths and sources, so they can be checked independently. Paths are relative to `build/` unless they start with `~` or `/`. The first draft of `spec.md` is in git (`0065189`); its routes, tool set and doors are kept at the end of this file.
 
-## Elco's live session, 9 Nov: RaidGuild (Moloch v3, Gnosis)
+## A live session, 9 Nov: RaidGuild (Moloch v3, Gnosis)
 
-From `~/.claude/projects/-Users-elco-Desktop/aff77786-bf63-45f6-bf89-19c524df4274.jsonl`: Claude Code, on the live site, with the terminal file.
+From a Claude Code session's transcript, on the live site, with the terminal file.
 
 - **Setup:** the agent fetched `skill.md` and the file and ran `petal.mjs` as the skill says. It then ran 125 shell commands in the whole session, many of them searches inside the 5.8 MB file:
   - `grep 'logs: obj'` to learn `read_chain`'s log arguments;
   - `grep 'm:<'` to learn whether a flower can take a new measure;
   - `grep POSTED_SNAPSHOTS_PER_DAY` to learn how posting works.
-- **The DAO:** `look_up "RaidGuild"` found two names in DAO lists, and no stored read. There's no Moloch v3 reader, so the agent drew the shares token with `erc20-holders` (158 holders). Elco said there's no delegation in RaidGuild, and it was redrawn.
-- **Proposals per wallet** (Elco: "use a little bit of basic osint"):
+- **The DAO:** `look_up "RaidGuild"` found two names in DAO lists, and no stored read. There's no Moloch v3 reader, so the agent drew the shares token with `erc20-holders` (158 holders). The person pointed out there's no delegation in RaidGuild, and it was redrawn.
+- **Proposals per wallet** (asked for as basic OSINT):
   - `read_chain --logs` for `SubmitProposal(uint256,bytes32,uint256,bytes,uint256,uint256,bool,uint256,string)` on the DAO at `0xf02fd4286917270cb94fbc13a0f4e1ed76f7e986`, paged;
   - then a script of the agent's own reading each submission's transaction sender, 246 of them;
   - then the count per holder, posted as a note.
 - **The refusal:** "show it on the petal". `render` with height `m:proposals` answered `bad_input`: "The snapshot has no measure \"proposals\". Measures in this snapshot: token_balance." The agent's recap: "Petal can't put proposal counts on the flower: its snapshot of RaidGuild holds only shares."
 
-## The harness brain (`~/Desktop/Saint Elmo Systems/backend/cloud/apps/harness/harness-brain`)
+## An earlier project's harness brain
 
 It's 101 files, about 9,000 lines, read on 9 Nov.
 
@@ -54,7 +54,7 @@ It's 101 files, about 9,000 lines, read on 9 Nov.
 
 ## The harness brain's history: how it was stored and delivered, and why it moved
 
-This was read on 9 Nov, from `harness-brain/HANDOFF-*.md`, `BRAIN-AUDIT-CRITICAL-2026-04-07T2329.md`, `docs/product/` and the Saint Elmo monorepo's history (`github.com/elcocoel/saint-elmo-systems`).
+This was read on 9 Nov, from the harness brain's handoff and audit notes, its product docs and its repository's history.
 
 ### Timeline
 
@@ -145,8 +145,8 @@ The readers are `packages/inputs/src/modules/`, registered in `packages/inputs/s
   - **Run:** `curl … -o ~/.petals/petal.mjs`, then `node ~/.petals/petal.mjs start --client … --question …` (`hosted.ts:25-26, 72`). MCP over stdio is `node petal.mjs mcp`.
   - **Size:** 5,811,957 bytes on `con/fast`, down from 7.9 MB.
 - **`/connect`:** `apps/web/app/(site)/connect/page.tsx`, with its doors in `apps/web/lib/doors.ts`. It offers a prompt for Claude Code, Codex and Hermes, and marks the Claude app and ChatGPT as unable to run the tools.
-- **The tab spike:** `research/spikes/tab-zero/RESULTS.md` (9 Nov), from an untracked file in `build.fe-tab/packages/tools/zz-tab/entry.ts`. The branch `m-face/fe-tab` has no commits of its own.
-- **Setup:** Elco said "three minutes" on 9 Nov (the `106c049` message, and `apps/cli/src/main.ts:358`). After `con/fast`, the page opened "15.5 s after the paste", measured in Claude Code with Sonnet against a local server. META's figure of about 160 s isn't written anywhere we found.
+- **The tab spike** (9 Nov) ran from an untracked file; it has no commits in this repository.
+- **Setup:** the target was three minutes (the `106c049` message, and `apps/cli/src/main.ts:358`). After `con/fast`, the page opened "15.5 s after the paste", measured in Claude Code with Sonnet against a local server.
 
 ## Delivery: the outside world, as of 9 Nov 2026
 
@@ -187,12 +187,12 @@ Sources:
 
 **To check against agentskills.io's own client list.**
 
-## Reading what an account holds or did, keyless (9 Nov, from `design/wallet-discovery.md`)
+## Reading what an account holds or did, keyless (9 Nov)
 
 | Source | What it gave | Result |
 |---|---|---|
 | FastNEAR `api.fastnear.com/v1/account/<id>/full` | `root.near`'s tokens, staking pools and NFTs, in one call | Worked: 209 tokens, 2 pools, 103 NFTs |
-| Ethplorer `getAddressInfo`, `apiKey=freekey` | An Ethereum address's tokens, with holder counts | Worked: up to 100 tokens. Spam airdrops come in too |
+| Ethplorer `getAddressInfo`, `apiKey=freekey` | An Ethereum address's tokens, with holder counts | Worked: up to 100 tokens. Spam tokens come in too |
 | Snapshot `hub.snapshot.org/graphql` | The votes an address cast | Worked, keyless |
 | Blockscout `/api/v2/addresses/<a>/tokens` | Tokens on EVM chains | Didn't work: Ethereum timed out twice, and Base answered with a Cloudflare challenge |
 

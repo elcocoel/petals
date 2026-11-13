@@ -1,13 +1,13 @@
-// Does meaning beat words? (#105; META, 11 Nov: "keep the model only where it beats words"). Questions with known
-// answers, over the brain's headers and the map (its cards and their proposals), ranked five ways:
+// Does meaning beat words? The model is kept only where it beats words. Questions with known answers, over
+// the brain's headers and the map (its cards and their proposals), ranked five ways:
 //   today     what Petals does now: the brain's BM25 routing; the map's every-word match on its cards (searchMap)
 //   words     BM25 over every document, proposals included
 //   meaning   Qwen3-Embedding alone
 //   both      words and meaning fused
 //   reranked  both, then Qwen3-Reranker over the best 30
 // Usage: node scripts/search-eval.ts <folder with maps.json and proposals/*.json, from GET /api/v1/maps and
-//   /api/v1/maps/:id/proposals> [--url http://192.168.65.1:8095] [--only maps|brain] [--show]
-//   [--embedding Qwen3-Embedding-4B] [--reranker Qwen3-Reranker-4B]
+//   /api/v1/maps/:id/proposals> --url <the oMLX server, e.g. http://127.0.0.1:8095> [--only maps|brain]
+//   [--show] [--embedding Qwen3-Embedding-4B] [--reranker Qwen3-Reranker-4B]
 import { appendFileSync, existsSync, mkdirSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parseArgs } from 'node:util';
@@ -37,8 +37,8 @@ const { values, positionals } = parseArgs({
   },
 });
 const folder = positionals[0];
-if (!folder) throw new Error('usage: search-eval.ts <folder> [--url <oMLX>] [--only maps|brain]');
-const model = searchModel(values.url ?? 'http://192.168.65.1:8095', {
+if (!folder || !values.url) throw new Error('usage: search-eval.ts <folder> --url <oMLX> [--only maps|brain]');
+const model = searchModel(values.url, {
   ...(values.embedding ? { embedding: values.embedding } : {}),
   ...(values.reranker ? { reranker: values.reranker } : {}),
 });
