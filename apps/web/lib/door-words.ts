@@ -5,6 +5,8 @@ export const doorWords = {
   connect: 'Connect',
   disconnect: 'Disconnect',
   badSignature: "That signature didn't work. Connect your wallet again.",
+  /** a wallet the person said no in, by its name */
+  declined: (wallet: string) => `${wallet} declined.`,
   nearDidntAnswer: "NEAR didn't answer. Try again.",
 } as const;
 

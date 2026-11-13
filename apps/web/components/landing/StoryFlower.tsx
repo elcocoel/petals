@@ -1,7 +1,7 @@
-// The hero story's flower (HERO ART's V2, Elco 11 Nov; HERO MOTION's choreography): one symbolic flower that
-// changes with the story, not a reading and not the live renderer, so it never goes out of date as the look
-// evolves; closer to the real thing (Elco, 12 Nov): flat petals in the look's keys, straight sides and arc tops
-// with a fine line of one width between them, a wide white centre, no light, shade or glow. In a world the camera
+// The hero story's flower: one symbolic flower that changes with the story, not a reading and not the live
+// renderer, so it never goes out of date as the look evolves; close to the real thing: flat petals in the look's
+// keys, straight sides and arc tops with a fine line of one width between them, a wide white centre, no light,
+// shade or glow. In a world the camera
 // moves through: the far map the story opens and closes on, my community and its two neighbours, each drawn from
 // far as the real far map draws one (lib/hero-map.ts). Per beat (lib/hero-story.ts): the camera dives in from the
 // far map and my community bursts out of its wave; the heights part, and the strongest three keep their colour as
@@ -82,8 +82,8 @@ const poly = (n: number, turn = 0) =>
 const SHAPES = { tri: poly(3), diamond: poly(4), hex: poly(6, Math.PI / 6) };
 
 /**
- * A made-up token's mark where a logo sits (Elco, 12 Nov: "cute simulated imaginary token symbols", never a black
- * dot): a disc in one of the look's keys with a simple glyph in white, drawn at radius `r`.
+ * A made-up token's mark where a logo sits, a friendly imaginary symbol rather than a black dot: a disc in one of
+ * the look's keys with a simple glyph in white, drawn at radius `r`.
  */
 function TokenMark({ token, r }: { token: Token; r: number }) {
   const g = r * 0.48;

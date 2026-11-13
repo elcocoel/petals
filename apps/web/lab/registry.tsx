@@ -50,6 +50,7 @@ import { MapHero } from '../components/landing/MapHero.tsx';
 import { Questions } from '../components/landing/Questions.tsx';
 import { Scene } from '../components/landing/Scene.tsx';
 import { StoryFlower } from '../components/landing/StoryFlower.tsx';
+import { SystemGraph } from '../components/landing/SystemGraph.tsx';
 import { MapClaims } from '../components/MapClaims.tsx';
 import { MapLayers } from '../components/MapLayers.tsx';
 import { MapList } from '../components/MapList.tsx';
@@ -77,6 +78,7 @@ import { Callout } from '../components/ui/Callout.tsx';
 import { Card } from '../components/ui/Card.tsx';
 import { ChooseFile } from '../components/ui/ChooseFile.tsx';
 import { ColourPick } from '../components/ui/ColourPick.tsx';
+import { ConnectButton, ConnectButtonView } from '../components/ui/ConnectButton.tsx';
 import { Drawing } from '../components/ui/Drawing.tsx';
 import { EmptySlot } from '../components/ui/EmptySlot.tsx';
 import { FaqItem } from '../components/ui/FaqItem.tsx';
@@ -127,6 +129,7 @@ import { ReadingKey } from '../components/workspace/ReadingKey.tsx';
 import { TipControl } from '../components/workspace/TipControl.tsx';
 import { Usage } from '../components/workspace/Usage.tsx';
 import { DimensionChoices } from '../components/workspace/ViewControls.tsx';
+import { WalletAsk } from '../components/workspace/WalletAsk.tsx';
 import { Wallets } from '../components/workspace/Wallets.tsx';
 import { FlowerPanel } from '../flower/FlowerPanel.tsx';
 import type { PublishableData } from '../lib/agent-client.ts';
@@ -791,8 +794,8 @@ export const registry: LabEntry[] = [
     figmaName: null,
     figmaNode: null,
     source: 'apps/web/components/landing/HeroStory.tsx',
-    // HERO ART's V2, approved by Elco (11 Nov); with its lab controls at /lab/landing-hero
-    states: [{ name: 'as approved', wide: true, render: () => <HeroStory /> }],
+    // the landing's hero as the page draws it; its lab controls are at /lab/landing-hero
+    states: [{ name: 'on the landing', wide: true, render: () => <HeroStory /> }],
   },
   {
     id: 'StoryFlower',
@@ -898,15 +901,8 @@ export const registry: LabEntry[] = [
       () => <BackIt />,
     ),
     states: [
-      {
-        name: 'as designed',
-        wide: true,
-        figmaName: 'Join the community',
-        figmaNode: '66:2346',
-        render: () => <BackIt />,
-      },
-      // LANDING's lean for the split's empty half (11 Nov), in place at /lab/landing-hero
-      { name: 'columns', wide: true, render: () => <BackIt layout="columns" /> },
+      // Petal Mania: four cards in a line, the cards the links
+      { name: 'Petal Mania', wide: true, render: () => <BackIt /> },
     ],
   },
   section(
@@ -916,6 +912,26 @@ export const registry: LabEntry[] = [
     '66:2316',
     () => <BuildWithUs />,
   ),
+  {
+    id: 'SystemGraph',
+    group: 'Sections',
+    // from the system map, Figma "Systems map" (119:2271)
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/landing/SystemGraph.tsx',
+    // Build it with us's system graph, on the ink band it sits in
+    states: [
+      {
+        name: 'on the ink band',
+        wide: true,
+        render: () => (
+          <Section kind="ink">
+            <SystemGraph />
+          </Section>
+        ),
+      },
+    ],
+  },
   {
     id: 'Footer',
     group: 'Sections',
@@ -988,17 +1004,16 @@ export const registry: LabEntry[] = [
       {
         name: 'a way in, on paper',
         render: () => (
-          <PlateLink href="#platelink" action={landingCopy.backIt.ways[0].action}>
-            <span className="type-title">{landingCopy.backIt.ways[0].title}</span>
-            <span className="type-body">{landingCopy.backIt.ways[0].body}</span>
+          <PlateLink href="#platelink">
+            <span className="type-heading">{landingCopy.backIt.ways[2].title}</span>
           </PlateLink>
         ),
       },
       {
         name: 'a slot with no address yet',
         render: () => (
-          <PlateLink action={landingCopy.backIt.ways[3].action}>
-            <span className="type-title">{landingCopy.backIt.ways[3].title}</span>
+          <PlateLink>
+            <span className="type-heading">{landingCopy.backIt.ways[1].title}</span>
           </PlateLink>
         ),
       },
@@ -1325,7 +1340,7 @@ export const registry: LabEntry[] = [
           <ActionRow gap="tight">
             <Button href="#actionrow">{landingCopy.nav.ask}</Button>
             <Button variant="secondary" href="#actionrow">
-              {landingCopy.builders.actions.docs}
+              {landingCopy.builders.doors[0].title}
             </Button>
           </ActionRow>
         ),
@@ -1455,6 +1470,34 @@ export const registry: LabEntry[] = [
     ],
   },
   {
+    id: 'ConnectButtonView',
+    group: 'Controls',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/ui/ConnectButton.tsx',
+    states: [
+      { name: 'visitor', render: () => <ConnectButtonView label="Connect" account={null} /> },
+      {
+        name: 'connected, named account',
+        render: () => <ConnectButtonView label="Connect" account="alice.near" />,
+      },
+      {
+        name: 'connected, long address',
+        render: () => (
+          <ConnectButtonView label="Connect" account="0x8ba1f109551bD432803012645Ac136ddd64DBA72" />
+        ),
+      },
+    ],
+  },
+  {
+    id: 'ConnectButton',
+    group: 'Controls',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/ui/ConnectButton.tsx',
+    states: [{ name: 'as the page reads it', render: () => <ConnectButton label="Connect" /> }],
+  },
+  {
     id: 'Button',
     group: 'Controls',
     figmaName: 'Petals / Button',
@@ -1497,6 +1540,17 @@ export const registry: LabEntry[] = [
             Support Petals
           </Button>
         ),
+      },
+      {
+        name: 'done',
+        closedIn: 'Actions',
+        render: () => <Button variant="done">Copied</Button>,
+      },
+      {
+        name: 'done, edged',
+        closedIn: 'Actions',
+        ...SECONDARY,
+        render: () => <Button variant="doneEdged">Copied</Button>,
       },
       {
         name: 'square, link',
@@ -2491,6 +2545,37 @@ export const registry: LabEntry[] = [
             onConnectEvm={() => {}}
             onConnectSolana={() => {}}
           />
+        ),
+      },
+    ],
+  },
+  {
+    id: 'WalletAsk',
+    group: 'The conversation',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/workspace/WalletAsk.tsx',
+    states: [
+      {
+        name: 'which wallet',
+        wide: true,
+        render: () => (
+          <WalletAsk
+            pick={[
+              { id: 'a', name: 'MetaMask', icon: null },
+              { id: 'b', name: 'SafePal', icon: null },
+            ]}
+            waitingFor={null}
+            onChoose={() => {}}
+            onStop={() => {}}
+          />
+        ),
+      },
+      {
+        name: 'waiting for one',
+        wide: true,
+        render: () => (
+          <WalletAsk pick={null} waitingFor="SafePal" onChoose={() => {}} onStop={() => {}} />
         ),
       },
     ],
