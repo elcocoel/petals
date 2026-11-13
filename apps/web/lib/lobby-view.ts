@@ -74,6 +74,32 @@ export const profileWords = {
   unread: "Your profile couldn't be read right now.",
 } as const;
 
+/** A person's public profile (/u/<account>), as anyone reads it. */
+export const publicProfileWords = {
+  page: 'Profile',
+  /** The eyebrow's second half: where the profile is. */
+  onSocial: 'On NEAR Social',
+  onPetals: 'On Petals',
+  /** A profile from NEAR Social on another chain's page: it's the same person's. */
+  linked: 'This person’s profile on NEAR Social, under a NEAR account they also hold.',
+  none: 'No public profile yet.',
+  /** From the lobby, to the page anyone sees. */
+  see: 'See your public profile',
+} as const;
+
+/** What GET /api/v1/profiles/:account answers. */
+export interface PublicProfileAnswer {
+  account: string;
+  chain: 'near' | 'eip155' | 'solana';
+  source: 'near-social' | 'petals' | null;
+  profile: {
+    name: string | null;
+    about: string | null;
+    avatar: string | null;
+    links: Record<string, string>;
+  } | null;
+}
+
 /**
  * The profile's editor: it saves into Petals, which costs nothing; Publish is its own
  * button, which puts the profile on NEAR Social, and stays off until it's set up on mainnet, so the line
