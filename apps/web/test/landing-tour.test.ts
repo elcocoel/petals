@@ -33,6 +33,8 @@ test('the section: the map to the window, the whole of it and the button over it
   expect(section).toMatch(/<LandingMap into=\{\{ href: siteLinks\.map, label: copy\.open \}\} \/>/);
   const map = text('components/landing/LandingMap.tsx');
   expect(map).toMatch(/<CoverLink href=\{into\.href\} label=\{into\.label\} \/>/);
-  expect(text('components/ui/CoverLink.tsx')).toMatch(/aria-label=\{label\} tabIndex=\{-1\}/);
+  expect(text('components/ui/CoverLink.tsx')).toMatch(
+    /<span className="sr-only">\{label\}<\/span>/,
+  );
   expect(text('viewmodels/useTour.ts')).toMatch(/prefers-reduced-motion: reduce/);
 });
