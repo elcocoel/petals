@@ -11,6 +11,6 @@ Results read from a chain are deterministic. So the question isn't whose map win
 <!-- card 110: a section only its author writes, kept off the page until it's written: why collective mapping matters, and what credit may come to mean (ownership, rewards). Put it here as "## Why it matters" with its words. -->
 
 - [Layers and versions](/docs/collective-mapping/layers-and-versions): one set of facts from one author at one time, kept by its hash, built on prior work, private first.
-- [Publishing](/docs/collective-mapping/publishing): one press, signed by your wallet, kept in a record nobody rewrites.
+- [Publishing](/docs/collective-mapping/publishing): one press signs a version with your wallet, kept in a record that's only ever added to.
 - [How layers meet](/docs/collective-mapping/how-layers-meet): new data, a new moment, new subjects, or the same slot, and how the map composes them.
-- [Credit](/docs/collective-mapping/credit): who is credited for each fact, in what order, and what credit doesn't say.
+- [Credit](/docs/collective-mapping/credit): who is credited for each fact, points for layers others build on, and what credit doesn't say.
