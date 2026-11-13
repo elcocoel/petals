@@ -64,7 +64,8 @@ export interface HistoryRow {
 
 export const historyWords = {
   title: 'Versions of this map',
-  version: (seq: number) => `Version ${seq.toLocaleString('en-US')}`,
+  /** a version by its place in the record, which every map's publications share */
+  version: (seq: number) => `No. ${seq.toLocaleString('en-US')} in the record`,
   by: (who: string) => `by ${who}`,
   imported: 'imported, unsigned',
   added: 'added',

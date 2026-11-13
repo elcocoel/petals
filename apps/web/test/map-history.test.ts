@@ -2,7 +2,7 @@
 // what each added and dropped named by the map's layers, the version it came after by its place, and the proof
 // kept only for a signed one.
 import { describe, expect, test } from 'vitest';
-import { historyOf, layerWords, type MapRecord } from '../lib/map-history.ts';
+import { historyOf, historyWords, layerWords, type MapRecord } from '../lib/map-history.ts';
 
 const h = (c: string) => c.repeat(64);
 const record: MapRecord = {
@@ -63,5 +63,11 @@ describe("a map's versions", () => {
       public_key: 'ed25519:k',
       signature: 'sig',
     });
+  });
+});
+
+describe("a version's name", () => {
+  test('its place in the record every map shares, not a count of this map', () => {
+    expect(historyWords.version(268)).toBe('No. 268 in the record');
   });
 });
