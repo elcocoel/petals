@@ -162,6 +162,7 @@ const Intro = memo(function Intro() {
             originIn={publicOrigin}
             label={setup.copy}
             copied={setup.copied}
+            next={setup.next}
             variant="secondary"
             bare
           />

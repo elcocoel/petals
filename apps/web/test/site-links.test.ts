@@ -66,7 +66,7 @@ describe('the landing page', () => {
     );
     const scenes = landingCopy.howItWorks.scenes.map((s) => `/landing/how-it-works/${s.id}.webp`);
     // the published shape went with "A reading, summarised" (Elco, 11 Nov: "kill it")
-    const drawings = [...scenes, '/landing/give-to-agent/petals-leading-agents.webp'];
+    const drawings = [...scenes, '/landing/give-to-agent/petals-leading-agents-clear.webp'];
     expect(images).toEqual(drawings);
     for (const drawing of drawings)
       expect(existsSync(join(app, '..', 'public', drawing)), drawing).toBe(true);

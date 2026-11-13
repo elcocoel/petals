@@ -170,10 +170,14 @@ const written = {
    * break is ours. "Click and paste" is Elco's on purpose; keep it.
    */
   giveToAgent: {
-    title: 'Skip the Reading.\nLet your agent set you up',
+    /** The band's one large line. */
+    title: 'Let your agent set you up',
     body: 'Click and paste to any chatbot. It will walk you through setting up a wallet, logging in and topping up—until you’re ready to talk to Petals.',
     copy: 'Copy the Setup Prompt',
-    copied: 'Copied. Paste it into your agent’s chat to get started.',
+    /** The button's word once it has copied, in its place, at its size. */
+    copied: 'Copied',
+    /** What to do next, said by a card by the button as it copies, never inside the button. */
+    next: 'Paste it into your agent’s chat to get started.',
     /** The one setup prompt, CONNECTORS's (lib/agents.ts); the page swaps in the address it's on when copying. */
     prompt: agentWords.setup,
   },

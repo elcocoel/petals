@@ -1494,6 +1494,17 @@ export const registry: LabEntry[] = [
         ),
       },
       {
+        name: 'done',
+        closedIn: 'Actions',
+        render: () => <Button variant="done">Copied</Button>,
+      },
+      {
+        name: 'done, edged',
+        closedIn: 'Actions',
+        ...SECONDARY,
+        render: () => <Button variant="doneEdged">Copied</Button>,
+      },
+      {
         name: 'square, link',
         ...SECONDARY,
         render: () => (
