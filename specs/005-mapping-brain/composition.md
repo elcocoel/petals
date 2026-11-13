@@ -50,8 +50,43 @@ NEAR signs it with NEP-413 (`recipient` this site, a fresh 32-byte `nonce`), as 
 - **Who the author is.** The author is the wallet that signed, never Petals' internal person id. A person with several bound wallets (`me/wallets`) chooses which one signs. Anyone can check the signature against the account.
 - **Petals' own mapping** publishes the same way: an author like any other.
 - **Presses signed before this protocol keep their signatures.** The first 35 RaidGuild names (12 Nov, 22:07 UTC) were signed with NEP-413 by their wallet. They enter the record as that author's publication, with that proof, whose message names the hash of what it signed. They are never folded into the import.
-- **What was loaded before this protocol** enters the record once per map, as an import. That covers the mapping runs' readings, values, proposals, marks, vesting and payouts under `mapping.petals.near`. The import's `author` is `mapping.petals.near` and its `proof` is null, said plainly as "imported, unsigned". It is never presented as signed. When a later read replaces one of those rows (a new value, new proposals, a reading retired), the import run after it appends Petals' next version of that map, its `parent` and `previous` the last: the composed map follows what Petals holds now, and the record keeps what it held before. A map whose rows haven't changed is left.
+- **What was loaded before this protocol** entered the record once per map, as an import (from now on bulk data goes through a press, section 2b). That covers the mapping runs' readings, values, proposals, marks, vesting and payouts under `mapping.petals.near`. The import's `author` is `mapping.petals.near` and its `proof` is null, said plainly as "imported, unsigned". It is never presented as signed. When a later read replaces one of those rows (a new value, new proposals, a reading retired), the import run after it appends Petals' next version of that map, its `parent` and `previous` the last: the composed map follows what Petals holds now, and the record keeps what it held before. A map whose rows haven't changed is left.
 - **Where it lives:** Petals' server keeps the record append-only. Entries are added, never updated or deleted. Anchoring each author's latest publication on NEAR (`data.md`, "Where layers live") is the next step, not built here.
+
+## 2b. One press, many publications (`manifest/v1`; change 2, additive to `publication/v1`)
+
+An author can publish several data units with **one press and one signature**: a press of their own across many maps, or a bulk import. Each unit stays an ordinary `publication/v1`, about one map, with its own layers, `parent`, `previous` and `published_at`. Only how it is signed is new: one signature covers a **manifest** that lists them, and each publication points at it. Nothing else changes: composing, facts and credit read each publication as they read one signed alone.
+
+**The manifest** is a document of its own, kept once in the record by its hash, like a layer:
+
+| Field | What it holds |
+|---|---|
+| `petal` | `manifest/v1` |
+| `author` | the signing account, CAIP-10, the same `author` as every publication it lists |
+| `publications` | the unsigned hash of each publication (its canonical JSON without `proof`, as section 2 names one), in the order they are appended |
+| `published_at` | when the server prepared the press |
+
+**What the wallet signs** is one readable text that names the manifest's hash:
+
+```
+Petals: publish 267 versions in your name.
+Manifest 7c1e…(64 hex)
+```
+
+It is signed as section 2 says: NEP-413 for NEAR, EIP-191 for EVM, ed25519 for Solana.
+
+**Each publication points at it.** Its `proof` is the press's one signature, as section 2 has it, plus `manifest`: the manifest's hash. So a publication signed this way reads `{ standard, public_key?, signature, message, nonce?, recipient?, manifest }`, and one signed alone has no `manifest` field, exactly as before.
+
+**How anyone checks one.** For a publication whose proof names a manifest:
+1. the manifest's canonical JSON hashes to `proof.manifest`;
+2. the manifest's `author` is the publication's `author`, and the publication's unsigned hash is in its `publications`;
+3. the text's last line names that manifest (`Manifest <hash>`), and the signature verifies over the text for that author, as for one publication.
+
+**How the server takes a press.** Prepare names the maps, `{ maps: [...], author }`, and answers the unsigned publications, the manifest, its hash, the text, and for NEAR the recipient and nonce. Publish sends `{ sha256: <the manifest's hash>, proof }`. The server checks the signature once, checks the manifest lists exactly the publications it prepared, then appends the manifest and every publication in one transaction: all of them, or none. Each gets its own `seq`, in the manifest's order. Section 2's rules hold for each one: only public layers and parents, `previous` the author's latest about that map, the record's order and time.
+
+**How credit counts.** As for any publication. Each is credited by its own `seq`, so firsts follow the manifest's order inside the press. A manifest is not a unit of data: it adds no facts and earns nothing. One press over many maps counts exactly as many presses would.
+
+**A bulk import is a press like any other.** Data loaded in bulk (a mapping run's readings, values, proposals, marks, vesting and payouts) enters the record through prepare and publish, under the author who signs it, with no special path. Petals' own base data is published this way by `near:mainnet:petals.near`, in one press. That press signs one version for each map: the next version after that map's imported entry, with `parent` and `previous` set to it. The bare label `mapping.petals.near` on the imported entries and `near:mainnet:petals.near` are one author, Petals'. From then on, the latest version of every map is signed, and the imported entries stay in the record as they are.
 
 ## 3. What a layer says: facts
 
