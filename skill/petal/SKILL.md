@@ -89,8 +89,8 @@ If a call answers that the job was stopped, or handed to another worker, drop it
 **When the person gives you one project's link** instead: call `take_job` with it as `exploration`, do the job and report it the same way, then take the next one. When there's none, tell the person in one line that the page's agent has your report.
 
 <!-- The block between the petal:shared markers is the same text as Petals' own agent's prompt
-     (packages/agent/src/prompt.md). `node skill/build.ts` copies it from there; until then the
-     coordinator syncs the wording at merge. Edit the shared text there, not here. -->
+     (packages/agent/src/prompt.md). `node skill/build.ts` copies it from there, and `--check` says
+     whether the two agree. Edit the shared text there, not here. -->
 <!-- petal:shared:begin -->
 ## Talk first
 

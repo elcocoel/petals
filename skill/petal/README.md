@@ -93,7 +93,7 @@ IronClaw uses the skill over HTTP, so `pnpm api` must run where IronClaw can rea
 
 ## Keeping it current
 
-The rules in `SKILL.md` (the block between the `petal:shared` markers) are the same text as Petals' own agent prompt, `packages/agent/src/prompt.md`. Edit them there. `node skill/build.ts` copies the block into `SKILL.md`, and `node skill/build.ts --check` says whether the two agree. The coordinator syncs the wording at merge. After you pull, copy `SKILL.md` again, unless you symlinked it.
+The rules in `SKILL.md` (the block between the `petal:shared` markers) are the same text as Petals' own agent prompt, `packages/agent/src/prompt.md`. Edit them there. `node skill/build.ts` copies the block into `SKILL.md`, and `node skill/build.ts --check` says whether the two agree. After you pull, copy `SKILL.md` again, unless you symlinked it.
 
 ## Without an agent
 
