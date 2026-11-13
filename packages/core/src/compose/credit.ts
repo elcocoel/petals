@@ -3,8 +3,7 @@
 // for one author, from the record alone, every layer they published, the facts they stated first and those they
 // matched, and who else used each layer. A layer earns one point for each distinct other account that built on it
 // (through `from`, the whole chain back) or reused it (published a version that includes it), and that use's point
-// goes only to the authors who had published the layer before the use was appended: copying earns nothing. Not
-// money, and no token: the record a later split could read. Pure.
+// goes only to the authors who had published the layer before the use was appended: copying earns nothing. Pure.
 import { createAjv, schemaId } from '../schema/ajv.ts';
 import type { Result, ValidationIssue } from '../types/index.ts';
 import type { Entry } from './compose.ts';

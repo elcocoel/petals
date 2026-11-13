@@ -111,7 +111,7 @@ A publication carries no licence field.
 
 ## 7b. The credit record (`credit/v1`)
 
-A deterministic summary per author, built from the record alone. It is **not money now**. What credit is worth is Elco's to design later.
+A deterministic summary per author, built from the record alone.
 
 | Field | What it holds |
 |---|---|
@@ -131,13 +131,12 @@ A deterministic summary per author, built from the record alone. It is **not mon
 - **A use gives its point only to the authors who had published that layer before the use was appended** (by `seq`). Publishing an already-used layer again by its hash earns "matched" credit, an independent confirmation, never points from earlier uses. Copying earns nothing (PM).
 - An author's points are the sum over their layers.
 - Matching or stating facts first is credit, not points.
-- The record keeps who used what. There is no token and no money now.
+- The record keeps who used what.
 - **Anyone can recompute it** from Petals' record and compare. Posting it to NEAR Social under the author's account waits, as does anchoring (Elco, 13 Nov: "let's not make this more complicated than it has to be").
 - **The caveats, named.** ATTRIBUTION, section 5 says:
   - No count here proves usefulness.
   - Several wallets can be one person (sock puppets), and colluding accounts can reuse each other.
   - "Imported, unsigned" credit is a collective label, not a person's.
-  - **Before any reward, a curator confirms usefulness and attribution, and that decision is itself recorded.**
 
 ## 7c. Considered, and how each is handled
 
@@ -148,7 +147,7 @@ Elco: "our system should otherwise communicate that these issues have been consi
 | Two authors give different values for the same block | Both stand. The qualifier's verdict, then the record's order, decide which shows first; the others are options. For chain data it's flagged as a probable read error | A re-read at the block, by anyone, is a third author who matches one of them |
 | Backdating, to be "first" | Order is the record's own sequence and time, set by the server when it appends. Nobody can choose it | Anchoring each author's latest publication on NEAR |
 | Copying a popular layer to share its points | A use's point goes only to the authors who published the layer before that use. A copy earns "matched" credit, never earlier points | — |
-| Sock puppets and colluding accounts | Named, not solved. Each account counts once per layer, and its own use never counts | A curator confirms usefulness and attribution before any reward, and that decision is recorded too |
+| Sock puppets and colluding accounts | Named, not solved. Each account counts once per layer, and its own use never counts | — |
 | Claims that disagree (two names for one account) | All shown side by side; none wins | The full treatment of interpretations, after the hackathon |
 | What was loaded before the protocol | Said plainly as "imported, unsigned", by `mapping.petals.near`, never shown as signed | Petals' own mapping signs its future publications like any author |
 
