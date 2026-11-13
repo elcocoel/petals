@@ -1,9 +1,9 @@
-// The top of the lobby: the person (Elco, 10 Nov: the person's own name above and larger than anything
-// else; the redo's frame, "Build it"). Their picture from NEAR Social, or the empty place for one; their
-// name there, or the wallet they signed in with, in the page's title size; the account under a name; and
-// badges for what's true of it: the chain it's on, and where its profile is (in Petals, on NEAR Social, or none). The way out is the
-// side panel's Profile section, the one place to sign out (LOBBY, PANEL, 10 Nov).
-// Props only: viewmodels/useProfile.ts reads it. Words from lib/lobby-view.ts, drafts.
+// The top of the lobby: the person, their own name above and larger than anything else. Their picture from NEAR
+// Social, or the empty place for one; their name there, or the wallet they signed in with, in the page's title
+// size; the account under a name; and badges for what's true of it: the chain it's on, and where its profile is
+// (in Petals, on NEAR Social, or none). The way out is the side panel's Profile section, the one place to sign
+// out.
+// Props only: viewmodels/useProfile.ts reads it. Words from lib/lobby-view.ts.
 import { profileWords, type SocialState, shownAccount } from '../../lib/lobby-view.ts';
 import { Badge } from '../ui/Badge.tsx';
 import { Mono } from '../ui/Mono.tsx';

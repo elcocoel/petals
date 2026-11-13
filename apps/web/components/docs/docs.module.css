@@ -203,7 +203,7 @@ main:has(.shell) {
 .prose a:hover {
   text-decoration-color: var(--text-primary);
 }
-/* an empty slot (card 110): the space Elco fills, with no words in it */
+/* an empty slot: the space the copy leaves open, with no words in it */
 .prose [data-slot] {
   max-width: var(--spacing-panel-width);
   min-height: calc(var(--spacing-space-32) * 3);
@@ -460,7 +460,7 @@ main:has(.shell) {
   border-top: var(--stroke) solid var(--hairline);
 }
 
-/* The search over the navigation (Elco, 12 Nov: "the search function"): its field, then the pages it finds. */
+/* The search over the navigation: its field, then the pages it finds. */
 .search {
   margin-bottom: var(--spacing-space-16);
 }

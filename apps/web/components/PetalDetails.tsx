@@ -1,13 +1,13 @@
 // One petal's details (T064, Figma's "Selected petal detail" 39:924): the account, its size, what's
 // known of who it is, and, one step further in, why it looks this way. Words from lib/flower-view.ts. In
-// the app's sizes, as the box it sits in (#78, 11 Nov: it was in the landing's).
+// the app's sizes, as the box it sits in.
 import type { PetalDetail } from '@petal/core/types';
 import { petalView } from '../lib/flower-view.ts';
 import type { WorthLine } from '../lib/value-view.ts';
 import { Button } from './ui/Button.tsx';
 import { SourceLink } from './ui/SourceLink.tsx';
 
-/** Drafts (#78, 11 Nov): the way back from a petal to its flower, which said "Close detail" as the box did. */
+/** The way back from a petal to its flower, which said "Close detail" as the box did. */
 export const petalWords = { back: 'Back to the flower' } as const;
 
 export function PetalDetails({
@@ -19,7 +19,7 @@ export function PetalDetails({
   petal: PetalDetail | null;
   /** What the amount is counted in. */
   unit?: string | undefined;
-  /** Its dollars at its map's price, with where and when (#91); 'no price' when the map has none. */
+  /** Its dollars at its map's price, with where and when; 'no price' when the map has none. */
   worth?: WorthLine | 'no price' | null | undefined;
   /** Given where a detail can be closed. */
   onClose?: (() => void) | undefined;

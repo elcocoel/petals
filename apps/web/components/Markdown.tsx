@@ -1,6 +1,6 @@
 // The tree from lib/markdown.ts as React elements. Text goes in as text: there is no path by which
-// the model's words become HTML. `app` is the conversation's scale (design/conversation.md, line 25): code
-// in Mono, a heading no bigger than the words, a table in UI.
+// the model's words become HTML. `app` is the conversation's scale: code in Mono, a heading no
+// bigger than the words, a table in UI.
 import { createElement, type ReactNode } from 'react';
 import type { Block, Inline } from '../lib/markdown.ts';
 
@@ -58,7 +58,7 @@ function spans(c: Inline[], onLink?: OnLink, app = false): ReactNode[] {
             href={x.href}
             target="_blank"
             rel="noreferrer"
-            // where the page can open it in place (the workspace's canvas), it does, and stays (Elco, 10 Nov)
+            // where the page can open it in place (the workspace's canvas), it does, and stays
             onClick={
               onLink &&
               ((e) => {

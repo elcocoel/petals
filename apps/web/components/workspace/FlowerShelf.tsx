@@ -1,7 +1,7 @@
 'use client';
 // The panel before there's a flower in it (Figma's "New question" 43:736 and "Reading the record"
 // 39:668): what to do here, and maps already made, one per address, each opening its page. Where the page
-// can open a map in place (/make's canvas, #78), `onLink` has its links first, as the conversation's do.
+// can open a map in place (/make's canvas), `onLink` has its links first, as the conversation's do.
 import type { MouseEvent } from 'react';
 import type { ShelfView } from '../../lib/panel-view.ts';
 import { MapList } from '../MapList.tsx';

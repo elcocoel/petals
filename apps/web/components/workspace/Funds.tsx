@@ -1,8 +1,8 @@
-// The Balance card (Elco, 9 and 10 Nov; the redo's frame, "Build it"): the credit the person holds, dollars
-// first (in the heading's size since Elco, 11 Nov: "the balance card feels gross and huge and large"), NEAR beside at today's price (wrapping under it when narrow); and Withdraw, the card's one action, which takes
-// everything out of the credit contract through their own wallet while it holds something. Withdraw is
-// quiet, as Disconnect is. Props only: viewmodels/useFunds.ts reads the credit and holds the withdrawal.
-// Words from lib/lobby-view.ts, drafts.
+// The Balance card: the credit the person holds, dollars first (in the heading's size, so the card stays compact),
+// NEAR beside at today's price (wrapping under it when narrow); and Withdraw, the card's one action, which takes
+// everything out of the credit contract through their own wallet while it holds something. Withdraw is quiet, as
+// Disconnect is. Props only: viewmodels/useFunds.ts reads the credit and holds the withdrawal. Words from
+// lib/lobby-view.ts.
 import { canWithdraw, fundsWords, type WithdrawPhase } from '../../lib/lobby-view.ts';
 import type { Money } from '../../lib/pay.ts';
 import type { PowerQuoteItem } from '../../lib/power-quotes.ts';
@@ -31,11 +31,11 @@ export function Funds({
   withdrew: string | null;
   onWithdraw: () => void;
   /**
-   * Every call charged to the person, newest first (usage/v1; Elco, 11 Nov: "turn the balance widget into
-   * like a full-blown professional usages widget"); absent where only the balance shows.
+   * Every call charged to the person, newest first (usage/v1), as a professional usage widget; absent where
+   * only the balance shows.
    */
   usage?: UsageView | 'reading' | 'unread';
-  /** An illustrated power quote for when there's no usage yet (#89, wave 7). */
+  /** An illustrated power quote for when there's no usage yet. */
   quote?: PowerQuoteItem | null;
 }) {
   const offer = held !== null && canWithdraw(held) && phase !== 'withdrew';

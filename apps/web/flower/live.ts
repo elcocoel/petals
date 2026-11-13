@@ -95,7 +95,7 @@ export interface Live {
   heights: Float64Array;
   target: { width: Float64Array; height: Float64Array; flare: Float64Array };
   reach: (r: number) => number;
-  /** Gliding from the reading it drew before to this one (wave 8), or null. */
+  /** Gliding from the reading it drew before to this one, or null. */
   glide: Glide | null;
 }
 

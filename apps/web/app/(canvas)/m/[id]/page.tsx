@@ -1,7 +1,6 @@
-// A map's page (Elco, 10 Nov: one map per address, its versions together; coordinator/one-source.md, step 6:
-// a flower is the map zoomed in). The Power Map opens inside this map's flower, and the box beside it says
-// what it maps, the key to its colours, and its readings newest first, each with who made it and its
-// drawings. No sign-in.
+// A map's page (one map per address, its versions together; a flower is the map zoomed in). The Power Map
+// opens inside this map's flower, and the box beside it says what it maps, the key to its colours, and its
+// readings newest first, each with who made it and its drawings. No sign-in.
 import { notFound } from 'next/navigation';
 import { MapList } from '../../../../components/MapList.tsx';
 import { ReadingColumn } from '../../../../components/SiteChrome.tsx';
@@ -19,7 +18,7 @@ import { viewerView } from '../../../../lib/viewer-view.ts';
 
 export const dynamic = 'force-dynamic';
 
-/** What its token is worth (#91): the reading's total and the supply, each with where and when; or no price. */
+/** What its token is worth: the reading's total and the supply, each with where and when; or no price. */
 function Worth({ m }: { m: MapCard }) {
   const worth = mapWorth(m.value);
   if (!worth) return null;
@@ -39,8 +38,8 @@ function Worth({ m }: { m: MapCard }) {
 
 /**
  * What the map says about itself, first in the map's Information box, at the app's scale as the side panel's
- * words are (Elco, 12 Nov, walk 3: "the typography here right now is still very getting left behind"): what it
- * maps and its address, its worth, and each reading's drawings. Its colours' key is Tools' Colour row.
+ * words are: what it maps and its address, its worth, and each reading's drawings. Its colours' key is Tools'
+ * Colour row.
  */
 function Readings({ m }: { m: MapCard }) {
   const name = viewName(m);
@@ -79,7 +78,7 @@ export default async function MapPage({ params }: { params: Promise<{ id: string
   const { hash } = await viewerView();
   const [got, at] = await Promise.all([mapOne(map, hash), powerMapAt(hash, { map })]);
   if (!got.ok) {
-    // not there: the site's 404, the bouncer (#78)
+    // not there: the site's 404, the bouncer
     if (isMissing(got.error)) notFound();
     return (
       <ReadingColumn>

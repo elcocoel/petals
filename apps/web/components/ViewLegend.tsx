@@ -1,13 +1,11 @@
-// The legend (design/legend.md; Elco, 11 Nov: "an interactive visual legend element which is basically
-// settings but it has to show up nice and pretty on published maps and interactive on a map we are working
-// on"; board #92), as a tool panel (Elco, 12 Nov, walk 2: "like a tool panel where I would have drop downs to
-// changing the things that it's very clearly to see what is category, what is input ... more inspired by the
-// side panel"). Two sections under the side panel's heads: Dimensions, the person's view as a key (Settings'
+// The legend: an interactive visual legend, settings that read well on a published map and change things on a
+// map being worked on, as a tool panel taken from the side panel that makes plain what is category and what is
+// input. Two sections under the side panel's heads: Dimensions, the person's view as a key (Settings'
 // rows, one source, each always there, None too), and Map, what the map itself shows (the flower's groups to
 // highlight, gravity, what a line is). Each row is its category on the left, quiet, and its input on the right:
 // a dropdown where the legend changes the view (Settings' own hands: /make, and /map signed in), the value as
 // words where it only reads. Under Colour, its keys. The glasses are the person's, never the petal's. Opaque, so
-// it reads over a map: one of the overlays (Overlay; design/overlays.md). Props only.
+// it reads over a map: one of the overlays (Overlay). Props only.
 import type { View } from '@petal/core/types';
 import { COLOUR_KEYS, DIMENSIONS, type Dimension, type Piece } from '@petal/core/view';
 import { type ReactNode, useState } from 'react';
@@ -35,11 +33,9 @@ import { Switch } from './ui/Switch.tsx';
 const words = panelWords.settings;
 
 /**
- * Every dimension of the view (Elco, 12 Nov, walk 3, twice: "I barely have any choices here!"), grouped as a person
- * reads a flower (wave 2: "the visual organization of this tool panel is still failing us"): first the four that
- * say most, how the petals go round the circle, how tall, what colour means and what names them; then the rest,
- * folded under their head until asked. Highlight has no place in a view: its row is the flower's groups (its
- * voting blocs, #94), under Highlight.
+ * Every dimension of the view, grouped as a person reads a flower: first the four that say most, how the petals go
+ * round the circle, how tall, what colour means and what names them; then the rest, folded under their head until
+ * asked. Highlight has no place in a view: its row is the flower's groups (its voting blocs), under Highlight.
  */
 const PETALS: readonly Dimension[] = ['order', 'height', 'colour', 'labels'];
 const MORE: readonly Dimension[] = DIMENSIONS.filter((d) => !PETALS.includes(d));
@@ -59,13 +55,13 @@ export interface LegendGroups {
   period: string;
   onChoose: (id: string | null) => void;
   onSpan: (span: BlocSpan) => void;
-  /** Outside any flower: nothing to choose yet, and the rows stay where they are (one menu, Elco's walk 3). */
+  /** Outside any flower: nothing to choose yet, and the rows stay where they are (one menu). */
   away?: boolean;
 }
 
 /**
  * One row of the panel: its category on the left, its input or value on the right; under the category, when it
- * has one, a quiet line saying what it does (Elco, 12 Nov, wave 3: "I don't understand all of these options here").
+ * has one, a quiet line saying what it does.
  */
 function ToolRow({
   label,
@@ -90,8 +86,8 @@ function ToolRow({
 }
 
 /**
- * What each colour stands for, under Colour: one value a line, its swatch before it (wave 3: "Just feels very
- * disorganized, especially the color parts"), led by a quiet line that says so.
+ * What each colour stands for, under Colour: one value a line, its swatch before it, led by a quiet line that
+ * says so.
  */
 function ColourMeans({ keys, edit }: { keys: readonly LegendKey[]; edit: LegendEdit | undefined }) {
   return (
@@ -103,7 +99,7 @@ function ColourMeans({ keys, edit }: { keys: readonly LegendKey[]; edit: LegendE
         {keys.map((k) => (
           <li key={k.label} className="flex items-center gap-space-4 type-ui text-primary">
             {edit?.onKey ? (
-              // its swatch chooses its colour (Elco, wave 4: "choosing which colour a value gets")
+              // its swatch chooses its colour
               <ColourPick
                 label={words.colourOf(k.label)}
                 swatch={k.swatch}
@@ -213,8 +209,8 @@ function ScaleRow({
 }
 
 /**
- * A number or a date on Colour, as its grade (LOOK's, wave 4): its two ends in words either side of the ramp, and,
- * where the legend changes the view, the grade's colour chosen by its own swatch.
+ * A number or a date on Colour, as its grade: its two ends in words either side of the ramp, and, where the
+ * legend changes the view, the grade's colour chosen by its own swatch.
  */
 function ColourGrade({
   grade,
@@ -253,8 +249,8 @@ function ColourGrade({
 
 /**
  * One dimension's rows: its data, its scale where it's a number, a word where no data takes it yet, and under
- * Colour what each colour stands for (Elco, wave 2: "the legend tells me what each color is ... Not the name of the
- * color"): inside a flower its values, each with its swatch; on the whole map, where each DAO keys its own, a word.
+ * Colour what each colour stands for, not the colour's name: inside a flower its values, each with its swatch; on
+ * the whole map, where each DAO keys its own, a word.
  */
 function DimensionRows({
   d,
@@ -325,30 +321,30 @@ export function ViewLegend({
   /** What the colours go by, said under Colour where there's no one key to give (a whole map). */
   keysNote?: string | undefined;
   /**
-   * Where Colour shows a number or a date (a grade, LOOK's wave 4): its two ends in words and its five steps'
-   * colours, lightest first, for a ramp under Colour (OVERLAYS draws it).
+   * Where Colour shows a number or a date (a grade): its two ends in words and its five steps'
+   * colours, lightest first, for a ramp under Colour.
    */
   gradeKeys?: { from: string; to: string; fills: string[] } | undefined;
   edit?: LegendEdit | undefined;
   /**
-   * The flower's groups for the Highlight row (#94): its voting blocs, the chosen one, and the hands that
+   * The flower's groups for the Highlight row: its voting blocs, the chosen one, and the hands that
    * choose one and the votes they come from. Choosing highlights a group on the map; it changes no one's view.
    */
   groups?: LegendGroups | undefined;
-  /** On a map, how much its flowers draw together (Elco, 12 Nov: "gravity"), 0 apart to 1 close, kept for the visit. */
+  /** On a map, how much its flowers draw together (gravity), 0 apart to 1 close, kept for the visit. */
   gravity?: { value: number; onChange: (value: number) => void } | undefined;
   /**
-   * On a map, whether each DAO's treasury and token price show under its name at some magnification (Elco, 12 Nov
-   * walk 3: "switchable from OVERLAYS' tools box"); OVERLAYS draws its row.
+   * On a map, whether each DAO's treasury and token price show under its name at some magnification,
+   * switched from the Tools box.
    */
   worth?: { on: boolean; onChange: (on: boolean) => void } | undefined;
-  /** On a map, whether Insights shows in its Information box (Elco, walk 3: "turn on insights on and off"). */
+  /** On a map, whether Insights shows in its Information box, switched on and off. */
   insights?: { on: boolean; onChange: (on: boolean) => void } | undefined;
   /** On a map, what a line between two flowers is: its name and what it says. */
   between?: { label: string; says: string } | undefined;
   /** Puts the map's own controls back as they came (Gravity, Votes, the switches, a chosen bloc), while one isn't. */
   resetMap?: (() => void) | undefined;
-  /** It folds to its bar, as every overlay can (design/overlays.md, line 6). */
+  /** It folds to its bar, as every overlay can. */
   fold?: { open: boolean; onToggle: () => void } | undefined;
   /** Its rows alone, for a box that frames it (the map's floating boxes). */
   bare?: boolean;
@@ -356,8 +352,7 @@ export function ViewLegend({
   const chosen = groups?.choices.find((c) => c.id === groups.chosen);
   // the rest of the dimensions, folded until asked: their head says how many there are
   const [moreOpen, setMoreOpen] = useState(false);
-  // every section folds under its head, so a long panel never loses you (Elco, 12 Nov, wave 4 walk: "they don't
-  // have a collapse component ... it's really easy to get lost"); open as they come
+  // every section folds under its head, so a long panel never loses you; open as they come
   const [petalsOpen, setPetalsOpen] = useState(true);
   const [highlightOpen, setHighlightOpen] = useState(true);
   const [mapOpen, setMapOpen] = useState(true);
@@ -480,8 +475,8 @@ export function ViewLegend({
           </div>
         </>
       )}
-      {/* the default back at a press, while anything in Tools isn't it (Elco: "keep a reset to default button
-          handy"): the view, and the map's own controls for the visit (VISUAL QA, wave 3: it did nothing to them) */}
+      {/* the default back at a press, while anything in Tools isn't it: the view, and the map's own controls
+          for the visit */}
       {(edit?.onReset || resetMap) && (
         <div className="px-space-8 pt-space-4 pb-space-8">
           <Button

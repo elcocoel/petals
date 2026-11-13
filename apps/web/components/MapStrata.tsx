@@ -1,5 +1,5 @@
-// A map's layers as strata in its Information box (lib/map-strata.ts; Elco, wave 8: "seeing that a map is made by
-// many people"): the newest on top, each a row with its stratum, a band in its first author's colour, then its switch,
+// A map's layers as strata in its Information box (lib/map-strata.ts), showing that a map is made by many
+// people: the newest on top, each a row with its stratum, a band in its first author's colour, then its switch,
 // what it holds, who published it and when, and, quiet in mono, its kind, what it covers and when it was read. A
 // switch takes the layer off the map you see, or puts it back. One just published in your name is lit. Props only.
 import {
@@ -49,7 +49,7 @@ export function MapStrata({
             </span>
             <span className="flex min-w-0 flex-col">
               <span className="type-ui text-primary wrap-anywhere">{l.title}</span>
-              {/* who: the heart of it (Elco: 'ownership over valuable mapping'), in the words' colour */}
+              {/* who: the heart of it, who mapped it, in the words' colour */}
               <span className="type-ui text-primary wrap-anywhere">{authorsLine(l.authors)}</span>
               <Mono as="span" tone="muted">
                 {strataLine(l)}

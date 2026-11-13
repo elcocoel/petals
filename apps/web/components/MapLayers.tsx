@@ -1,7 +1,6 @@
-// A map's layers in its Information box (lib/map-layers.ts; Elco, 12 Nov, walk 3: "they should know the period
-// that is contained in that data at each layer ... showing who mapped that layer"): one row each, what it is on
-// its first line, then its period, how much, and who mapped it or where it came from, quiet in mono, the outside
-// source's arrow beside it. Props only.
+// A map's layers in its Information box (lib/map-layers.ts), with the period each layer's data covers and who
+// mapped it: one row each, what it is on its first line, then its period, how much, and who mapped it or where
+// it came from, quiet in mono, the outside source's arrow beside it. Props only.
 import type { LayerLine } from '../lib/map-layers.ts';
 import { Mono } from './ui/Mono.tsx';
 import { SourceLink } from './ui/SourceLink.tsx';

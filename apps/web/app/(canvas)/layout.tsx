@@ -1,6 +1,5 @@
-// Pages where the live canvas fills the window under the site's nav: a flower's page and a draft
-// (coordinator/one-source.md, step 4), and the Power Map (step 5). The URLs don't change: (canvas) is only
-// a folder.
+// Pages where the live canvas fills the window under the site's nav: a flower's page and a draft, and the
+// Power Map. The URLs don't change: (canvas) is only a folder.
 import type { ReactNode } from 'react';
 import { Nav } from '../../components/ui/Nav.tsx';
 

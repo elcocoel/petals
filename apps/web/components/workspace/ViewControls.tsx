@@ -1,5 +1,4 @@
-// The person's view, as the Settings section sets it (coordinator/one-source.md, section 3 and step 7; Elco,
-// 10 Nov: "I'm basically choosing the glasses through which I see the entire universe"). One row per
+// The person's view, as the Settings section sets it: the glasses through which they see every map. One row per
 // dimension it's handed (Settings: the four behaviours and Labels, lib/person-view.ts), saying the data it shows; pressing one opens its choices under it, as a project
 // opens its conversations: only the data that fits it, or none, with the default marked, and, while it
 // shows a number on a dimension that has one, its scale. A dimension no data takes yet, showing none, can't
@@ -67,7 +66,7 @@ export function ViewControls({
         const fit = choices[d];
         const trail = shown ? words.piece(shown) : words.none;
         // Only a row with nothing to choose and nothing shown stays shut: a row showing data always opens, so
-        // None is there to switch it back (Elco, 12 Nov: "don't let users break their views")
+        // None is there to switch it back, and a person can't break their view
         if (fit.length === 0 && shown === null) {
           return (
             <li key={d}>
