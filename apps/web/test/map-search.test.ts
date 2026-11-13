@@ -1,4 +1,4 @@
-// Search on the Power Map (#105): the answers that are maps on this map, as rows, in search's order.
+// Search on the Power Map: the answers that are maps on this map, as rows, in search's order.
 import { describe, expect, test } from 'vitest';
 import { searchRows } from '../lib/map-search.ts';
 

@@ -1,5 +1,5 @@
-// Time as data (Elco, 12 Nov: "the dimension of time specifically is particularly absent ... last active, most
-// active ... color grade the [petals] that never voted"): each petal's activity in its map's proposals.
+// Time as data (last active, most active, and a colour grade for the petals that never voted): each petal's
+// activity in its map's proposals.
 import { describe, expect, test } from 'vitest';
 import { activityPieces, NEVER_VOTED, VOTED } from '../src/activity.ts';
 import type { Proposals } from '../src/proposals.ts';

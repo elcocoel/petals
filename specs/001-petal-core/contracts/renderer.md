@@ -62,7 +62,7 @@ A skin is `(reading, { size, thumb }) => { svg, legend, petals }`. It reads noth
 
 **Known leak, on purpose:** the words in `details` and the tail's legend line name the `render/v1` look in places ("hatched", "solid", "side"), as `spec.encodings` meanings do. A later skin returns its own `legend` and `petals`, so it can say otherwise; the reading is reworded as `reading/v2` when a second skin exists.
 
-## Geometry (ported from `research/spikes/flower/index.html`, `draw()`)
+## Geometry (ported from the flower spike's `draw()`)
 
 Port the geometry only, not the page or its controls.
 

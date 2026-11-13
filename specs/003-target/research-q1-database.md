@@ -1,7 +1,7 @@
 # Q1 research: the database
 
 **Created**: 2026-11-08
-**Status**: For Elco to read and choose. Nothing is built or decided here.
+**Status**: Research, for a choice. Nothing is built or decided here.
 **Question** (`spec.md`, Q1): SQLite on one server, or Postgres? What does "permanent" need: backups, copies, a second machine? What changes in our code either way?
 **Judged against**:
 - TGT-010: what a person makes survives restarts, a move to another host, and the loss of a disk.
@@ -10,7 +10,7 @@
 
 ## The short answer
 
-**Lean: keep SQLite on the server, make it permanent by copying every change off this machine as it happens, and rewrite our code now so it would work on Postgres too.** Then moving to Postgres later, Supabase or any other, is a contained step and not a rewrite. That's Elco's own sketch, "SQLite here, written as if it were a Postgres that could live in Supabase", with the missing piece named: the copies.
+**Lean: keep SQLite on the server, make it permanent by copying every change off this machine as it happens, and rewrite our code now so it would work on Postgres too.** Then moving to Postgres later, Supabase or any other, is a contained step and not a rewrite. That follows the earlier sketch, SQLite here, written as if it were a Postgres that could live in Supabase, with the missing piece named: the copies.
 
 Either engine can be permanent, and either can hold one account with many links, or claims with their history. What really decides between them is:
 - **where the copies live**, since without copies elsewhere neither is permanent;
@@ -36,15 +36,15 @@ The database is the server's memory of everything that's private, or that exists
 - **What it does:** today each linked wallet is stored scrambled under a key (`PETAL_WALLET_KEY`), and it's found by a fingerprint made with the same key.
 - **If the key is lost:** a perfect copy of the database still can't tell which wallet belongs to which account. Nobody could sign in to their old work.
 - **If the key and the copies sit in the same place:** whoever takes the copies can read the wallets.
-- **So:** keep the key apart from the copies, for example in Elco's password manager. This holds whichever engine is chosen.
+- **So:** keep the key apart from the copies, for example in the operator's password manager. This holds whichever engine is chosen.
 
 ## 2. What "permanent" asks, in plain words
 
 TGT-010 names three events. I add a fourth, because it happens more often than the other three.
 
 1. **A restart.** The program stops and starts again. Anything written to disk survives. Both engines already pass this today.
-2. **A move to another host.** Petals' server moves from this Mac to a VPS or another machine. The data has to go with it, or already be somewhere the new host can reach.
-3. **The loss of a disk.** The disk dies, the Mac is stolen, or the house floods. Only a copy somewhere else saves the data. **A copy on a drive plugged into the same Mac covers a dead internal disk, but not a lost Mac.**
+2. **A move to another host.** Petals' server moves from the current host to a VPS or another machine. The data has to go with it, or already be somewhere the new host can reach.
+3. **The loss of a disk.** The disk dies, the machine is stolen, or the building floods. Only a copy somewhere else saves the data. **A copy on a drive plugged into the same machine covers a dead internal disk, but not a lost machine.**
 4. **A mistake.** A bug or a bad change deletes or damages records. A copy that's updated every second copies the damage too. The fix is copies that can go back to a moment before the mistake ("point-in-time restore").
 
 **And one rule for all of them: a copy counts only once a restore from it has been tried.** That means a test that restores onto an empty server and compares the two.
@@ -55,9 +55,9 @@ TGT-010 names three events. I add a fourth, because it happens more often than t
 - **What it holds:** 23 tables, one of which is a search index. The only features Postgres doesn't share are that search index (SQLite's FTS5) and a few settings the store uses when it opens the file.
 - **How the code uses it:** the store is synchronous. When code asks the database something, it waits for the answer right there, before doing anything else. That's normal and fast when the database is a file next to the program. A search finds about 180 places in 8 files where code calls the store, and 17 test files use it.
 - **Copies:**
-  - **The script:** `coordinator/backup.sh` copies the data folder to the external drive Runner-4TB and keeps the last 14 copies.
+  - **The script:** a backup script copies the data folder to an external drive and keeps the last 14 copies.
   - **How often:** it runs by hand. Its nightly job is off.
-  - **What it doesn't cover:** the copies aren't encrypted, and they never leave this Mac.
+  - **What it doesn't cover:** the copies aren't encrypted, and they never leave the host.
   - **Where that leaves us:** today Petals passes event 1, half of event 3 (a dead internal disk, losing up to a day), and none of event 2 without a manual copy.
 
 ## 4. The options
@@ -67,7 +67,7 @@ TGT-010 names three events. I add a fourth, because it happens more often than t
 **What it is.** The engine stays as it is. A small open-source program, Litestream, runs beside the server and sends every change to storage somewhere else within about a second. It also keeps older points, so the database can be restored as it was at an earlier moment. The server never notices: it's the same file, used the same way.
 
 **What it needs to be permanent:**
-- **Copies:** Litestream sends to "object storage", a place that holds files on the internet, or to another machine Elco owns. See choice D2.
+- **Copies:** Litestream sends to "object storage", a place that holds files on the internet, or to another machine the operator owns. See choice D2.
   - **The container:** it has to run inside the server's container, because that's where the file's locks live. It can start the server itself, so the two run together.
 - **Restore:**
   - **On a new host or after a lost disk:** when the server starts with an empty data folder, it restores the latest copy first, then begins.
@@ -81,9 +81,9 @@ TGT-010 names three events. I add a fourth, because it happens more often than t
 - the restore when the server starts;
 - the copy of the snapshot files;
 - the restore test;
-- `backup.sh` becomes the occasional extra copy, or goes.
+- the backup script becomes the occasional extra copy, or goes.
 
-The store stays synchronous unless Elco chooses otherwise (D3).
+The store stays synchronous unless D3 chooses otherwise.
 
 **How it meets the four events:**
 - **A restart:** yes.
@@ -142,7 +142,7 @@ Postgres alone doesn't make anything more permanent.
 
 **What changes in our code:**
 - **The same as Option B,** without running Postgres ourselves.
-- **Every query crosses the internet,** from this Mac or the VPS to Supabase's machines. Our pages make many small queries, so they'd get slower unless the queries are grouped.
+- **Every query crosses the internet,** from the host or the VPS to Supabase's machines. Our pages make many small queries, so they'd get slower unless the queries are grouped.
 - **A new secret:** the database's connection string lives on the server.
 
 **How it meets the four events:**
@@ -209,23 +209,23 @@ Neither gives Petals more than Option A or C.
 
 Most claims will live on chain anyway (Q4), so the database keeps an index of them that can be rebuilt.
 
-## 7. What Elco would choose
+## 7. The choices
 
 | # | Choice | Options | Lean |
 |---|---|---|---|
 | D1 | The engine | A. SQLite with copies · B. our own Postgres · C. Supabase | **A for now.** C later, when a second server or a provider's care is wanted |
-| D2 | Where the copies go: the database, the posted readings, and their older points | Cloudflare's file storage (R2, which Elco already has an account with; it has a free tier, but it's an outside service) · another machine Elco owns · Supabase's file storage · the Runner-4TB drive (covers a dead internal disk only, not a lost Mac) | **Off this machine. Cloudflare R2**, if Elco accepts one outside service for copies. Otherwise another machine Elco owns. Either way encrypted, and Runner-4TB stays as an extra |
+| D2 | Where the copies go: the database, the posted readings, and their older points | Cloudflare's file storage (R2; it has a free tier, but it's an outside service) · another machine the operator owns · Supabase's file storage · an external drive (covers a dead internal disk only, not a lost host) | **Off this machine. Cloudflare R2**, if one outside service for copies is acceptable. Otherwise another machine the operator owns. Either way encrypted, and the external drive stays as an extra |
 | D3 | Make the store asynchronous now, or at the move | Now · at the move | **Now**, with tests against PGlite, so "written as if it were Postgres" is proven |
-| D4 | Where the key that seals wallets is kept | Only on the server · also in Elco's password manager | **Also in the password manager**, never beside the copies |
+| D4 | Where the key that seals wallets is kept | Only on the server · also in the operator's password manager | **Also in the password manager**, never beside the copies |
 | D5 | How long older points are kept, for undoing mistakes | Days · weeks | **A few weeks.** It costs a little storage |
 
 ## 8. Why this lean
 
 1. **It meets TGT-010 fully,** once the copies leave the machine and a restore has been tried. The other options don't do better on permanence: Postgres on our own machine needs the same copies, and Supabase's free plan has none.
 2. **It changes the least that's working,** and it adds one small program instead of a database server or an outside database.
-3. **It costs $0,** and the copies can go somewhere Elco chooses.
+3. **It costs $0,** and the copies can go wherever is chosen.
 4. **It doesn't close the door.** With the store asynchronous and tested against Postgres, the move to Supabase stays a contained step for whenever it's wanted.
-5. **It matches what Elco already sketched:** SQLite here, written as if it were Postgres.
+5. **It matches the earlier sketch:** SQLite here, written as if it were Postgres.
 
 **What would change the lean:**
 - **Two servers at once,** for example the website's own functions writing to the database directly, or a second region. That needs Postgres, and C is the way to it.

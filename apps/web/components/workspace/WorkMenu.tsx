@@ -1,21 +1,19 @@
-// The work menu (specs/004-workspace, B1): the side panel on the left of the lobby and of the workspace,
-// the same piece in both (Elco, 9 Nov), held by the layout they share, so it stays while the page beside
-// it changes. Since 10 Nov a professional tool's panel, as Orca's is, and a bar of sections (Elco: "each
-// of them is a set of tools"): Conversations, Projects, Your agents and Lobby, then the person's own two,
-// Profile and Settings, at the bar's foot. Open, every section is in the panel, one after the other, in
-// that order, scrolling as one; a section's icon brings it to the top (design/side-panel.md).
+// The work menu (specs/004-workspace, B1): the side panel on the left of the lobby and of the workspace, the
+// same piece in both, held by the layout they share, so it stays while the page beside it changes. A
+// professional tool's panel and a bar of sections, each a set of tools: Conversations, Projects, Your agents
+// and Lobby, then the person's own two, Profile and Settings, at the bar's foot. Open, every section is in the
+// panel, one after the other, in that order, scrolling as one; a section's icon brings it to the top.
 // - Conversations: every conversation, newest first, each with who and when, and the way to a project;
 //   New conversation is its first row, where a new one appears.
 // - Projects: each holding its conversations, named in place; New project is its last row.
 // - Your agents: each with its state and a way to end it; connecting one is at the panel's top, once.
 // - Lobby: the balance and the map, each opening its card on /lobby; the head says Lobby, so no row does,
-//   and the balance's amount is on the page beside it (WORKSPACE's walk, 11 Nov). Withdraw stays on the card.
+//   and the balance's amount is on the page beside it. Withdraw stays on the card.
 // - Profile: who's signed in, their public profile's state (it opens their profile page, /profile), and
 //   Disconnect, the one place to sign out.
-// - Settings: first the tip, an optional donation to Petals on the price's scale (TipControl; design/
-//   side-panel.md, lines 34 to 38); then the person's view, how each dimension draws data for
-//   every petal they look at (ViewControls; coordinator/one-source.md, step 7), saved at once and drawn
-//   everywhere without a reload.
+// - Settings: first the tip, an optional donation to Petals on the price's scale (TipControl); then the
+//   person's view, how each dimension draws data for every petal they look at (ViewControls), saved at
+//   once and drawn everywhere without a reload.
 // It lies in the page's flow, open or collapsed, so a page that lays out beside it isn't covered.
 // Props only: its state comes from viewmodels/useWorkMenu.ts and useWorkPanel.ts. Every word from
 // lib/panel-words.ts.
@@ -66,7 +64,7 @@ export interface WorkMenuView {
   jump: { key: SectionKey; n: number } | null;
   /** A section's icon: opens the panel if it's collapsed, unfolds the section, and scrolls to it. */
   jumpTo: (key: SectionKey) => void;
-  /** The sections folded to their heads (design/side-panel.md, lines 40 to 42). */
+  /** The sections folded to their heads. */
   folded: readonly SectionKey[];
   fold: (key: SectionKey) => void;
   /** The person's projects, as the server keeps them (its folders). */
@@ -82,7 +80,7 @@ export interface WorkMenuView {
   stopNaming: () => void;
   /** Where each conversation moved here is now, until the list is read again. */
   placed: Readonly<Record<string, string | null>>;
-  /** The row whose ⋯ menu is open (design/side-panel.md, lines 24 to 29). */
+  /** The row whose ⋯ menu is open. */
   menuFor: string | null;
   toggleMenu: (key: string) => void;
   closeMenu: () => void;
@@ -117,7 +115,7 @@ export interface WorkMenuView {
   /** The row just moved, and what a screen reader hears about it. */
   justMoved: string | null;
   said: string;
-  /** The person's own agents, and what each is doing (the first full test, 9 Nov). */
+  /** The person's own agents, and what each is doing. */
   agents: AgentRow[];
   /** Where Connect an agent was just pressed, for its Copied; null once that's gone. */
   copied: CopiedAt | null;
@@ -125,7 +123,7 @@ export interface WorkMenuView {
   copy: (at: CopiedAt) => void;
   /** Ends one agent, by the name the server knows it by. */
   disconnect: (name: string) => void;
-  /** Ends every agent, all their workers (design/side-panel.md, line 46). */
+  /** Ends every agent, all their workers. */
   disconnectAll: () => void;
 }
 
@@ -142,9 +140,9 @@ export type SettingsView = Omit<Parameters<typeof ViewControls>[0], 'dimensions'
 
 /**
  * A section of the panel: its head, then its rows, the last of which is its one action, if it has one.
- * Pressing the head folds it to the head (design/side-panel.md, lines 40 and 43): the rows stay, out of
- * reach, so the fold can settle (head.settle); without the joy layer they're simply gone. The space under
- * a section is its own, so folded heads meet.
+ * Pressing the head folds it to the head: the rows stay, out of reach, so the fold can settle
+ * (head.settle); without the joy layer they're simply gone. The space under a section is its own, so
+ * folded heads meet.
  */
 function Group({
   title,
@@ -189,11 +187,11 @@ export function WorkMenu({
   menu: WorkMenuView;
   you: PanelYou;
   settings: SettingsView;
-  /** The tip, Settings' first row (design/side-panel.md, lines 34 to 38). */
+  /** The tip, Settings' first row. */
   tip: TipView;
   /** The sash's hands: the panel's width is sized at its edge. */
   width: RailWidth;
-  /** The window is narrow: opened, the panel lies over the page (design/side-panel.md, line 48). */
+  /** The window is narrow: opened, the panel lies over the page. */
   over?: boolean;
   /** New, pressed where a new conversation already is: the address won't move, so this opens it again. */
   restartNew?: (() => void) | undefined;
@@ -310,7 +308,7 @@ export function WorkMenu({
         {rows.length > 0 ? (
           <ConversationList rows={rows} actions={actions} />
         ) : (
-          // design/minimally-good.md, rule 2: empty says what goes here; the way to it is the row above
+          // empty says what goes here; the way to it is the row above
           <NavItem label={panelWords.noConversations} muted />
         )}
         {/* line 28: one row for the archived, only while there are some */}
@@ -405,7 +403,7 @@ export function WorkMenu({
               />
             </li>
           ))}
-          {/* connecting one is at the panel's top, once (design/side-panel.md, lines 12 and 45) */}
+          {/* connecting one is at the panel's top, once */}
           {menu.agents.length === 0 && (
             <li>
               <NavItem label={panelWords.noAgents} muted />
@@ -437,7 +435,7 @@ export function WorkMenu({
           current={here === 'profile'}
           label={name ?? who?.shown ?? '…'}
           {...(who ? { title: who.full } : {})}
-          // nothing at its end while there's no profile (WORKSPACE's walk, 11 Nov: "None")
+          // nothing at its end while there's no profile, rather than a "None"
           {...(you.social.kind === 'none'
             ? {}
             : {
@@ -467,7 +465,7 @@ export function WorkMenu({
     ),
   };
 
-  // design/side-panel.md, lines 45 and 46: always in sight, under the wordmark
+  // always in sight, under the wordmark
   const connected = agentsAtTop(menu.agents);
   const top = (
     <ul className="m-0 flex list-none flex-col p-0">

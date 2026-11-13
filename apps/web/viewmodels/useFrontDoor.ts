@@ -1,4 +1,4 @@
-// The front door (T206, then Elco on 8 Nov): the wallet opens on the front page when someone asks, and
+// The front door (T206): the wallet opens on the front page when someone asks, and
 // connecting lands in their own lobby, not in a conversation. Every way into the app from the landing is
 // the door: Ask Petals, the Ask box and its questions. Signed in, they go straight through. Closing the
 // picker leaves them where they were. The picker is near-connect's, so nothing here draws.
@@ -26,7 +26,7 @@ export function useFrontDoor(): void {
       },
     );
     // Connecting lands in the lobby, whatever link asked: a question from the landing has no conversation
-    // to wait in on a site that runs no agent for visitors (design/polish-log.md).
+    // to wait in on a site that runs no agent for visitors.
     const enter = () => {
       if (busy) return;
       busy = true;
@@ -34,7 +34,7 @@ export function useFrontDoor(): void {
         client: sessionClient,
         sign: (challenge) => signPrepared({ ...challenge, entry_sha256: '' }, SIGN_IN_NETWORK),
         arrived: () => window.location.assign(siteLinks.lobby),
-        // Where a failure shows on the front page is an open question (design/journey-strings.md).
+        // Where a failure shows on the front page is an open question.
         failed: (words) => console.warn(words),
       }).finally(() => {
         busy = false;

@@ -1,4 +1,4 @@
-// The person's tip (price/v2; design/side-panel.md, lines 34 to 38): read once when someone's signed in,
+// The person's tip (price/v2): read once when someone's signed in,
 // with the price's scale for it (GET /api/v1/me/tip) and a typical turn (the catalogue's default model,
 // measured). The slider moves a draft while a hand holds it; letting go keeps it (PUT), and if it isn't
 // kept the draft goes and what's kept shows again, with the reason. No timer.

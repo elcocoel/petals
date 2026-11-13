@@ -1,7 +1,7 @@
-// What was on the map before the publication record enters it once (specs/005-mapping-brain/composition.md,
-// section 2): per map, Petals' own rows as one "imported, unsigned" publication by mapping.petals.near, and each
-// press signed before the protocol as its author's, with its proof. A map already in the record is left. Where the
-// server runs:
+// What was on the map before the publication record enters it (specs/005-mapping-brain/composition.md, section
+// 2): per map, Petals' own rows as one "imported, unsigned" publication by mapping.petals.near, and each press
+// signed before the protocol as its author's, with its proof. A map whose rows changed since Petals' latest
+// version gets the next version; one unchanged is left. Run it after a load. Where the server runs:
 //   container exec petals node /app/scripts/publish-import.ts [--dry]
 import { parseArgs } from 'node:util';
 // through @petal/agent, as the other scripts: /app/scripts resolves no other workspace package in the container

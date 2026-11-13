@@ -76,7 +76,9 @@ export const renderFlowerTool = defineTool<
   title: 'Render a flower',
   description:
     'Draw a valid spec as a deterministic SVG. Returns the render hash, the legend (one line per ' +
-    'primitive used), the petal details and a view_url that opens the draft on the site. The SVG ' +
+    'primitive used), the petal details, how many petals were drawn (petals_drawn) and a view_url that ' +
+    'opens the draft on the site. With no petals, nothing_drawn says why and which measures someone ' +
+    'holds: never say petals are drawn then; say so plainly and draw by one of those. The SVG ' +
     'is included only with include_svg: true. Refuses a spec validate_spec rejects (invalid_spec).',
   input: obj(
     ['spec'],
@@ -97,9 +99,19 @@ export const renderFlowerTool = defineTool<
     },
     { additionalProperties: false },
   ),
-  output: obj(['spec_sha256', 'render_sha256', 'legend', 'petals', 'view_url'], {
+  output: obj(['spec_sha256', 'render_sha256', 'legend', 'petals', 'petals_drawn', 'view_url'], {
     spec_sha256: SHA256,
     render_sha256: SHA256,
+    petals_drawn: { type: 'integer', minimum: 0, description: 'how many petals the flower has' },
+    nothing_drawn: obj(['measure', 'says', 'measures_held'], {
+      measure: { type: 'string' },
+      says: { type: 'string' },
+      measures_held: {
+        type: 'array',
+        items: { type: 'string' },
+        description: "the reading's measures someone holds: draw by one of these instead",
+      },
+    }),
     svg: { type: 'string' },
     reading: obj(['title', 'petals'], {
       title: { type: 'string' },
@@ -129,18 +141,18 @@ export const renderFlowerTool = defineTool<
         'validate_spec lists every error; propose_spec builds a valid spec.',
       );
     }
-    // Always through a view (one-source.md, step 2): the one given, or the viewer's, or the default. A
+    // Always through a view: the one given, or the viewer's, or the default. A
     // flower's own choices are the record of what its agent proposed, and never draw it.
     const drawWith = view ?? ctx.view ?? DEFAULT_VIEW;
-    // the viewer's own names, on the petals they name (annotation step 6); a visitor's are none
-    // and each petal's value in dollars, from its map's stored value (#91): none with no price
+    // the viewer's own names, on the petals they name; a visitor's are none
+    // and each petal's value in dollars, from its map's stored value: none with no price
     const pieces = [
       ...(ctx.names?.length ? namePieces(snapshot, ctx.names) : []),
       ...(ctx.names?.length ? typePieces(snapshot, ctx.names) : []),
       ...valuePieces(snapshot, (await valuesOf(ctx)).get(mapOf(snapshot)) ?? null),
-      // and each petal's activity in its map's proposals (activity.ts, 12 Nov)
+      // and each petal's activity in its map's proposals (activity.ts)
       ...(await activityOf(ctx, snapshot)),
-      // and each petal's vesting at the reading's date (vesting.ts, wave 7)
+      // and each petal's vesting at the reading's date (vesting.ts)
       ...(await vestingOf(ctx, snapshot)),
     ];
     const r = renderFlower(spec, snapshot, {
@@ -151,9 +163,28 @@ export const renderFlowerTool = defineTool<
     const stored = await putSpecBody(ctx.config, spec, ctx.now().toISOString());
     // renderFlower reads the same thing and keeps it to itself, so this is only paid for when asked.
     const reading = include_reading ? readFlower(spec, snapshot, drawWith, pieces) : null;
+    // no petals: nobody in the reading holds the measure it's drawn by; say which measures someone does hold
+    const measure = spec.selection.measure;
+    const held = [
+      ...new Set(
+        snapshot.holdings
+          .filter((h) => h.measure !== measure && /[1-9]/.test(String(h.amount)))
+          .map((h) => h.measure),
+      ),
+    ].sort();
     return {
       spec_sha256: specHash(spec),
       render_sha256: r.render_sha256,
+      petals_drawn: r.petals.length,
+      ...(r.petals.length === 0
+        ? {
+            nothing_drawn: {
+              measure,
+              says: `Nobody in this reading holds any ${measure}, so the flower has no petals.`,
+              measures_held: held,
+            },
+          }
+        : {}),
       ...(include_svg ? { svg: r.svg } : {}),
       ...(reading ? { reading: { title: reading.title, petals: reading.petals } } : {}),
       legend: r.legend,

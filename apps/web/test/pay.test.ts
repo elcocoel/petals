@@ -1,4 +1,4 @@
-// B, the payment step: what a payment sends, what's left (dollars first, NEAR beside), and where the chat offers it.
+// The payment step: what a payment sends, what's left (dollars first, NEAR beside), and where the chat offers it.
 
 import { DEFAULT_VIEW } from '@petal/core/view';
 import { createElement } from 'react';
@@ -7,6 +7,7 @@ import { describe, expect, test } from 'vitest';
 import { ConnectWallet } from '../components/chat/ConnectWallet.tsx';
 import { PayRow } from '../components/chat/PayRow.tsx';
 import { notSignedInWords } from '../lib/door-words.ts';
+import { intentWords, type TopUpView, tokenChoices } from '../lib/intents.ts';
 import {
   money,
   moneyWords,
@@ -26,7 +27,7 @@ describe('paying for Petals’ agent', () => {
     expect(yoctoOf(0.5)).toBe('500000000000000000000000');
   });
 
-  test('money reads dollars first, NEAR beside at today’s price (Elco, 10 Nov)', () => {
+  test('money reads dollars first, NEAR beside at today’s price', () => {
     expect(money(2, 4)).toEqual({ usd: '2.00', near: '0.50' });
     expect(moneyWords(money(2, 4))).toBe('$2.00 · 0.50 NEAR');
     expect(payWords.balance(money(1, 3.62))).toBe('Balance: $1.00 · 0.28 NEAR');
@@ -88,7 +89,7 @@ describe('paying for Petals’ agent', () => {
   });
 });
 
-describe('about $1, never twice (wave 5, Elco’s mainnet test)', () => {
+describe('about $1, never twice', () => {
   test('dollars become NEAR at today’s price, in thousandths, never less than asked', () => {
     expect(nearFor(1, 3.42)).toBe(0.293);
     expect(nearFor(1, null)).toBeNull();
@@ -193,5 +194,45 @@ describe('the conversation’s Connect offers NEAR, Ethereum and Solana (flow 1,
     expect(html).toContain(notSignedInWords.near);
     expect(html).toContain(notSignedInWords.evm);
     expect(html).toContain(notSignedInWords.solana);
+  });
+});
+
+describe('one amount for both ways of paying', () => {
+  const topUp: TopUpView = {
+    open: true,
+    groups: tokenChoices([
+      { asset: 'nep141:base-usdc', chain: 'base', symbol: 'USDC', decimals: 6, usd: 1 },
+    ]),
+    asset: 'nep141:base-usdc',
+    usd: '1',
+    refund: '',
+    refundLabel: intentWords.refund('Base'),
+    getting: false,
+    error: null,
+    sent: null,
+    copied: null,
+    actions: {
+      open: () => {},
+      setAsset: () => {},
+      setUsd: () => {},
+      setRefund: () => {},
+      get: () => {},
+      copy: () => {},
+      again: () => {},
+    },
+  };
+  const row = (amount: { usd: string; label: string; onUsd: () => void } | null) =>
+    renderToStaticMarkup(
+      createElement(PayRow, { phase: 'ready', added: null, onPay: () => {}, topUp, amount }),
+    );
+
+  test('with the row’s amount shown, paying with another token asks for no second one', () => {
+    const html = row({ usd: '1', label: payWords.amount, onUsd: () => {} });
+    expect(html).toContain('id="pay-usd"');
+    expect(html).not.toContain('id="topup-usd"');
+  });
+
+  test('where the row shows none, the form asks for it itself', () => {
+    expect(row(null)).toContain('id="topup-usd"');
   });
 });

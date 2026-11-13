@@ -1,7 +1,7 @@
-// What the agent offers next on /make, under its short reading (lib/next-steps.ts; Elco, 12 Nov evening: "having
-// this moment where okay ... do we want to map some new stuff?"): a few steps, each one press, as the side panel's
-// rows: its words, a quiet line under them, a square of accent while it runs; then the brain's services folded
-// under More, the same rows. Props only: whether More is open is the page's.
+// What the agent offers next on /make, under its short reading (lib/next-steps.ts), the moment to ask whether to
+// map something new: a few steps, each one press, as the side panel's rows: its words, a quiet line under
+// them, a square of accent while it runs; then the brain's services folded under More, the same rows. Props
+// only: whether More is open is the page's.
 import { type NextStep, nextStepWords as words } from '../lib/next-steps.ts';
 import { Icon } from './ui/Icon.tsx';
 import { LineRow } from './ui/LineRow.tsx';

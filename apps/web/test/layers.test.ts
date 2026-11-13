@@ -1,4 +1,4 @@
-// T178: MVVM+ held by a test (design/frontend-foundation.md), the way packages/core/test/purity.test.ts
+// T178: MVVM+ held by a test, the way packages/core/test/purity.test.ts
 // holds core: a static scan of every source file, with comments and string contents removed, so a
 // comment saying "fetch" does not count. Each rule also runs against a sample that breaks it, so a
 // rule that stopped catching anything fails here too.

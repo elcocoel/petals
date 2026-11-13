@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:petal:schema:payouts:v1",
   "title": "Petal payouts v1",
-  "description": "payouts/v1 (12 Nov; Elco: 'how much money DAOs have and even more interestingly how much they spend, which DAOs are actually spending'; 'an unopinionated payouts from this treasury over period x'): what a DAO paid out, one payout each, read from its own chain, kept by the map's address. A payout is money that left the DAO for someone by a proposal that passed and ran: from, to, what, how much, when it was paid, the proposal and its kind, and its dollars on the day it was paid, named as its source's. A move between the DAO's own accounts isn't one; neither is a proposal's bond coming back. What isn't known is null, never a guess. One per map, read again to refresh.",
+  "description": "payouts/v1 (12 Nov): what a DAO paid out, one payout each, read from its own chain, kept by the map's address. A payout is money that left the DAO for someone by a proposal that passed and ran: from, to, what, how much, when it was paid, the proposal and its kind, and its dollars on the day it was paid, named as its source's. A move between the DAO's own accounts isn't one; neither is a proposal's bond coming back. What isn't known is null, never a guess. One per map, read again to refresh.",
   "type": "object",
   "additionalProperties": false,
   "required": [

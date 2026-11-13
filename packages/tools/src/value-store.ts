@@ -1,4 +1,4 @@
-// Each map's stored value (board #91), as the map's cards and readings take it: the values by the map's
+// Each map's stored value, as the map's cards and readings take it: the values by the map's
 // address, and a card's own block, with its supply and its own total in dollars.
 import { usdString, type Value, validateValue } from '@petal/core';
 import { treasurySource } from '@petal/inputs';

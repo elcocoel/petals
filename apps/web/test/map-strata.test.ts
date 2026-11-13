@@ -1,4 +1,4 @@
-// A map's layers as strata (wave 8, composition.md §9): oldest first by the record's order, each author named and
+// A map's layers as strata (composition.md §9): oldest first by the record's order, each author named and
 // their first publication's day, Petals' import said as imported and unsigned, what each layer covers in words, and
 // each first author in their own colour.
 import { describe, expect, test } from 'vitest';

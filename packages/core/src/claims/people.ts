@@ -1,13 +1,10 @@
-// REAL PEOPLE. This file is the rule. Elco can change it here.
+// REAL PEOPLE. This file is the rule, and it is changed here.
 //
-// Elco's decision, 10 Nov (coordinator/annotation-layer.md, decision 1 (a)): names are allowed in a
-// person's own annotations, kept in their own project (`{ private: true }`), because Elco asked to tie
-// wallets to friends' names. Anything published keeps the first version below, to be decided again
-// before annotations are published (step 8). Decided again, 12 Nov (Elco on RaidGuild's names: "let's try
-// to get our information published - I think we found names etc - but it's not yet on the global map";
-// META's reading, which Elco can correct): a name the system's own records tie to an address publishes,
-// said as declared there, with where, as a lead (the doctrine's own line): a `named` claim resting on a
-// proposal or a transaction, with that record's own words quoted (`declaredName`). Every other name
+// Names are allowed in a person's own annotations, kept in their own project (`{ private: true }`), so a
+// person can tie wallets to friends' names. Anything published keeps the first version below, with one
+// exception, so names found while mapping can reach the shared map: a name the system's own records tie to an
+// address publishes, said as declared there, with where, as a lead (the doctrine's own line): a `named` claim
+// resting on a proposal or a transaction, with that record's own words quoted (`declaredName`). Every other name
 // stays private. In a person's own project, rules 2 and 5 give way for
 // claim/v2's named and noted and for the evidence's notes and quotes; rules 1, 3 and 4 hold everywhere.
 //
@@ -79,7 +76,7 @@ const REASON = {
 const namespaceOf = (ref: string): string => ref.slice(0, Math.max(0, ref.indexOf(':')));
 
 /**
- * A name the system's own records tie to the address (12 Nov): a `named` claim taken from its source (sourced,
+ * A name the system's own records tie to the address: a `named` claim taken from its source (sourced,
  * never worked out), with a piece of evidence that is a proposal or a transaction, naming which, and quoting its
  * own words. Said as declared there, as a lead.
  */

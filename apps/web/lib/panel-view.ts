@@ -178,7 +178,7 @@ const STARTER = 'Who holds the UNI token on Base?';
 const NOT_ON_CANVAS = new Set<string>(['outline', 'lines', 'markings']);
 
 /**
- * The rows whose swatches are the canvas's own paint (core wedge/keys.ts lookFills, since 11 Nov): a petal's
+ * The rows whose swatches are the canvas's own paint (core wedge/keys.ts lookFills): a petal's
  * key, its bands' keys, and the tail's grey.
  */
 const PAINTED = new Set<string>(['colour', 'segments', 'tail']);

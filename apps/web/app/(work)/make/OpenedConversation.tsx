@@ -4,7 +4,7 @@
 // the page's data from the server (a saved view redrawing the tiles) or the page writing its own address
 // keeps the one that's open. A move opens the new conversation only once the page's data is for the
 // address showing: on Back the address changes first and the data after, and opening on the old data
-// would open the conversation Back just left (WORKSPACE's find).
+// would open the conversation Back just left.
 import { useSearchParams } from 'next/navigation';
 import { Fragment, type ReactNode, useRef } from 'react';
 import { conversationAt } from '../../../lib/workspace-url.ts';

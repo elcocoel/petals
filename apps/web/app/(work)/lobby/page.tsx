@@ -1,6 +1,5 @@
-// The lobby (specs/004-workspace, W3): a skeleton of where a person's work sits, so Elco can sense what's
-// needed. It's a person's own: Elco, 8 Nov, "lobby is my lobby". Nobody signed in goes to the front page,
-// asked here before anything is drawn, so a visitor never sees it.
+// The lobby (specs/004-workspace, W3): a skeleton of where a person's work sits. It's a person's own:
+// nobody signed in goes to the front page, asked here before anything is drawn, so a visitor never sees it.
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { api } from '../../../lib/api.ts';
@@ -16,7 +15,7 @@ export default async function LobbyPage() {
     cookie: (await headers()).get('cookie'),
   });
   if (!me.ok) redirect('/');
-  // The one map, a card per address, as the Power Map lists it (Elco, 10 Nov: one map per address), so a
+  // The one map, a card per address, as the Power Map lists it (one map per address), so a
   // map reads and opens the same in both. No answer is the same as none.
   const maps = await mapList((await viewerView()).hash);
   const cards = maps.ok ? maps.value.maps : [];

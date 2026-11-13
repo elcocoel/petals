@@ -1,5 +1,5 @@
 // quote_payment (tools.md; FR-031): a NEAR Intents 1Click quote with dry: true. No deposit
-// address, no money moves. A real payment needs Elco's explicit OK and is not built.
+// address, no money moves. A real payment is not built.
 import type { QuoteRequest, QuoteResult } from '@petal/core/types';
 import { defineTool } from '../define.ts';
 import { ToolFailure } from '../errors.ts';

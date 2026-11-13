@@ -29,7 +29,7 @@ export interface CanvasOptions {
   relations: FakeRelations | null;
   /** A look of the page's own (the lab's benches); with none, the flower's own (core lookFills). */
   look?: PetalLook | null;
-  /** its map's proposals on the ring (#93) */
+  /** its map's proposals on the ring */
   votes?: VoteRing | null;
   scatter: boolean;
   probe: boolean;

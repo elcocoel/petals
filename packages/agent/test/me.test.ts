@@ -1,5 +1,5 @@
-// A person's own, kept on the site (Elco, 10 Nov): their view, the glasses every petal they see is drawn
-// through (one-source.md, step 1), and their profile in NEAR Social's own shape (social-kv/1), with its
+// A person's own, kept on the site: their view, the glasses every petal they see is drawn
+// through, and their profile in NEAR Social's own shape (social-kv/1), with its
 // pictures kept here. Through petalApp, signed in with a test wallet; no model is called.
 import { createHash } from 'node:crypto';
 import { join } from 'node:path';
@@ -71,7 +71,7 @@ describe("a person's view", () => {
     expect((await w.request('/api/v1/me/view', 'PUT', { view: IDENTITY })).status).toBe(401);
   });
 
-  test("a visitor keeps a view by its hash, nobody's (walk 3, 12 Nov): read back by the hash, kept once, checked, same-origin only", async () => {
+  test("a visitor keeps a view by its hash, nobody's: read back by the hash, kept once, checked, same-origin only", async () => {
     const w = setup();
     const put = await w.request('/api/v1/views', 'PUT', { view: IDENTITY });
     expect(put.status).toBe(200);

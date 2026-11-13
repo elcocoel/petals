@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:petal:schema:value:v2",
   "title": "Petal value v2",
-  "description": "value/v2 (11 Nov; META and LOOK: a treasury holds several assets) is value/v1 with a treasury: everything value/v1 says of the map's own token stays as it is, and treasury lists what the map's treasury holds, each asset priced or not, with a total that says what it leaves out. What a map's token is worth in dollars, and how much of it there is (board #91; Elco, 11 Nov: 'monetary estimates of the value of these petals and the stakes and the supply and all of these data that we can put about each community and tokens'): its price from NEAR Intents' 1Click list, its supply from its own chain, and its reading's totals at that price. One per map, named by the map's address, read again to refresh. A token 1Click doesn't price has price null: no price, never a guess.",
+  "description": "value/v2 (11 Nov: a treasury holds several assets) is value/v1 with a treasury: everything value/v1 says of the map's own token stays as it is, and treasury lists what the map's treasury holds, each asset priced or not, with a total that says what it leaves out. What a map's token is worth in dollars, and how much of it there is: its price from NEAR Intents' 1Click list, its supply from its own chain, and its reading's totals at that price. One per map, named by the map's address, read again to refresh. A token 1Click doesn't price has price null: no price, never a guess.",
   "type": "object",
   "additionalProperties": false,
   "required": [

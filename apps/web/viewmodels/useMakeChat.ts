@@ -231,7 +231,7 @@ export function useMakeChat({
     el.form?.scrollIntoView({ block: 'end' });
   }, [recorded]);
 
-  // New is new (design/minimally-good.md, rule 3): words that were on their way come back only on a
+  // New is new: words that were on their way come back only on a
   // reload of this same page; arriving by New or a link starts clean, and forgets them.
   useEffect(() => {
     if (recorded) return;
@@ -271,7 +271,7 @@ export function useMakeChat({
       refollow: () => {
         if (runId && !busy) void openRun(deps, runId, { again: true });
       },
-      /** The server started a turn of its own (a report Petals' agent takes up, C): read it and follow it. */
+      /** The server started a turn of its own (a report Petals' agent takes up): read it and follow it. */
       follow: () => {
         if (runId && !busy) void openRun(deps, runId);
       },

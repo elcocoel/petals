@@ -1,7 +1,7 @@
-// A wallet chosen on the map, said in the map's Information box (WORKSPACE, wave 4: /make's flower box goes, so a
-// petal press shows exactly what /map's does; Elco: "one thing to edit one thing to improve"): its name or address,
+// A wallet chosen on the map, said in the map's Information box (/make has no flower box of its own, so a
+// petal press shows exactly what /map's does: one thing to edit, one to improve): its name or address,
 // who it is where it's named, its kind, what it holds and its share, and its dollars where the map's price allows.
-// Only what the reading says. Pure. The words are drafts.
+// Only what the reading says. Pure.
 import type { ReadingPetal } from '@petal/core/types';
 import { type MapValue, petalWorth } from './value-view.ts';
 
@@ -14,7 +14,7 @@ export interface WalletView {
   facts: [string, string][];
   /** its dollars where priced, and where that price was read */
   worth: { text: string; source: string; link?: string } | null;
-  /** where authors stated different values for it (wave 8): each piece, who stated the value drawn, and each other
+  /** where authors stated different values for it: each piece, who stated the value drawn, and each other
    * value with who stated it */
   differs?: readonly {
     what: string;
@@ -30,7 +30,7 @@ export const walletWords = {
   kind: 'Kind',
   holds: 'Holds',
   share: 'Share',
-  /** Where authors differ (composition.md §5): both stand, read-only. Drafts. */
+  /** Where authors differ (composition.md §5): both stand, read-only. */
   differ:
     'Authors differ here. Both values stand and anyone can check; two reads of one block should agree, so one is probably wrong.',
   value: (value: string, by: string) => `${value} by ${by}`,

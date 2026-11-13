@@ -1,4 +1,4 @@
-// "Everyone else", one petal (#76; Elco, 11 Nov): as tall as the share it holds, made of its members as stripes,
+// "Everyone else", one petal (11 Nov): as tall as the share it holds, made of its members as stripes,
 // the smallest nearest the centre.
 import { describe, expect, test } from 'vitest';
 import { readFlower } from '../src/reading/index.ts';

@@ -1,16 +1,16 @@
 # Contract: the website and its server
 
 **Created**: 2026-11-08
-**Status**: Proposed, for Elco's go. It follows the leans in `../research.md`. Where a lean isn't chosen yet, the choice is named (C1 to C10).
+**Status**: Proposed. It follows the leans in `../research.md`. Where a lean isn't chosen yet, the choice is named (C1 to C10).
 
 ## Who is who
 
 | | The website | The server |
 |---|---|---|
-| **Where** | Vercel, at `https://petals.elementarycomplexity.dev` | A container. On this Mac for now, reached by Vercel at its own tunnel name (C9). Built as for any host |
+| **Where** | Vercel, at the site's address | A container. On one host for now, reached by Vercel at the server's own name through a tunnel (C9). Built as for any host |
 | **Runs** | The Next.js pages | Today's app (C3): the HTTP API (`http-api.md`), `/mcp`, `/skill.md`, `/petal.mjs`, `/d/:hash` and `/s/:token` |
 | **Holds** | Nothing private. No database, and no secret but the site key | Everything private, and the live hub (below) |
-| **Settings** | `PETAL_SERVER` (the server's name), `PETAL_SITE_KEY` | `PETAL_API` (the website's address, from `Petals/public-url`), `PETAL_PUBLIC=1`, `PETAL_SITE_KEY`, the data folder and the wallet-sealing key |
+| **Settings** | `PETAL_SERVER` (the server's name), `PETAL_SITE_KEY` | `PETAL_API` (the website's address), `PETAL_PUBLIC=1`, `PETAL_SITE_KEY`, the data folder and the wallet-sealing key |
 
 ## What crosses the seam
 

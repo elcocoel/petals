@@ -1,9 +1,9 @@
-// T044: the testnet smoke test. Runs only with PETAL_LIVE=1, and only once Elco has created the
-// accounts and given the one-time OK to sign testnet transactions with the writer key (T043).
+// T044: the testnet smoke test. Runs only with PETAL_LIVE=1, and only once the accounts exist and
+// the operator has given the one-time OK to sign testnet transactions with the writer key (T043).
 // It signs ONE testnet transaction (a __fastdata_kv call of about 0.0001 NEAR of gas, from the
 // writer's function-call allowance). Nothing on mainnet, no deposit.
 //
-//   PETAL_LIVE=1 PETAL_WRITER_KEY_FILE=../.secrets/petal-writer.testnet.json \
+//   PETAL_LIVE=1 PETAL_WRITER_KEY_FILE=/path/to/keys/petal-writer.testnet.json \
 //     pnpm vitest run --project near test/testnet.smoke.test.ts
 //
 // Optional: PETAL_MAP_RECEIVER (petals.testnet), PETAL_WRITER_ACCOUNT (petals-writer.testnet),

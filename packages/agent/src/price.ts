@@ -1,4 +1,4 @@
-// The price a person pays (price/v2, packages/core's price.ts; coordinator/pricing-protocol.md): NEAR AI's
+// The price a person pays (price/v2, packages/core's price.ts): NEAR AI's
 // bill, plus a base fee, plus their own tip. It's this file, versioned with the code: changing it is a
 // commit, and every charge names its hash. Every switch of the base fee is off and the tip is 0 by default,
 // so today Petals runs at cost.

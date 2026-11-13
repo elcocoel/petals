@@ -38,7 +38,7 @@ Connect a NEAR wallet to save your conversations, notes and maps. Return to them
 
 Browsing the Power Map is free. Top up your Petals account to use its agent and mapping tools, paying as you go. Connected agents use their own resources for the work they take on.
 
-<!-- card 110: a section only its author writes, kept off the page until it's written (META, 12 Nov): put back here a heading "Why map power" and, under it, its words; "What can I do with what I find?" then goes back to a third-level heading under it. -->
+<!-- A section "Why map power" is kept off the page until its words are written: it goes back here as a heading, and "What can I do with what I find?" then becomes a third-level heading under it. -->
 
 ## What can I do with what I find?
 

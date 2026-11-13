@@ -1,4 +1,4 @@
-// coordinator/one-source.md, step 6: a flower is the map zoomed in. A map's page, a flower's page and a
+// A flower is the map zoomed in. A map's page, a flower's page and a
 // draft open the Power Map inside the flower that stands for their map, found by its address or by a
 // reading of it; a reading that isn't on the map opens nothing.
 import { describe, expect, test, vi } from 'vitest';
@@ -24,7 +24,7 @@ const asked: string[] = [];
 vi.mock('../lib/api.ts', () => ({
   api: async (path: string) => {
     asked.push(path);
-    // the maps' cards, for their marks (#85): none here, so every flower keeps its own name
+    // the maps' cards, for their marks: none here, so every flower keeps its own name
     if (path.startsWith('/api/v1/maps')) return { ok: true, value: { maps: [] } };
     return { ok: true, value: { ...night, views } };
   },

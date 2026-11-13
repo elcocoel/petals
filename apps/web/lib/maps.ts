@@ -1,5 +1,5 @@
-// One map per address (Elco, 10 Nov: "maps that map the same address need to come together as versions of
-// the same map"; coordinator/one-map-per-address.md). SYSTEMS's GET /api/v1/maps gives one card per address,
+// One map per address: maps of the same address come together as versions of the same map.
+// GET /api/v1/maps gives one card per address,
 // newest first: its newest drawing's name, picture and colours, and its readings (the sediments), newest
 // first, each with who made it and its drawings. The web shows them as given.
 import { api } from './api.ts';
@@ -45,11 +45,11 @@ export interface MapCard {
   picture: string;
   view_url: string;
   keys: Keys;
-  /** what its token is worth (#91), or null until it's read; older servers leave it out */
+  /** what its token is worth, or null until it's read; older servers leave it out */
   value?: MapValue | null;
-  /** what tells its organisation from another (#85): its name, its token's symbol, its logo; null until read */
+  /** what tells its organisation from another: its name, its token's symbol, its logo; null until read */
   mark?: MapMark | null;
-  /** how many proposals SYSTEMS has read for it (#93), or null where it has none; older servers leave it out */
+  /** how many proposals the server has read for it, or null where it has none; older servers leave it out */
   proposals?: { count: number; voted: number; read_at: string } | null;
   /** newest first */
   readings: MapReading[];
@@ -60,7 +60,7 @@ export interface MapMark {
   name: { value: string; status: string; source: string } | null;
   symbol: { value: string; status: string; source: string } | null;
   logo: { url: string; status: string; source: string } | null;
-  /** mark/v2 (#97): what kind of thing it is, each word once, in the order its is_a claims were found */
+  /** mark/v2: what kind of thing it is, each word once, in the order its is_a claims were found */
   type_words?: string[];
   read_at: string;
 }

@@ -1,11 +1,11 @@
 #!/bin/bash
-# The app on the real testnet map (petals.testnet) with Petal's writer key. Without
-# NEAR_AI_API_KEY the agent replays its recorded run; set the key in near-ai.env (keys folder beside the
-# repo) for the real one. The site on 3080 and its server on 3081, apart as on a host (specs/002-system/research.md),
-# on this machine only. Stop both with Ctrl-C.
+# The app on the real testnet map (petals.testnet) with Petal's writer key, read from PETAL_KEYS_DIR (a
+# folder outside the repo, required). Without near-ai.env there, the agent replays its recorded run. The site
+# on 3080 and its server on 3081, apart as on a host (specs/002-system/research.md), on this machine only.
+# Stop both with Ctrl-C.
 cd "$(dirname "$0")/.." || exit 1
 source ~/.nvm/nvm.sh && nvm use >/dev/null || exit 1
-secrets="$(cd .. && pwd)/.secrets"
+secrets="${PETAL_KEYS_DIR:?set PETAL_KEYS_DIR to the keys folder, outside the repo}"
 for env_file in near-ai.env petal-wallet.env; do
   if [ -f "$secrets/$env_file" ]; then
     set -a

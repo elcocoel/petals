@@ -35,7 +35,7 @@ Rule: a network the modules can't read returns `cannot_read` with the reason and
 
 ### Snapshot (the common table)
 
-The gathered data for one network population at one moment. Schema: [common-table.schema.json](./contracts/common-table.schema.json). It grows out of the spike format (`research/data/FORMAT.md`) with these changes: one canonical JSON document (no CSV sidecars), a `module` stamp, a `final` flag, declared grouping, and a `group` participant kind.
+The gathered data for one network population at one moment. Schema: [common-table.schema.json](./contracts/common-table.schema.json). It grows out of the spike format with these changes: one canonical JSON document (no CSV sidecars), a `module` stamp, a `final` flag, declared grouping, and a `group` participant kind.
 
 | Part | Holds |
 |---|---|
@@ -222,7 +222,7 @@ State: `running ──► done (flower) | failed (error, explained) | stopped (S
 
 ### Payment quote
 
-`{ purpose: "sponsor_refresh" | "sponsor_coverage", amount_usd, origin_asset, dry: true, quote { amount_in, amount_in_usd, time_estimate, ... }, correlation_id, signature }` (FR-031). Phase A: dry only, no deposit address, no money. Phase B, only with Elco's OK: one real quote and payment on mainnet.
+`{ purpose: "sponsor_refresh" | "sponsor_coverage", amount_usd, origin_asset, dry: true, quote { amount_in, amount_in_usd, time_estimate, ... }, correlation_id, signature }` (FR-031). Phase A: dry only, no deposit address, no money. Phase B, only with explicit approval: one real quote and payment on mainnet.
 
 ## Relationships
 

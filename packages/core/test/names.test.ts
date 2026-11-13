@@ -1,4 +1,4 @@
-// Annotations become data (annotation-layer.md step 5): composing a reading with the person's annotations gives
+// Annotations become data: composing a reading with the person's annotations gives
 // each claimed participant one name, and how it's known, as two categories the look can draw. A reading of a
 // DAO on Gnosis, as RaidGuild's is; every address and name here is invented.
 import { readFileSync } from 'node:fs';

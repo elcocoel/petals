@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:petal:schema:price:v1",
   "title": "Petal price v1",
-  "description": "What Petals charges for its agent's work (coordinator/pricing-protocol.md; Elco, 10 Nov: \"We have a set of fees * multiplied * by a user defined 'tip' rate *added* protocol defined rate - just so we can either be free, or charge and some users can choose to 'pay more to support' - this is optional switches for now\"). A charge is NEAR AI's own bill for the call, plus the fees that are switched on times the person's tip, plus the protocol's rate of the bill. Every switch off is Petals at cost. Each charge names the hash of the price it used.",
+  "description": "What Petals charges for its agent's work. A charge is NEAR AI's own bill for the call, plus the fees that are switched on times the person's tip, plus the protocol's rate of the bill. Every switch off is Petals at cost. Each charge names the hash of the price it used.",
   "type": "object",
   "additionalProperties": false,
   "required": ["petal", "form", "fees", "protocol", "tip"],

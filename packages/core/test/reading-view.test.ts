@@ -1,4 +1,4 @@
-// Drawing from the viewer's view (specs/006-the-map/plan.md; SYSTEMS's conditions, 9 Nov): without a view
+// Drawing from the viewer's view (specs/006-the-map/plan.md): without a view
 // the readings are what they always were; with one, the reading keeps reading/v1's fields and only the
 // values the view picks change; a pick the look can't draw, or data a flower lacks, draws nothing.
 import { describe, expect, test } from 'vitest';

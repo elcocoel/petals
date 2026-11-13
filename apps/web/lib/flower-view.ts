@@ -52,7 +52,7 @@ const CHAINS: Record<string, string> = {
   'eip155:8453': 'Base',
   'eip155:42161': 'Arbitrum',
   'eip155:100': 'Gnosis',
-  // a reading off any chain, as a Snapshot vote is: its chain is 'none' (a draft word, META, 11 Nov)
+  // a reading off any chain, as a Snapshot vote is: its chain is 'none'
   none: 'Off-chain',
 };
 
@@ -90,7 +90,7 @@ export interface ReadingKeyView {
 
 const group = (n: number) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 
-/** Figma's "Reading key" (39:887): what the petals are, how to read them, and which data. */
+/** The "Reading key": what the petals are, how to read them, and which data. */
 export function readingKey(spec: Spec): ReadingKeyView {
   const { petals, tail } = spec.selection;
   const { height, order } = spec.encodings;
@@ -137,7 +137,7 @@ export const colourKeys = (legends: readonly (readonly LegendItem[])[]): LegendK
 export const keysOf = (keys: readonly { label: string; swatch: string }[]): LegendKey[] =>
   keys.map((k) => ({ label: k.label, swatch: swatchKey(k.swatch) }));
 
-// "Everyone else" is grey since the keys (#76), as a value past the fifth is: told apart by its words.
+// "Everyone else" is grey, as a value past the fifth is: told apart by its words.
 const isTail = (k: LegendKey) => k.swatch === 'tail' || k.label.startsWith('everyone else');
 
 /** One key from several: each colour once, and "everyone else" last. */
@@ -156,11 +156,10 @@ export const svgImage = (svg: string) =>
 
 const shorten = (id: string) => `${id.slice(0, 4)}…${id.slice(-4)}`;
 
-/** An account as people read it: a chain-qualified id (CAIP-10, eip155:1:0x…) is its address alone (#78). */
+/** An account as people read it: a chain-qualified id (CAIP-10, eip155:1:0x…) is its address alone. */
 /**
- * A wallet with no map of its own (Elco, walk 5, 12 Nov: "if I am looking at a wallet and I see population not
- * mapped ... click it and get it mapped"): what its box says, and what pressing it asks Petals' agent, about
- * that wallet. The ask is a draft.
+ * A wallet with no map of its own, which a press gets mapped: what its box says, and what pressing it asks
+ * Petals' agent, about that wallet.
  */
 export const populationWords = {
   notMapped: 'Population not mapped',

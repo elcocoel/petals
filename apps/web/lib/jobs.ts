@@ -1,15 +1,14 @@
-// Jobs (C, Elco, 9 Nov: "the agent in the conversation can work in collaboration with conversations in
-// the apps to outsource mapping and other processes"): Petals' agent hands a job to the person's own
-// agent, which does it on their machine and reports back into the same conversation. The run's `job`
-// event says it was handed; GET /api/v1/explorations/:ref/jobs says where each stands. Pure. The words
-// are drafts, shipped on Elco's word (9 Nov: "Ship the drafts, I'll change them later").
+// Jobs, so the agent in the conversation can work with the person's own agents in other apps to hand off
+// mapping and other work: Petals' agent hands a job to the person's own agent, which does it on their machine
+// and reports back into the same conversation. The run's `job` event says it was handed;
+// GET /api/v1/explorations/:ref/jobs says where each stands. Pure.
 
 import { readableAgent, workerName } from './agents.ts';
 
-/** 'stopped' (swarm.md, step 3): the person or Petals' agent stopped it, and its worker reports nothing. */
+/** 'stopped': the person or Petals' agent stopped it, and its worker reports nothing. */
 export type JobStatus = 'open' | 'taken' | 'done' | 'failed' | 'stopped';
 
-/** A job as GET /api/v1/explorations/:ref/jobs lists it (SYSTEMS). */
+/** A job as GET /api/v1/explorations/:ref/jobs lists it. */
 export interface Job {
   id: string;
   exploration?: string;
@@ -23,11 +22,11 @@ export interface Job {
   to?: string | null;
   /** Who took it, or null. */
   taken_by?: string | null;
-  /** The taker's place among that agent's workers: 2 is "Codex 2" (swarm.md, step 1). */
+  /** The taker's place among that agent's workers: 2 is "Codex 2". */
   n?: number | null;
-  /** The job's own conversation, where its work goes (swarm.md, step 2). */
+  /** The job's own conversation, where its work goes. */
   conversation?: string | null;
-  /** Its worker's last call, while it's taken (swarm.md, step 3). */
+  /** Its worker's last call, while it's taken. */
   last_seen?: string | null;
 }
 
@@ -55,7 +54,7 @@ export const jobWords = {
   moveFailed: "That didn't work. Try again.",
 } as const;
 
-/** What the person can do with a job, by where it stands, as the server allows (swarm.md, step 3). */
+/** What the person can do with a job, by where it stands, as the server allows. */
 export function jobMoves(status: JobStatus): { stop: boolean; retry: boolean; handOver: boolean } {
   return {
     stop: status === 'open' || status === 'taken',

@@ -41,4 +41,4 @@ Which files to load for each task. The doctrine always comes first, so no row li
 | A full DAO report | full dao report, combined report | `full-dao-report` | `governance-health-report` |
 | A system Petals can't read | cannot read, not supported, framework | `a-new-system` | `contributing` |
 | Improve a chapter or a recipe | improve, contribute, pull request, github, fix | `contributing` | n/a |
-| A one-press service (#101) | service, deliverable | `services` | n/a |
+| A one-press service | service, deliverable | `services` | n/a |

@@ -143,7 +143,7 @@ export function createContext(cfg: Config): ToolContext {
     const reader: MapReader = deferred(() =>
       fastDataReader({ network: m.network, receiver: m.receiver }),
     );
-    // Writes go to testnet only during the build (shared-map.md); mainnet needs Elco's OK.
+    // Writes go to testnet only during the build (shared-map.md); mainnet is never written here.
     const writer: MapWriter | null =
       m.network === 'testnet' && m.writer && m.keyFile
         ? deferred(() =>
@@ -239,7 +239,7 @@ export function configFromEnv(env: Env = process.env, root: string = process.cwd
     live: env.PETAL_LIVE === '1',
     fake: env.PETAL_FAKE === '1',
   };
-  // Since 9 Nov a public site runs Petals' own agent for people who pay for it (TGT-030, amended), so it
+  // A public site runs Petals' own agent for people who pay for it (TGT-030, amended), so it
   // carries the model key like any other.
   const isPublic = env.PETAL_PUBLIC === '1';
   if (isPublic) cfg.public = true;

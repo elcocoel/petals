@@ -1,4 +1,4 @@
-// readTransfer and nearUsd (9 Nov): a NEAR transfer read back from the chain, and NEAR's price from NEAR
+// readTransfer and nearUsd: a NEAR transfer read back from the chain, and NEAR's price from NEAR
 // Intents. Faked HTTP only; the journey server walks a real testnet transfer.
 import { describe, expect, test } from 'vitest';
 import { nearUsd, readTransfer, yoctoToNear } from '../src/pay/index.ts';
@@ -40,7 +40,7 @@ describe('readTransfer', () => {
       succeeded: true,
       methods: [],
     });
-    expect(r.sent[0]?.url).toBe('https://rpc.mainnet.fastnear.com');
+    expect(r.sent[0]?.url).toBe('https://archival-rpc.mainnet.fastnear.com');
     expect(r.sent[0]?.body).toMatchObject({
       method: 'tx',
       params: { tx_hash: HASH, sender_account_id: 'alice.near', wait_until: 'FINAL' },
@@ -77,7 +77,7 @@ describe('readTransfer', () => {
     expect((await readTransfer('testnet', HASH, 'a.near', { fetch: r.fetch })).succeeded).toBe(
       false,
     );
-    expect(r.sent[0]?.url).toBe('https://rpc.testnet.fastnear.com');
+    expect(r.sent[0]?.url).toBe('https://archival-rpc.testnet.fastnear.com');
   });
 
   test('an unknown or never-seen transaction is not_found; a bad hash is bad_input', async () => {

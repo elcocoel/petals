@@ -1,4 +1,4 @@
-// The side panel's section heads (design/side-panel.md, lines 39 and 40): a band in the tint, the panel's
+// The side panel's section heads: a band in the tint, the panel's
 // full width, and pressing it folds the section; the chevron says which.
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';

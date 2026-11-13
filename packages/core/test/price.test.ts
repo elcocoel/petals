@@ -1,4 +1,4 @@
-// price/v2 (Elco, 10 Nov: "there's three components to the price"): NEAR AI's bill, plus a base fee (each
+// price/v2 (three components to the price): NEAR AI's bill, plus a base fee (each
 // part a switch), plus the person's tip, a donation at a percent of their usage on a scale they set. Every
 // switch off and a tip of 0 is Petals at cost.
 import { readFileSync } from 'node:fs';

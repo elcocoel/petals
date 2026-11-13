@@ -158,7 +158,7 @@ export type TestnetAction =
     };
 
 /**
- * A test wallet's real transaction on testnet (9 Nov, the pay step): `implicitSigner(seed)`'s account sends
+ * A test wallet's real transaction on testnet: `implicitSigner(seed)`'s account sends
  * one action to `receiverId` and waits for the FINAL outcome, which it returns as a wallet would. A call is
  * how it deposits into or withdraws from the credit contract. Testnet only: the key is derived from a public
  * seed, so anyone could spend what it holds. Its account must hold testnet NEAR first.
@@ -198,7 +198,7 @@ export async function testnetSend(
 }
 
 /**
- * A test wallet's real transfer on testnet (9 Nov, the pay step): `implicitSigner(seed)`'s account sends
+ * A test wallet's real transfer on testnet: `implicitSigner(seed)`'s account sends
  * `yocto` to `receiverId` and waits for the FINAL outcome, which it returns as a wallet would. Testnet only:
  * the key is derived from a public seed, so anyone could spend what it holds. Its account must hold
  * testnet NEAR first.

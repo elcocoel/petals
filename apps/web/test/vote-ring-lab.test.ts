@@ -1,4 +1,4 @@
-// The vote ring is in /lab first (#93), on NEAR's Marketing DAO as SYSTEMS reads it: only the petal look's bench
+// The vote ring is in /lab first, on NEAR's Marketing DAO as the server reads it: only the petal look's bench
 // hands the canvas any votes.
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';

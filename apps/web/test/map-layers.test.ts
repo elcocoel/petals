@@ -1,4 +1,4 @@
-// A map's layers each say the period their data covers and who mapped them (Elco's walk 3), as the card says.
+// A map's layers each say the period their data covers and who mapped them, as the card says.
 import type { Claim } from '@petal/core/types';
 import { describe, expect, test } from 'vitest';
 import { type LayerCard, mapLayers } from '../lib/map-layers.ts';

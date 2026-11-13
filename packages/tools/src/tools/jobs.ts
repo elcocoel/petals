@@ -1,9 +1,9 @@
-// Jobs in a project (Elco, 9 Nov, B with C): "the agent in the conversation can work in
-// collaboration with conversations in the apps to outsource mapping and other processes". Petals'
-// agent on the page hands a job out in a project (an exploration); the person's own agent takes it
-// with the project's link, does it on their machine, and reports back. Jobs are mapping, for now.
+// Jobs in a project: the agent in the conversation works with conversations in the person's own apps,
+// handing out mapping and other work. Petals' agent on the page hands a job out in a project (an
+// exploration); the person's own agent takes it with the project's link, does it on their machine, and
+// reports back. Jobs are mapping, for now.
 //   take_job    the oldest open job, now taken; or none. With the person's agent key instead of a project
-//               link (10 Nov, for an app at /mcp, which can't hold a wait open): their next job from any
+//               link (for an app at /mcp, which can't hold a wait open): their next job from any
 //               of their projects, sent to this agent or to anyone. Either way, with a continue link for
 //               the job's own conversation (migration 22), where its work goes
 //   report_job  a taken job, done with its result or failed with why
@@ -120,7 +120,7 @@ async function takeWithKey(
     throw new ToolFailure('unauthorised', DISCONNECTED);
   }
   const at = ctx.now().toISOString();
-  // what it says it can do, in its own words, for Petals' agent to read (swarm lean 2); unsaid, null
+  // what it says it can do, in its own words, for Petals' agent to read; unsaid, null
   await store.agent.seen({ owner, name, last_seen: at, can: can?.trim() || null });
   const job = await store.job.takeFor(owner, name, at);
   if (!job) return { job: null, next: 'No job is open for you in any of their projects.' };
@@ -129,14 +129,14 @@ async function takeWithKey(
     workIn(job),
     'continue',
   );
-  // its worker's link, from now (swarm.md step 3)
+  // its worker's link, from now
   if (job.conversation) await store.job.handOut(job.id, made.id, at);
   touched(ctx, workIn(job), 'take_job', name);
   return {
     exploration: workIn(job),
     link: made.url,
     job: jobOut(job),
-    // the person's glasses (one-source.md): every flower drawn for them is drawn through these
+    // the person's glasses: every flower drawn for them is drawn through these
     view: await viewOfPerson(ctx, owner),
     next: `Do what brief says, with the six steps, passing link as exploration to save_step, add_note and keep_layer, and view to render_flower. ${THEN_REPORT}`,
   };
@@ -222,7 +222,7 @@ export const takeJob = defineTool<
       exploration: there,
       ...(own ? { link: own.url } : {}),
       job: jobOut(job),
-      // the project's owner's glasses (one-source.md): their flowers are drawn through these
+      // the project's owner's glasses: their flowers are drawn through these
       view: await viewOfPerson(ctx, o.row.owner),
       next: own
         ? 'Do what brief says, with the six steps, passing link as exploration to save_step, add_note, keep_layer and add_annotation, and view to render_flower. Use add_annotation for who or what you find behind addresses, never only a file. Then report_job with link as exploration, this job id and result: { summary, steps, annotations: the ids add_annotation gave }, or failed and why.'
@@ -280,7 +280,7 @@ export const reportJob = defineTool<
         'take_job gives the id; a job is reported once.',
       );
     }
-    // the report lands in the job's own conversation too, in the worker's words (swarm.md step 2)
+    // the report lands in the job's own conversation too, in the worker's words
     if (done.conversation) {
       await store.note.append({
         exploration: done.conversation,

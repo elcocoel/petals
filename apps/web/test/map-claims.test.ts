@@ -1,5 +1,5 @@
 // What Petals' own mapping says about a map's accounts, as the overlay says it (lib/map-claims.ts), on real
-// claims (lab/map-claims-fixtures.ts, SYSTEMS's samples).
+// claims (lab/map-claims-fixtures.ts, the server's samples).
 import { describe, expect, test } from 'vitest';
 import { LAB_CLAIM_NAMES, LAB_MAP_CLAIMS } from '../lab/map-claims-fixtures.ts';
 import { claimWho, mapClaimGroups, noteOf, toolOf, wordsOf } from '../lib/map-claims.ts';

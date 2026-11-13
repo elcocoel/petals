@@ -1,9 +1,9 @@
 // near-house-of-stake (T036): NEAR's House of Stake, live. veNEAR holders, their voting power
 // and delegations, the governance roles and the vote.dao proposals, read keyless in ~16 view
-// calls (~10 s on dRPC), following ../research/spikes/near-dao/house_of_stake.py.
+// calls (~10 s on dRPC).
 //
 // Contracts: venear.dao (veNEAR) and vote.dao (voting), named in the HoS Interim Constitution
-// art. 3.1 and confirmed on chain by NEP-330 metadata (research/data/near-dao/NOTES.md).
+// art. 3.1 and confirmed on chain by NEP-330 metadata.
 //
 // Every read is pinned to one final block (`block_id`), so the snapshot is a function of the
 // block: re-reading the same block gives the same bytes and the same sha256. That is why
@@ -555,7 +555,7 @@ export function nearHouseOfStake(opts: { rpc?: RpcPool } = {}): InputModule {
           population: 'house-of-stake',
           title: 'NEAR House of Stake',
           description: 'veNEAR holders, their voting power and delegations; vote.dao proposals',
-          // its contracts by name, so every reading is on one map, venear.dao's (DAO SET, 12 Nov: the old key
+          // its contracts by name, so every reading is on one map, venear.dao's (the old key
           // near:mainnet:house-of-stake named no account); the reader takes no parameters of its own
           params: { token: VENEAR, voting_contract: VOTE },
         },

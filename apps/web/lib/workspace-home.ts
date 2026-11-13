@@ -1,6 +1,6 @@
 // Server only. What a page holding the conversation needs before the first paint: whether a model is
 // answering, what's on the shelf, and what its address asked to bring back (lib/workspace-url.ts). Nothing
-// stands on the canvas until the conversation draws its own flower (Elco, 8 Nov: no flower hard-coded in).
+// stands on the canvas until the conversation draws its own flower (no flower hard-coded in).
 import { api } from './api.ts';
 import type { ApiHealth } from './api-label.ts';
 import type { Catalogue } from './composer-options.ts';
@@ -21,7 +21,7 @@ export async function workspaceHome(
     mapList(view),
   ]);
   const recorded = health.ok && health.value.llm === 'recorded';
-  // One map per address (Elco, 10 Nov): the first message and the shelf offer the same maps.
+  // One map per address: the first message and the shelf offer the same maps.
   const maps = map.ok ? map.value.maps : [];
   const { open, petal } = openFromParams(q);
   return {

@@ -1,4 +1,4 @@
-// A map or a flower that isn't there gets the site's 404, not the API's words (#78).
+// A map or a flower that isn't there gets the site's 404, not the API's words.
 import { describe, expect, test } from 'vitest';
 import { isMissing } from '../lib/missing.ts';
 

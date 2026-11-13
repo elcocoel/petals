@@ -1,4 +1,4 @@
-// A wallet chosen on the map, in the map's Information box (lib/wallet-view.ts; WORKSPACE, wave 4: a petal press
+// A wallet chosen on the map, in the map's Information box (lib/wallet-view.ts; a petal press
 // shows the same on /make as on /map): its name in UI words, its address quiet in mono where the name says
 // something else, then each fact as a tool row reads (what it is quiet, the value in the words' colour), and its
 // dollars with where the price was read. Props only.
@@ -24,7 +24,7 @@ export function WalletFacts({ view }: { view: WalletView }) {
         ))}
       </dl>
       {view.differs && view.differs.length > 0 && (
-        // where authors stated different values: each shown with who stated it, none erased (wave 8)
+        // where authors stated different values: each shown with who stated it, none erased
         <div className="flex flex-col gap-space-4">
           <Mono as="span" tone="muted">
             {walletWords.differ}

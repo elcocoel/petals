@@ -1,6 +1,6 @@
 # The brain: one source in the repo, a thin service that routes
 
-The brain is what the agent knows how to do: a short doctrine, a few chapters and the recipes. **The repo is its only source of truth**, improved only by pull requests. A thin **brain service** on our server holds the latest copy of it and routes agents quickly: "which chapter or recipe for this?" (Elco, 9 Nov).
+The brain is what the agent knows how to do: a short doctrine, a few chapters and the recipes. **The repo is its only source of truth**, improved only by pull requests. A thin **brain service** on our server holds the latest copy of it and routes agents quickly: "which chapter or recipe for this?"
 
 ## What it is
 
@@ -19,16 +19,16 @@ A folder in the repo, `brain/`:
 | **open-source-leads** | Public traces as directions only: private, never a name for a wallet |
 | **contributing** | How to open a pull request for a chapter or a recipe, and how to help a person make a GitHub account if they have none |
 
-There's no chapter or reader per DAO type (Elco, 9 Nov: "let's not default to a one module per DAO type"). A framework is a recipe, and `where-power-lives` is the chapter.
+There's no chapter or reader per DAO type. A framework is a recipe, and `where-power-lives` is the chapter.
 
 - **`<department>/recipes/<framework>.json` (`recipes/` until 12 Nov):** one per framework or contract type, as `data.md` defines them. Moloch v3 comes first. A recipe's header says how to recognise its contracts, so the index routes to it directly.
 - **`routing.md` (12 Nov, the master routing table):** one authored table, read by people and by the machine alike: Task | Words it answers to | Load | Also load. Routing ranks its rows beside the headers; a row that fires brings what it loads (its chapters before its departments' hubs), then what it also loads, cut to the best three. The doctrine is in no row: it's always read. The check fails a row that names a file that isn't there, and a chapter that no row names.
 - **`index.json`:** generated from every header. Nobody edits it by hand. Since 12 Nov it's `brain-index/v2`: each entry names its department.
-- **Departments (12 Nov; Elco, 11 Nov: "The department's component is important or else it becomes just a list that goes on forever"):** every chapter and recipe is in one of seven, as Elco named them: connecting, gathering, governance, money, investigation, services (#101's slots only), stewardship. The doctrine is in none: it's in every answer. Each department has a hub, `<department>/README.md`: a header (`id`, `kind: department`, `for`, `recognise`) and a "when to use which chapter" table. Routing reaches a hub by its department's name, so a question in a chapter's own words still reaches the chapter first. The services hub lists #101's slots, planned, and holds nothing else. The plan is `research/brain-departments-2026-11-11.md`.
+- **Departments (12 Nov, so the brain doesn't become a list that goes on forever):** every chapter and recipe is in one of seven: connecting, gathering, governance, money, investigation, services (the planned services' slots only), stewardship. The doctrine is in none: it's in every answer. Each department has a hub, `<department>/README.md`: a header (`id`, `kind: department`, `for`, `recognise`) and a "when to use which chapter" table. Routing reaches a hub by its department's name, so a question in a chapter's own words still reaches the chapter first. The services hub lists the planned services' slots and holds nothing else.
 
 ## The brain service
 
-Elco, 9 Nov: "cant that be the repo, and we build a thin API or MCP or whatever that the agents use to get routed quickly semantically like I used in the harness?"
+One source, the repo, and a thin API or MCP that routes agents to the right file quickly, by meaning, as the harness did.
 
 - **What it holds:** the latest brain from the repo's main branch, and the index made from it, stamped with the commit. It's never edited by hand. If it's lost, it's rebuilt from the repo.
 - **When it refreshes:** when the repo changes. The service reads the brain folder's git commit at each request, and reads the files again only when that commit has moved; a merge is the change. Today the server serves its own `brain/`, so a deploy is the change; `PETAL_BRAIN_DIR` points it at a read-only copy of `build/` that follows main, once that's mounted. Once the repo is public, GitHub tells the server on each push to main. Nothing runs on a timer.
@@ -46,9 +46,9 @@ Elco, 9 Nov: "cant that be the repo, and we build a thin API or MCP or whatever 
 ## Routing: three ways, compared honestly
 
 **What the harness actually used, from its code:**
-- **Not embeddings.** The harness brain's reader (`src/lib/brain/reader.ts`) counts exact keyword matches against `routing.json`, takes words from the work order's role, phase, label and description, and returns at most 6 documents.
+- **Not embeddings.** The harness brain's reader counts exact keyword matches against `routing.json`, takes words from the work order's role, phase, label and description, and returns at most 6 documents.
 - **On a miss,** its memory map (Lens) made one model call that "picks from existing tags, never invents new ones".
-- **The semantic recall Elco remembers is Jarvis's memory,** elsewhere in Saint Elmo (`backend/engine/jarvis/embedder.py`, `memory_index.py`):
+- **The semantic recall remembered from it is another system's memory (Jarvis):**
   - a small local model, all-MiniLM-L6-v2, quantized, about 22 MB, run with ONNX;
   - vectors kept in SQLite, cosine top-K in memory;
   - word matching when the model isn't there;
@@ -65,7 +65,7 @@ Elco, 9 Nov: "cant that be the repo, and we build a thin API or MCP or whatever 
 2. **For words, 2 and 3 together:** each ranks, the two rankings are combined, and 2 alone serves if the model isn't there, as Jarvis does.
 3. **The service returns the best three** with their headers, and **the agent's own model chooses.** That last step is the most semantic of all, and it's on the person's own model.
 
-**Test before trusting it.** A set of real questions from Elco's sessions, each with the chapter it should reach, is run against 2 alone and against 2 with 3. The model stays only if it's right more often.
+**Test before trusting it.** A set of real questions from real sessions, each with the chapter it should reach, is run against 2 alone and against 2 with 3. The model stays only if it's right more often.
 
 **Tested, 9 Nov.** Twenty questions in the words people use (`packages/tools/test/brain-service.test.ts`). Words alone (2) put the right chapter first for 17 and in the top three for 18. Both misses had words that sat in the chapter's text but not in its header ("upgrade, pause", "sponsored proposals"), so they went into `where-power-lives`'s header, as the header is what routes. Then: 19 first, 20 in the top three. The model (3) isn't added: words already reach every question, and a miss is fixed in a header, by pull request.
 
@@ -92,13 +92,13 @@ The service builds its index the same way, so what it serves is what the check p
 
 ## Improving it: only by pull request
 
-Elco, 9 Nov: "only through github for now … teach the AI to submit a PR, and if the user doesn't have github he gets one." There are no suggestions on the site.
+Only through GitHub for now: the agent learns to submit a pull request, and a person without GitHub gets an account. There are no suggestions on the site.
 
 1. **The person says it, in the conversation.** For example: "that missed the loot", "keep this way of reading Baal DAOs", or a new framework that just worked.
 2. **The agent drafts the change** to a chapter or a recipe, or a new one. It adds what went wrong or what worked, from the conversation.
 3. **The agent opens the pull request,** as the `contributing` chapter teaches: fork, branch, commit and open it, with the `gh` command or GitHub's website.
 4. **If the person has no GitHub,** the agent helps them make an account. The person signs up themselves; the agent never handles their password.
-5. **A maintainer reviews and merges,** Elco first. The check runs, the service follows the merge, and from that moment every agent is given it.
+5. **A maintainer reviews and merges.** The check runs, the service follows the merge, and from that moment every agent is given it.
 
 **Nothing changes what the next agent reads until a reviewed merge.** A chapter or a recipe is instructions to every agent, so review is the gate.
 
@@ -119,5 +119,5 @@ Elco, 9 Nov: "only through github for now … teach the AI to submit a PR, and i
 
 ## Not here yet
 
-- **The public repo.** It's Elco's go. Until then, the service follows `build/` main, and pull requests come once it's public.
-- **Who else can merge** besides Elco: later.
+- **The public repo.** Until then, the service follows `build/` main, and pull requests come once it's public.
+- **Who else can merge** besides the maintainer: later.

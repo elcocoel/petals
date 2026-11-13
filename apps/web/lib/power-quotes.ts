@@ -1,6 +1,4 @@
-// The illustrated power quotes (#89), Elco's final selection from Figma #44–60
-// (design/quotes/selected-13-2026-11-11/manifest.json), shown wherever a screen is empty (wave 7, Elco: "the quotes
-// are made but not finished ... let's put the shitty version in and fix forward"). The pictures are in
+// The illustrated power quotes, the final selection of thirteen, shown wherever a screen is empty. The pictures are in
 // public/quotes/, 960 px wide. Pure.
 
 export interface PowerQuoteItem {

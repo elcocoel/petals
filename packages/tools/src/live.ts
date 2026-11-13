@@ -7,7 +7,7 @@ export interface Presence {
   client: string | null;
   last_at: string;
   last_tool: string | null;
-  /** additive (10 Nov, swarm.md step 2): which of that agent's workers, by place (1, 2, …), when known */
+  /** additive: which of that agent's workers, by place (1, 2, …), when known */
   n?: number | null;
 }
 

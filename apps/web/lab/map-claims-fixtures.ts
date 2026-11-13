@@ -1,6 +1,6 @@
-// Real claims from Petals' own mapping, for the lab only (SYSTEMS, 11 Nov: GET /api/v1/maps/:id/claims bodies
-// made by its lane from the waves' files): two sourced notes and an inferred one about Marinade accounts, and a
-// note about House of Stake as a record (JSON). Trimmed to a few, each as it came.
+// Real claims from Petals' own mapping, for the lab only (GET /api/v1/maps/:id/claims bodies, 11 Nov, made from
+// the mapping runs' files): two sourced notes and an inferred one about Marinade accounts, and a note about House
+// of Stake as a record (JSON). Trimmed to a few, each as it came.
 import type { Claim } from '@petal/core/types';
 
 export const LAB_MAP_CLAIMS: Claim[] = [

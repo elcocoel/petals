@@ -45,9 +45,9 @@ import type { Channel } from './spring.ts';
 import { LINE, MONO } from './words.ts';
 
 /**
- * The art direction's look (#76; design/flower-art-direction/default-system-vnext.md, V1, 11 Nov): each petal's
- * colour and each band's, and the petals the highlight is on (core's wedge/keys.ts and wedge/highlight.ts).
- * Only the lab hands the scene one, until Elco has seen it; without one the flower draws as it always has.
+ * The art direction's look: each petal's colour and each band's, and the petals the highlight is on (core's
+ * wedge/keys.ts and wedge/highlight.ts).
+ * A page may hand the scene one; without one the flower takes the reading's own colours.
  */
 export interface PetalLook {
   /** each petal's fill, by its id; a petal not here draws in the plain petal tone */
@@ -64,7 +64,7 @@ export interface PetalLook {
    */
   folds?: Record<string, Fold>;
   /**
-   * Proposals on the ring and each wallet's vote (#93; core's wedge/votes.ts): a stretch of time round a thin ring
+   * Proposals on the ring and each wallet's vote (core's wedge/votes.ts): a stretch of time round a thin ring
    * just outside the petals, each proposal an arc on it; pointing at one puts a dot under each voter's petal in
    * its vote's colour. No vote, no dot.
    */
@@ -76,18 +76,18 @@ export interface PetalLook {
     colours: Record<VoteColour, string>;
   };
   /**
-   * The wallet level (Elco, 11 Nov: "Its votes"): the chosen wallet, by its id, whose vote on each proposal colours
+   * The wallet level, its votes: the chosen wallet, by its id, whose vote on each proposal colours
    * that proposal's arc, as its dot would be; the proposals it didn't vote on stay quiet.
    */
   voter?: string | null;
   /**
-   * A proposal a click pinned, by its id (Elco, 12 Nov: "clicking a proposal should highlight the wallets that voted
-   * and show dots for positive and negative votes"): it stays pointed, its dots shown, while the page lights its voters.
+   * A proposal a click pinned, by its id, lighting the wallets that voted and their dots for and against: it
+   * stays pointed, its dots shown, while the page lights its voters.
    */
   pinned?: string | null;
   /**
    * The proposal stacks a click opened, by their petal's index (-1 the stack of no petal here); every other stack of
-   * more than STACK_FOLD folds into one mark with its count (Elco, 12 Nov walk 3).
+   * more than STACK_FOLD folds into one mark with its count.
    */
   opened?: readonly number[];
 }
@@ -247,7 +247,7 @@ export interface Scene {
     /** What's already on the screen around it (the map's names and boxes), in screen px: its words keep clear. */
     taken?: readonly { x0: number; y0: number; x1: number; y1: number }[];
     /**
-     * The petals a new reading no longer has, closing into their seams as the flower glides to it (wave 8): their
+     * The petals a new reading no longer has, closing into their seams as the flower glides to it: their
      * wedges, their fills as they were, and how far the glide has gone. Null when nothing glides.
      */
     ghosts?: { ring: Ring; fills: readonly string[]; done: number } | null;
@@ -269,10 +269,9 @@ export function createScene(
   relations: FakeRelations | null,
   given: PetalLook | null = null,
 ): Scene {
-  // Every flower in the art direction's look since 11 Nov (#76; Elco: lab into the product): a page that hands
-  // none gets the reading's own colours from core's lookFills, its bands at rest, no highlight.
-  // Round tops on every flower, with a vote ring or without (Elco, 12 Nov walk: "this one doesn't have the rounded
-  // tops and it looks different than the ones that have proposals ... check if we're not creating a fork").
+  // Every flower in the art direction's look: a page that hands none gets the reading's own colours
+  // from core's lookFills, its bands at rest, no highlight.
+  // Round tops on every flower, with a vote ring or without, so a flower with proposals looks like one without.
   const look: PetalLook = given ?? { ...lookFills(m.petals), highlight: [], roundTops: true };
   // Nothing in the drawing hit-tests: the pointer is read geometrically, against the rest flower.
   const root = el('g', { class: MONO, 'pointer-events': 'none' }, svg);
@@ -325,13 +324,13 @@ export function createScene(
       }
     : null;
 
-  // figure.vote-ring: the lab's proposals on the ring (#93), drawn under the petals
+  // figure.vote-ring: the lab's proposals on the ring, drawn under the petals
   const votes = look?.votes;
   const voteLayer = votes ? el('g', {}, worldNode) : null;
   // One path, or with the lab's look one path per colour.
   // figure.flower-silhouette
   const silhouette = slot(el('path', { fill: look ? 'none' : PETAL }, worldNode));
-  // the petals a new reading no longer has, under the others as they close (wave 8)
+  // the petals a new reading no longer has, under the others as they close
   const ghostGroup = slot(el('g', { fill: PETAL, display: 'none' }, worldNode));
   const ghostPaths: SVGPathElement[] = [];
   const writeGhosts = (ghosts: { ring: Ring; fills: readonly string[]; done: number } | null) => {
@@ -390,8 +389,8 @@ export function createScene(
   /** figure.petal-highlight: on or off, per petal. */
   const high = Uint8Array.from(m.petals, (p) => (lit.has(p.id) ? 1 : 0));
   /**
-   * The same highlight state's fourth part (the brief, 11 Nov; Elco: "do it and we'll see"): while a group is
-   * chosen, every petal outside it recedes as a pointed petal's neighbours do, so a group of small petals stands out.
+   * The same highlight state's fourth part: while a group is chosen, every petal outside it recedes as a pointed
+   * petal's neighbours do, so a group of small petals stands out.
    */
   const away = (i: number): number => (lit.size > 0 && !high[i] ? 1 - RECEDE : 1);
   const defs = el('defs', {}, root);
@@ -399,7 +398,7 @@ export function createScene(
   /**
    * The highlight's surface: light from the upper left and shade from the lower right, inside the petal's outside
    * edge only, each in the colour under it (lifted, or darkened), so a petal of several bands gets one surface and
-   * its bands keep their straight lines (Elco, 11 Nov). One filter for the scene, on each highlighted petal's group.
+   * its bands keep their straight lines. One filter for the scene, on each highlighted petal's group.
    */
   let surfaceId = '';
   const surface = (): string => {
@@ -518,8 +517,8 @@ export function createScene(
       voteLayer,
     );
   }
-  // each proposal above its proposer's petal, oldest nearest the ring (Elco, 11 Nov: "proposals are related to
-  // specific wallets - SOMEONE made that proposal"); a proposer not on this flower: hollow, in a stack of its own
+  // each proposal above its proposer's petal, oldest nearest the ring, since someone made
+  // each proposal; a proposer not on this flower: hollow, in a stack of its own
   const placed = votes
     ? placesOf(
         votes.proposals,
@@ -536,9 +535,7 @@ export function createScene(
     if (votes && voter && cast?.has(voter)) return votes.colours[cast.get(voter) ?? 'abstain'];
     return own ? MUTED : HAIR;
   };
-  // A stack of more than STACK_FOLD proposals over one petal folds into one mark with its count; a click opens it
-  // (Elco, 12 Nov walk 3: "a collapsed version of the proposal stack as shows that there are several proposals in a
-  // number and then you could click and it would open").
+  // A stack of more than STACK_FOLD proposals over one petal folds into one mark with its count; a click opens it.
   const opened = new Set(look?.opened ?? []);
   const perPetal = new Map<number, number>();
   for (const pl of placed) perPetal.set(pl.petal, (perPetal.get(pl.petal) ?? 0) + 1);
@@ -546,7 +543,7 @@ export function createScene(
   let stackPointed: number | null = null;
   // An opened stack reaches as far as there's room: as many arcs as fit between its petal and the window's edge or a
   // box, its earlier ones folded nearest the petal, where the oldest sit, with their count; so an open stack never
-  // runs behind the header or under a box (VISUAL QA pass 2, 12 Nov: Ref Finance's 189 opened). How many of each
+  // runs behind the header or under a box (as Ref Finance's 189 once did). How many of each
   // opened petal's proposals are folded, by petal; none until the first draw measures the room.
   const hidden = new Map<number, number>();
   const stacks = [...perPetal]
@@ -622,12 +619,12 @@ export function createScene(
   // the arcs have been laid on a measured ring at least once
   let laid = false;
   // The pointer is on an arc or a stack: the arcs hold still under it, so a click lands where it pointed,
-  // and catch up with the ring once it leaves (VISUAL QA pass 2, wave 6).
+  // and catch up with the ring once it leaves.
   let overArc = false;
   let arcsBehind = false;
   /**
    * The proposals' marks on the ring as it is now: on top of their petals as the petals turn, swell and open with
-   * the pointer and the zoom (Elco, 12 Nov, wave 4: "arcs floating off their petals").
+   * the pointer and the zoom, never floating off them.
    */
   const arcsOn = (ring: Ring) => {
     for (const s of markSlots) {
@@ -658,8 +655,8 @@ export function createScene(
   /** The folded stacks' counts, kept at their marks in screen space, so they read at any zoom. */
   const placeStacks = (mk: Marks | null, taken: readonly Box[]) => {
     if (!lastView || stacks.length === 0) return;
-    // what's there already: the notes, the pointed one's two lines, the map's names and boxes (META's QA, 12 Nov:
-    // "labels never sit on each other")
+    // what's there already: the notes, the pointed one's two lines, the map's names and boxes, so
+    // labels never sit on each other
     const there: Box[] = [...taken];
     for (const note of mk?.notes ?? [])
       there.push({
@@ -758,7 +755,7 @@ export function createScene(
     if (!voteWords || !voteTally || pointed < 0 || !lastView) return;
     const x = (SHAPE.cx + lastRing.ox) * lastView.k + lastView.x;
     const y = (SHAPE.cy + lastRing.oy) * lastView.k + lastView.y;
-    // above the middle, so they never sit on the DAO's name under its logo (Elco, 12 Nov walk 3)
+    // above the middle, so they never sit on the DAO's name under its logo
     voteWords.set('transform', `translate(${n3(x)} ${n3(y - LINE * 3.4)})`);
     voteTally.set('transform', `translate(${n3(x)} ${n3(y - LINE * 2.2)})`);
   };
@@ -853,7 +850,7 @@ export function createScene(
     const dot = slot(
       el('circle', { r: 2.5, fill: GROUND, stroke: INK, 'stroke-width': 1 }, group.node),
     );
-    // the ground under its words, so a line behind (a proposal's arc, a petal's edge) never crosses them (wave 6)
+    // the ground under its words, so a line behind (a proposal's arc, a petal's edge) never crosses them
     const ground = slot(
       el('rect', { fill: GROUND, height: 14, 'pointer-events': 'none' }, group.node),
     );
@@ -1115,7 +1112,7 @@ export function createScene(
     const h = ring.h[i] as number;
     const cut = (CUT * fade) / k;
     const last = segs.length - 1;
-    // highlighted: corners and stroke on the petal's outside only (Elco, 11 Nov), the bands' lines straight
+    // highlighted: corners and stroke on the petal's outside only, the bands' lines straight
     const r = HIGHLIGHT.radius / REFERENCE;
     const w = Math.min(HIGHLIGHT.stroke.width / REFERENCE, 1 / k);
     const inner =
@@ -1160,8 +1157,8 @@ export function createScene(
       : `color-mix(in srgb, ${LIT} ${Math.round((100 * step) / ACCENT_STEPS)}%, ${from})`;
 
   const writeAccent = (accent: Channel) => {
-    // with the lab's look a petal keeps its colours when it's pointed at or chosen (Elco, 11 Nov: "colors should
-    // stay on the zoomed version"); its swell and its note say it's the one
+    // with the lab's look a petal keeps its colours when it's pointed at or chosen, zoomed in too;
+    // its swell and its note say it's the one
     if (look) return;
     const { x } = accent;
     for (let i = 0; i < m.n; i++) {

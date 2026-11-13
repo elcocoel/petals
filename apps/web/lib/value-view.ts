@@ -1,4 +1,4 @@
-// What a map's token is worth, in people's words (board #91; SYSTEMS's value/v1, on each map's card): a petal's
+// What a map's token is worth, in people's words (value/v1, on each map's card): a petal's
 // dollars in its box, and the map's total and its token's supply on the map's page, each with where and when its
 // price was read. No price says so, never a guess. The sums are core's (usdString), so a petal's dollars here are
 // the server's to the cent.
@@ -95,8 +95,8 @@ export function petalWorth(
 }
 
 /**
- * A map's treasury and its token's price, short, for the map at some magnification (Elco, 12 Nov walk 3 on Ref
- * Finance: "show treasury and token price"): each where its card has it, none where it doesn't, never a guess.
+ * A map's treasury and its token's price, short, for the map at some magnification: each where its card has
+ * it, none where it doesn't, never a guess.
  */
 export function worthWords(v: MapValue | null | undefined): string[] {
   if (!v) return [];
@@ -105,8 +105,8 @@ export function worthWords(v: MapValue | null | undefined): string[] {
     out.push(
       `Treasury ${dollars(v.treasury_usd)}${v.treasury_unpriced ? ` (${v.treasury_unpriced} unpriced)` : ''}`,
     );
-  // the token's price, said as a price and when it was read, so it never reads as a treasury (Elco, 12 Nov: "I
-  // first thought, like, all of these have only 3 dollars in their treasury") and two days' prices tell apart
+  // the token's price, said as a price and when it was read, so it never reads as a treasury (a $3 price once
+  // read as a $3 treasury) and two days' prices tell apart
   if (v.price) out.push(`1 ${tokenOf(v)} = ${dollars(v.price.usd)}, ${dayShort(v.price.at)}`);
   return out;
 }

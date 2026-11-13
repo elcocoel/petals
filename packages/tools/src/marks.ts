@@ -1,4 +1,4 @@
-// The run over the shared map (board #85, Elco's pick, 11 Nov: "Chain first, then lists"): every map's card,
+// The run over the shared map (chain first, then lists): every map's card,
 // its address read with @petal/inputs' readMark, its mark/v1 kept by the map's address, its logo as a picture
 // in media. Read again, a map's mark is replaced. scripts/map-marks.ts runs it where the server runs.
 import { MARK_VERSION, validateMark } from '@petal/core';
@@ -94,9 +94,9 @@ export interface TypeRunResult {
 }
 
 /**
- * The types pass (#97; META, 11 Nov: "only adds types to each kept mark"): each map's kept mark gains the types
+ * The types pass (it only adds types to each kept mark): each map's kept mark gains the types
  * its reading and chain show, as mark/v2. Its name, symbol, logo and when they were read stay as they were, so a
- * wave's own mark keeps its words. A map with no mark kept, or no types found, is left as it is.
+ * mapping run's own mark keeps its words. A map with no mark kept, or no types found, is left as it is.
  */
 export async function typeMaps(ctx: ToolContext, o: MarkRun = {}): Promise<TypeRunResult> {
   const store = privateStore(ctx.config);
@@ -149,10 +149,10 @@ export interface LogoRunResult {
 }
 
 /**
- * The logos pass (Elco, 12 Nov, walk 3: "some daos here that do have logos not having them"): each map whose kept
- * mark has no logo is read again, chain first, then the curated lists (#85), and a logo found is added to the kept
- * mark, with its picture in media. Its name, symbol and types stay as they were, so a wave's own mark keeps its
- * words; a map with no mark kept gains the mark read. Nothing else changes.
+ * The logos pass (for DAOs that have a logo the map didn't show): each map whose kept
+ * mark has no logo is read again, chain first, then the curated lists, and a logo found is added to the kept
+ * mark, with its picture in media. Its name, symbol and types stay as they were, so a mapping run's own mark keeps
+ * its words; a map with no mark kept gains the mark read. Nothing else changes.
  */
 export async function logoMaps(ctx: ToolContext, o: MarkRun = {}): Promise<LogoRunResult> {
   const store = privateStore(ctx.config);

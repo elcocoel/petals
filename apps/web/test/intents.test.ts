@@ -1,4 +1,4 @@
-// Paying with any token from any chain through NEAR Intents (Elco, 10 Nov): what's offered, how it's
+// Paying with any token from any chain through NEAR Intents: what's offered, how it's
 // named, the dollars a person types, and what each state says.
 import { describe, expect, test } from 'vitest';
 import {
@@ -33,7 +33,7 @@ describe('what a person can pay with', () => {
     ]);
   });
 
-  test('what most people hold comes first, in its own group, and isn’t listed twice (#78)', () => {
+  test('what most people hold comes first, in its own group, and isn’t listed twice', () => {
     const groups = tokenChoices([
       token('SHITZU', 'near'),
       token('wNEAR', 'near'),

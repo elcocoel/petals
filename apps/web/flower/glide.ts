@@ -1,8 +1,8 @@
-// A flower gliding from the reading it drew to a new one (wave 8, Elco: "how different data layers from different
-// people contribute to fuller and fuller maps"; the map drawn from the layers on, petals moving, no jump). Each petal
-// goes from where it was drawn to where the new reading puts it, matched by who it is: its angle, its width and its
-// height ease together. A wallet the new reading brings grows out of the seam it opens in; one it no longer has
-// closes into its seam, drawn as a fading ghost. Where nothing reorders, neighbours keep touching all the way.
+// A flower gliding from the reading it drew to a new one, as layers from different people make a map fuller (the
+// map drawn from the layers on, petals moving, no jump). Each petal goes from where it was drawn to where the new
+// reading puts it, matched by who it is: its angle, its width and its height ease together. A wallet the new
+// reading brings grows out of the seam it opens in; one it no longer has closes into its seam, drawn as a fading
+// ghost. Where nothing reorders, neighbours keep touching all the way.
 import { closeRing, newRing, placeAt, type Ring } from './ring.ts';
 
 /** How long a flower takes to glide to a new reading, in seconds: as long as the map's arrangement does. */

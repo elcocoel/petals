@@ -1,9 +1,8 @@
-// A proposal pressed on the map, said in the map's Information box (Elco, 12 Nov, walk 3, Ref Finance: "when I
-// click the proposal there's no way for me to know what this proposal is about so maybe there's a link to wherever
-// it was made maybe there is a summary"): its title, what kind it is, how it ended and when, who proposed it and
+// A proposal pressed on the map, said in the map's Information box, so a person knows what it is about: its
+// title, what kind it is, how it ended and when, who proposed it and
 // for whom, how its voters voted, its own words where they say more than its title (proposals/v3's summary, as its
 // source says it, never a model's), and its link, said for what it is: where it was made, or an address its text
-// names (a Sputnik proposal has no page of its own). Pure. The words are drafts.
+// names (a Sputnik proposal has no page of its own). Pure.
 import type { Proposal } from '@petal/core';
 import { dateLabel } from './flower-view.ts';
 

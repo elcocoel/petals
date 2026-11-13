@@ -1,6 +1,5 @@
-// Elco, 12 Nov walk: "we have to hold on to the mini shape longer until I'm actually focusing on one or another
-// group of dowels ... the transition happens at different times depending on something related to the size of
-// petals". The far wave hands over to petals at one zoom for the whole chain, measured from its home.
+// The mini shape holds until one group is in focus, rather than switching at a time that depends on the size of
+// its petals. The far wave hands over to petals at one zoom for the whole chain, measured from its home.
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { expect, test } from 'vitest';
