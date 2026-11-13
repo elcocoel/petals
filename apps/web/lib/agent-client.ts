@@ -1,4 +1,4 @@
-// The adapter: the one place the browser talks to Petal's API (design/frontend-foundation.md, MVVM+).
+// The adapter: the one place the browser talks to Petal's API (MVVM+).
 // Everything else gets plain values and agent events, so views and ViewModels hold no URLs, no status
 // codes and no `fetch`. layers.test.ts names this file as the only one in lib/ allowed to call it.
 
@@ -84,7 +84,7 @@ export const agentClient: AgentClient = {
       const json = (await res.json().catch(() => ({}))) as {
         error?: { code: string; message: string };
       };
-      // the code goes with it, so a refusal can be answered for what it is (a payment, B)
+      // the code goes with it, so a refusal can be answered for what it is (a payment)
       throw new Refused(
         json.error?.code ?? 'internal',
         json.error?.message ?? `HTTP ${res.status}`,
@@ -183,7 +183,7 @@ export async function moveConversation(id: string, project: string | null): Prom
  */
 /**
  * Where a map's flower is drawn (GET /api/v1/maps/:id, its view_url: /d/<sha> or /f/<id>), so the workspace
- * can open it when a petal of it is clicked on its map (#78). Null when the map isn't there.
+ * can open it when a petal of it is clicked on its map. Null when the map isn't there.
  */
 export async function readMapDrawing(map: string): Promise<string | null> {
   const res = await fetch(`/api/v1/maps/${encodeURIComponent(map)}`);
@@ -192,7 +192,7 @@ export async function readMapDrawing(map: string): Promise<string | null> {
   return json.map?.view_url ?? null;
 }
 
-/** What a signed-in person kept about a map and can publish (SYSTEMS, 12 Nov: GET /api/v1/publish/data). */
+/** What a signed-in person kept about a map and can publish (GET /api/v1/publish/data). */
 export interface PublishableData {
   about: string;
   name: string | null;
@@ -208,7 +208,7 @@ export interface PublishableData {
     source?: PublishSource | null;
     confidence?: number | null;
   }[];
-  /** each one that can go, in the order it would (Elco, 12 Nov: "Let me look first") */
+  /** each one that can go, in the order it would, to read before the press */
   claims?: {
     id: string;
     subject: string;
@@ -219,9 +219,9 @@ export interface PublishableData {
   }[];
   /** already on the shared map */
   published: number;
-  /** what the press would add, per layer and kind, and what can't go yet and why (SYSTEMS, wave 3) */
+  /** what the press would add, per layer and kind, and what can't go yet and why */
   adds?: PublishAdds[];
-  /** the person's readings of the map that go with the press, credited to them (SYSTEMS, wave 7) */
+  /** the person's readings of the map that go with the press, credited to them */
   readings?: {
     layer: string;
     id: string;
@@ -231,8 +231,8 @@ export interface PublishableData {
     accounts: number;
   }[];
   /**
-   * each layer the press would publish, and what it adds to the map in front, by case (SYSTEMS, wave 8:
-   * specs/005-mapping-brain/composition.md §9, a draft until Elco's OK)
+   * each layer the press would publish, and what it adds to the map in front, by case
+   * (specs/005-mapping-brain/composition.md §9)
    */
   layers?: PublishLayer[];
   /** the same cases, summed for the whole publication */
@@ -240,8 +240,8 @@ export interface PublishableData {
 }
 
 /**
- * The ways a published fact meets the map in front (composition.md §5; Elco, 13 Nov: "how do different data layers
- * from different people contribute to fuller and fuller maps"): a kind of data it has no fact of, another moment of
+ * The ways a published fact meets the map in front, as layers from different people add up to fuller maps
+ * (composition.md §5): a kind of data it has no fact of, another moment of
  * one it has, subjects it had no fact for, or the same slot, where the same value is a match credited to every
  * author who stated it and a different one differs, both standing. No one's layer wins.
  */
@@ -371,7 +371,7 @@ export async function readMapClaims(map: string): Promise<MapClaims | null> {
 }
 
 /**
- * Search over the map (GET /api/v1/search, #105): maps, with the proposals and what Petals' mapping says that
+ * Search over the map (GET /api/v1/search): maps, with the proposals and what Petals' mapping says that
  * matched under them. Without the reranker unless `ordered` (about 0.35 s in place of 2 to 3 s). Null when it
  * can't answer.
  */
@@ -384,7 +384,7 @@ export async function searchMap(q: string, ordered: boolean): Promise<SearchBody
 }
 
 /**
- * Search in /docs (Elco, 12 Nov: "the search function"): the pages /docs renders, each by its file's path in the
+ * Search in /docs: the pages /docs renders, each by its file's path in the
  * repository, with the sections that matched. The same quick and ordered asks as the map's.
  */
 export async function searchDocs(q: string, ordered: boolean): Promise<SearchBody | null> {
@@ -562,8 +562,8 @@ export async function saveView(view: View): Promise<PersonView> {
 export class SignInFirst extends Error {}
 
 /**
- * Keeps a visitor's view by its hash (PUT /api/v1/views; Elco, 12 Nov, walk 3: "is it expensive do allow me to
- * change here too?"): nobody's, so their browser keeps the hash and the pages ask for it. Throws the reason.
+ * Keeps a visitor's view by its hash (PUT /api/v1/views), so visitors can change it too: nobody's, so their
+ * browser keeps the hash and the pages ask for it. Throws the reason.
  */
 export async function keepView(view: View): Promise<PersonView> {
   return putView('/api/v1/views', view);
@@ -608,7 +608,7 @@ export interface SnapshotFacts {
 
 /** Facts only decorate a flower, so a snapshot that can't be described just has none. */
 /**
- * The accounts two groups share (#87), from the relations index, by each one's reading snapshot: each account on
+ * The accounts two groups share, from the relations index, by each one's reading snapshot: each account on
  * the first side, as the index names it and as its address alone. Empty when it can't be read.
  */
 export async function readShared(a: string, b: string): Promise<string[]> {
@@ -643,8 +643,8 @@ export interface ComposedReading {
 }
 
 /**
- * A map's reading composed from the layers on (GET /api/v1/maps/:id/reading, composition.md §9; Elco, wave 8: "results
- * should be deterministic"): what the map draws for them, in the person's view. Null when it can't be read.
+ * A map's reading composed from the layers on (GET /api/v1/maps/:id/reading, composition.md §9), deterministic:
+ * what the map draws for them, in the person's view. Null when it can't be read.
  */
 export async function readComposed(
   map: string,
@@ -669,7 +669,7 @@ export async function readMapCard(map: string): Promise<LayerCard | null> {
     differs?: number;
   };
   if (!json.map) return null;
-  // wave 8's record comes beside the card (SYSTEMS's GET /api/v1/maps/:id): its layers, authors and differences
+  // the map's layer record comes beside the card (GET /api/v1/maps/:id): its layers, authors and differences
   return {
     ...json.map,
     ...(json.layers ? { layers: json.layers } : {}),
@@ -678,7 +678,7 @@ export async function readMapCard(map: string): Promise<LayerCard | null> {
   };
 }
 
-/** What a map's token is worth (#91), from its card: null when it has none, or it can't be read. */
+/** What a map's token is worth, from its card: null when it has none, or it can't be read. */
 export async function readMapValue(map: string): Promise<MapValue | null> {
   const res = await fetch(`/api/v1/maps/${encodeURIComponent(map)}`).catch(() => null);
   if (!res?.ok) return null;
@@ -687,7 +687,7 @@ export async function readMapValue(map: string): Promise<MapValue | null> {
 }
 
 /**
- * A map's voting blocs (#94), as SYSTEMS finds them over a period (GET /api/v1/maps/:id/blocs): accounts that vote
+ * A map's voting blocs, as the server finds them over a period (GET /api/v1/maps/:id/blocs): accounts that vote
  * alike, biggest bloc first, members as petal ids; the period it used (from/to ISO, the last 90 days unless asked).
  * Null when it has none, or they can't be read.
  */
@@ -706,7 +706,7 @@ export async function readMapBlocs(
   return json && Array.isArray(json.blocs) ? json : null;
 }
 
-/** A map's proposals with every vote (#93), as SYSTEMS reads them (proposals/v1): null when it has none. */
+/** A map's proposals with every vote, as the server reads them (proposals/v1): null when it has none. */
 export async function readMapProposals(map: string): Promise<Proposal[] | null> {
   const res = await fetch(`/api/v1/maps/${encodeURIComponent(map)}/proposals`).catch(() => null);
   if (!res?.ok) return null;
@@ -837,7 +837,7 @@ export async function readSignedIn(): Promise<{ network: string; account: string
   return network && account ? { network, account } : null;
 }
 
-/** The visitor's credit for Petals' agent (B), or null: not signed in, or no top-up yet. */
+/** The visitor's credit for Petals' agent, or null: not signed in, or no top-up yet. */
 export async function readCredit(): Promise<Credit | null> {
   const res = await fetch('/api/v1/me');
   if (!res.ok) return null;
@@ -845,7 +845,7 @@ export async function readCredit(): Promise<Credit | null> {
   return json.credit ?? null;
 }
 
-/** The person's credit record (SYSTEMS's credit/v1, wave 8); null for nobody or no answer. */
+/** The person's credit record (the server's credit/v1); null for nobody or no answer. */
 export async function readMyCredit(): Promise<CreditRecord | null> {
   const res = await fetch('/api/v1/me/credit', { cache: 'no-store' });
   if (!res.ok) return null;
@@ -871,7 +871,7 @@ export interface EvmProof {
   signature: string;
 }
 
-/** The text an EVM wallet signs, Sign-In with Ethereum, for this address on the chain it's on (SYSTEMS). */
+/** The text an EVM wallet signs, Sign-In with Ethereum, for this address on the chain it's on. */
 export const evmChallenge = (address: string, chainId: number) =>
   sessionPost<{ message: string; nonce: string; expires_at: string }>('/api/v1/auth/challenge', {
     chain: 'eip155',
@@ -887,7 +887,7 @@ export interface SolanaProof {
   signature: string;
 }
 
-/** The text a Solana wallet signs to sign in or be added, for this address (SYSTEMS). */
+/** The text a Solana wallet signs to sign in or be added, for this address. */
 export const solanaChallenge = (address: string) =>
   sessionPost<{ message: string; nonce: string; expires_at: string }>('/api/v1/auth/challenge', {
     chain: 'solana',
@@ -1015,7 +1015,7 @@ export function addMyAnnotations(body: {
   return sessionPost('/api/v1/me/annotations', body);
 }
 
-/** The person's moves on one of their jobs (swarm.md, step 3): stop it, send it again, or hand it to an agent. */
+/** The person's moves on one of their jobs: stop it, send it again, or hand it to an agent. */
 export function moveJob(
   job: string,
   move: 'stop' | 'retry' | 'hand-over',
@@ -1024,7 +1024,7 @@ export function moveJob(
   return sessionPost(`/api/v1/jobs/${encodeURIComponent(job)}/${move}`, to ? { to } : {});
 }
 
-/** The jobs Petals' agent handed out in a conversation, and where each stands (C). Empty on no answer. */
+/** The jobs Petals' agent handed out in a conversation, and where each stands. Empty on no answer. */
 export async function readJobs(exploration: string): Promise<Job[]> {
   const res = await fetch(`/api/v1/explorations/${encodeURIComponent(exploration)}/jobs`, {
     cache: 'no-store',
@@ -1045,7 +1045,7 @@ export function mintAgentLink(): Promise<{ id: string; token: string; created_at
   return sessionPost('/api/v1/agents/link', {});
 }
 
-/** Ends one of the person's agents by its name (SYSTEMS): it leaves the list, and its waits are refused. */
+/** Ends one of the person's agents by its name: it leaves the list, and its waits are refused. */
 export function disconnectAgent(
   name: string,
 ): Promise<{ disconnected: { name: string; at: string } }> {

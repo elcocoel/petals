@@ -1,8 +1,7 @@
-// The words for connecting a wallet, in one place, so changing one is one line here. They're the "Proposed"
-// column of design/journey-strings.md, which Elco hasn't approved: for Test 1, they say so if they're wrong.
+// The words for connecting a wallet, in one place, so changing one is one line here.
 
 export const doorWords = {
-  // The landing's and the navbar's word for the same thing (Elco, 9 Nov: Connect, never Ask).
+  // The landing's and the navbar's word for the same thing (Connect, never Ask).
   connect: 'Connect',
   disconnect: 'Disconnect',
   badSignature: "That signature didn't work. Connect your wallet again.",
@@ -10,18 +9,17 @@ export const doorWords = {
 } as const;
 
 /**
- * /make for someone not signed in (Elco, 11 Nov, #78: "a oops, your no logged in"): drafts for Elco, listed in
- * design/journey-strings.md. The copy button's words are the setup prompt's own (lib/landing-copy.ts).
+ * /make for someone not signed in. The copy button's words are the setup prompt's own (lib/landing-copy.ts).
  */
 export const notSignedInWords = {
   title: 'Oops, you’re not logged in.',
   body: 'Connect a NEAR wallet to talk to Petals’ agent.',
-  /** with an Ethereum wallet too (wave 5, Elco: "multi chain wallet connection"; "evm is priority") */
+  /** with an Ethereum wallet too (multi-chain wallet connection, EVM first) */
   bodyAny: 'Connect a NEAR or Ethereum wallet to talk to Petals’ agent.',
-  /** the two ways in, as the lobby's Wallets widget names them (LOBBY, wave 5) */
+  /** the two ways in, as the lobby's Wallets widget names them */
   near: 'Connect a NEAR wallet',
   evm: 'Connect an Ethereum wallet',
-  /** and Solana's (wave 5, LOBBY's connectSolana; the Wallets widget says the same) */
+  /** and Solana's (the lobby's connectSolana; the Wallets widget says the same) */
   bodyAll: 'Connect a NEAR, Ethereum or Solana wallet to talk to Petals’ agent.',
   solana: 'Connect a Solana wallet',
   /** before the quieter way in, the setup prompt for the person's own agent */

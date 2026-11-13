@@ -1,7 +1,6 @@
-// A flower's voting blocs (#94; Elco, 11 Nov: "this will allow us, with the added element of time periods to
-// allow models to map voting blocks"), as the legend's Highlight row says them: each bloc by how many vote
-// alike, its pairs quiet beside it, the period the votes come from, and what voting alike doesn't prove
-// (inferred, never proof of coordination). Pure. The words are drafts.
+// A flower's voting blocs (accounts that vote alike, seen across time periods), as the legend's Highlight row
+// says them: each bloc by how many vote alike, its pairs quiet beside it, the period the votes come from, and
+// what voting alike doesn't prove (inferred, never proof of coordination). Pure.
 import type { Blocs } from '@petal/core';
 import { dayOf } from './map-claims.ts';
 
@@ -23,7 +22,6 @@ export interface BlocChoice {
   members: readonly string[];
 }
 
-/** Drafts (Elco changes them later). */
 export const blocWords = {
   none: 'None',
   alike: (n: number) => `${n} that vote alike`,

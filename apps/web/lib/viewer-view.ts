@@ -1,4 +1,4 @@
-// Server only. The one place a page reads whose view it draws with (coordinator/one-source.md, step 3):
+// Server only. The one place a page reads whose view it draws with:
 // the person's own, from the server with their cookie, or the default the server gives a visitor. Every
 // page built on the server (the flower and map pages, the lists, the landing, the root layout that seeds
 // the browser's copy) asks here, so one person's change shows on every page they open.

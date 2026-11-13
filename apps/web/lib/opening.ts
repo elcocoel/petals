@@ -1,5 +1,5 @@
 // What the agent says first (M-Talk). Written text with real maps from the one shared map (GET /api/v1/maps;
-// Elco, 10 Nov: one map per address), not a model call: a person opening the app should cost nothing. It
+// one map per address), not a model call: a person opening the app should cost nothing. It
 // goes to the model with the first question, so the agent knows what it already said.
 import { viewName } from './map-views.ts';
 import { type MapCard, mapHref } from './maps.ts';
@@ -12,8 +12,8 @@ const MAX_SHOWN = 3;
 
 /**
  * What's offered as already mapped, in the first message and on /make's shelf alike: maps, one per address
- * (Elco, 10 Nov), the largest first, as the readiest first cases. Two maps that read the same name are
- * offered once, the larger (#78, 11 Nov: two 'Marinade MNDE deposits and lock schedules' side by side).
+ * the largest first, as the readiest first cases. Two maps that read the same name are
+ * offered once, the larger (else two 'Marinade MNDE deposits and lock schedules' sit side by side).
  */
 export function firstCases<M extends Pick<MapCard, 'readings' | 'name' | 'title'>>(
   maps: readonly M[],
@@ -47,5 +47,5 @@ export function openingMessage(maps: readonly MapCard[]): string {
     .join('\n\n');
 }
 
-/** Drafts (#78, 11 Nov): the room beside the conversation while the Power Map is on its way (megabytes). */
+/** The room beside the conversation while the Power Map is on its way (megabytes). */
 export const groundWords = { opening: 'Opening the Power Map…' } as const;

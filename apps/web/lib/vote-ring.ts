@@ -1,7 +1,7 @@
-// The vote ring on the product's flowers (#93; Elco, 11 Nov: the lab into the product): a map's proposals, as
-// SYSTEMS reads them (proposals/v1), on a thin ring just outside the petals, each an arc over the petal of the
+// The vote ring on the product's flowers: a map's proposals, as
+// the server reads them (proposals/v1), on a thin ring just outside the petals, each an arc over the petal of the
 // member who put it up; pointing at one puts a dot under each voter's petal. The ring is the last RING_DAYS of the
-// map's proposals, up to when the newest one closes, until the legend's period setting (#92). Pure.
+// map's proposals, up to when the newest one closes, until the legend's period setting. Pure.
 import { GREY, KEYS, type Key } from '@petal/core/wedge/keys';
 import type { Proposal, VoteColour } from '@petal/core/wedge/votes';
 
@@ -17,7 +17,7 @@ export interface VoteRing {
   colours: Record<VoteColour, string>;
 }
 
-/** The reading's meaning for this question (Elco's example): for mint, against pink; abstain is context. */
+/** The reading's meaning for this question: for mint, against pink; abstain is context. */
 export const VOTE_COLOURS: Record<VoteColour, string> = {
   for: (KEYS[0] as Key).hex,
   against: (KEYS[4] as Key).hex,

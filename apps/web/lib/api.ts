@@ -11,7 +11,7 @@ export type ApiResult<T> =
 
 /**
  * The server's public answers it names by what they hold (ETag), the last one kept by its path: asked again,
- * a 304 gives the kept one, so the map's megabytes travel once while no reading changes (/map/data, 11 Nov).
+ * a 304 gives the kept one, so the map's megabytes travel once while no reading changes (/map/data).
  */
 const named = new Map<string, { etag: string; value: unknown }>();
 

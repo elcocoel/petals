@@ -1,11 +1,9 @@
-// /make's two states (Elco, 12 Nov: "we need to define the 'exploring' and 'mapping' states and the change and on
-// the mapping state there should be a clear indicator of what data layers and claims I would be adding").
+// /make's two states, exploring and mapping; the mapping state shows clearly which data layers and claims it adds.
 // Exploring reads what's there; mapping is what the person would add to the map in front of them, in their name.
-// Wave 8 (Elco, 13 Nov: "how do different data layers from different people contribute to fuller and fuller maps"):
-// each layer they'd publish says what it adds to that map, by the cases of SYSTEMS's composition
+// Each layer they'd publish says what it adds to that map, by the cases of the composition
 // (specs/005-mapping-brain/composition.md §4): new data, a new moment, new subjects, a match credited to every
 // author who stated it, or a value that differs, both standing. No one's layer wins. Then what can't go yet and
-// why, and the press. The case words are written once, here; Information (OVERLAYS) says them too. Drafts.
+// why, and the press. The case words are written once, here; Information says them too.
 import type { State } from '@petal/core';
 import type {
   CreditedAuthor,
@@ -123,7 +121,7 @@ export const caseWords = {
     match: (n: number) => `${plural(n, 'fact', 'facts')} ${n === 1 ? 'matches' : 'match'}`,
     differs: (n: number) => `${plural(n, 'fact', 'facts')} ${n === 1 ? 'differs' : 'differ'}`,
   } satisfies Record<MapCase, (n: number) => string>,
-  /** Information's heading on a publication that just landed (OVERLAYS) */
+  /** Information's heading on a publication that just landed */
   justAdded: 'Just added, in your name',
 } as const;
 
@@ -164,7 +162,7 @@ export function toMapLines(c: LayerCases): ToMapLine[] {
   }));
 }
 
-/** A publication that just landed on the map, as the press hands it to the map's `joined` (OVERLAYS's MapJoined). */
+/** A publication that just landed on the map, as the press hands it to the map's `joined` (MapJoined). */
 export interface Joined {
   /** the map it joined */
   map: string;
@@ -239,7 +237,7 @@ export function mappingView(
     // what goes is in the layers, by what it adds; here, what can't go yet
     .filter((a) => !a.goes)
     .map((a) => ({
-      // a layer's kind can come twice, what goes and what stays private (SYSTEMS's adds)
+      // a layer's kind can come twice, what goes and what stays private (the server's adds)
       key: `${a.layer}:${a.kind}:${a.verb ?? a.label}:stays`,
       line: modeWords.adds(a),
       goes: false,
