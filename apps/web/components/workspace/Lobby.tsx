@@ -78,6 +78,7 @@ export function Lobby({
     held: string | null;
     phase: WithdrawPhase;
     withdrew: string | null;
+    failedWhy?: string | null;
     withdraw: () => void;
   };
   /** Every call charged to them (usage/v1), in the Balance widget. */
@@ -136,6 +137,7 @@ export function Lobby({
             held={funds.held}
             phase={funds.phase}
             withdrew={funds.withdrew}
+            failedWhy={funds.failedWhy ?? null}
             onWithdraw={funds.withdraw}
             usage={usage}
             quote={quotes.usage}
