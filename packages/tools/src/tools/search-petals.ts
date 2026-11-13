@@ -1,10 +1,10 @@
-// search_petals (#105; Elco, 11 Nov: "did we ever implement search with the embedding model on the server being
-// super smart to find shit all sorts of different ways?"): one search over everything on the map (organisations,
-// their names, symbols and types, and their proposals) and the signed-in person's own work (conversations,
-// explorations, shapes, notes, follows) and annotations, by words and by meaning (search-index.ts), on the models
-// on Elco's Mac (search-model.ts). One answer per map, with what matched under it. The shared map's documents
-// are built when they change and each text is embedded once, kept in the store (migration 29); a load isn't
-// waited on, it's seen at the next search. Petals' agent, people's agents (/mcp) and GET /api/v1/search use it.
+// search_petals, with the embedding model on the server, to find a thing many different ways: one search over
+// everything on the map (organisations, their names, symbols and types, and their proposals) and the signed-in
+// person's own work (conversations, explorations, shapes, notes, follows) and annotations, by words and by
+// meaning (search-index.ts), on the models on the host machine (search-model.ts). One answer per map, with what
+// matched under it. The shared map's documents are built when they change and each text is embedded once, kept
+// in the store (migration 29); a load isn't waited on, it's seen at the next search. Petals' agent, people's
+// agents (/mcp) and GET /api/v1/search use it.
 import { type Mark, validateMark } from '@petal/core';
 import type { Claim } from '@petal/core/types';
 import type { AnnotationRow, Store } from '@petal/store';
@@ -44,7 +44,7 @@ export const OWN_KINDS = [
   'note',
   'follow',
 ] as const;
-/** The pages /docs shows (Elco, 12 Nov: "the search function" on the docs): asked for by name, never by default. */
+/** The pages /docs shows (search on the docs): asked for by name, never by default. */
 export const DOC_KINDS = ['doc'] as const;
 export const FINDABLE_KINDS = [...MAP_KINDS, ...OWN_KINDS, ...DOC_KINDS] as const;
 export type FindableKind = (typeof FINDABLE_KINDS)[number];
@@ -161,7 +161,7 @@ const mapSets = new Map<string, Promise<MapSet>>();
 
 /**
  * The shared map's documents, built again only when the map changes: its drawings, its marks or its proposals.
- * Hidden maps (#96) are in none of them.
+ * Hidden maps are in none of them.
  */
 async function mapSet(ctx: ToolContext, model: SearchModel | null): Promise<MapSet> {
   const store = privateStore(ctx.config);
@@ -170,7 +170,7 @@ async function mapSet(ctx: ToolContext, model: SearchModel | null): Promise<MapS
   const marks = await store.mark.list();
   const proposalRows = await store.proposals.list();
   // Petals' own mapping's claims and what people published (publish-data.ts), the same for every viewer
-  // a claim a wave reissued is retired: its replacement is what's said (hidden.ts)
+  // a claim a mapping run reissued is retired: its replacement is what's said (hidden.ts)
   const claimRows = [
     ...(await store.annotation.list(MAPPING)),
     ...(await store.annotation.list(PUBLISHED)),
@@ -395,7 +395,7 @@ async function ownDocs(ctx: ToolContext, subject: string, shared: MapSet) {
   const store = privateStore(ctx.config);
   const docs: Findable[] = [];
   const rows = await store.annotation.list(subject);
-  // their own names first, as their petals show them (annotation step 6), then the map's
+  // their own names first, as their petals show them, then the map's
   const own = namer(new Map(), rows);
   const nameOf = (ref: string) => own(ref) ?? shared.nameOf(ref);
   for (const r of rows) {
@@ -444,7 +444,7 @@ const idOf = (f: Findable) =>
       ? f.id.slice(f.kind.length + 1)
       : f.id;
 
-/** What search says when its model isn't running (Elco, 11 Nov: "Fall back to word search"). */
+/** What search says when its model isn't running: it falls back to word search. */
 export const MEANING_OFF =
   "Search by meaning is off right now: its model isn't running, so these were found by their words alone.";
 

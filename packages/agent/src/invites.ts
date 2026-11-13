@@ -19,7 +19,7 @@ export const INVITE_CLOSED =
   "This invite isn't valid any more, so Petals' agent stopped here. You can carry on with your own agent.";
 export const CREDIT_SPENT =
   "Your credit is used up, so Petals' agent stopped here and nothing more will be spent. Top up from your wallet to carry on, or carry on with your own agent.";
-/** A signed-in person with no credit and no invite (9 Nov): Petals' agent is paid for from their wallet. */
+/** A signed-in person with no credit and no invite: Petals' agent is paid for from their wallet. */
 export const PAYMENT_NEEDED =
   "Petals' agent runs on NEAR AI and is paid for in NEAR from your wallet, so nothing was spent. Top up to start, or use your own agent.";
 /** Where to pay, for a caller that isn't the page. */
@@ -86,7 +86,7 @@ export async function mintInvite(
 }
 
 /**
- * A new budget for an invite, in total, the same token kept (Elco, 10 Nov): what's left moves by the
+ * A new budget for an invite, in total, the same token kept: what's left moves by the
  * difference, so what it has spent still counts. False when no such invite exists.
  */
 export async function setInviteBudget(
@@ -265,7 +265,7 @@ export interface PersonCredit {
   left_usd: number;
 }
 
-/** What was put in by `reasons`: by default both kinds, what Elco gave and what the person paid. */
+/** What was put in by `reasons`: by default both kinds, what the operator gave and what the person paid. */
 const fundedOf = async (store: Store, account: string, reasons = [FUNDED, PAID, SYNCED]) =>
   (await store.credit.entries(account))
     .filter((e) => reasons.includes(e.reason))
@@ -286,8 +286,8 @@ export async function personCredit(store: Store, person: string): Promise<Person
 }
 
 /**
- * Corrects what a person was charged, as one entry with its reason (Elco, 10 Nov: "one entry 'repriced at
- * the cached rate'"): a positive amount goes back, a negative one is charged. It isn't funding: it changes
+ * Corrects what a person was charged, as one entry with its reason (e.g. 'repriced at the
+ * cached rate'): a positive amount goes back, a negative one is charged. It isn't funding: it changes
  * what they spent. Its id names the person and the reason, so running it again changes nothing.
  */
 export async function creditBack(
@@ -346,7 +346,7 @@ export async function fundPerson(
 }
 
 /**
- * A payment the chain has shown (9 Nov): `usd` onto this person's credit, under `id`, which counts once
+ * A payment the chain has shown: `usd` onto this person's credit, under `id`, which counts once
  * however often it's sent. Returns what it added (0 the second time) and the credit after.
  */
 export async function payPerson(
@@ -369,8 +369,8 @@ export async function payPerson(
 }
 
 /**
- * A day with no cap, for turns a person pays for themselves (Elco, 9 Nov: the daily cap is "for unpaid
- * spend only; paid turns don't count"). It reports the real day's spend, and adds nothing to it.
+ * A day with no cap, for turns a person pays for themselves (the daily cap is for unpaid
+ * spend only; paid turns don't count). It reports the real day's spend, and adds nothing to it.
  */
 function uncapped(day: BudgetLedger, now: () => Date): BudgetLedger {
   return {

@@ -8,10 +8,9 @@ import type { Encoding, PetalRow, Snapshot, Spec } from '../types/index.ts';
 export const HEIGHT_FLOOR = 0.03;
 
 /**
- * Straight heights (share on the linear scale; the art direction's, the default since 11 Nov, #76): twice as
+ * Straight heights (share on the linear scale; the art direction's, the default since 11 Nov): twice as
  * much is twice as tall, with no minimum, and everyone else as tall as all it holds, on the one scale whose top
- * is the largest petal, it included (Elco, 11 Nov: "everyone else should be 1 petal, the correct size for the
- * percentage it represents").
+ * is the largest petal, it included ("everyone else" is one petal, sized by the share it represents).
  */
 export const isStraight = (height: Encoding): boolean =>
   height.by === 'share' && height.scale === 'linear';

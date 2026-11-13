@@ -1,5 +1,5 @@
-// Each petal's activity in its map's proposals (core's activityPieces; Elco, 12 Nov: "the dimension of time
-// specifically is particularly absent"), for every renderer: the map's views and render_flower. A map's
+// Each petal's activity in its map's proposals (core's activityPieces, the flower's dimension of time), for every
+// renderer: the map's views and render_flower. A map's
 // proposals are parsed once for each time they were read, so drawing the map stays as cheap as it was.
 import {
   activityPieces,

@@ -38,7 +38,7 @@ const SHA = /^[0-9a-f]{64}$/;
 const MAX_LISTED = 5;
 const MAX_ACCOUNT_READS = 6;
 
-/** How an item is known (design/tools.md): the chain said so, a read on a date, a list says so, a guess. */
+/** How an item is known: the chain said so, a read on a date, a list says so, a guess. */
 type Known = 'verified' | 'stored' | 'listed' | 'inferred';
 
 interface Searched {
@@ -335,7 +335,7 @@ function sayIt(
   searched: Searched[],
 ): string {
   const parts: string[] = [];
-  // What's already there comes first (Elco, 12 Nov): the person goes to a map by its link, before any reading.
+  // What's already there comes first: the person goes to a map by its link, before any reading.
   if (found.maps)
     parts.push(
       `${plural(found.maps, 'map')} on the Power Map, each with its map_url: the link that takes the person there, to give exactly as it is; get_map tells what each holds`,
@@ -518,7 +518,7 @@ export function makeLookUp(
           if (typeof st?.sha256 === 'string') shas.add(st.sha256);
         }
       const stored = (rows ?? [])
-        // a reading a wave replaced is in no list of the map (#96): it's never offered to draw
+        // a reading a mapping run replaced is in no list of the map: it's never offered to draw
         .filter((r) => !retiredReading(r.sha256))
         .filter(
           (r) =>

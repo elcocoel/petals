@@ -326,13 +326,13 @@ export const proposeSpec = defineTool<ProposeIn, object>({
   ),
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   async run(input, ctx) {
-    // a stored reading by a reader Petals doesn't have (a mapping wave's) is described by itself (#96)
+    // a stored reading by a reader Petals doesn't have (a mapping run's) is described by itself
     const known = ctx.modules[input.network]?.descriptor;
     const s = await loadSnapshot(ctx, input.sha256);
     if (!known && s.network.id !== input.network) moduleFor(ctx, input.network);
     const base = known ?? readingDescriptor(s);
-    // A stored reading's own params are the spec's whatever its reader calls them (a wave's governance_contract):
-    // passing them back, as list_flowers and get_map give them, is never refused (12 Nov, a wasted turn).
+    // A stored reading's own params are the spec's whatever its reader calls them (a run's governance_contract):
+    // passing them back, as list_flowers and get_map give them, is never refused (a refusal wastes a turn).
     // Only what's added to them is checked, with them standing for what its reader needs.
     const own = s.network.params ?? {};
     if (known && Object.entries(input.params ?? {}).some(([k, v]) => own[k] !== v)) {

@@ -1,6 +1,6 @@
-// Search's models (#105; Elco, 11 Nov: "can we run the model in the server in my machine"): Qwen3-Embedding and
-// Qwen3-Reranker on Elco's Mac, behind oMLX (coordinator/search_model_up.sh), reached at PETAL_SEARCH_URL. No
-// outside service. Embeddings are OpenAI-style (/v1/embeddings), reranking Cohere-style (/v1/rerank).
+// Search's models, on the server's own machine: Qwen3-Embedding and Qwen3-Reranker behind oMLX, reached at
+// PETAL_SEARCH_URL. No outside service. Embeddings are OpenAI-style (/v1/embeddings), reranking Cohere-style
+// (/v1/rerank).
 
 /** What a question is, to the embedding model (Qwen3-Embedding takes an instruction with each query, not documents). */
 const TASK =

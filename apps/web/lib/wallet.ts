@@ -99,6 +99,17 @@ export async function connectWallet(network: Network): Promise<string> {
 }
 
 /**
+ * The account the wallet connected on `network` names, asking nothing; null when none is connected. For a
+ * payment, which has to come from one of the person's own wallets (flow 3, 13 Nov).
+ */
+export async function connectedAccount(network: Network): Promise<string | null> {
+  const connector = await connectorFor(network);
+  const known = await connector.wallet().catch(() => null);
+  const accounts = known ? await known.getAccounts({ network }).catch(() => []) : [];
+  return accounts[0]?.accountId ?? null;
+}
+
+/**
  * One function call from the connected wallet, with JSON args or raw bytes (a FastFS file's borsh), no
  * deposit. Hands back what the wallet answered; it rejects when the person says no, and, with some
  * wallets, when the receipt fails, as NEAR Social's always does (CodeDoesNotExist).

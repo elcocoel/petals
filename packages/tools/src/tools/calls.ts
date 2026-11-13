@@ -1,5 +1,5 @@
-// list_calls (Elco, 12 Nov: "open calls is the most useful ... helping people make money from daos and helping
-// daos to source talent"): Petals' feed of open calls, as kept from their sources (calls.ts), each a calls/v1.
+// list_calls (people find work in DAOs, and DAOs find talent): Petals' feed of open calls, as kept from their
+// sources (calls.ts), each a calls/v1.
 import type { Call, CallKind } from '@petal/core';
 import { callsOf } from '../calls.ts';
 import { defineTool } from '../define.ts';

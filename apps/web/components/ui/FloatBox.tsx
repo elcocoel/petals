@@ -109,7 +109,9 @@ export function FloatBox({
       >
         {/* its rows scroll above the box's rounded foot, so nothing is cut by the corner and the scroll bar stays
             inside it, never falling out of the frame at the radius; with a base, the base closes it instead */}
-        <div className={`flex min-h-0 flex-1 flex-col ${foot ? '' : 'pb-space-32'}`}>
+        {/* folded to its bar it holds nothing, so no foot: the foot would stand below the bar, unseen, and take
+            the map's clicks there */}
+        <div className={`flex min-h-0 flex-1 flex-col ${foot || folded ? '' : 'pb-space-32'}`}>
           <div
             className={`flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-none ${foot ? 'pb-space-16' : ''}`}
           >

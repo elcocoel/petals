@@ -54,7 +54,7 @@ export const STATUS: Record<ToolErrorCode, number> = {
   payment_required: 402,
   not_on_this_site: 403,
   // 503, not 502: Cloudflare, in front of the live server, swaps an origin's 502 or 504 for its own page,
-  // and the person would read that instead of these words (onchain-walk, 11 Nov).
+  // and the person would read that instead of these words.
   source_failed: 503,
   internal: 500,
 };
@@ -223,12 +223,12 @@ export function createAgentRoutes(deps: AgentRouteDeps, o: AgentRouteOptions = {
       : {}),
   });
   // A report that comes back (report_job): Petals' agent takes it up at once, as a turn in the run that handed
-  // the job out, paid from the person's own credit (Elco, 9 Nov), or else from the invite they chat on (10 Nov).
+  // the job out, paid from the person's own credit, or else from the invite they chat on.
   // With neither, or the run already going, it waits in the job row for the person's next message, as before.
   if (o.takeUp) {
     o.takeUp.current = async (job) => {
       if (!job.run || jobs.running(job.run) || !o.auth?.admitOwner) return;
-      // A job in parts (swarm.md step 4) comes back once every part has: the report that completes the group,
+      // A job in parts comes back once every part has: the report that completes the group,
       // and only that one, starts the turn, so two parts reporting together make one.
       const parts = job.part_of
         ? (await privateStore(deps.tools.config).job.list(job.exploration)).filter(

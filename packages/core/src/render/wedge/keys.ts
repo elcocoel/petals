@@ -1,8 +1,8 @@
-// The look's colours (design/flower-art-direction/default-system-vnext.md, V1, Elco 11 Nov; exact values in
-// palette-final.json): five keys handed to a category's values from the most common to the rarest, and grey for
-// context. No value has a colour of its own: the keys go by how many petals carry each value, so the same flower
-// keyed again gets the same colours and another flower's commonest value is mint too. Only the keys needed. On
-// every flower and still picture since 11 Nov (#76; Elco: the lab into the product). Pure.
+// The look's colours (the art direction's V1, 11 Nov; exact values from its final palette): five keys handed to
+// a category's values from the most common to the rarest, and grey for context. No value has a colour of its
+// own: the keys go by how many petals carry each value, so the same flower keyed again gets the same colours and
+// another flower's commonest value is mint too. Only the keys needed. On every flower and still picture since
+// 11 Nov. Pure.
 
 import { colourLabel } from '../../reading/words.ts';
 import { BACKER_LABELS, type BackerClass } from '../../segments/backers.ts';
@@ -15,7 +15,7 @@ export interface Key {
   hex: string;
 }
 
-/** The five keys, most common first (Elco's order, 11 Nov). */
+/** The five keys, most common first. */
 export const KEYS: readonly Key[] = [
   { name: 'mint', hex: '#8BC9BD' },
   { name: 'blue', hex: '#96D4E3' },
@@ -41,7 +41,7 @@ function shade(hex: string, t: number): string {
 }
 
 /**
- * A grade's five steps (Elco, 12 Nov, wave 4: "color graded by a number or a date"): one key's hue from light to
+ * A grade's five steps (colour graded by a number or a date): one key's hue from light to
  * dark, the fewest (or oldest) lightest, the most (or newest) darkest; mint unless a view chooses its hue.
  */
 export function grades(hue: Key = KEYS[0] as Key): Key[] {
@@ -72,8 +72,8 @@ export interface Keyed {
 }
 
 /**
- * Values that say nothing happened draw grey and take no key (Elco, 12 Nov: "a way to color grade the [wallets] that
- * never voted"): a wallet that never voted, and a petal the piece has no value for (reading/index.ts NO_VALUE).
+ * Values that say nothing happened draw grey and take no key: a wallet that never voted, and a petal the piece
+ * has no value for (reading/index.ts NO_VALUE).
  */
 export const QUIET_VALUES: ReadonlySet<string> = new Set(['never voted', 'no value']);
 
@@ -86,7 +86,7 @@ export function keysOf(
   values: readonly (string | null | undefined)[],
   weights: readonly number[] = [],
   /**
-   * The view's chosen colours (colour.keys; Elco, wave 4: "choosing which colour a value gets"): a value named there
+   * The view's chosen colours (colour.keys, the colour a person chose for a value): a value named there
    * takes that key, the rest are ranked over the keys left; the grade's hue under 'grade'.
    */
   chosen: Readonly<Record<string, string>> = {},
@@ -136,8 +136,8 @@ export function keysOf(
 }
 
 /**
- * One colour per value across a whole map (Elco, 12 Nov: "I have a drop down to say what color means and then the
- * legend tells me what each color is"): the keys ranked once over every flower's petals, so mint is the same value
+ * One colour per value across a whole map (a person says what colour means, and the legend says what each colour
+ * is): the keys ranked once over every flower's petals, so mint is the same value
  * on every flower and the map's legend can say what each colour stands for.
  */
 export function mapKeys(
@@ -180,7 +180,7 @@ export interface Keyable {
 }
 
 /**
- * The art direction's colours for a reading (#76, on every flower since 11 Nov): each petal in its kind's key, the
+ * The art direction's colours for a reading (on every flower since 11 Nov): each petal in its kind's key, the
  * kinds handed out by how many petals carry each, everyone else in grey; each band in its class's key, the classes
  * by how many petals carry a band of each. A value past the fifth, and a petal of bands with none recorded, grey.
  * The same for the live flower and the still picture.

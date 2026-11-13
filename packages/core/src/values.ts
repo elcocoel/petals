@@ -1,5 +1,5 @@
-// value/v1 (board #91; Elco, 11 Nov: "monetary estimates of the value of these petals and the stakes and the
-// supply"): a map's token in dollars, its supply, and its reading's totals at that price. Each petal's own
+// value/v1: monetary estimates of a map's petals, stakes and supply. A map's token in dollars, its supply, and
+// its reading's totals at that price. Each petal's own
 // value is a piece of data beside the snapshot's (valuePieces), like a person's names: the look draws it only
 // where a view names it. A token with no price has no value pieces and no totals in dollars, never a guess.
 import { canonicalJson, sha256Hex } from './hash.ts';

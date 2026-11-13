@@ -264,7 +264,7 @@ function toOpenAi(m: LlmMessage): OpenAI.Chat.Completions.ChatCompletionMessageP
 }
 
 /**
- * NEAR AI answers 402 four ways (near-ai.md, section 2): `api_key_limit_exceeded` is this key's own
+ * NEAR AI answers 402 four ways: `api_key_limit_exceeded` is this key's own
  * lifetime cap, and the rest are the organization behind it. None gets better on another model. The
  * body holds spend figures, so they stay out of what a viewer of the run reads.
  */

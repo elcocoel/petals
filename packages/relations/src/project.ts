@@ -130,7 +130,7 @@ const round6 = (x: number): number => Math.round(x * 1e6) / 1e6;
 
 export function groupsOf(s: Snapshot): ProjectedGroup[] {
   // A view made with compose_view keeps its base's network and parameters, but observes nothing new: its
-  // readings are indexed already, so it's no group, and never a second observation of one (LOOK, 9 Nov).
+  // readings are indexed already, so it's no group, and never a second observation of one.
   if (s.module?.id === COMPOSED) return [];
   if (Number.isNaN(Date.parse(s.snapshot.as_of)))
     throw new TypeError(`snapshot date is not a date: ${s.snapshot.as_of}`);

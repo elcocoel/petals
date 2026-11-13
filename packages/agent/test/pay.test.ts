@@ -1,4 +1,4 @@
-// Paying for Petals' own agent in NEAR (9 Nov, specs/003-target/proposal-payment.md), through petalApp. The
+// Paying for Petals' own agent in NEAR (specs/003-target/proposal-payment.md), through petalApp. The
 // chain and NEAR's price are stand-ins here; tests/e2e's journey server walks a real testnet transfer.
 import { join } from 'node:path';
 import { NearError } from '@petal/near';
@@ -236,7 +236,7 @@ describe('paying for Petals’ agent in NEAR', () => {
     expect(res.status).toBe(401);
   });
 
-  test('testnet pays on a lane, to petals.testnet; a public site counts mainnet NEAR only', async () => {
+  test('testnet pays on a development server, to petals.testnet; a public site counts mainnet NEAR only', async () => {
     const lane = setup({ [HASH]: { receiver_id: 'petals.testnet' } });
     await lane.signIn(alice, 'testnet');
     expect(
@@ -256,7 +256,7 @@ describe('paying for Petals’ agent in NEAR', () => {
     expect(live.onChain.reads).toEqual([]);
   });
 
-  test('paid turns don’t count against the daily cap (Elco, 9 Nov: unpaid spend only)', async () => {
+  test('paid turns don’t count against the daily cap (unpaid spend only)', async () => {
     const w = setup({ [HASH]: {} }, { dailyUsd: 0.015, costUsd: 0.01 });
     await w.signIn();
     await w.pay({ network: 'mainnet', account_id: 'alice.near', tx_hash: HASH });

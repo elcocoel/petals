@@ -11,7 +11,7 @@ import { BASE_USDC, type OneClickQuoteResponse, toQuoteResult } from './fake.ts'
 export const ONE_CLICK_QUOTE_URL = 'https://1click.chaindefuser.com/v0/quote';
 /** USDC on NEAR (the destination: what Petal's account would receive) */
 export const NEAR_USDC = 'nep141:17208628f84f5d6ad33f0da3bbbeb27ffcb398eac501a31bd6ad2011e36133a1';
-/** Stand-in payout account, as in the 4 Nov try, until Elco creates petals.near (T147). */
+/** Stand-in payout account, as in the 4 Nov try, from before petals.near existed (T147). */
 export const DEFAULT_PAYOUT_ACCOUNT = 'petal-demo.near';
 /**
  * The example refund address from the 1Click OpenAPI spec. A dry quote creates no deposit, so

@@ -1,7 +1,7 @@
-// Publishing to the shared map, the page's press (Elco, 12 Nov: "we need this live soon, it's a big part of my
-// test"; wave 8, 13 Nov: a signed version, specs/005-mapping-brain/composition.md): what a signed-in person kept
-// about a map goes to everyone's Power Map as a publication/v1 in the record, signed by one of their wallets, at
-// once and credited to it (@petal/tools publish-data.ts holds the what; this holds who and the signature).
+// Publishing to the shared map, the page's press (a signed version, specs/005-mapping-brain/composition.md):
+// what a signed-in person kept about a map goes to everyone's Power Map as a publication/v1 in the record,
+// signed by one of their wallets, at once and credited to it (@petal/tools publish-data.ts holds the what;
+// this holds who and the signature).
 //
 //   GET  /api/v1/publish/data?map=<id>     { about, name, ready, claims, readings, private, published, adds,
 //                                          layers: [{ sha256, petal, title, cases }], totals }: what one press
@@ -101,7 +101,7 @@ export function publishRoutes(d: PublishDeps): Hono {
     }
   });
 
-  // The signed-in person's credit (credit/v1, wave 8), as the wallet they signed in with is credited: bare, with its hash
+  // The signed-in person's credit (credit/v1), as the wallet they signed in with is credited: bare, with its hash
   app.get('/api/v1/me/credit', async (c) => {
     const who = await whoOf(c);
     if (!who) return signIn(c);

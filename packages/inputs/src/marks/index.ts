@@ -1,5 +1,5 @@
-// A map's mark (board #85; research/org-names-logos-2026-11-11.md, strategy 2, Elco's pick, 11 Nov: "Chain
-// first, then lists"): its organisation's name, its token's symbol and its logo, each saying where it came from.
+// A map's mark, chain first, then lists: its organisation's name, its token's symbol and its logo, each saying
+// where it came from.
 //   name:   the DAO's own profile, then the token's own name, then the lists
 //   symbol: the token's own, then the lists
 //   either, said by the chain, is self-declared, and verified when a curated list holds the address
@@ -49,7 +49,7 @@ export interface MarkTarget {
   address: string | null;
   /** the reader of its newest reading: erc20-holders, moloch-v1, … */
   reader: string | null;
-  /** its newest reading's sha256: what an observed type rests on (#97) */
+  /** its newest reading's sha256: what an observed type rests on */
   snapshot?: string | null;
 }
 
@@ -185,7 +185,7 @@ const READ_AS: Record<string, string[]> = {
 };
 
 /**
- * A map's types (#97; Elco, 11 Nov: types are data, claims with evidence, any value, several at once), as is_a
+ * A map's types (types are data: claims with evidence, any value, several at once), as is_a
  * claims (claim/v4): what its reading shows it is, observed and resting on that reading; and, for a token a Baal
  * owns whose sharesToken() names it back, that DAO's, inferred from that call. In the order found. A whole
  * network's map has no account to be about, so none.
@@ -241,7 +241,7 @@ function typesOf(
 
 /**
  * A map's types alone, as readMark finds them: its chain's own words, with no lists and no logo. For the pass
- * that adds types to a mark already kept (#97; META, 11 Nov: "only adds types to each kept mark").
+ * that adds types to a mark already kept.
  */
 export async function readTypes(t: MarkTarget, deps: MarkDeps = {}): Promise<Claim[]> {
   const fetchImpl = deps.fetch ?? ((...a: Parameters<Fetch>) => globalThis.fetch(...a));

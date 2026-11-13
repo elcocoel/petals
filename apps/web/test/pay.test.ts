@@ -4,7 +4,9 @@ import { DEFAULT_VIEW } from '@petal/core/view';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, test } from 'vitest';
+import { ConnectWallet } from '../components/chat/ConnectWallet.tsx';
 import { PayRow } from '../components/chat/PayRow.tsx';
+import { notSignedInWords } from '../lib/door-words.ts';
 import {
   money,
   moneyWords,
@@ -16,6 +18,7 @@ import {
   yoctoOf,
 } from '../lib/pay.ts';
 import { threadView } from '../lib/thread-view.ts';
+import { payFromMine } from '../viewmodels/usePay.ts';
 
 describe('paying for Petals’ agent', () => {
   test('a transfer is written in yoctoNEAR, exactly', () => {
@@ -113,5 +116,82 @@ describe('about $1, never twice (wave 5, Elco’s mainnet test)', () => {
     expect(waiting).toContain(payWords.confirm);
     expect(waiting).toContain(payWords.pending);
     expect(waiting).not.toContain(payWords.amount);
+  });
+});
+
+describe('the NEAR comes from one of their own wallets (flow 3, 13 Nov)', () => {
+  const deps = (o: {
+    mine?: string[];
+    connected?: string | null;
+    link?: string | null | Error;
+  }) => {
+    const calls: string[] = [];
+    return {
+      calls,
+      d: {
+        mine: async () => {
+          calls.push('mine');
+          return o.mine ?? [];
+        },
+        connected: async () => {
+          calls.push('connected');
+          return o.connected ?? null;
+        },
+        link: async () => {
+          calls.push('link');
+          if (o.link instanceof Error) throw o.link;
+          return o.link === undefined ? 'linked.near' : o.link;
+        },
+      },
+    };
+  };
+
+  test('a connected wallet that is theirs sends at once, with nothing more to sign', async () => {
+    const { d, calls } = deps({ mine: ['a.near'], connected: 'a.near' });
+    expect(await payFromMine(d)).toBe(true);
+    expect(calls).not.toContain('link');
+  });
+
+  test('signed in with Ethereum or Solana, the NEAR wallet is bound first, before any NEAR leaves', async () => {
+    const none = deps({ mine: [], connected: null });
+    expect(await payFromMine(none.d)).toBe(true);
+    expect(none.calls).toContain('link');
+    const other = deps({ mine: ['a.near'], connected: 'b.near' });
+    expect(await payFromMine(other.d)).toBe(true);
+    expect(other.calls).toContain('link');
+  });
+
+  test('closing the wallet stops it; the server’s refusal comes back as its words, and nothing is sent', async () => {
+    expect(await payFromMine(deps({ link: null }).d)).toBe(false);
+    await expect(
+      payFromMine(deps({ link: new Error('That wallet already belongs to another account.') }).d),
+    ).rejects.toThrow('That wallet already belongs to another account.');
+  });
+
+  test('a transfer already out from a wallet that isn’t theirs is bound first, then confirmed', async () => {
+    const out = deps({ mine: ['a.near'], connected: 'a.near' });
+    expect(await payFromMine(out.d, 'b.near')).toBe(true);
+    expect(out.calls).toEqual(['mine', 'link']);
+    const theirs = deps({ mine: ['b.near'] });
+    expect(await payFromMine(theirs.d, 'b.near')).toBe(true);
+    expect(theirs.calls).toEqual(['mine']);
+  });
+});
+
+describe('the conversation’s Connect offers NEAR, Ethereum and Solana (flow 1, 13 Nov)', () => {
+  test('three ways in, as the signed-out page has them', () => {
+    const html = renderToStaticMarkup(
+      createElement(ConnectWallet, {
+        question: '',
+        busy: false,
+        failed: null,
+        onConnect: () => {},
+        onConnectEvm: () => {},
+        onConnectSolana: () => {},
+      }),
+    );
+    expect(html).toContain(notSignedInWords.near);
+    expect(html).toContain(notSignedInWords.evm);
+    expect(html).toContain(notSignedInWords.solana);
   });
 });

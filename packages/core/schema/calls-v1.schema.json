@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:petal:schema:calls:v1",
   "title": "Petal calls v1",
-  "description": "calls/v1 (12 Nov; Elco: 'open calls is the most useful ... helping people make money from daos and helping daos to source talent'): one open call, someone paying for work or asking for a vote right now: a request for proposals, a grants program, a bounty, a hackathon, an accelerator, a fund, or an open vote. Read from a public source without a key, every field as that source says it: a status is kept as said beside its deadline, even when the two disagree, and a budget in the call's own words. Its fields follow the RFP Object Standard's (DAOIP-5, schema.org/Grant), so other tools can read Petals' feed. Any agent can write one (#98).",
+  "description": "calls/v1 (12 Nov): one open call, someone paying for work or asking for a vote right now: a request for proposals, a grants program, a bounty, a hackathon, an accelerator, a fund, or an open vote. Read from a public source without a key, every field as that source says it: a status is kept as said beside its deadline, even when the two disagree, and a budget in the call's own words. Its fields follow the RFP Object Standard's (DAOIP-5, schema.org/Grant), so other tools can read Petals' feed. Any agent can write one.",
   "type": "object",
   "additionalProperties": false,
   "required": [

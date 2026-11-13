@@ -1,11 +1,11 @@
-// The mapping waves' files, onto the shared map (board #96; Elco, 11 Nov: "let's map it ourselves using the brain
-// but at super speed", not through the site's saves): every file in a folder that is one of Petals' formats is
+// The mapping runs' files, onto the shared map (Petals mapping by itself with the brain, in bulk, not through the
+// site's saves): every file in a folder that is one of Petals' formats is
 // checked against its own schema and rules, and a bad one is refused with its reasons, nothing of it kept. A good
 // reading is kept by its hash and drawn as its reader's default flower, credited to Petals' own mapping; a good
 // mark, value, proposals or vesting is kept by its map's address, unless one is already kept there (--replace puts the
-// wave's in its place). A good claim is checked as a published one, naming no person, and kept as Petals' own
-// mapping's (mapping-claims.ts), for every viewer (Elco, 11 Nov: "show them").
-// Hidden maps (#96) stay hidden: the hides are by address, whoever loads them. scripts/load-mapping.ts runs it.
+// run's in its place). A good claim is checked as a published one, naming no person, and kept as Petals' own
+// mapping's (mapping-claims.ts), shown to every viewer.
+// Hidden maps stay hidden: the hides are by address, whoever loads them. scripts/load-mapping.ts runs it.
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { basename, dirname, join, relative } from 'node:path';
 import {
@@ -27,11 +27,11 @@ import type { ToolContext } from './types.ts';
 export interface LoadRun {
   /** check and say, keep nothing */
   dry?: boolean;
-  /** put a wave's mark, value or proposals in place of one already kept */
+  /** put a mapping run's mark, value or proposals in place of one already kept */
   replace?: boolean;
   /** who the drawings are credited to */
   by: string;
-  /** a wave's manifest outside the folder (L2-IMPORT-MANIFEST.json) */
+  /** a mapping run's manifest outside the folder (L2-IMPORT-MANIFEST.json) */
   manifests?: string[];
   log?: (line: string) => void;
 }
@@ -40,7 +40,7 @@ export interface LoadReport {
   files: number;
   /** files that aren't one of Petals' formats: raw receipts and manifests, left as evidence */
   evidence: number;
-  /** Petals documents a wave's manifest marks evidence only (load: false): checked, not loaded */
+  /** Petals documents a mapping run's manifest marks evidence only (load: false): checked, not loaded */
   held: number;
   refused: { file: string; why: string[] }[];
   /** per format: how many were good, kept, and left because one is already kept */
@@ -64,12 +64,12 @@ interface Listed {
 }
 
 /**
- * The waves' manifests: every *IMPORT-MANIFEST.json under the folder, and any given with --manifest. Five shapes,
- * each path from the manifest's own folder: objects [{ path, load, canonical_sha256 }] (GNOSIS WAVE's); daos
- * [{ artifacts [{ file, canonical_sha256 }] }] (the L2 wave's); artifacts [{ file, role, canonical_json_sha256 }],
- * loading its 'load-candidate's (Solana's); records [{ path, status, sha256 }], loading its 'importable…' ones
- * (Ethereum's phase2-ethereum-manifest.json, whose sha256 is the canonical one); files [{ path, loadable,
- * canonical_sha256 }] (NEAR's). A listed file loads when the manifest says so and
+ * The mapping runs' manifests: every *IMPORT-MANIFEST.json under the folder, and any given with --manifest. Five
+ * shapes, each path from the manifest's own folder: objects [{ path, load, canonical_sha256 }] (the Gnosis run's);
+ * daos [{ artifacts [{ file, canonical_sha256 }] }] (the L2 run's); artifacts [{ file, role,
+ * canonical_json_sha256 }], loading its 'load-candidate's (Solana's); records [{ path, status, sha256 }], loading
+ * its 'importable…' ones (Ethereum's phase2-ethereum-manifest.json, whose sha256 is the canonical one); files
+ * [{ path, loadable, canonical_sha256 }] (NEAR's). A listed file loads when the manifest says so and
  * has the canonical sha256 it gives; within a manifest's folder, a Petals document it doesn't list is held, since
  * only its listed artifacts are inputs.
  */
@@ -117,7 +117,7 @@ function manifestsIn(root: string, extra: readonly string[]) {
 
 /**
  * Check one document by its own format: the reasons it isn't one, or none. Exported as mappingProblems so the
- * file's validate-data --public says exactly what this loader says of a file (#98).
+ * file's validate-data --public says exactly what this loader says of a file.
  */
 function problems(doc: Record<string, unknown>, scope?: { private: true }): string[] {
   const petal = String(doc.petal);
@@ -144,7 +144,7 @@ function problems(doc: Record<string, unknown>, scope?: { private: true }): stri
 
 export const mappingProblems = (doc: Record<string, unknown>) => problems(doc);
 
-/** The same check as a person's own project makes it (keep_data, #98): a claim may name a person there. */
+/** The same check as a person's own project makes it (keep_data): a claim may name a person there. */
 export const projectProblems = (doc: Record<string, unknown>) => problems(doc, { private: true });
 
 export async function loadMapping(ctx: ToolContext, root: string, o: LoadRun): Promise<LoadReport> {
@@ -178,7 +178,7 @@ export async function loadMapping(ctx: ToolContext, root: string, o: LoadRun): P
       continue;
     }
     const d = doc as Record<string, unknown>;
-    // a wave's manifest (IMPORT-MANIFEST.json) says which of its files load, and the hash each must have
+    // a mapping run's manifest (IMPORT-MANIFEST.json) says which of its files load, and the hash each must have
     const listed = manifests.entries.get(path);
     if (!listed && manifests.scopes.some((dir) => path.startsWith(`${dir}/`))) {
       report.held++;

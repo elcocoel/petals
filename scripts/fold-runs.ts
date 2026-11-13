@@ -1,4 +1,4 @@
-// Fold real conversations from one store into another, so a lane can go without losing what someone
+// Fold real conversations from one store into another, so a worktree can go without losing what someone
 // said to it, and one person's work has one home. Whole rows are copied; the source isn't touched.
 // A run already in the target stays as it is, so running this twice changes nothing.
 //
@@ -7,7 +7,7 @@
 //   node scripts/fold-runs.ts --adopt <db> --owner <owner> [--dry]
 //
 // Real means a real model answered and it isn't a harness's question. --owner gives what's folded to
-// that owner, since a lane's anonymous owner means nothing in another store: put it first, because
+// that owner, since a worktree's anonymous owner means nothing in another store: put it first, because
 // a later run won't change a row. --adopt gives a store's unowned runs, from before runs had owners,
 // to that owner, recorded replays included: those were still someone's real questions.
 

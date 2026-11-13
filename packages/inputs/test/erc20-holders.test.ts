@@ -1211,7 +1211,7 @@ describe.each([
   });
 });
 
-describe("Ankr's holder list (12 Nov, Elco's free key)", () => {
+describe("Ankr's holder list (with a free key)", () => {
   const balances = { [addr(1)]: 500n, [addr(2)]: 300n, [addr(3)]: 100n };
   /** An Ankr that lists these holders, largest first, two a page. */
   const fakeAnkr = (calls: { url: string; body: Record<string, unknown> }[]) =>

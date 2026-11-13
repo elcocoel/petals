@@ -25,11 +25,11 @@ const QUESTIONS: [string, string][] = [
   ['who controls this treasury', 'where-power-lives'],
   ['map the members of this DAO and how they vote', 'where-power-lives'],
   ['who can upgrade this contract or pause it', 'who-can-move-money-or-change-rules'],
-  // signers are the routing table's treasury row (routing.md, 12 Nov)
+  // signers are the routing table's treasury row (routing.md)
   ['who are the signers of this multisig', 'who-can-move-money-or-change-rules'],
   ['who delegates to whom in this governance', 'where-power-lives'],
   ['who sponsored the most proposals', 'where-power-lives'],
-  // open calls (Elco, 12 Nov: "an Osint chapter on the brain helping people make money from daos")
+  // open calls: the brain's OSINT chapter on grants, RFPs and bounties
   ['what grants can I apply for on NEAR right now?', 'open-calls'],
   ['are there open RFPs or bounties I could work on?', 'open-calls'],
   ['tell me when a new grants program opens', 'watch-open-calls'],
@@ -46,7 +46,7 @@ const QUESTIONS: [string, string][] = [
   ['go deeper', 'going-deeper'],
   ['how do I improve this recipe on github', 'contributing'],
   ['I want to contribute a fix, open a pull request', 'contributing'],
-  // connecting (step 4): an app and what it's trying to do
+  // connecting: an app and what it's trying to do
   ["I'm Claude Code, how do I connect to Petals", 'connect-claude-code'],
   ['set up petals in codex', 'connect-codex'],
   ["I'm Hermes, how do I install Petals", 'connect-hermes'],
@@ -58,7 +58,7 @@ const QUESTIONS: [string, string][] = [
   ['can anyone mint more of this token', 'who-can-move-money-or-change-rules'],
 ];
 
-/** Governance (Elco's four chapters, #80, 11 Nov): each question reaches its own chapter first. */
+/** Governance (four chapters): each question reaches its own chapter first. */
 const GOVERNANCE: [string, string][] = [
   ['who holds the delegated voting power of ENS', 'who-gets-a-vote'],
   ['how do I leave this DAO, can I ragequit', 'who-gets-a-vote'],
@@ -71,13 +71,13 @@ const GOVERNANCE: [string, string][] = [
   ['who can mint this token', 'who-can-move-money-or-change-rules'],
   ["who are NEAR's validators and who backs them", 'stake-behind-the-network'],
   ['who controls this DAO', 'where-power-lives'],
-  // the second round of Elco's governance chapters (#91, #97, 11 Nov)
+  // the second round of governance chapters
   ['what is this token worth in dollars', 'value'],
   ["what's the treasury worth", 'value'],
   ['when do these tokens unlock', 'vesting'],
   ['is this a multisig or a DAO', 'what-kind-of-thing-it-is'],
   ['is this an exchange wallet', 'what-kind-of-thing-it-is'],
-  // the voting blocs (#94, 11 Nov)
+  // the voting blocs
   ['who votes together in this DAO', 'voting-blocs-over-time'],
   ['are there voting blocs', 'voting-blocs-over-time'],
 ];
@@ -93,7 +93,7 @@ describe('routing', () => {
     expect(routeBrain(index, { words: q })[0]?.id).toBe(want);
   });
 
-  // the departments (research/brain-departments-2026-11-11.md, step 4): each question that reaches its chapter
+  // the departments: each question that reaches its chapter
   // first reaches its chapter's department first
   const departmentOf = (id: string) => index.entries.find((e) => e.id === id)?.department;
   test.each(GOVERNANCE)('%s reaches the department of %s first', (q, want) => {
@@ -165,7 +165,7 @@ describe('the service', () => {
   });
 });
 
-describe('receipts (research/brain-departments-2026-11-11.md, step 5)', () => {
+describe('receipts', () => {
   test('each door keeps one brain-receipt/v1 the moment it answers, and says its id', async () => {
     const kept: BrainReceipt[] = [];
     const ctx = createContext({ root: REPO, map: null, llmDailyUsd: 0, fake: true });
@@ -210,7 +210,7 @@ describe('receipts (research/brain-departments-2026-11-11.md, step 5)', () => {
   });
 });
 
-describe('brain_context (step 6, the Harness query_brain)', () => {
+describe('brain_context (the Harness query_brain)', () => {
   test('one call: the doctrine, the routed files whole, why each matched, the version and the receipt', async () => {
     const kept: BrainReceipt[] = [];
     const ctx = createContext({ root: REPO, map: null, llmDailyUsd: 0, fake: true });
@@ -239,7 +239,7 @@ describe('brain_context (step 6, the Harness query_brain)', () => {
   });
 });
 
-describe('brain_usage (step 7, the counts from the receipts)', () => {
+describe('brain_usage (the counts from the receipts)', () => {
   test('per file, department and row, what found nothing, per read, by door, app and version, and coverage', async () => {
     const kept: BrainReceipt[] = [];
     const ctx = createContext({ root: REPO, map: null, llmDailyUsd: 0, fake: true });

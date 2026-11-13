@@ -1,5 +1,5 @@
 // A view checked against its version's schema (specs/006-the-map/contracts/view.md), for whoever stores one:
-// the server, when a person saves their own (one-source.md, step 1), and the render route. The document says
+// the server, when a person saves their own, and the render route. The document says
 // its version, and the check picks the schema by it: view/v1 and view/v2 both read; any other is refused,
 // never guessed. Apart from view/index.ts, which the site imports, so the browser doesn't carry the checker.
 import { createAjv, type SchemaName, schemaId } from '../schema/ajv.ts';

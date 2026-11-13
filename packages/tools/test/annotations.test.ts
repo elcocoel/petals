@@ -1,4 +1,4 @@
-// Annotations kept per project (annotation-layer.md step 2): what a person or an agent adds about an account,
+// Annotations kept per project: what a person or an agent adds about an account,
 // one or many at once, all or none, listed back by project and by account. Over HTTP, through the project's
 // links, as petal.mjs and the page call them. Every account, name and URL here is invented.
 import { Hono } from 'hono';

@@ -133,7 +133,7 @@ export function InteractionSurface({
   }, [state.modelsOpen, raiseOptions]);
   const { onCanvas, panel } = state;
   // The Power Map: at the map a link opened, or whole until the conversation has a flower.
-  const { land, opening: mapOpening } = useGroundMap();
+  const { land, opening: mapOpening, reread: rereadMap } = useGroundMap();
   // the legend changes the person's view here, with Settings' own hands
   // The Power Map is always the ground: the conversation floats over it, and its flower, where the map
   // holds it, opens the map there instead of replacing it. Only a flower the map doesn't hold yet is
@@ -157,13 +157,28 @@ export function InteractionSurface({
     ? (made.held.name ?? made.held.what ?? networkLabel(made.held.network))
     : '';
   const madeReading = made?.flower ? state.drawings[made.flower.spec_sha256]?.reading : undefined;
+  // A new map, once its read is done and its flower drawn, is the map it landed as: the Power Map is read again
+  // once, where it isn't on it yet, and the map is found by its reading. The Mapping box then reads what it adds,
+  // without waiting for a reload.
+  const madeSha =
+    made?.flower && !made.held.existing_map && !state.busy
+      ? made.flower.spec.snapshot.sha256
+      : null;
+  const madeOnMap = madeSha && land ? land.flowers.find((f) => f.snapshot === madeSha) : undefined;
+  const [rereadFor, setRereadFor] = useState<string | null>(null);
+  useEffect(() => {
+    if (!madeSha || !land || madeOnMap || madeSha === rereadFor) return;
+    setRereadFor(madeSha);
+    rereadMap();
+  }, [madeSha, land, madeOnMap, rereadFor, rereadMap]);
+  const madeMap = made?.held.existing_map ?? madeOnMap?.map ?? null;
   const landed =
     made && madeChain && madeReading
       ? {
           chain: madeChain,
           name: madeName,
           reading: madeReading,
-          map: made.held.existing_map ?? null,
+          map: madeMap,
           snapshot: made.flower?.spec.snapshot.sha256,
         }
       : null;
@@ -196,7 +211,7 @@ export function InteractionSurface({
   // what the person kept about the map in front of them, published with one press
   // the map in front: the flower the person is inside on the map, else the conversation's (lib/mapping.ts)
   const [inMap, setInMap] = useState<string | null>(null);
-  const publishMap = inMap ?? flowerMap ?? state.mapAt?.map ?? made?.held.existing_map ?? null;
+  const publishMap = inMap ?? flowerMap ?? state.mapAt?.map ?? madeMap;
   const publishing = usePublishPress(publishMap);
   // a power quote wherever /make has nothing to show yet: the map on its way, an empty Mapping
   const openingQuote = usePowerQuote(0);
@@ -299,6 +314,8 @@ export function InteractionSurface({
                   busy={state.session.busy}
                   failed={state.session.failed}
                   onConnect={state.session.connect}
+                  onConnectEvm={state.session.connectEvm}
+                  onConnectSolana={state.session.connectSolana}
                 />
               )}
               {/* Hidden, not gone, so what's in it and the way to it stay while someone connects. */}

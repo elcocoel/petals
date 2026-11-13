@@ -2,7 +2,7 @@
 // each kept as a transcript a person can read. Run by hand; `pnpm test:e2e` doesn't.
 //
 //   node scripts/stress.ts --door claude --model sonnet --out <dir> [--cases a,b] [--jobs 4] [--web]
-//   set -a; source ../.secrets/near-ai.env; set +a
+//   set -a; source /path/to/keys/near-ai.env; set +a
 //   node scripts/stress.ts --door near --model <NEAR AI id> --out <dir> --stop-at-usd 0.20 --cases a,b
 //   node scripts/stress.ts --door loop --model sonnet --out <dir> [--cases a,b] [--window tokens]
 //
@@ -18,7 +18,7 @@
 // `claude` is the skill and the tools through `claude -p` on a subscription, at no NEAR AI cost, with no
 // API key and with --allowedTools from scripts/try-agent.ts. --web also lets it search the web.
 //
-// Both read the same map as Elco's app and neither holds a writer key, so nothing is ever written.
+// Both read the same map as the operator's app and neither holds a writer key, so nothing is ever written.
 import { spawn } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -84,7 +84,7 @@ interface Told {
 }
 
 const wordsOf = (text: string) => text.split(/\s+/).filter(Boolean).length;
-/** What Petal's own text measured (near-ai.md). */
+/** What Petal's own text measured. */
 const tokensIn = (text: string) => Math.round(text.length / 3.7);
 const short = (text: string) => text.replace(/\/draft\?spec=[\w=&;%-]+/g, '/draft?spec=…');
 

@@ -1,4 +1,4 @@
-// The curated lists a mark is checked against (research/org-names-logos-2026-11-11.md, strategy 2): plain files
+// The curated lists a mark is checked against: plain files
 // their owners keep, read once a run and named by their version, plus Trust Wallet's per-address folders and
 // Jupiter's search for Solana. A list that holds an address confirms it's the real token (verified), and brings
 // what the chain doesn't say, a logo above all.
@@ -147,7 +147,7 @@ export function listReader(fetchImpl: Fetch = globalThis.fetch) {
     });
     return llama;
   };
-  // CoinGecko's own coins (12 Nov, walk 3): a coin CoinGecko lists by its contract on this chain, with its image,
+  // CoinGecko's own coins: a coin CoinGecko lists by its contract on this chain, with its image,
   // for a token its token lists don't carry. Its coin list once a run, then that coin's market entry.
   const geckoHeaders: Record<string, string> = process.env.COINGECKO_API_KEY?.trim()
     ? { 'x-cg-demo-api-key': process.env.COINGECKO_API_KEY.trim() }

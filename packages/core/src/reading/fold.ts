@@ -1,7 +1,6 @@
-// "Everyone else" as its members (#76; Elco, 11 Nov: "everyone else should be 1 petal, the correct size for the
-// percentage it represents - the stripey pattern would work better inverted (smaller closer to the center)"): the
-// members' heights stacked, smallest first, in at most FOLD_CELLS stripes. The numbers only; render/wedge/fold.ts
-// draws them. Pure.
+// "Everyone else" as its members (one petal, sized by the share it represents, its stripes inverted, the smaller
+// closer to the centre): the members' heights stacked, smallest first, in at most FOLD_CELLS stripes. The
+// numbers only; render/wedge/fold.ts draws them. Pure.
 
 /** The most stripes a folded petal is drawn with; a longer tail joins neighbours into one, their heights summed. */
 export const FOLD_CELLS = 120;

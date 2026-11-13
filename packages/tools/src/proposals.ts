@@ -1,7 +1,7 @@
-// A DAO's proposals and each account's vote, the run over the shared map (board #93; Elco, 11 Nov: proposals on
-// the flower's ring, each wallet's yes and no on hover, absent showing nothing): for each map of a DAO Petals
-// reads proposals from, its proposals/v1, kept by the map's address. scripts/map-proposals.ts runs it where the
-// server runs, and adds a DAO's map first when asked. Read again, a map's proposals are replaced.
+// A DAO's proposals and each account's vote, the run over the shared map (proposals on the flower's ring, each
+// wallet's yes and no on hover, absent showing nothing): for each map of a DAO Petals reads proposals from, its
+// proposals/v1, kept by the map's address. scripts/map-proposals.ts runs it where the server runs, and adds a
+// DAO's map first when asked. Read again, a map's proposals are replaced.
 import { PROPOSALS_VERSION, type Proposals, validateProposals } from '@petal/core';
 import type { Spec } from '@petal/core/types';
 import {
@@ -25,7 +25,7 @@ export interface CardProposals {
   count: number;
   voted: number;
   read_at: string;
-  /** the earliest and latest proposal's own time (Elco, 12 Nov, walk 3: the period each layer contains); null with none */
+  /** the earliest and latest proposal's own time (the period each layer contains); null with none */
   period: { from: string; to: string } | null;
   /** the earliest and latest vote's time, where its source keeps one (Sputnik keeps none); null when none does */
   votes_period: { from: string; to: string } | null;
@@ -116,8 +116,8 @@ export async function proposalMaps(
 ): Promise<{ maps: number; saved: number; proposals: number; votes: number }> {
   const store = privateStore(ctx.config);
   const log = o.log ?? (() => {});
-  // a card's reader: its first reading Petals reads proposals for, newest first (a wave's newest reading can be
-  // of a network Petals has no reader for, beside an older one it has: RaidGuild's moloch-v3 by its erc20-holders)
+  // a card's reader: its first reading Petals reads proposals for, newest first (a mapping run's newest reading can
+  // be of a network Petals has no reader for, beside an older one it has: RaidGuild's moloch-v3 by its erc20-holders)
   const readerOf = (c: { readings: { network: string }[] }) =>
     c.readings.map((r) => READERS[r.network]).find((r): r is Reader => !!r);
   const cards = mapsOf(await mapViews(ctx)).filter(
@@ -191,8 +191,8 @@ const onSnapshot = (doc: Proposals, p: Proposals['proposals'][number]) =>
     p.ref.startsWith('https://snapshot.org/'));
 
 /**
- * The Snapshot proposals kept on the shared map (the mapping waves wrote them), each given its own text and
- * its page on Snapshot, where it was made, by its id from Snapshot's keyless GraphQL (walk 3, 12 Nov). Only
+ * The Snapshot proposals kept on the shared map (the mapping runs wrote them), each given its own text and
+ * its page on Snapshot, where it was made, by its id from Snapshot's keyless GraphQL. Only
  * summary and link are added: everything else in a doc stays as it was, and a doc that wouldn't validate is
  * left alone. scripts/map-snapshot-texts.ts runs it where the server runs.
  */

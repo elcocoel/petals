@@ -1,5 +1,5 @@
-// Wallets beyond NEAR (Elco, 12 Nov, wave 5: "multi chain wallet connection"; "evm is priority, is solana is simple
-// we do it"): an EVM wallet signs in, or is added to an account, with one signed message (EIP-191 personal_sign on a
+// Wallets beyond NEAR, EVM first and Solana too: an EVM wallet signs in, or is added to an account, with one signed
+// message (EIP-191 personal_sign on a
 // Sign-In with Ethereum text, EIP-4361), one wallet for every EVM chain; a Solana wallet the same with its ed25519
 // signMessage. As NEP-413 does for NEAR: the message names this site and a nonce the server issued, it expires,
 // and the nonce is spent once. Nothing here asks a chain: a signature names its key, and the key is the address.

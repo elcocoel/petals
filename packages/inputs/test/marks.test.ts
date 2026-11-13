@@ -1,4 +1,4 @@
-// A map's mark (board #85): the chain first, then curated lists, each part saying where it came from. On a
+// A map's mark: the chain first, then curated lists, each part saying where it came from. On a
 // fake fetch; the vectors are real (Seeker's Metaplex account, read on Solana on 11 Nov; EIP-55's own).
 import { validateMark } from '@petal/core';
 import { describe, expect, test } from 'vitest';
@@ -270,7 +270,7 @@ describe('a mark: the chain first, then the lists', () => {
   });
 });
 
-describe("a Sputnik DAO's own logo (12 Nov, walk 3: DAOs with logos that show none)", () => {
+describe("a Sputnik DAO's own logo (for DAOs whose logos showed none)", () => {
   const DAO = 'she-is-near.sputnik-dao.near';
   /** NEAR's RPC answering get_config with this metadata (base64 JSON, as Sputnik keeps it); everything else per page */
   const sputnik = (metadata: unknown, pages: [string, () => Response][] = []) =>

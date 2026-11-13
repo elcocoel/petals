@@ -1,17 +1,17 @@
-// Paying for Petals' own agent (9 Nov; specs/003-target/proposal-payment.md).
+// Paying for Petals' own agent (specs/003-target/proposal-payment.md).
 //   GET  /api/v1/pay   where to send NEAR, on the network the person signed in on, and NEAR's price now
 //   POST /api/v1/pay   {network, account_id, tx_hash}: the server reads that transaction on chain, and a
 //                      successful NEAR transfer from one of this person's wallets to Petals' account goes
 //                      onto their credit, in dollars at NEAR's price now, once however often it's sent
 //
-// The server holds no key: Petals' account is Elco's, and the server only reads the chain. Each turn of the
+// The server holds no key: Petals' account is the operator's, and the server only reads the chain. Each turn of the
 // agent then draws the credit down by what NEAR AI charged (invites.ts, personLedger).
 //
 // A public site counts mainnet NEAR only. Testnet NEAR is free, and NEAR AI bills real dollars, so on the
-// live site a testnet payment would spend Elco's money. A site that isn't public (a lane, the journey
-// server) takes testnet too, so the pay step can be walked for nothing.
+// live site a testnet payment would spend the operator's money. A site that isn't public (a development or
+// journey server) takes testnet too, so the pay step can be walked for nothing.
 //
-// With the credit contract (credit.ts; Elco, 9 Nov), the person deposits into it instead: GET says the
+// With the credit contract (credit.ts), the person deposits into it instead: GET says the
 // contract and `method: "deposit"`, and POST, sent after a deposit or a withdrawal, checks that transaction
 // and sets the person's credit to what the wallet they signed in with holds in the contract now.
 import type { Price } from '@petal/core';
@@ -287,7 +287,7 @@ export function payRoutes(d: PayDeps): Hono {
     });
   }
 
-  // -- a top-up through NEAR Intents (Elco, 10 Nov: "let users pay with anything from anywhere"):
+  // -- a top-up through NEAR Intents, so a person can pay with any token from any chain:
   //    GET  /api/v1/pay/tokens          what a person can pay from: every token and chain 1Click lists
   //    POST /api/v1/pay/intents         { usd, origin_asset, refund_to } → a deposit address to send to
   //    GET  /api/v1/pay/intents/:deposit where it stands; once it's landed, the dollars are on their credit
@@ -447,8 +447,8 @@ export async function settleTopUp(d: Settling, person: string, row: TopUpRow) {
 const OVER = new Set(['REFUNDED', 'FAILED', 'EXPIRED']);
 
 /**
- * Each of the person's top-ups that hasn't landed, asked again (META, 12 Nov, wave 5: "closing the tab never loses
- * a credit"): read when their own page reads /api/v1/me, never on a timer, all at once. A quote still waiting for
+ * Each of the person's top-ups that hasn't landed, asked again (closing the tab never loses a credit):
+ * read when their own page reads /api/v1/me, never on a timer, all at once. A quote still waiting for
  * its deposit after its deadline is asked once more, and if nothing came it's EXPIRED, never asked again; one sent
  * in time says so (KNOWN_DEPOSIT_TX, PROCESSING) and is asked until it lands. A source that can't say now is asked
  * at the next read.

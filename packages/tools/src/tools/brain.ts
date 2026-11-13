@@ -4,8 +4,8 @@
 //   brain_route   the best three chapters or recipes for a question, the calls a contract answers, or both
 //   brain_file    one of them, whole, by its id
 //   brain_index   every header
-//   brain_context the doctrine and the routed files, whole, in one call (the Harness's query_brain, 12 Nov)
-//   brain_usage   how often what gets read, worked out from the receipts (the librarian's report, 12 Nov)
+//   brain_context the doctrine and the routed files, whole, in one call
+//   brain_usage   how often what gets read, worked out from the receipts (the librarian's report)
 import { randomBytes } from 'node:crypto';
 import { join } from 'node:path';
 import {
@@ -29,7 +29,7 @@ const RECEIPT = {
 };
 
 /**
- * Keep a receipt for what a door served (research/brain-departments-2026-11-11.md, step 5), the moment it
+ * Keep a receipt for what a door served, the moment it
  * answers, and say its id; null where the context keeps none (a terminal's built-in copy, a test).
  */
 async function receipt(
@@ -205,8 +205,8 @@ export const brainIndexTool = defineTool<Record<string, never>, object>({
 });
 
 /**
- * One call for what the brain says about a question (research/brain-departments-2026-11-11.md, step 6; the Harness's
- * query_brain): the doctrine, then the routed files whole, why each matched, the version and the receipt.
+ * One call for what the brain says about a question: the doctrine, then the routed files whole, why each
+ * matched, the version and the receipt.
  */
 export const brainContext = defineTool<{ question?: string; answers?: string[] }, object>({
   name: 'brain_context',
@@ -289,9 +289,9 @@ const COUNT = (key: string, type: unknown) =>
   }) as const;
 
 /**
- * How often what gets read (research/brain-departments-2026-11-11.md, step 7; Elco, 11 Nov: anyone reads the counts
- * through this door), worked out from the receipts when asked: per file, department and routing row; what found
- * nothing; files and characters per read; by door, app and brain version; and the layers' coverage.
+ * How often what gets read (anyone reads the counts through this door), worked out from the receipts when
+ * asked: per file, department and routing row; what found nothing; files and characters per read; by door, app
+ * and brain version; and the layers' coverage.
  */
 export const brainUsage = defineTool<{ since?: string }, object>({
   name: 'brain_usage',
