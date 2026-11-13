@@ -1,4 +1,4 @@
-// T201, then Elco on 8 Nov: nothing stands on the canvas before the conversation draws, and nothing throws.
+// T201: nothing stands on the canvas before the conversation draws, and nothing throws.
 import type { ToolError } from '@petal/core/types';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 

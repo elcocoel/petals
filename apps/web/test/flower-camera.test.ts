@@ -192,7 +192,7 @@ describe('a drag', () => {
   });
 });
 
-describe('a canvas with a side covered (#78: the flower under /make’s conversation)', () => {
+describe('a canvas with a side covered (the flower under /make’s conversation)', () => {
   test('the home fits in what the side leaves, centred there', () => {
     const whole = fitView(1200, 800);
     const beside = fitView(1200, 800, undefined, { left: 500, right: 0, top: 0, bottom: 0 });

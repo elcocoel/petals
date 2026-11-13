@@ -48,6 +48,8 @@ function setup(
     public?: boolean;
     dailyUsd?: number;
     registry?: ReturnType<typeof fakeRegistry>['registry'];
+    /** payments made from NEAR Intents (near.com's wallet): by hash, who signed the withdraw and how much */
+    intents?: Record<string, { signer: string; yocto: string }>;
   } = {},
 ) {
   const root = tmpRoot();
@@ -70,6 +72,19 @@ function setup(
       registry: o.registry ?? fakeRegistry().registry,
       pay: {
         readTransfer: onChain.read,
+        readIntentsWithdraw: async (_n, hash, signer, receiver) => {
+          const w = o.intents?.[hash];
+          if (!w) throw new NearError('not_found', `no transaction ${hash}`);
+          const mine = w.signer === signer;
+          return {
+            tx_hash: hash,
+            signer_id: signer,
+            receiver_id: receiver,
+            yocto: mine ? w.yocto : '0',
+            succeeded: mine,
+            methods: [],
+          };
+        },
         nearUsd: async () => (o.price === undefined ? 3.5 : o.price),
       },
       env: { PETAL_AGENT_ACCESS: 'gated', PETAL_WALLET_KEY: 'ab'.repeat(32), NODE_ENV: 'test' },
@@ -227,6 +242,26 @@ describe('paying for Petals’ agent in NEAR', () => {
     expect(
       ((await (await w.call('GET', '/api/v1/me')).json()) as { credit: unknown }).credit,
     ).toBeNull();
+  });
+
+  test('paid from NEAR Intents (near.com’s wallet): a withdraw the wallet signed counts as its transfer, once, and only for it', async () => {
+    const W = 'Bw1JqXvqW8LhFQH4yW3mjvnwq8Vv5k8x3NRqv6e7yZ4C';
+    const w = setup({}, { intents: { [W]: { signer: 'alice.near', yocto: ONE_NEAR } } });
+    await w.signIn();
+    const first = (await (
+      await w.pay({ network: 'mainnet', account_id: 'alice.near', tx_hash: W })
+    ).json()) as { added_usd: number; credit: { left_usd: number } };
+    expect(first.added_usd).toBe(3.5);
+    expect(first.credit.left_usd).toBe(3.5);
+    const again = (await (
+      await w.pay({ network: 'mainnet', account_id: 'alice.near', tx_hash: W })
+    ).json()) as { added_usd: number };
+    expect(again.added_usd).toBe(0);
+    // bob signs in and names the same transaction: the withdraw isn't his
+    const b = setup({}, { intents: { [W]: { signer: 'alice.near', yocto: ONE_NEAR } } });
+    await b.signIn(bob);
+    const res = await b.pay({ network: 'mainnet', account_id: 'bob.near', tx_hash: W });
+    expect(res.status).toBe(400);
   });
 
   test('another person can’t claim the same transaction', async () => {

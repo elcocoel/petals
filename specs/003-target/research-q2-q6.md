@@ -1,8 +1,8 @@
 # Petals target research: identity, claims and accountability
 
-**Scope update — Elco, 8 November 2026 (after this research):** wallet-only login. Socials are only ever self-connected fields on the user’s profile, with no login, messaging or other functions. Private messaging is not a goal. Claims are private commentary for now; Petals will not define or declare truth. Public-claim storage research resumes only after basic testing and usability. The upgradable mapping protocol follows testing, covering Elco’s broader list of mapping targets. The earlier social-login, messaging and public-claim recommendations below are historical options, not current scope. Current follow-ups: [Intents for non-NEAR users](intents-current.md) and [contract shortlist/Sputnik](near-contract-shortlist.md).
+**Scope update — 8 November 2026 (after this research):** wallet-only login. Socials are only ever self-connected fields on the user’s profile, with no login, messaging or other functions. Private messaging is not a goal. Claims are private commentary for now; Petals will not define or declare truth. Public-claim storage research resumes only after basic testing and usability. The upgradable mapping protocol follows testing, covering a broader list of mapping targets. The earlier social-login, messaging and public-claim recommendations below are historical options, not current scope. Current follow-ups: [Intents for non-NEAR users](intents-current.md) and [contract shortlist/Sputnik](near-contract-shortlist.md).
 
-Research date: **8 November 2026**. Owner: **RESEARCH**, for META COORDINATOR. Based on the approved [003 target](spec.md); these are recommendations for review, not new product decisions. Freeze: 12 November; submission planned for 13 November.
+Research date: **8 November 2026**. Based on the approved [003 target](spec.md); these are recommendations for review, not new product decisions.
 
 Evidence labels used throughout:
 
@@ -10,7 +10,7 @@ Evidence labels used throughout:
 - **Tested — prior pass**: a specific result recorded in the project's 4–5 November research, not rerun here. Those experiments had different permissions; this pass made no accounts, signatures, transactions, model calls or payments.
 - **Inferred**: our interpretation, proposed design or calculation. It is not a tested integration or a legal ruling.
 
-The earlier research remains useful evidence, especially `research/near-tooling/near-identity.md`, `near-data.md`, `near-agents.md`, `near-ai.md` and `near-pay.md` in the project folder. Its architecture recommendations predate the approved target. References to an Elco-funded agent, sponsored publishing, a server-side agent loop or limited agent keys as the publishing path do not carry forward.
+The earlier research (4–5 November) remains useful evidence. Its architecture recommendations predate the approved target. References to an operator-funded agent, sponsored publishing, a server-side agent loop or limited agent keys as the publishing path do not carry forward.
 
 **Terms used in the summary.** An API (application programming interface) lets software call another service. OAuth is a protocol for giving an application limited access to a provider account; a sign-in flow uses that access to identify the account. An RPC (remote procedure call) endpoint is a network service for querying a blockchain node. A wallet signature proves possession or authorized use of signing credentials at that moment, not a person’s legal identity.
 
@@ -33,7 +33,7 @@ All entries in this table are **Inferred**.
 
 1. **Authentication reads.** TGT-030 forbids server chain/web reads for visitors. Checking a named NEAR account's current key, an Ethereum contract wallet or a social OAuth callback needs authoritative external information. Client assertions alone are not adequate. Lean: explicitly permit bounded authentication verification and provider key retrieval, distinct from mapping work. If absolutely no such reads are allowed, reduce supported proof types or accept a specified external verifier; do not silently weaken verification.
 2. **Public author versus private wallet.** TGT-004 allows private links; TGT-020 requires public attribution. A wallet used to send a public NEAR claim is publicly visible. Lean: the person chooses a public publishing identity; linking a private wallet never silently publishes it. Someone with only private links must choose an eligible public identity before publishing. This does not require a real-world name.
-3. **Permanent claims versus people.** Story 6 includes who a wallet belongs to. Narrowing third-party identification of natural persons changes that scope. The recommendation below must be approved by Elco; it is not already a target requirement.
+3. **Permanent claims versus people.** Story 6 includes who a wallet belongs to. Narrowing third-party identification of natural persons changes that scope. The recommendation below is a proposal; it is not already a target requirement.
 4. **Standing versus adjudication.** The target mentions claims upheld but defines no authority that upholds them. Until a review rule exists, report issued, challenged, answered and retracted; do not fabricate an upheld counter.
 5. **Contract deposits versus no custody.** Storage deposits lock contributors' NEAR in the contract account. A design with no operator withdrawal and no treasury is materially different from Petals holding spendable customer balances, but that distinction must be explicit under the target's no-money-custody rule.
 
@@ -43,11 +43,11 @@ All entries in this table are **Inferred**.
 
 **Inferred:** lean toward four small verification adapters with one shared challenge/session/linking service. A connector asks the wallet to sign; the server independently verifies. A signature proves authorisation by a key or account policy at verification time, not a unique human, beneficial ownership, historical activity or permanent control.
 
-**Inferred, grounded in the standards below:** TGT-030's “server does no chain reads” conflicts with secure current NEAR account verification and EVM smart-wallet verification. No transaction fee does **not** mean no RPC: RPC is a request to a blockchain node, consuming connectivity, provider capacity and potentially fees. This also needs reconciliation with TGT-031/SC-T3's literal restriction on Elco's connection.
+**Inferred, grounded in the standards below:** TGT-030's “server does no chain reads” conflicts with secure current NEAR account verification and EVM smart-wallet verification. No transaction fee does **not** mean no RPC: RPC is a request to a blockchain node, consuming connectivity, provider capacity and potentially fees. This also needs reconciliation with TGT-031/SC-T3's literal restriction on the operator's connection.
 
 Possible approaches:
 
-- Allow narrowly bounded identity-verification reads, separate from visitors' mapping work. This is my lean, subject to Elco changing/clarifying the target.
+- Allow narrowly bounded identity-verification reads, separate from visitors' mapping work. This is the lean, subject to the target being changed or clarified.
 - Keep the prohibition and explicitly limit accepted proofs to locally verifiable key/address identities; ordinary named NEAR accounts and EVM contract authorisation remain unsupported.
 - Have visitors supply independently verifiable chain-state proofs. An ordinary browser RPC response or “verified” boolean is forgeable. A light-client/proof system adds substantial scope; no ready integration was established here.
 
@@ -118,7 +118,7 @@ A **NEP** is a NEAR Enhancement Proposal; **EIP/ERC** names Ethereum proposal/in
 | Bitcoin verifier candidate | 4.0.1 | 2026-11-01 | [bip322-js](https://registry.npmjs.org/bip322-js) |
 | Bitcoin connector | 4.2.1 | 2025-10-28 | [sats-connect](https://registry.npmjs.org/sats-connect) |
 
-**Tested — prior, 2026-11-05, reported in `research/near-tooling/near-identity.md`:** synthetic NEAR cases exposed unfunded implicit-account rejection and callback mismatch; Intents view calls accepted synthetic EVM/Solana-style signatures and rejected mismatches. These were neither SIWE/SIWS interoperability nor smart-wallet/BIP-322 tests. No current fix or real-wallet behaviour was verified here.
+**Tested — prior, 2026-11-05:** synthetic NEAR cases exposed unfunded implicit-account rejection and callback mismatch; Intents view calls accepted synthetic EVM/Solana-style signatures and rejected mismatches. These were neither SIWE/SIWS interoperability nor smart-wallet/BIP-322 tests. No current fix or real-wallet behaviour was verified here.
 
 **Inferred — next validation:** after resolving the reads conflict, check duplicate/concurrent replay, wrong origin/network/purpose, deleted NEAR keys, EVM owner changes/counterfactual wallets, both SIWS formats, BIP prefixes/address types and conflicting links. A signed issue time is an assertion, not independently trusted historical dating; Q4 must address durable public claim verification separately.
 
@@ -242,7 +242,7 @@ An **attestation** is a signed statement with a defined structure. It proves who
 
 **Read in docs.** Sign's current network table lists maintained EVM deployments at version 1.1.4 with an owner and proxy contracts (addresses whose executing implementation can be changed); several older deployments are explicitly legacy. Its broader storage docs discuss other chains. Do not assume every advertised ecosystem has the same maintained deployment or verification path. Neither the reviewed EAS nor Sign material establishes a native NEAR equivalent. This is a bounded finding, not proof that no community project exists.
 
-**Tested — prior pass.** `research/near-tooling/near-data.md` reports that 56 testnet rows could be reconstructed from 31 transactions with no value mismatch. Transaction discovery still used FastNEAR; decoding used another RPC. Mainnet NearBlocks receipts supplied an independent sample, not a full rebuild. Normal-node history measured roughly 21–35 hours across providers. These are dated measurements, not retention contracts. `near-map-pay.md` also records pagination omissions in some prefix/history queries. No repeat writes were needed for this pass.
+**Tested — prior pass.** The 5 November data research reports that 56 testnet rows could be reconstructed from 31 transactions with no value mismatch. Transaction discovery still used FastNEAR; decoding used another RPC. Mainnet NearBlocks receipts supplied an independent sample, not a full rebuild. Normal-node history measured roughly 21–35 hours across providers. These are dated measurements, not retention contracts. The 4 November pass also records pagination omissions in some prefix/history queries. No repeat writes were needed for this pass.
 
 ### What independent verification needs
 
@@ -290,7 +290,7 @@ This is a change of lean from the older “no contract” research, justified by
 
 ### A small-team challenge procedure
 
-Everything in this subsection is **Inferred** and proposed for Elco's review.
+Everything in this subsection is **Inferred** and proposed for review.
 
 - A challenge is a signed claim identifying the disputed proposition, reason and counter-evidence. It is shown next to the original. Multiple similar challenges are grouped for reading, not counted as independent votes.
 - The author can answer, narrow, supersede or retract. Retraction remains attributable and visible; a voluntary correction should not be treated automatically as fraud.
@@ -304,7 +304,7 @@ The testable slice is a public claim, a different account's challenge, the subje
 
 ### Natural persons and the legal angle
 
-**Read in docs; legal issue-spotting, not a legal opinion about Petals.** A natural person is a human individual, as distinct from a company or contract. EU/Portuguese law is relevant to review given the project's Lisbon context; the applicable laws also depend on operations and affected people.
+**Read in docs; legal issue-spotting, not a legal opinion about Petals.** A natural person is a human individual, as distinct from a company or contract. EU/Portuguese law is relevant to review given where the project operates; the applicable laws also depend on operations and affected people.
 
 - The **General Data Protection Regulation (GDPR)** applies to identifiable people, including indirectly identifiable or pseudonymous data. It requires a lawful basis, minimization, accuracy and retention limits; Articles 13/14 concern notice, 16/17 correction/erasure, 21 objection, 25 design safeguards and 35 high-risk assessment. Public availability does not alone supply a lawful basis. Article 9 covers sensitive categories; Article 10 has separate rules for criminal-offence data. Expression exceptions require a specific assessment. [GDPR, 27 April 2016](https://eur-lex.europa.eu/eli/reg/2016/679/oj/eng), read 8 Nov.
 - The **European Data Protection Board (EDPB)** final blockchain guidance is **version 2.0, 7 July 2026**, not just the 2025 consultation draft. Paragraphs 52–55 discuss hashes, commitments and exceptional justified public processing; 102–106 address erasure and correction. Paragraph 104 recommends keeping personal data off chain even when encrypted or hashed. This is guidance, not a blanket statutory ban on every blockchain. A **data protection impact assessment (DPIA)** evaluates necessity and risks; where required, it must precede processing. [Final guidance](https://www.edpb.europa.eu/system/files/2026-07/edpb_guidelines_202502_blockchain_v2_en.pdf), read 8 Nov.
@@ -315,7 +315,7 @@ The testable slice is a public claim, a different account's challenge, the subje
 
 **Inferred recommendation.** Start with narrowly described contract/account actions and consensual self-declarations, and keep third-party natural-person identification and allegations out of immutable claim payloads pending a defined publication policy and qualified legal review. Account-only language is risk reduction, not immunity: named wallets and identifiable clusters can still identify people. Testnet is public too. Self-disclosure does not consent to every future inference about that person.
 
-Do not offer a guaranteed erasure promise for on-chain material. Keep sensitive evidence and correction handling off chain; consider whether even a pointer or hash identifies the person. No raw private names, identity links, access tokens, addresses or allegations should be smuggled into evidence URLs, notes or metadata. A stronger legal/policy restriction than the target must remain visibly proposed until Elco decides.
+Do not offer a guaranteed erasure promise for on-chain material. Keep sensitive evidence and correction handling off chain; consider whether even a pointer or hash identifies the person. No raw private names, identity links, access tokens, addresses or allegations should be smuggled into evidence URLs, notes or metadata. A stronger legal/policy restriction than the target must remain visibly proposed until decided.
 
 ## Q6. Public and private profiles
 
@@ -345,13 +345,13 @@ Changing a field back to private can stop future distribution by Petals; it cann
 
 **Read in docs.** NEAR Intents lets a person express a desired asset outcome while competing solvers execute the exchange. The 1Click interface packages this as a quote, deposit route and status. Supported routes/tokens must be discovered at use time; “any chain” is shorthand, not universal coverage. The [FAQ](https://docs.near-intents.org/resources/faqs), read 8 Nov, still says there is no testnet deployment.
 
-**Tested — prior pass.** `near-pay.md` tested browser cross-origin access and dry quotes for EVM, Solana and Bitcoin routes; it did not make a real payment. A person can send from their own wallet to the quoted deposit address, with the destination set to the intended recipient and refunds to the payer. Petals need not hold the funds, but settlement/bridge infrastructure still introduces counterparty and availability assumptions. A payment address must not silently become a verified account link.
+**Tested — prior pass.** The earlier payments pass tested browser cross-origin access and dry quotes for EVM, Solana and Bitcoin routes; it did not make a real payment. A person can send from their own wallet to the quoted deposit address, with the destination set to the intended recipient and refunds to the payer. Petals need not hold the funds, but settlement/bridge infrastructure still introduces counterparty and availability assumptions. A payment address must not silently become a verified account link.
 
 **Read in docs, updated 8 Nov.** The current [fee page](https://docs.near-intents.org/resources/fees) states protocol fee 0.0001%; for non-ANY_INPUT quotes, an additional 0.25% without an API key; authenticated base fees normally 0.20%, or 0.01% on stablecoin/same-asset routes. It now describes configurable revenue sharing, floors and quote-improvement fees. Older dry observations did not always show the documented surcharge. **Inferred:** display the actual total quote, network/refund fees, deadline, destination and echoed app fees; do not promise a fixed “Petals cut” from the older notes. No fresh quotes or payments were made here.
 
 **Read in docs.** NEAR AI Cloud's [quickstart](https://docs.near.ai/cloud/quickstart), read 8 Nov, tells the person to create an account, buy credits in its console and generate their own API key; the inference endpoint is OpenAI-compatible at `https://cloud-api.near.ai/v1`. No reviewed public material establishes a general 1Click payment directly into another person's Cloud-credit balance.
 
-**Tested — prior pass / Read in prior code.** `near-ai.md` found browser access technically possible, lifetime rather than periodic per-key spending caps, and potential cap overshoot from concurrent/in-flight calls. Its staking-for-inference investigation found live conversion uncertainty and administrative keys. Those are dated observations, not a fresh purchase test or a risk-free funding recommendation.
+**Tested — prior pass / Read in prior code.** The earlier NEAR AI pass found browser access technically possible, lifetime rather than periodic per-key spending caps, and potential cap overshoot from concurrent/in-flight calls. Its staking-for-inference investigation found live conversion uncertainty and administrative keys. Those are dated observations, not a fresh purchase test or a risk-free funding recommendation.
 
 **Inferred lean.** Link to the person's own Cloud console for funding/key creation; let their own agent use the key directly. A browser client is an option if the key never reaches Petals' server and the person understands the session/exposure model. A restored conversation is not a still-running agent when the browser is closed. Defer embedded Cloud account provisioning, staking and payment mediation. Define payment purpose, payer, beneficiary, refund handling and fee policy in Q8's later spec before choosing a payment path.
 

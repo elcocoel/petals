@@ -1,12 +1,12 @@
 # Contract: claims
 
-**Version**: claim/v4 (v1, v2 and v3 still read) | **Code**: `packages/core/src/claims/`, pure | **Schemas**: `packages/core/schema/claim.schema.json` (v1), `claim-v2.schema.json` (v2), `claim-v3.schema.json` (v3), `claim-v4.schema.json` (v4) | **Consumers**: a person's annotations (annotation-layer.md), later the relations index and surfaces
+**Version**: claim/v4 (v1, v2 and v3 still read) | **Code**: `packages/core/src/claims/`, pure | **Schemas**: `packages/core/schema/claim.schema.json` (v1), `claim-v2.schema.json` (v2), `claim-v3.schema.json` (v3), `claim-v4.schema.json` (v4) | **Consumers**: a person's annotations, later the relations index and surfaces
 
 **claim/v2 (10 Nov)** adds annotations, what a person or an agent says about an account: `named`, `noted` and `linked`, the kind `stated`, the ground `research`, and `tx`, `proposal` and `quote` in the evidence. Everything else is v1's, word for word. Chain reads are still made as v1, so their ids don't move. A reader picks the schema by `petal`.
 
-**claim/v4 (11 Nov, board #97; Elco: types are data, claims with evidence, any value, several at once)** is claim/v3 with one more verb, `is_a`: the account is of a type, in any word, as a technical form (a contract, a multisig), a role (a treasury, a delegate) or a declared nature (a DAO, a foundation). Several types are several claims. Everything else is v3's. Petals' own readers say a map's types as `is_a` claims in its mark (mark/v2): what its reading shows, `observed` and resting on that reading, and the DAO behind a Baal's shares token, `inferred` from `sharesToken()`. A person's or an agent's own go in their project, as annotations. Published, an `is_a` word is checked as a note is: no person's name.
+**claim/v4 (11 Nov: types are data, claims with evidence, any value, several at once)** is claim/v3 with one more verb, `is_a`: the account is of a type, in any word, as a technical form (a contract, a multisig), a role (a treasury, a delegate) or a declared nature (a DAO, a foundation). Several types are several claims. Everything else is v3's. Petals' own readers say a map's types as `is_a` claims in its mark (mark/v2): what its reading shows, `observed` and resting on that reading, and the DAO behind a Baal's shares token, `inferred` from `sharesToken()`. A person's or an agent's own go in their project, as annotations. Published, an `is_a` word is checked as a note is: no person's name.
 
-**claim/v3 (11 Nov; Elco: "make sure that the DATA LAYER contains space for discovered, inferred, osint gathered claims and their evidence")** types every piece of evidence and says who found it and when. Each piece now has:
+**claim/v3 (11 Nov: the data layer has room for discovered, inferred and OSINT-gathered claims and their evidence)** types every piece of evidence and says who found it and when. Each piece now has:
 - `type`, required: `snapshot` (a reading, `snapshot_sha256`), `tx`, `proposal`, `page` or `post` (`url`), `claim` (`claim_id`) or `note`. Each names the field it must hold, and a page or post is an http(s) URL.
 - `found_by`, required: an account, a named tool or a named model, never a person.
 - `found_at`, required: when it was found.
@@ -115,9 +115,9 @@ Closed lists: `grounds` is a sorted, comma-separated set of `funding_lineage`, `
 
 ## Real people
 
-**Elco's decision, 10 Nov** (annotation-layer.md, decision 1 (a)): names are allowed in a person's own annotations, kept in their own project, because Elco asked to tie wallets to friends' names. `validateClaim(claim, { private: true })` reads a claim kept there. Rules 2 and 5 below give way there, for `named` and `noted` and for the evidence's notes and quotes; rules 1, 3 and 4 hold everywhere. Anything published keeps the first version below, decided again before annotations are published (step 8).
+**Private annotations (10 Nov)**: names are allowed in a person's own annotations, kept in their own project, so a person can tie wallets to names they know. `validateClaim(claim, { private: true })` reads a claim kept there. Rules 2 and 5 below give way there, for `named` and `noted` and for the evidence's notes and quotes; rules 1, 3 and 4 hold everywhere. Anything published keeps the first version below, decided again before annotations are published.
 
-**The first version, which Elco can change.** It lives in `packages/core/src/claims/people.ts`. Constitution line 56 allows links "wherever public evidence allows" and promises removal. Both hold only off chain, so that line is under question (open question 9).
+**The first version.** It lives in `packages/core/src/claims/people.ts`. Constitution line 56 allows links "wherever public evidence allows" and promises removal. Both hold only off chain, so that line is under question (open question 9).
 
 1. Claims name accounts, contracts and groups. No natural person as subject or object.
 2. No free-text names in `object`, `qualifiers` or `note`.
@@ -207,7 +207,7 @@ petal/v1/claim/<subject>/<claim id>
 
 One claim, one key, never overwritten. `<subject>` is the ref as it stands, and it never holds a `/`. A row whose key doesn't match its hash is dropped. Testnet only, until open question 9 is decided. Observed claims derivable from a snapshot are never written.
 
-**A reader must never treat "everything under the receiver" as the claim set.** Measured on testnet (`research/near-tooling/near-data.md`): about $2 buys a million junk rows, and it takes 5,000 pages to read past them.
+**A reader must never treat "everything under the receiver" as the claim set.** Measured on testnet: about $2 buys a million junk rows, and it takes 5,000 pages to read past them.
 
 - **Read per writer by default:** the writers a lens trusts, plus the subject's own account, whose answers always show.
 - **Cap any receiver-wide read,** such as "all claims about X, by anyone", and report the result as "at least". It's a sample, not the set.

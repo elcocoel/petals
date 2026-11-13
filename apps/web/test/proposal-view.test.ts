@@ -1,4 +1,4 @@
-// A pressed proposal says what it's about (Elco's walk 3): its facts, its voters, its own words where they say
+// A pressed proposal says what it's about: its facts, its voters, its own words where they say
 // more than its title, and its link said for what it is.
 import type { Proposal } from '@petal/core';
 import { describe, expect, test } from 'vitest';

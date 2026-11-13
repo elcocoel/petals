@@ -1,5 +1,5 @@
 // A link in the conversation to one of this site's flowers, so the workspace opens it on its own canvas
-// rather than sending the person away (Elco, 10 Nov: "you're gonna link me to outside the work surface?").
+// rather than sending the person away, outside the work surface.
 // A published one is /f/<id>; render_flower's view_url is /draft?spec=, holding the spec itself; a view on
 // the map is /d/<sha>, the server's way there. Any may come whole (https://this-site/…) or as a path. Pure.
 
@@ -28,7 +28,7 @@ export function drawingLink(href: string, origin: string): DrawingLink | null {
 
 /**
  * A link in the conversation to the Power Map (/map) or to one map on it (/m/<id>), so the workspace opens it
- * on its own canvas too (#78, 11 Nov): the map's id, or null for the whole map. Null for anything else.
+ * on its own canvas too: the map's id, or null for the whole map. Null for anything else.
  */
 export function mapLink(href: string, origin: string): { map: string | null } | null {
   let url: URL;

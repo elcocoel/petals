@@ -1,6 +1,6 @@
 // Browser only. The person's own Solana wallet, the one in this browser (Phantom, Solflare, Backpack and
 // the like inject one), for signing in and adding a wallet with one signed message, as a NEAR or an EVM
-// wallet does (wave 5; Elco, 12 Nov: "is solana is simple we do it"). It asks to connect, then to sign the
+// wallet does. It asks to connect, then to sign the
 // text Petals' challenge gives; nothing else, so no transaction and no spend. Pure of React.
 
 interface SolanaInjected {
@@ -27,7 +27,7 @@ const provider = (): SolanaInjected | null => {
 /** There's a Solana wallet in this browser to ask. */
 export const hasSolanaWallet = () => provider() !== null;
 
-/** Said when there's none. LOBBY's draft. */
+/** Said when there's none. */
 export const NO_SOLANA_WALLET = 'There’s no Solana wallet in this browser.';
 
 /** The wallet's address, base58. Rejects when the person says no. */

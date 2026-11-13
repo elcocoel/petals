@@ -1,5 +1,5 @@
-// Paying with another token through NEAR Intents, beside the pay row's 'Add 1 NEAR' (Elco, 10 Nov: "let users
-// pay with anything from anywhere"). The person picks a token and its chain, the dollars and their own
+// Paying with another token through NEAR Intents, beside the pay row's 'Add 1 NEAR', so people can pay with
+// anything from anywhere. The person picks a token and its chain, the dollars and their own
 // address on that chain for a refund; the server gives a deposit address and the exact amount; they send it
 // in one plain transfer from whatever wallet they have. The dollars are the pay row's own amount, one for both. Where it stands is read again every few seconds
 // while it's under way, and stops when it ends; once it has landed, the one balance reads again (`paid`).

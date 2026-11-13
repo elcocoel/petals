@@ -6,7 +6,7 @@
 
 **Status**: Draft (clarified 2026-11-03: 3 written questions, 5 by voice; updated 2026-11-04 after the step 1 and step 2 tries)
 
-**Input**: User description: "Petal is a visual way to see power in any network. It's a circle, a flower: every account is a petal, like a bar chart wrapped into a circle. Width, height, colour, texture and the inner space (interactions between accounts) are a modular encoding for what signifies power and privilege in that organisation. Point it at any organisation or contract: an agent with a 'meanings of power' skill reads the chain, the forum and the docs, decides what each channel means, and renders the flower. Everything is a DAO: any chain. Pre-populated with a gallery of existing DAOs. Public service and art project. Later: creative competitions, queries, paid generation via NEAR Intents, and wallet messaging that turns Petal into a peer-to-peer coordination space for governors."
+**Input**: Feature description: a visual way to see power in any network. A circle, a flower: every account is a petal, like a bar chart wrapped into a circle. Width, height, colour, texture and the inner space (interactions between accounts) are a modular encoding for what signifies power and privilege in that organisation. Pointed at any organisation or contract, an agent with a "meanings of power" skill reads the chain, the forum and the docs, decides what each channel means, and renders the flower. Everything is a DAO, on any chain. A gallery of existing DAOs comes pre-populated. A public service and an art project. Later: creative competitions, queries, paid generation via NEAR Intents, and wallet messaging that turns Petal into a peer-to-peer coordination space for governors.
 
 ## Mission
 
@@ -174,8 +174,8 @@ A maker who likes their flower publishes it. They sign in with a NEAR account, a
 - **FR-027**: Makers MUST be able to publish a flower to a shared map on NEAR, signed by their NEAR account, and see it in the published gallery.
 - **FR-028**: Data gathered for a network at a given date MUST be kept and reused, never fetched again, once it is final on its chain; the shared map records its fingerprint.
 - **FR-029**: Agents MUST be able to publish on a maker's behalf only with a key limited to publishing that cannot move funds.
-- **FR-030** (amended 2026-11-05 by Elco, see `specs/002-system/`): Viewing flowers and making a flower with one's own agent MUST need no account, key or payment. Using Petal's own agent spends budget, so it needs sponsorship or the person's own payment.
-- **FR-031**: Petal SHOULD show what it would cost to sponsor new coverage or a refresh, quoted through NEAR Intents so it can be paid from any chain; no payment is taken in the build without Elco's explicit approval.
+- **FR-030** (amended 2026-11-05, see `specs/002-system/`): Viewing flowers and making a flower with one's own agent MUST need no account, key or payment. Using Petal's own agent spends budget, so it needs sponsorship or the person's own payment.
+- **FR-031**: Petal SHOULD show what it would cost to sponsor new coverage or a refresh, quoted through NEAR Intents so it can be paid from any chain; no payment is taken in the build without explicit approval.
 - **FR-032**: The build MAY implement a subset of the primitive vocabulary; any primitive not yet implemented is declared unavailable to the agent and the user, never imitated.
 
 ### Key Entities
@@ -213,7 +213,7 @@ A maker who likes their flower publishes it. They sign in with a NEAR account, a
 ## Assumptions
 
 - Primary audience is anyone: the flower must be legible to a non-expert first, with expert detail underneath. Governance participants, researchers and journalists are the deep users; hackathon judges are the first audience.
-- The delivery form (web platform, API, MCP server, agent skill, installable software) and the rendering approach are plan decisions; Elco prefers rendering in code (for example Three.js). The demo needs at least one form a judge can try without credentials.
+- The delivery form (web platform, API, MCP server, agent skill, installable software) and the rendering approach are plan decisions; rendering in code is preferred (for example Three.js). The demo needs at least one form a judge can try without credentials.
 - The on-chain input module comes first; which chains get data access first is a plan decision. Other input types are added only where nearly free. Step 1 showed keyless sources for NEAR (validators, delegators, Sputnik DAOs, House of Stake), Bitcoin and Ethereum.
 - The hackathon build showcases as much of NEAR as is genuinely useful (decided 2026-11-04): NEAR AI Cloud as the brain of Petal's agent, NEAR for the shared map, NEAR accounts and limited keys for publishing, NEAR Intents for payment, an IronClaw skill, and NEAR's own governance as data. Non-NEAR alternatives are documented for later.
 - Development writes to NEAR testnet; reads of chain data use mainnet.

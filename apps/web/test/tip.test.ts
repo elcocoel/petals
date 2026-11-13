@@ -1,4 +1,4 @@
-// The tip (design/side-panel.md, lines 34 to 38): a typical turn is the default model's measured one, and
+// The tip: a typical turn is the default model's measured one, and
 // what a tip adds to it reads as every amount does, dollars first, NEAR beside.
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';

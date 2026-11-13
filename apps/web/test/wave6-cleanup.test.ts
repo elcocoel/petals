@@ -1,6 +1,5 @@
-// Elco, 12 Nov, wave 4 walk: "look at how many visual behaviors are bugging in relation to the proposal and things
-// change sizes ... I thought it was cute that there is a mini map of the dial that shows up at high zoom. The place
-// where it's showing up is pretty weird. I think it should be on the top right as if I was playing a video game."
+// The visual behaviours around the proposals hold as things change size, and the small dial (the mini map that
+// shows at high zoom) stands at the top right, as in a video game.
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { Reading } from '@petal/core/types';
@@ -40,7 +39,7 @@ test('the proposals sit on their petals as the petals move: drawn from the ring 
   );
 });
 
-// VISUAL QA pass 2, 12 Nov: Ref Finance's 189 opened ran behind the header and across its neighbours' names.
+// Ref Finance's 189, opened, once ran behind the header and across its neighbours' names.
 test('an opened stack reaches only as far as there is room, the rest folded into its count', () => {
   // straight up from y 300 in a 900-high window, 16 clear of the top: 284 of room
   expect(roomAlong(500, 300, 0, -1, 1440, 900, [], 16)).toBeCloseTo(284);
@@ -74,7 +73,7 @@ test("a petal opening slides the flower's mark and name with its ring", () => {
   expect(text('landscape/scene.ts')).toMatch(/const moved = slid\?\.get\(i\);/);
 });
 
-// Elco, 12 Nov: Arcadia's "long line running off" ran from the opened petal to its panel, which stood under Tools.
+// Arcadia's long line running off once ran from the opened petal to its panel, which stood under Tools.
 test("an account's panel stands clear of the boxes over the map, in the first corner with room", () => {
   const k = 12;
   const tools = { x0: 0, y0: 0, x1: 300, y1: H };

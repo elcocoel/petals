@@ -1,19 +1,18 @@
 # 006 plan: milestone 2, the bench at `/lab/map`
 
-**Created**: 2026-11-09, by LOOK.
-**Scope**: the bench only (spec milestone 2). It doesn't change `packages/core/src/render`; the one look (milestone 3) gets its own plan, which goes to META first.
-**Lane**: `build.fe-map`, branch `m-face/fe-map`, port 3191.
+**Created**: 2026-11-09.
+**Scope**: the bench only (spec milestone 2). It doesn't change `packages/core/src/render`; the one look (milestone 3) gets its own plan, reviewed first.
 
 ## Data, read-only from the live server
 
 | What | From | Used for |
 |---|---|---|
 | Groups and pairs | `GET /api/v1/relations/overview?kind=holdings&limit=5000` | Continents (by `chain`), the force between flowers (`shared`, `weight`), roads |
-| The night's views | The 203 `/d/<sha>` links in `research/mapping-run-2026-11-09/INDEX.md` | Which flowers exist |
+| The night's views | The 203 `/d/<sha>` links the 9 Nov mapping run saved | Which flowers exist |
 | Each view's reading | `/d/<sha>` gives the spec; `POST /api/v1/render` with `include_reading: true` gives `{title, petals}` | The flower itself, as on `/make` |
 | View to group | `spec.snapshot.sha256` = the group's `snapshot_sha256` | Joining the two |
 
-A view's spec is content-addressed, so its reading never changes: cached for good, as the landing lane does (`lib/api.ts`, `forever`).
+A view's spec is content-addressed, so its reading never changes: cached for good, as the landing does (`lib/api.ts`, `forever`).
 
 ## Places (`places/v1`), worked out once and saved
 
@@ -22,7 +21,7 @@ A view's spec is content-addressed, so its reading never changes: cached for goo
   - **Continents:** one per chain, each sized by its flowers and set apart with room between them.
   - **Inside a continent:** a force map. Linked flowers pull together by their overlap weight, and every flower pushes the others away, so nothing overlaps.
   - **A second run keeps every saved place and only places new flowers**, near their strongest links. That's what makes a place an address.
-- **A flower's size on the map:** a narrow range by member count, about 1x to 2.5x. This is a lean inside the order, flagged for Elco when the bench is shown; equal size is the other way.
+- **A flower's size on the map:** a narrow range by member count, about 1x to 2.5x. This is a lean; equal size is the other way.
 
 ## The flower carries over unchanged, with one change: the camera belongs to the space
 
@@ -45,7 +44,7 @@ flower view:  k = K × s      x = X₀ + K × (fx − s × cx)      y = Y₀ + K
 - **New detail rows,** in the same table and the same form: the flower's mark, its title under it, the roads and the fan-out. Every number starts as a guess from the 5 Nov proof and is judged by hand.
 - **The pointer:** the landscape hook owns the pointer, wheel and keys, and passes the pointer on to the live flower under it. Esc and the way back fly to the landscape.
 
-## Nothing unasked
+## Nothing new on the page
 
 The page shows no new words: only the flowers' own titles and the data's counts. No colour beyond today's flower, no frontier, no "around you", no panels beyond the flower's own. The lab bench stays hidden in production unless `PETAL_LAB=1`, as `/lab/flower` does.
 
@@ -58,9 +57,9 @@ The page shows no new words: only the flowers' own titles and the data's counts.
 
 ## Measuring
 
-The probe, as on the bench (`?probe=1`): frame times while zooming from the whole landscape into ENS delegates, then into one delegate, on Elco's Mac, with the CPU throttled 4x. The bar is the 5 Nov proof's: about 60 full frames a second.
+The probe, as on the bench (`?probe=1`): frame times while zooming from the whole landscape into ENS delegates, then into one delegate, on a development machine, with the CPU throttled 4x. The bar is the 5 Nov proof's: about 60 full frames a second.
 
-## Built, 9 Nov (lane `m-face/fe-map`, `3f12193`, not merged)
+## Built, 9 Nov
 
 What's on the bench, and where it moved from the plan above:
 
@@ -70,25 +69,25 @@ What's on the bench, and where it moved from the plan above:
 - **Each flower pulls on its strongest three links only** (`backbone`, `ROADS_FAR`). Pulling on all of them knotted Solana, where nearly every group shares someone with every other. Far away, a flower shows those three; the rest come in with a new row, `roadMore`.
 - **Flowers with no links sit on the shore,** past every linked flower.
 - **The fan's rest:** ENS and Uniswap delegates share 1,731 accounts, but none of them is among either flower's 60 drawn petals. So besides the lines between shared petals, one line joins the two "everyone else" petals, weighted by the accounts left over.
-- **Measured** on this Mac in Chrome, zooming from the whole map into one ENS delegate's account: 0.5 ms a frame typical, 1.1 ms at the 95th percentile, 2.4 ms worst.
+- **Measured** on a development machine in Chrome, zooming from the whole map into one ENS delegate's account: 0.5 ms a frame typical, 1.1 ms at the 95th percentile, 2.4 ms worst.
 - **Tests:** 15 new tests in `apps/web/test/landscape.test.ts`; the flower's 152 pass unchanged; 3,353 in all.
 
-## Bench v2: one chain, simpler, elegant (Elco, 9 Nov, evening)
+## Bench v2: one chain, simpler, elegant (9 Nov)
 
-From "Elco on the first bench" (spec) and Elco's four answers. Lab-only, on `m-face/fe-map`. META's go, 9 Nov.
+From "The first bench" (spec) and four follow-up answers. Lab-only.
 
-| Elco | What the bench does |
+| Asked | What the bench does |
 |---|---|
-| "I don't think we have to see more than one chain at a time... a selector on the side... like how you would do on an exchange" | A list down the left: one `row` button per chain (`components/ui/Button.tsx`), its name (`chainLabel`) and how many flowers it has, the chosen one pressed. The map shows that chain's continent alone, fitted to the window. It starts on Ethereum (a lean: the most links). No new words. |
-| Connections: "far away distance and one thicker of thinner line dictated by the amount of shared accounts - the number and details can show as you zoom or click the connection" | One straight line per connection, its width by the accounts shared. Far away, each flower's strongest three; the rest come in as you zoom (rows `road`, `roadMore`). The fan into petals goes. The number shows at the line's middle once its flowers are big enough (row `roadCount`), and a click on a line marks it and shows its number at any distance. |
-| Entering: "Only the organization with 'outgoing' lines with an arrow that has the name of the neighbours (in the orientation of where they would show up if you zoom out)" | A click on a flower flies to it, filling the window as it does alone; so does zooming in until it fills most of the window. Everything else fades away. From its edge, one arrow per connection points the real way to that neighbour, its width by the accounts shared, ending near the window's edge with the neighbour's mark and name. Where two names would collide, the stronger connection keeps its name. A click on an arrow flies into that neighbour. Esc, or zooming back out, brings the map back. |
-| Logos: "Real logos, symbol if none" | `apps/web/scripts/landscape-logos.ts` copies each token's logo once from Trust Wallet's public list (`trustwallet/assets`, by chain folder and checksummed address) into `fixtures/landscape/logos/`. A flower with no logo there gets a mark made from its token symbol: the first word of its title when it reads "SYM holders", "SYM active holders" or "SYM delegates". With no token, the first letter of its name. |
-| Names: "Mark + short name, under" | One line under each flower, always the same size on screen: the mark, then the run's name for it without its notes in brackets, cut at 28 characters. Names never sit on a flower; when two collide, the bigger flower keeps its name and the smaller shows only its mark. On the map, a live flower draws no title of its own. |
-| "the Z dimension here is confused" | One order, bottom to top: roads, flowers, live flowers, names and marks, then the notes of the one flower under the pointer (or the one you've entered). Other live flowers show no notes. |
+| One chain at a time, from a selector on the side, as on an exchange | A list down the left: one `row` button per chain (`components/ui/Button.tsx`), its name (`chainLabel`) and how many flowers it has, the chosen one pressed. The map shows that chain's continent alone, fitted to the window. It starts on Ethereum (a lean: the most links). No new words. |
+| Connections: one line, thicker or thinner by the accounts shared; the number and details show on zoom or click | One straight line per connection, its width by the accounts shared. Far away, each flower's strongest three; the rest come in as you zoom (rows `road`, `roadMore`). The fan into petals goes. The number shows at the line's middle once its flowers are big enough (row `roadCount`), and a click on a line marks it and shows its number at any distance. |
+| Entering: only the organisation, with outgoing arrows named for its neighbours, pointing where they'd show when zoomed out | A click on a flower flies to it, filling the window as it does alone; so does zooming in until it fills most of the window. Everything else fades away. From its edge, one arrow per connection points the real way to that neighbour, its width by the accounts shared, ending near the window's edge with the neighbour's mark and name. Where two names would collide, the stronger connection keeps its name. A click on an arrow flies into that neighbour. Esc, or zooming back out, brings the map back. |
+| Logos: real logos, a symbol if none | `apps/web/scripts/landscape-logos.ts` copies each token's logo once from Trust Wallet's public list (`trustwallet/assets`, by chain folder and checksummed address) into `fixtures/landscape/logos/`. A flower with no logo there gets a mark made from its token symbol: the first word of its title when it reads "SYM holders", "SYM active holders" or "SYM delegates". With no token, the first letter of its name. |
+| Names: the mark and a short name, under | One line under each flower, always the same size on screen: the mark, then the run's name for it without its notes in brackets, cut at 28 characters. Names never sit on a flower; when two collide, the bigger flower keeps its name and the smaller shows only its mark. On the map, a live flower draws no title of its own. |
+| One clear order of what's on top | One order, bottom to top: roads, flowers, live flowers, names and marks, then the notes of the one flower under the pointer (or the one you've entered). Other live flowers show no notes. |
 
 ## Drawing from the viewer's view (after seam/v1, 9 Nov)
 
-META's go once `seam/v1` was live (`1c82b33`); the reading is SYSTEMS's, so this waits for their OK too. Lane `m-face/fe-viewdraw`.
+Once `seam/v1` was live. The reading is core's, so core's side reviewed this too.
 
 **The change, in one line:** `readFlower(spec, snapshot, view?)`. With a view, each dimension's choice comes from the view, matched against the flower's own data (`seamOf`'s pieces); without one, nothing changes, so the golden readings stay as they are.
 
@@ -105,45 +104,45 @@ META's go once `seam/v1` was live (`1c82b33`); the reading is SYSTEMS's, so this
 | markings, texture, lines | anything | nothing yet |
 
 - **A pure step in core,** `encodingsOf(view, spec, seam)`, gives `spec/v1`-shaped encodings with each meaning taken from the data's own label, so the legend is exactly what's drawn. `readFlower` uses them in place of `spec.encodings`. The reading's `spec_sha256` stays the spec's: the flower is the same flower.
-- **The agent's choices stay in its spec,** as its proposal (Elco: "Agent proposes, person adjusts").
+- **The agent's choices stay in its spec,** as its proposal (the agent proposes, the person adjusts).
 - **Where the view comes from:** `render_flower` and `/api/v1/render` take an optional `view`; the web passes the viewer's. Until a person can set one (the lobby's settings, later), the viewer's view is the default.
 - **A correction:** the default view turns bands on (`segments: backers`), but today's `default/v1` doesn't; the default becomes `segments: null`, so the default view changes no drawing. Its fixture and pin change with it.
 
 **Tests:** without a view, every golden reading is byte-identical; with the default view, the default specs' readings are the same; a view naming a piece a flower lacks draws nothing in that dimension; markings, texture and lines draw nothing yet.
 
-**Elco, 9 Nov: the default view for all.** Until people can set their own view, every flower is drawn by the default; the agent's choices stay with the flower as its proposal and don't show until a person can adopt them.
+**The default view for all (9 Nov).** Until people can set their own view, every flower is drawn by the default; the agent's choices stay with the flower as its proposal and don't show until a person can adopt them.
 
-**SYSTEMS, 9 Nov: OK,** on two conditions: without a view the golden readings stay byte-identical, and with one the reading keeps `reading/v1`'s shape (same fields, only the values the view picks), so it stays v1. Height by a piece's name keeps today's path, `m:<name>` through `measureTable` on the composed snapshot. The optional `view` on `render_flower` and `/api/v1/render` is additive; SYSTEMS raises `tools_version` once for the day's tool changes, so this lane doesn't.
+**Two conditions:** without a view the golden readings stay byte-identical, and with one the reading keeps `reading/v1`'s shape (same fields, only the values the view picks), so it stays v1. Height by a piece's name keeps today's path, `m:<name>` through `measureTable` on the composed snapshot. The optional `view` on `render_flower` and `/api/v1/render` is additive; `tools_version` is raised once for the day's tool changes, not here.
 
 ## Milestone 3: the one look (plan, 10 Nov)
 
-Elco: "no second look - one first look that we improve on"; V8: "Always the latest look". Rule 11 of `design/minimally-good.md`: the same flower looks the same everywhere. Today the still pictures (the landing's Power Map, the gallery and lobby tiles, a flower's page, drafts) are `render/v1`'s bars, and `/make` and the map draw the wedge flower. This touches `packages/core/src/render`, so it goes to META first, then SYSTEMS for core.
+No second look, one look that improves; V8: always the latest look. The same flower looks the same everywhere. Today the still pictures (the landing's Power Map, the gallery and lobby tiles, a flower's page, drafts) are `render/v1`'s bars, and `/make` and the map draw the wedge flower. This touches `packages/core/src/render`, so it is reviewed first, with core's side.
 
 **The change:** the wedge flower becomes the renderer's one look, `render/v2`, and `render/v1` stops being drawn.
 
-1. **One home for the geometry.** The wedge flower's pure parts move from `apps/web/flower/` into core, under the renderer, as `packages/core/src/render/wedge/` (SYSTEMS: render/ stays the one place that draws): `ring.ts` (itself a copy of `render/geometry.ts` with wedges), `model.ts`, `detail.ts`, `marks.ts`, `words.ts`, `order.ts`, and the two constants they read (`GUTTER`, `RECEDE`). The live flower imports them from core, unchanged, so `/make` and the map draw exactly what they draw today. The DOM parts (`scene.ts`, the camera, springs, the hook) stay in the web.
+1. **One home for the geometry.** The wedge flower's pure parts move from `apps/web/flower/` into core, under the renderer, as `packages/core/src/render/wedge/` (render/ stays the one place that draws): `ring.ts` (itself a copy of `render/geometry.ts` with wedges), `model.ts`, `detail.ts`, `marks.ts`, `words.ts`, `order.ts`, and the two constants they read (`GUTTER`, `RECEDE`). The live flower imports them from core, unchanged, so `/make` and the map draw exactly what they draw today. The DOM parts (`scene.ts`, the camera, springs, the hook) stay in the web.
 2. **A still skin from the same marks.** `render/skin-v2.ts`, `render/v2`, draws the flower at rest, fitted to the requested size, by asking `marks()` what shows at that size, the same table that drives the live flower, and writing the SVG as text, with no DOM. So a tile shows what the live flower shows at a tile's size, and a page shows what it shows at a page's size.
 3. **Colour from the reading.** The default view says `colour: kind`, and the legend says so, so the one look paints each petal by its kind with the palette `render/v1` already has (`style.ts`). The live flower paints it too, since it's the same look; today it's all grey, and the legend lists colours it doesn't draw. This is the one visible change on `/make`.
-4. **Versions:** `RENDER_VERSION` becomes `render/v2`, and `SKINS` holds only it. A published flower stays the same flower: its id leaves the drawing out, and its page says "Same facts, today's look." `contract-surface.test.ts` pins the version; SYSTEMS raises `tools_version` with its own changes.
+4. **Versions:** `RENDER_VERSION` becomes `render/v2`, and `SKINS` holds only it. A published flower stays the same flower: its id leaves the drawing out, and its page says "Same facts, today's look." `contract-surface.test.ts` pins the version; `tools_version` is raised with the tools' own changes.
 5. **Goldens:** the `.svg` and `.json` goldens are redrawn (`pnpm golden:update`) and reviewed; the `.reading.json` goldens stay byte-identical, which proves the facts didn't move.
 6. **Caches:** the landing keeps a drawing for a year (`lib/api.ts`, `forever`). Its request names the look, so `render/v2` asks anew and nothing old stays.
-7. **The still pictures' addresses name the look too** (META, 10 Nov, after Elco saw the lobby's old tile): `/api/v1/flowers/:id/svg` is kept for a year by the browser and by Vercel's edge (`x-vercel-cache: HIT`), so every page builds it through one helper, `flowerImage(id)` in `apps/web/lib/flower-view.ts`, which adds `?look=render%2Fv2`. A new look is a new address. Deploy order: the server first (so it draws `render/v2`), then the site, or the first visit could store the old look under the new address.
+7. **The still pictures' addresses name the look too** (10 Nov, after the lobby showed an old tile): `/api/v1/flowers/:id/svg` is kept for a year by the browser and by Vercel's edge (`x-vercel-cache: HIT`), so every page builds it through one helper, `flowerImage(id)` in `apps/web/lib/flower-view.ts`, which adds `?look=render%2Fv2`. A new look is a new address. Deploy order: the server first (so it draws `render/v2`), then the site, or the first visit could store the old look under the new address.
 
 **Done when:** the landing's Power Map, the gallery, the lobby's tiles, a flower's page and a draft all draw the `/make` flower; no page draws the bars; the readings are unchanged; the whole check is green.
 
-**SYSTEMS, 10 Nov: OK** on all of it; `tools_version` stays, since no tool's shape changes. Kept as history and never rewritten: `fixtures/map/3394fb87….json` (a `flower/v1` whose signed id holds its `render_sha256`) and `packages/core/schema/fixtures/entry.v2.json` (`drawn_with: render/v1`, pinned). What changes, and is fine: the ETags of `/api/v1/render` and `/api/v1/flowers/:id/svg`; the SVG's `data-petal` mark moves with the look (the old string is only in `apps/web/lib/mock/near-validators.json`); new publishes record `drawn_with: render/v2`.
+**Reviewed, 10 Nov:** `tools_version` stays, since no tool's shape changes. Kept as history and never rewritten: `fixtures/map/3394fb87….json` (a `flower/v1` whose signed id holds its `render_sha256`) and `packages/core/schema/fixtures/entry.v2.json` (`drawn_with: render/v1`, pinned). What changes, and is fine: the ETags of `/api/v1/render` and `/api/v1/flowers/:id/svg`; the SVG's `data-petal` mark moves with the look (the old string is only in `apps/web/lib/mock/near-validators.json`); new publishes record `drawn_with: render/v2`.
 
 **Not in it:** marks at the tips, texture and lines (V5, V6), and the joy layer. Words stay as they are.
 
-## Built, 10 Nov (lane `m-face/fe-onelook`)
+## Built, 10 Nov
 
-All seven steps; the colour checked on screen at `/lab/flower` and `/lab/map` (inside a flower), and in the three goldens. Elco's go, 10 Nov, through META: "one look goes live now".
+All seven steps; the colour checked on screen at `/lab/flower` and `/lab/map` (inside a flower), and in the three goldens.
 
-**Then, the tile (META's go, SYSTEMS's OK, 10 Nov):** live, the same flower showed many colours on its tile and one on its page, because `/api/v1/flowers/:id/svg` drew the spec's own choices (backers) and the page and `/make` draw the viewer's view. Everyone sees the default today (decisions, 9 Nov), so the tile draws with `DEFAULT_VIEW` too. The picture's address now names the view as well, `&view=` and the first 12 characters of the view's hash, because the bytes changed under an address already kept for a year.
+**Then, the tile (10 Nov):** live, the same flower showed many colours on its tile and one on its page, because `/api/v1/flowers/:id/svg` drew the spec's own choices (backers) and the page and `/make` draw the viewer's view. Everyone sees the default today (decisions, 9 Nov), so the tile draws with `DEFAULT_VIEW` too. The picture's address now names the view as well, `&view=` and the first 12 characters of the view's hash, because the bytes changed under an address already kept for a year.
 
-## The gallery and the landing on the one map (Elco's go, 10 Nov, fixes 2 to 4)
+## The gallery and the landing on the one map (10 Nov)
 
-- **One list:** the gallery, titled Power Map as the navbar and the landing call it, lists every view of the shared map (SYSTEMS's `GET /api/v1/map/views`), each with the server's own picture and address, as given. The landing's nine tiles and the hero are views of the same list, read at most hourly.
+- **One list:** the gallery, titled Power Map as the navbar and the landing call it, lists every view of the shared map (`GET /api/v1/map/views`), each with the server's own picture and address, as given. The landing's nine tiles and the hero are views of the same list, read at most hourly.
 - **A key wherever a flower shows:** `LegendKeys`, one quiet line of the colours a picture draws: under a flower's page drawing, under the hero, over the Power Map's tiles and the gallery (one key for all of them, each colour once, everyone else last). The colours come from the render's legend, or from each map row's `keys`.
 - **One name for a still picture:** `pictureQuery(view)` in `packages/core/src/render` gives `look`, `view` (12 hex of the view's hash) and `paint` (8 hex of the still palette's CSS hash). The site's flower tiles and the server's map pictures both use it, so a new look, view or palette gives every picture a new address.
 - **Gone:** the fixture twin, the raw publish line, the status line, the sponsor box, and "Sponsor a refresh" on a flower's page and in `/make`'s detail.

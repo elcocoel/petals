@@ -1,4 +1,4 @@
-// The key to a flower's colours (Elco, 10 Nov: colours by kind get a key wherever a flower shows): the
+// The key to a flower's colours (colours by kind get a key wherever a flower shows): the
 // legend's colours by kind, then "everyone else", each once, and the hero drawing its flower with that key.
 import type { LegendItem } from '@petal/core/types';
 import { DEFAULT_VIEW } from '@petal/core/view';
@@ -60,7 +60,7 @@ describe('colourKeys', () => {
       { label: 'everyone else', swatch: 'tail' },
     ]);
   });
-  test('everyone else last, though grey like a value past the fifth (the keys, #76)', () => {
+  test('everyone else last, though grey like a value past the fifth (the keys)', () => {
     const tail = { label: 'everyone else (311) 13.8%', swatch: 'var(--key-grey)' };
     const keyed: LegendItem[] = [
       { primitive: 'tail', meaning: 'everyone else', sources: [], keys: [tail] },
@@ -94,7 +94,7 @@ describe('the hero', () => {
     href: `/d/${HERO_SHA}`,
     keys: colourKeys([validators]),
   };
-  // The first hero, in the lab since HERO ART's story took the landing's (11 Nov).
+  // The first hero, in the lab since the hero story took its place on the landing.
   test('draws its flower in the one look, with the key to its colours', () => {
     const html = renderToStaticMarkup(createElement(Hero, { flower: tile }));
     expect(html).toContain('src="data:image/svg+xml;base64,PHN2Zy8+"');

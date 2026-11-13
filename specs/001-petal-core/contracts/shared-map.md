@@ -2,14 +2,14 @@
 
 **Version**: map/v2 | **Owner**: workstream W3 (NEAR adapters, `@petal/near/map`) | **Consumers**: tools (`get_snapshot`, `list_flowers`, `get_flower`, `publish_flower`), web
 
-The shared map is a set of keys written with `__fastdata_kv` function calls to a receiver account that has no contract. The FastData indexer records every write with its writer (`predecessor_id`), signer, tx hash, block and time. Writes go to **testnet** during the build. Mainnet only with Elco's OK.
+The shared map is a set of keys written with `__fastdata_kv` function calls to a receiver account that has no contract. The FastData indexer records every write with its writer (`predecessor_id`), signer, tx hash, block and time. Writes go to **testnet** during the build. Mainnet only with explicit approval.
 
-## Accounts (proposed names; Elco creates them)
+## Accounts (proposed names; the operator creates them)
 
 | Role | Testnet | Mainnet (later, needs OK) | Keys |
 |---|---|---|---|
-| Receiver: the map's namespace | `petals.testnet` | `petals.near` (free on 2026-11-04) | full-access key stays with Elco. **No contract is ever deployed.** |
-| Petal's writer | `petals-writer.testnet` | `writer.petals.near` | full-access key stays with Elco. Petal's server holds only a **function-call key**: receiver `petals.testnet`, method `__fastdata_kv`, allowance 1 NEAR. It cannot move funds or add keys. |
+| Receiver: the map's namespace | `petals.testnet` | `petals.near` (free on 2026-11-04) | full-access key stays with the operator. **No contract is ever deployed.** |
+| Petal's writer | `petals-writer.testnet` | `writer.petals.near` | full-access key stays with the operator. Petal's server holds only a **function-call key**: receiver `petals.testnet`, method `__fastdata_kv`, allowance 1 NEAR. It cannot move funds or add keys. |
 | Maker | any `.testnet` account | any `.near` account | the maker's wallet. Signs NEP-413 messages (no gas). Phase B: may add a function-call key for their own agent. |
 
 ## Endpoints
@@ -33,7 +33,7 @@ All keys start with `petal/v1/`. Keys ≤ 1,024 bytes; values ≤ 256 KiB; ≤ 2
 | `petal/v1/index/<caip2>/<population>/<block_height>` | `{ "sha256": "…" }` | A | Petal's writer |
 | `petal/v1/label/<caip2>/<address>` | `{ tag, value, status, evidence[], written_at }` | B | Petal's writer, or a maker directly |
 | `petal/v1/correction/<flower-id>/<id>` | Correction request (below): `{ "petal": "correction/v1", flower_id, target, request, reason, evidence[], requester, proof, written_at }` | B | Petal's writer, for a requester who signed it |
-| `petal/v1/vouch/<account>` | `{ since, note }` — trusted writers | B | the receiver account (Elco) |
+| `petal/v1/vouch/<account>` | `{ since, note }` — trusted writers | B | the receiver account (the operator) |
 
 The `petal/v1/` prefix names the folder layout, which map/v2 doesn't change, so a reader lists every version with one read. `<id>` is the entry id (24 hex). `<caip2>` is e.g. `near:mainnet`. The snapshot body is never on the map: `urls[]` points to Petal's API (`/api/v1/snapshots/<sha256>`) and, once the repo is public, the fixture file in the repo. FastFS (files up to 32 MiB, gas only) is a Phase B test for bodies.
 

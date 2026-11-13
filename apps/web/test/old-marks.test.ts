@@ -1,4 +1,4 @@
-// coordinator/one-source.md, step 8: the old hand-drawn marks go. Nothing petal-shaped on the site comes from
+// The old hand-drawn marks go. Nothing petal-shaped on the site comes from
 // lib/figures.ts: the workspace's sign is the Petals icon (components/ui/Icon.tsx), and the landing's marks
 // are gone. The figures stay for the lab's own pages, which aren't the site.
 import { readdirSync, readFileSync } from 'node:fs';

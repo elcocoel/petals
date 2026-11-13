@@ -2,8 +2,8 @@
 
 The seam is thin on purpose. Each side improves and versions on its own, and only what's listed here crosses.
 
-- **The data side:** `data.md`, led by SYSTEMS.
-- **The visual side:** how a view turns measures into a flower (channels, encodings, relations, time). It's LOOK's, with Elco (W8).
+- **The data side:** `data.md`.
+- **The visual side:** how a view turns measures into a flower (channels, encodings, relations, time). It's the look's (W8).
 
 ## From data to visual: the view input
 
@@ -30,7 +30,7 @@ What it never holds: leads that aren't the viewer's own, anything about drawing,
 - **The kinds:** amount, count, share, category, flag (a yes or no), date, parts and relation (`DATA_KINDS`). The look's `DataKind` is the same list.
 - **From every reading:** each of its holdings by its own name, as an amount; `amount` (its main data) and `share` (of that), computed here so the look never computes; `kind` and `identity` (categories; identity is verified, self-declared, inferred or none); and `backers` (parts, from its delegations) where it has them. These names are the reading's: a layer can't use them.
 - **About the same address:** a reading is about its chain and the address it was asked for (`dao`, `token`, `mint`, `contract`, `address`, `account`), or its chain and population when it reads a whole network. Every layer, and every added reading, must be about the same, or compose refuses.
-- **Names from annotations (11 Nov, annotation-layer.md step 5):** core's `namePieces(reading, claims)`, and `seamOf`'s fourth argument, turn the person's `named` annotations (claim/v2) into two categories for the participants they're about: `name` (one name each) and `name_kind` (declared, stated, sourced or inferred). Where several are claimed, one shows: declared, then stated, then sourced, then inferred, then the newest. What the policy hides (retracted, replaced) doesn't count. Both are `lead`, the viewer's own and never verified. Their `layer` is the hash of the chosen claims' ids. A new piece under an existing kind, so still `seam/v1`. The page reads the claims at `GET /api/v1/me/annotations?verb=named`, from all the person's projects, and composes them with the reading it draws.
+- **Names from annotations (11 Nov):** core's `namePieces(reading, claims)`, and `seamOf`'s fourth argument, turn the person's `named` annotations (claim/v2) into two categories for the participants they're about: `name` (one name each) and `name_kind` (declared, stated, sourced or inferred). Where several are claimed, one shows: declared, then stated, then sourced, then inferred, then the newest. What the policy hides (retracted, replaced) doesn't count. Both are `lead`, the viewer's own and never verified. Their `layer` is the hash of the chosen claims' ids. A new piece under an existing kind, so still `seam/v1`. The page reads the claims at `GET /api/v1/me/annotations?verb=named`, from all the person's projects, and composes them with the reading it draws.
 - **Not yet:** a reader's own data is all `amount` until readers say each piece's kind (a count of blocks reads as an amount today).
 
 ## From visual to data: references only
