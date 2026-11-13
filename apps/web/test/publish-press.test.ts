@@ -1,8 +1,8 @@
 // Publishing what a person mapped, with one press (Elco, 12 Nov). Wave 8 (13 Nov): one signed version of their
-// layers, from the wallet they choose, with who did the work recorded (composition.md §2).
+// layers, from their wallet (composition.md §2).
 import { describe, expect, test } from 'vitest';
 import type { PublishableData } from '../lib/agent-client.ts';
-import { publishPressView, publishWords, signersOf } from '../lib/publish-press.ts';
+import { publishPressView, publishWords, signerOf } from '../lib/publish-press.ts';
 
 const data: PublishableData = {
   about: 'eip155:100:0xf02f',
@@ -37,63 +37,32 @@ const wallets = [
     author: 'eip155:1:0xced608aa29bb92185d9b6340adcbfa263dae075b',
   },
 ];
-const signers = signersOf(wallets);
-const one = { signers: signers.slice(0, 1), chosen: 'mainnet:alice.near', via: null };
+const signer = signerOf(wallets);
+const one = signer;
 
 describe('the publish press', () => {
-  test('signs as one of the person’s wallets, each named as their author', () => {
-    expect(signers).toEqual([
-      {
-        key: 'mainnet:alice.near',
-        author: 'near:mainnet:alice.near',
-        label: 'NEAR · alice.near',
-        shown: 'alice.near',
-      },
-      {
-        key: 'eip155:0xced608aa29bb92185d9b6340adcbfa263dae075b',
-        author: 'eip155:1:0xced608aa29bb92185d9b6340adcbfa263dae075b',
-        label: 'Ethereum · 0xce…075b',
-        shown: '0xce…075b',
-      },
-    ]);
-    // a wallet with no author can't sign a publication
-    expect(signersOf([{ ...wallets[0], author: undefined } as never])).toEqual([]);
+  test('signs as the person’s first wallet that names its author', () => {
+    expect(signer).toEqual({
+      wallet: wallets[0],
+      author: 'near:mainnet:alice.near',
+      shown: 'alice.near',
+    });
+    expect(
+      signerOf([{ ...wallets[0], author: undefined } as never, wallets[1] as never])?.author,
+    ).toBe('eip155:1:0xced608aa29bb92185d9b6340adcbfa263dae075b');
+    expect(signerOf([])).toBeNull();
   });
 
-  test('with one wallet it just presses; with more, the person chooses which signs', () => {
+  test('presses once; the wallet signs once and nothing is spent', () => {
     expect(publishPressView(data, 'ready', null, one)).toMatchObject({
       press: publishWords.press,
       sign: publishWords.sign,
-      signers: null,
     });
-    expect(
-      publishPressView(data, 'ready', null, { signers, chosen: signers[1]?.key ?? null, via: null })
-        ?.signers,
-    ).toEqual({
-      label: publishWords.signsAs,
-      options: [
-        { value: 'mainnet:alice.near', label: 'NEAR · alice.near' },
-        {
-          value: 'eip155:0xced608aa29bb92185d9b6340adcbfa263dae075b',
-          label: 'Ethereum · 0xce…075b',
-        },
-      ],
-      chosen: 'eip155:0xced608aa29bb92185d9b6340adcbfa263dae075b',
-    });
-  });
-
-  test('says who did the work, as the publication records it', () => {
-    expect(
-      publishPressView(data, 'ready', null, {
-        ...one,
-        via: { kind: 'agent', name: publishWords.agent, model: 'Qwen3 30B' },
-      })?.via,
-    ).toBe('Mapped with Petals’ agent (Qwen3 30B)');
   });
 
   test('is not there with no layers to publish, or no wallet to sign', () => {
     expect(publishPressView({ ...data, layers: [] }, 'ready', null, one)).toBeNull();
-    expect(publishPressView(data, 'ready', null, { ...one, signers: [] })).toBeNull();
+    expect(publishPressView(data, 'ready', null, null)).toBeNull();
     expect(publishPressView(null, 'ready', null, one)).toBeNull();
   });
 

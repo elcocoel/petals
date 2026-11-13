@@ -309,13 +309,6 @@ export async function readPublishable(map: string): Promise<PublishableData | nu
   return (await res.json()) as PublishableData;
 }
 
-/** Who did the work on the author's behalf, as the author says it: recorded, never credited in their place. */
-export interface PublicationVia {
-  kind: 'agent';
-  name: string;
-  model?: string;
-}
-
 /**
  * One press, prepared (POST /api/v1/publish/prepare, composition.md §2 and §9): the unsigned publication/v1, the
  * hash of its canonical JSON, and the two lines the wallet signs, which name that hash. A NEAR wallet signs them
@@ -333,7 +326,6 @@ export async function preparePublication(o: {
   map: string;
   /** the wallet that signs, CAIP-10: the author the publication names */
   author: string;
-  via?: PublicationVia | null;
 }): Promise<PreparedPublication> {
   const res = await fetch('/api/v1/publish/prepare', {
     method: 'POST',

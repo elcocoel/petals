@@ -197,7 +197,7 @@ export function InteractionSurface({
   // the map in front: the flower the person is inside on the map, else the conversation's (lib/mapping.ts)
   const [inMap, setInMap] = useState<string | null>(null);
   const publishMap = inMap ?? flowerMap ?? state.mapAt?.map ?? made?.held.existing_map ?? null;
-  const publishing = usePublishPress(publishMap, state.via);
+  const publishing = usePublishPress(publishMap);
   // a power quote wherever /make has nothing to show yet (#89, wave 7): the map on its way, an empty Mapping
   const openingQuote = usePowerQuote(0);
   const mappingQuote = usePowerQuote(1);
@@ -372,7 +372,6 @@ export function InteractionSurface({
             view={mapping}
             press={publishing.view}
             onPublish={() => void publishing.publish()}
-            onSigner={publishing.choose}
             quote={mappingQuote && <PowerQuote quote={mappingQuote} />}
             wallet={
               chosen && chosenAccount

@@ -1,20 +1,15 @@
 // The one press that publishes what a person mapped (lib/publish-press.ts): the names that go, read first, then
-// the wallet that signs when there's a choice, who did the work, the press, that the wallet signs once and
-// nothing is spent, and why the rest stay private, folded. Props only.
+// the press, that the wallet signs once and nothing is spent, and why the rest stay private, folded. Props only.
 import type { PublishPressView, PublishRow } from '../lib/publish-press.ts';
 import { Button } from './ui/Button.tsx';
-import { Select } from './ui/Select.tsx';
 import { TextLink } from './ui/TextLink.tsx';
 
 export function PublishPress({
   view,
   onPublish,
-  onSigner,
 }: {
   view: PublishPressView;
   onPublish: () => void;
-  /** the wallet chosen to sign */
-  onSigner?: ((key: string) => void) | undefined;
 }) {
   return (
     <section className="flex flex-col items-start gap-space-4">
@@ -27,18 +22,6 @@ export function PublishPress({
           )}
         </>
       )}
-      {view.signers && onSigner && (
-        <span className="flex items-center gap-space-8">
-          <span className="type-caption text-muted">{view.signers.label}</span>
-          <Select
-            label={view.signers.label}
-            value={view.signers.chosen}
-            options={view.signers.options}
-            onChange={onSigner}
-          />
-        </span>
-      )}
-      {view.via && <p className="my-0 type-caption text-muted">{view.via}</p>}
       {view.press && (
         <Button variant="compact" disabled={view.busy} onClick={onPublish}>
           {view.press}

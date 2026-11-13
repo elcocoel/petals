@@ -206,8 +206,6 @@ export interface MappingView {
   intro: string;
   /** what the press publishes, layer by layer, each with what it adds to the map */
   layers: LayerLine[];
-  /** all of it in one line, over the press */
-  summary: string | null;
   /** what the person kept that can't go yet, each with why */
   adds: AddsLine[];
   /** said when there's nothing to add, or no map in front */
@@ -220,10 +218,9 @@ export function mappingView(
   data: PublishableData | null,
 ): MappingView {
   const heading = modeWords.heading(name ?? data?.name ?? null);
-  const none = { heading, intro: modeWords.intro, layers: [], summary: null, adds: [] };
+  const none = { heading, intro: modeWords.intro, layers: [], adds: [] };
   if (!map) return { ...none, empty: modeWords.noMap };
   const layers = layerLines(data?.layers ?? []);
-  const summary = data?.totals ? casesLine(countsOf(data.totals)) : null;
   const adds = (data?.adds ?? [])
     // what goes is in the layers, by what it adds; here, what can't go yet
     .filter((a) => !a.goes)
@@ -239,5 +236,5 @@ export function mappingView(
     (data?.ready ?? 0) > 0 ||
     (data?.private.length ?? 0) > 0 ||
     adds.length > 0;
-  return { ...none, layers, summary, adds, empty: any ? null : modeWords.nothing };
+  return { ...none, layers, adds, empty: any ? null : modeWords.nothing };
 }

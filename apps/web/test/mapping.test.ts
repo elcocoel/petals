@@ -75,7 +75,6 @@ describe('the mapping state', () => {
       ],
       ['TRUMP vesting', ['New data: The map has no vesting schedule yet']],
     ]);
-    expect(v.summary).toBe('1 new kind of data · 1 new moment · 212 new subjects · 60 facts match');
     expect(v.empty).toBeNull();
   });
 

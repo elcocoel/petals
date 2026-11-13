@@ -141,7 +141,7 @@ import { flowerPanelView, type PanelFlower, shelfView } from '../lib/panel-view.
 import { viewChoices } from '../lib/person-view.ts';
 import { POWER_QUOTES } from '../lib/power-quotes.ts';
 import { claimsView, usageView, walletRows } from '../lib/profile-view.ts';
-import { publishPressView, publishWords, signersOf } from '../lib/publish-press.ts';
+import { publishPressView, publishWords, signerOf } from '../lib/publish-press.ts';
 import type { Done } from '../lib/thread.ts';
 import { answeredBy, composerView, type TurnRow, threadView } from '../lib/thread-view.ts';
 import { tipLine } from '../lib/tip.ts';
@@ -711,25 +711,14 @@ const LAB_PUBLISH: PublishableData = {
     },
   ],
 };
-const LAB_SIGNERS = signersOf([
+const LAB_SIGN = signerOf([
   {
     network: 'mainnet',
     account_id: 'alice.near',
     proved_at: '2026-11-11T09:00:00Z',
     author: 'near:mainnet:alice.near',
   },
-  {
-    network: 'eip155',
-    account_id: '0xced608aa29bb92185d9b6340adcbfa263dae075b',
-    proved_at: '2026-11-12T09:00:00Z',
-    author: 'eip155:1:0xced608aa29bb92185d9b6340adcbfa263dae075b',
-  },
 ]);
-const LAB_SIGN = {
-  signers: LAB_SIGNERS,
-  chosen: LAB_SIGNERS[0]?.key ?? null,
-  via: { kind: 'agent' as const, name: publishWords.agent, model: 'Qwen3 30B' },
-};
 
 export const registry: LabEntry[] = [
   {
@@ -2999,7 +2988,6 @@ export const registry: LabEntry[] = [
             view={mappingView(LAB_PUBLISH.about, 'TRUMP', LAB_PUBLISH)}
             press={publishPressView(LAB_PUBLISH, 'ready', null, LAB_SIGN)}
             onPublish={() => {}}
-            onSigner={() => {}}
           />
         ),
       },
@@ -3044,12 +3032,10 @@ export const registry: LabEntry[] = [
     source: 'apps/web/components/PublishPress.tsx',
     states: [
       {
-        name: 'two wallets to sign with, the agent recorded',
+        name: 'ready',
         render: () => {
           const view = publishPressView(LAB_PUBLISH, 'ready', null, LAB_SIGN);
-          return view ? (
-            <PublishPress view={view} onPublish={() => {}} onSigner={() => {}} />
-          ) : null;
+          return view ? <PublishPress view={view} onPublish={() => {}} /> : null;
         },
       },
       {
