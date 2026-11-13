@@ -24,6 +24,10 @@ const written = {
     /** The same words, two sentences, wrapping as the hero's column needs (HERO ART's V2, 11 Nov). */
     titleWide: 'Power has a shape.\nNow you can see it.',
     body: 'Point Petals at any wallet or contract, or just name a community, and map how power moves.',
+    /** The small button beside Connect and the setup prompt, read aloud and shown on hover (Elco, 13 Nov). */
+    star: 'Star Petals on GitHub',
+    /** The socials under the hero's buttons, in Elco's order (13 Nov), each named for the ear and on hover. */
+    socials: { github: 'GitHub', telegram: 'Telegram', twitter: 'Twitter', youtube: 'YouTube' },
     ask: {
       /** One line per chapter, in the chapters' order: the box types one, holds it, deletes it, types the next. */
       placeholders: [

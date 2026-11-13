@@ -12,6 +12,7 @@ export type ButtonVariant =
   | 'primary'
   | 'compact'
   | 'secondary'
+  | 'square'
   | 'starter'
   | 'link'
   | 'quiet'
@@ -25,6 +26,7 @@ const BEHAVIOUR: Partial<Record<ButtonVariant, 'action' | 'link' | 'item'>> = {
   primary: 'action',
   compact: 'action',
   secondary: 'action',
+  square: 'action',
   starter: 'action',
   link: 'link',
   quiet: 'link',
@@ -36,6 +38,8 @@ const VARIANTS: Record<ButtonVariant, string> = {
   primary: '',
   compact: 'h-row-height px-text-gap type-ui',
   secondary: 'border border-primary bg-transparent text-primary',
+  // secondary holding one icon, as wide as it is high: the hero's star beside Connect (Elco, 13 Nov)
+  square: 'w-control-height border border-primary bg-transparent px-0 text-primary',
   // One line at any width Figma draws. Narrower than its question, it wraps instead of overflowing.
   starter:
     'h-auto border border-hairline bg-transparent px-space-16 py-space-8 type-caption whitespace-normal text-primary',
