@@ -112,6 +112,7 @@ import { FlowerShelf } from '../components/workspace/FlowerShelf.tsx';
 import { Funds } from '../components/workspace/Funds.tsx';
 import { MappingBox } from '../components/workspace/MappingBox.tsx';
 import { NotSignedIn } from '../components/workspace/NotSignedIn.tsx';
+import { Points } from '../components/workspace/Points.tsx';
 import { Profile } from '../components/workspace/Profile.tsx';
 import { ProfileEditor } from '../components/workspace/ProfileEditor.tsx';
 import { ProfileHead } from '../components/workspace/ProfileHead.tsx';
@@ -137,6 +138,7 @@ import { oopsWords } from '../lib/oops-words.ts';
 import { openingMessage } from '../lib/opening.ts';
 import { flowerPanelView, type PanelFlower, shelfView } from '../lib/panel-view.ts';
 import { viewChoices } from '../lib/person-view.ts';
+import { type CreditRecord, pointsView } from '../lib/points-view.ts';
 import { POWER_QUOTES } from '../lib/power-quotes.ts';
 import { claimsView, usageView, walletRows } from '../lib/profile-view.ts';
 import { publishPressView } from '../lib/publish-press.ts';
@@ -642,6 +644,35 @@ const LAB_CLAIMS: AnnotationRow[] = [
     added_at: '2026-11-10T18:00:00Z',
   },
 ];
+
+/** A credit record for the lab (SYSTEMS's credit/v1 shape): two layers, others built on and reused them. */
+const LAB_CREDIT: CreditRecord = {
+  petal: 'credit/v1',
+  rule: 'credit-rule/v1',
+  as_of: '2026-11-13T02:00:00Z',
+  points: 5,
+  layers: [
+    {
+      layer: 'a1'.repeat(32),
+      about: 'eip155:100:0xfe1084bc16427e5eb7f13fc19bcd4e641f7d571f',
+      title: 'RaidGuild: who holds the shares',
+      published_at: '2026-11-11T10:00:00Z',
+      built_on_by: 3,
+      reused_by: 1,
+      points: 4,
+    },
+    {
+      layer: 'b2'.repeat(32),
+      about: 'near:mainnet:astro-stakers.poolv1.near',
+      title: 'Astro Stakers: its delegators',
+      published_at: '2026-11-12T18:00:00Z',
+      built_on_by: 0,
+      reused_by: 1,
+      points: 1,
+    },
+  ],
+  hash: 'c3'.repeat(32),
+};
 
 /** The editor's view for the lab: every control does nothing. */
 const editorView = (over: Partial<ProfileEditorView>): ProfileEditorView => ({
@@ -2842,6 +2873,34 @@ export const registry: LabEntry[] = [
       },
       { name: 'still reading', render: () => <Wallets wallets="reading" /> },
       { name: "Petals didn't answer", render: () => <Wallets wallets="unread" /> },
+    ],
+  },
+  {
+    id: 'Points',
+    group: 'The workspace',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/workspace/Points.tsx',
+    states: [
+      {
+        name: 'points from two layers others built on',
+        render: () => <Points points={pointsView(LAB_CREDIT)} onPublish={() => {}} />,
+      },
+      {
+        name: 'published on NEAR Social',
+        render: () => (
+          <Points
+            points={pointsView(LAB_CREDIT)}
+            publishing={{ kind: 'published' }}
+            onPublish={() => {}}
+          />
+        ),
+      },
+      {
+        name: 'none yet',
+        render: () => <Points points={pointsView({ ...LAB_CREDIT, points: 0, layers: [] })} />,
+      },
+      { name: 'still reading', render: () => <Points points="reading" /> },
     ],
   },
   {

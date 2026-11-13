@@ -13,7 +13,7 @@
 // from the indexer (GET /v1/tx/{hash}), never from the receipt. The waits ask a few times, a moment apart,
 // and only after the person pressed Publish. lib/near-social.ts holds the data and lib/lobby-view.ts the words.
 import { useCallback, useState } from 'react';
-import { fastfsServes, readKeptPicture, readSocialTx, saveMyProfile } from '../lib/agent-client.ts';
+import { readKeptPicture, saveMyProfile } from '../lib/agent-client.ts';
 import type { EditPhase, ProfileEditorView, SocialState } from '../lib/lobby-view.ts';
 import { editorWords, PUBLISH_TO_NEAR_SOCIAL, shownAccount } from '../lib/lobby-view.ts';
 import {
@@ -30,26 +30,13 @@ import {
   type PetalsProfile,
   type ProfileDraft,
   profileArgs,
-  SOCIAL_RECEIVER,
-  type TxOutcome,
   toPetals,
-  txOutcome,
-  WRITE_GAS,
 } from '../lib/near-social.ts';
-import { sentBy } from '../lib/pay.ts';
-import { callFunction, connectWallet } from '../lib/wallet.ts';
+import { connectWallet } from '../lib/wallet.ts';
+import { accepted, confirmed, message, Stop, send, served } from './socialWrite.ts';
 
 /** A profile picture's longest side, in pixels: well under FastFS's 1 MiB for one call. */
 const PICTURE_SIDE = 512;
-/** How many times to ask, and how far apart: NEAR Social usually has a write within about 3 s. */
-const ASKS = 20;
-const APART_MS = 1500;
-
-class Stop extends Error {}
-
-const pause = (ms: number) => new Promise((ok) => setTimeout(ok, ms));
-const message = (e: unknown) => (e instanceof Error ? e.message : String(e));
-const hashIn = (s: string) => /\b[1-9A-HJ-NP-Za-km-z]{43,44}\b/.exec(s)?.[0] ?? null;
 
 async function sha256Hex(bytes: Uint8Array<ArrayBuffer>): Promise<string> {
   const d = new Uint8Array(await crypto.subtle.digest('SHA-256', bytes));
@@ -82,46 +69,6 @@ async function squarePicture(
   if (!blob) throw new Error('The picture could not be made.');
   return { bytes: new Uint8Array(await blob.arrayBuffer()), mime: blob.type || 'image/png' };
 }
-
-/** One call to `social` from the wallet; its transaction's hash, or Stop when nothing was sent. */
-async function send(method: string, args: object | Uint8Array): Promise<string> {
-  let said = '';
-  try {
-    const hash = sentBy(
-      await callFunction('mainnet', SOCIAL_RECEIVER, method, args, WRITE_GAS),
-    )?.hash;
-    if (hash) return hash;
-  } catch (e) {
-    // Some wallets report the expected CodeDoesNotExist as an error; the hash in it is still the write.
-    said = message(e);
-    const hash = hashIn(said);
-    if (hash) return hash;
-  }
-  throw new Stop(editorWords.refused);
-}
-
-/** What NEAR Social's indexer did with the transaction, asked a few times while it hasn't seen it. */
-async function confirmed(hash: string): Promise<TxOutcome> {
-  for (let i = 0; i < ASKS; i++) {
-    const out = txOutcome(await readSocialTx(hash).catch(() => null));
-    if (out.kind !== 'waiting') return out;
-    await pause(APART_MS);
-  }
-  return { kind: 'waiting' };
-}
-
-async function served(url: string): Promise<boolean> {
-  for (let i = 0; i < ASKS; i++) {
-    if (await fastfsServes(url, `${Date.now()}-${i}`).catch(() => false)) return true;
-    await pause(APART_MS);
-  }
-  return false;
-}
-
-const accepted = (out: TxOutcome) => {
-  if (out.kind === 'refused') throw new Stop(editorWords.rejected(out.why.join('; ')));
-  if (out.kind === 'waiting') throw new Stop(editorWords.slow);
-};
 
 export function useProfileEditor(
   account: string | null,

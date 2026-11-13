@@ -2,8 +2,9 @@
 // lobby to be ... we might want to unify them and use this overall"; #79's investigator's card, with the
 // lobby's map). /lobby and /profile both show it. Beside the side panel, which is the layout's
 // (app/(work)/WorkPanel.tsx, PANEL's), from the top, the person (ProfileHead); then the widgets in rows of
-// two, each pair the same height: their Profile card beside the Wallets they've proven, the Claims they and
-// their agents keep about accounts beside their Balance, and the map beside their Conversations. Each card
+// two, each pair the same height: their Profile card beside the Wallets they've proven, their Points for
+// mapping (wave 8) beside their Balance, the Claims they and their agents keep about accounts beside their
+// Conversations, and the map across the page. Each card
 // has one title and one job (components/ui/Card.tsx); a list that grows keeps a set height and scrolls
 // inside (Elco: "I don't like the idea that the claims widget is infinite"). The editor opens over the
 // whole row, the width of the page.
@@ -18,6 +19,7 @@ import {
   type WithdrawPhase,
 } from '../../lib/lobby-view.ts';
 import type { Money } from '../../lib/pay.ts';
+import type { PointsPublish, PointsView } from '../../lib/points-view.ts';
 import type { PowerQuoteItem } from '../../lib/power-quotes.ts';
 import type {
   AddWalletPhase,
@@ -32,6 +34,7 @@ import { Card } from '../ui/Card.tsx';
 import { Claims } from './Claims.tsx';
 import { Conversations } from './Conversations.tsx';
 import { Funds } from './Funds.tsx';
+import { Points } from './Points.tsx';
 import { Profile } from './Profile.tsx';
 import { ProfileEditor } from './ProfileEditor.tsx';
 import { ProfileHead } from './ProfileHead.tsx';
@@ -54,6 +57,9 @@ export function Lobby({
   claims,
   conversations,
   map,
+  points,
+  publishing,
+  publishPoints,
   quotes,
 }: {
   /** The wallet this session signed in with, and the profile Petals keeps or NEAR Social's. */
@@ -81,8 +87,15 @@ export function Lobby({
   claims: ClaimsView | 'reading' | 'unread';
   conversations: ConversationRow[];
   map: LobbyMap;
+  /** The person's points for mapping and the layers behind them (wave 8, SYSTEMS's credit/v1). */
+  points: PointsView | 'reading' | 'unread';
+  publishing: PointsPublish;
+  publishPoints: () => void;
   /** An illustrated power quote for each widget with nothing in it yet (#89, wave 7). */
-  quotes: Record<'profile' | 'claims' | 'usage' | 'conversations', PowerQuoteItem | null>;
+  quotes: Record<
+    'profile' | 'claims' | 'usage' | 'conversations' | 'points',
+    PowerQuoteItem | null
+  >;
 }) {
   return (
     <main aria-label={lobbyWords.page} data-surface="ground" className="flex h-dvh bg-surface">
@@ -106,7 +119,12 @@ export function Lobby({
           </div>
           <Wallets wallets={wallets} adding={adding} onAdd={addWallet} />
           <div className="grid min-w-0 lg:col-span-2">
-            <Claims claims={claims} quote={quotes.claims} />
+            <Points
+              points={points}
+              publishing={publishing}
+              onPublish={publishPoints}
+              quote={quotes.points}
+            />
           </div>
           <Funds
             balance={funds.balance}
@@ -118,6 +136,10 @@ export function Lobby({
             quote={quotes.usage}
           />
           <div className="grid min-w-0 lg:col-span-2">
+            <Claims claims={claims} quote={quotes.claims} />
+          </div>
+          <Conversations rows={conversations} quote={quotes.conversations} />
+          <div className="grid min-w-0 lg:col-span-3">
             <Card
               title={lobbyWords.map}
               labelledBy="lobby-map"
@@ -132,7 +154,6 @@ export function Lobby({
               )}
             </Card>
           </div>
-          <Conversations rows={conversations} quote={quotes.conversations} />
         </div>
       </div>
     </main>
