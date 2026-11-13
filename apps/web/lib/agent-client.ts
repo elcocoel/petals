@@ -2,7 +2,7 @@
 // Everything else gets plain values and agent events, so views and ViewModels hold no URLs, no status
 // codes and no `fetch`. layers.test.ts names this file as the only one in lib/ allowed to call it.
 
-import type { Blocs } from '@petal/core';
+import type { Blocs, Credit as CreditRecord } from '@petal/core';
 import type {
   AgentEvent,
   ChatMessage,
@@ -21,7 +21,6 @@ import type { BenchLandscape } from '../landscape/land.ts';
 import type { ConnectedAgent } from './agents.ts';
 import type { AnnotationRow } from './claim-lines.ts';
 import type { Catalogue, Settings } from './composer-options.ts';
-import type { CreditRecord } from './contribution-view.ts';
 import type { ListedConversation, ListedProject } from './conversation-list.ts';
 import { decodeDraft } from './draft.ts';
 import type { ElsewhereRead } from './elsewhere.ts';

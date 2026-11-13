@@ -5,6 +5,8 @@
 // keep about accounts (GET /api/v1/me/annotations), and every model call charged to them (usage/v1, GET
 // /api/v1/me/usage). Add a wallet signs Petals' challenge with another wallet, as signing in does, and binds
 // it to this person (POST /api/v1/me/wallets); the session stays as it is. There is no timer.
+
+import type { Credit } from '@petal/core';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   addMyWallet,
@@ -14,7 +16,7 @@ import {
   readWallets,
   sessionClient,
 } from '../lib/agent-client.ts';
-import { type CreditRecord, contributionView } from '../lib/contribution-view.ts';
+import { contributionView } from '../lib/contribution-view.ts';
 import { hasEvmWallet, NO_EVM_WALLET } from '../lib/evm-wallet.ts';
 import {
   type AddWalletPhase,
@@ -47,7 +49,7 @@ export function useLobby() {
     'reading',
   );
   const [adding, setAdding] = useState<AddWalletPhase>({ kind: 'ready' });
-  const [credit, setCredit] = useState<CreditRecord | 'reading' | 'unread'>('reading');
+  const [credit, setCredit] = useState<Credit | 'reading' | 'unread'>('reading');
 
   useEffect(() => {
     let gone = false;

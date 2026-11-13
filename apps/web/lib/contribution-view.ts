@@ -3,27 +3,11 @@
 // good' looks like"; "let's not make this more complicated than it has to be"). Three plain counts, as
 // SYSTEMS's credit/v1 already computes them (composition.md, section 7): facts the person added to the map
 // first, facts they confirmed (matched independently), and accounts that built on their work (points/v1, Elco's
-// points for mapping, 004-workspace). Pure. LOBBY's drafts.
+// points for mapping, 004-workspace): core's Credit, totals { first, confirmed, built_on }. Pure. LOBBY's drafts.
 
+import type { Credit } from '@petal/core';
 import { dateLabel } from './flower-view.ts';
 import { subjectOf } from './profile-view.ts';
-
-/** A layer the person published, as the record lists it: only what the widget reads. */
-export interface CreditLayer {
-  sha256: string;
-  /** The map it's about, `chain:address`. */
-  map: string;
-  title?: string | null;
-  published_at?: string | null;
-}
-
-/** The person's credit record, as GET /api/v1/me/credit gives it: only what the widget reads. */
-export interface CreditRecord {
-  petal: string;
-  layers: CreditLayer[];
-  totals: { facts_first: number; facts_matched: number; points: number };
-  hash: string;
-}
 
 export const contributionWords = {
   title: 'Contribution',
@@ -50,13 +34,13 @@ export interface ContributionView {
   empty: boolean;
 }
 
-export function contributionView(record: CreditRecord): ContributionView {
-  const { facts_first, facts_matched, points } = record.totals;
+export function contributionView(record: Credit): ContributionView {
+  const { first, confirmed, built_on } = record.totals;
   return {
     counts: [
-      { key: 'first', value: facts_first, label: contributionWords.first },
-      { key: 'confirmed', value: facts_matched, label: contributionWords.confirmed },
-      { key: 'built-on', value: points, label: contributionWords.builtOn },
+      { key: 'first', value: first, label: contributionWords.first },
+      { key: 'confirmed', value: confirmed, label: contributionWords.confirmed },
+      { key: 'built-on', value: built_on, label: contributionWords.builtOn },
     ],
     layers: [...record.layers]
       .sort((a, b) => ((a.published_at ?? '') < (b.published_at ?? '') ? 1 : -1))
@@ -64,11 +48,11 @@ export function contributionView(record: CreditRecord): ContributionView {
         const about = subjectOf(l.map);
         return {
           key: l.sha256,
-          title: l.title ?? about.shown,
+          title: l.title || about.shown,
           about,
           when: l.published_at ? dateLabel(l.published_at) : null,
         };
       }),
-    empty: facts_first + facts_matched + points === 0 && record.layers.length === 0,
+    empty: first + confirmed + built_on === 0 && record.layers.length === 0,
   };
 }

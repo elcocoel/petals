@@ -10,6 +10,7 @@
 // first state shows here until they take them as props, as the chat's views do. Their controls are
 // live on the page.
 
+import type { Credit } from '@petal/core';
 import { DEFAULT_VIEW, DIMENSIONS, EVERY_FLOWER, inUse } from '@petal/core/view';
 import { grades } from '@petal/core/wedge/keys';
 import type { SurfaceName } from '@petal/tokens';
@@ -644,6 +645,43 @@ const LAB_CLAIMS: AnnotationRow[] = [
     added_at: '2026-11-10T18:00:00Z',
   },
 ];
+
+/** A credit record for the lab, in core's credit/v1 shape: two published layers. */
+const LAB_LAYER = {
+  petal: 'claim/v3',
+  publication: 'f7'.repeat(32),
+  seq: 2,
+  confirmed: 0,
+  built_on_by: [],
+  reused_by: [],
+  built_on: 0,
+};
+const LAB_CREDIT: Credit = {
+  petal: 'credit/v1',
+  author: 'near:mainnet:a-name.near',
+  rule: 'points/v1',
+  compose: 'compose/v1',
+  layers: [
+    {
+      ...LAB_LAYER,
+      sha256: 'a1'.repeat(32),
+      map: 'eip155:100:0xfe1084bc16427e5eb7f13fc19bcd4e641f7d571f',
+      title: 'RaidGuild: who holds the shares',
+      published_at: '2026-11-11T10:00:00Z',
+      first: 120,
+    },
+    {
+      ...LAB_LAYER,
+      sha256: 'b2'.repeat(32),
+      map: 'near:mainnet:astro-stakers.poolv1.near',
+      title: 'Astro Stakers: its delegators',
+      published_at: '2026-11-12T18:00:00Z',
+      first: 8,
+    },
+  ],
+  totals: { layers: 2, first: 128, confirmed: 35, built_on: 4 },
+  composed_from: ['f7'.repeat(32)],
+};
 
 /** The editor's view for the lab: every control does nothing. */
 const editorView = (over: Partial<ProfileEditorView>): ProfileEditorView => ({
@@ -2855,39 +2893,16 @@ export const registry: LabEntry[] = [
     states: [
       {
         name: 'three counts',
-        render: () => (
-          <Contribution
-            contribution={contributionView({
-              petal: 'credit/v1',
-              layers: [
-                {
-                  sha256: 'a1'.repeat(32),
-                  map: 'eip155:100:0xfe1084bc16427e5eb7f13fc19bcd4e641f7d571f',
-                  title: 'RaidGuild: who holds the shares',
-                  published_at: '2026-11-11T10:00:00Z',
-                },
-                {
-                  sha256: 'b2'.repeat(32),
-                  map: 'near:mainnet:astro-stakers.poolv1.near',
-                  title: 'Astro Stakers: its delegators',
-                  published_at: '2026-11-12T18:00:00Z',
-                },
-              ],
-              totals: { facts_first: 128, facts_matched: 35, points: 4 },
-              hash: 'c3'.repeat(32),
-            })}
-          />
-        ),
+        render: () => <Contribution contribution={contributionView(LAB_CREDIT)} />,
       },
       {
         name: 'nothing yet',
         render: () => (
           <Contribution
             contribution={contributionView({
-              petal: 'credit/v1',
+              ...LAB_CREDIT,
               layers: [],
-              totals: { facts_first: 0, facts_matched: 0, points: 0 },
-              hash: 'c3'.repeat(32),
+              totals: { layers: 0, first: 0, confirmed: 0, built_on: 0 },
             })}
           />
         ),
