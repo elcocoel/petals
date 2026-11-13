@@ -1,8 +1,8 @@
 // Figma's Footer (66:2360), a band on the FAQ's grey with two section paddings above its content. On the left, the
 // wordmark a third of the band's width (mark.fill) with the small print under it in the links' type; on the right,
 // three groups of links (Petals, Build, Community), their last lines level with the wordmark's foot. Every
-// destination is listed: one whose address is still empty shows as its name, in the links' type, until the
-// address is set in siteLinks. The content sits one block gap from the window's left and bottom edges and a column
+// destination is listed: one whose address is still empty shows as its name, greyed, until the address is set
+// in siteLinks. The content sits one block gap from the window's left and bottom edges and a column
 // gap from its right.
 import type { ReactNode } from 'react';
 import { landingCopy } from '../../lib/landing-copy.ts';
@@ -23,7 +23,7 @@ function Group({ name, links }: { name: string; links: Destination[] }): ReactNo
             {link.name}
           </TextLink>
         ) : (
-          <span key={link.name} className="type-label text-primary">
+          <span key={link.name} className="type-label text-muted">
             {link.name}
           </span>
         ),
@@ -40,8 +40,8 @@ export function Footer() {
       name: copy.groups.petals,
       links: [
         { name: copy.links.map, href: siteLinks.map },
-        { name: copy.links.gallery, href: siteLinks.gallery },
         { name: copy.links.leaderboard, href: siteLinks.leaderboard },
+        { name: copy.links.drop, href: siteLinks.merch },
       ],
     },
     {
@@ -49,7 +49,6 @@ export function Footer() {
       links: [
         { name: copy.links.docs, href: siteLinks.docs },
         { name: copy.links.github, href: siteLinks.github },
-        { name: copy.links.api, href: siteLinks.api },
         { name: copy.links.brandKit, href: siteLinks.brandKit },
       ],
     },
@@ -59,7 +58,6 @@ export function Footer() {
         { name: socials.telegram, href: siteLinks.socials.telegram },
         { name: socials.twitter, href: siteLinks.socials.twitter },
         { name: socials.youtube, href: siteLinks.socials.youtube },
-        { name: copy.links.merch, href: siteLinks.merch },
       ],
     },
   ];
