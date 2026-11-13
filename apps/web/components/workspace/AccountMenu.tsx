@@ -39,13 +39,7 @@ export function AccountMenu({
   ];
   return (
     <div className="relative">
-      <Button
-        variant="done"
-        aria-haspopup="menu"
-        aria-expanded={open}
-        aria-label={lobbyWords.account}
-        onClick={onToggle}
-      >
+      <Button variant="done" expanded={open} label={lobbyWords.account} onClick={onToggle}>
         {avatar ? (
           // biome-ignore lint/performance/noImgElement: a picture the account chose, from its own storage
           <img

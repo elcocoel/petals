@@ -32,6 +32,7 @@ import type {
   ClaimsView,
   UsageView,
   WalletKind,
+  WalletLogos,
   WalletRow,
 } from '../../lib/profile-view.ts';
 import { PayRow } from '../chat/PayRow.tsx';
@@ -77,6 +78,7 @@ export function Lobby({
   contribution,
   quote,
   tip,
+  logos,
 }: {
   /** The wallet this session signed in with, and the profile Petals keeps or NEAR Social's. */
   profile: {
@@ -121,10 +123,18 @@ export function Lobby({
   quote: PowerQuoteItem | null;
   /** The person's tip, in the Balance band. */
   tip: TipView;
+  /** Each chain's logo, for the Wallets card's buttons. */
+  logos?: WalletLogos;
 }) {
   const named = profile.social.kind === 'profile' ? profile.social.profile : null;
   const walletsCard = (
-    <Wallets wallets={wallets} adding={adding} onAdd={addWallet} onStop={stopAdding} />
+    <Wallets
+      wallets={wallets}
+      adding={adding}
+      onAdd={addWallet}
+      onStop={stopAdding}
+      logos={logos}
+    />
   );
   return (
     <main aria-label={lobbyWords.page} data-surface="ground" className="flex h-dvh bg-surface">
@@ -166,6 +176,9 @@ export function Lobby({
                   onEdit={profile.edit}
                   saved={profile.saved}
                   published={profile.published}
+                  {...(profile.account
+                    ? { publicHref: `/u/${encodeURIComponent(profile.account)}` }
+                    : {})}
                 />
               </div>
               {walletsCard}

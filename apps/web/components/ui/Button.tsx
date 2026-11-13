@@ -83,6 +83,8 @@ export type ButtonProps = {
       current?: boolean;
       /** What it does, for a control with no words of its own: read aloud and shown on hover. */
       label?: string;
+      /** It opens a menu: whether the menu is open now. */
+      expanded?: boolean;
       onClick?: MouseEventHandler<HTMLButtonElement>;
     }
 );
@@ -110,7 +112,7 @@ export function Button({ variant = 'primary', arrow, children, ...rest }: Button
       </a>
     );
   }
-  const { type = 'button', disabled, pressed, current, label, onClick } = rest;
+  const { type = 'button', disabled, pressed, current, label, expanded, onClick } = rest;
   return (
     <button
       type={type}
@@ -120,6 +122,8 @@ export function Button({ variant = 'primary', arrow, children, ...rest }: Button
       data-current={current ? '' : undefined}
       aria-label={label}
       title={label}
+      aria-haspopup={expanded === undefined ? undefined : 'menu'}
+      aria-expanded={expanded}
       onClick={onClick}
       data-b={BEHAVIOUR[variant]}
       data-kind={variant}

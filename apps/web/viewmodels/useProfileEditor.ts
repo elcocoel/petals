@@ -299,8 +299,10 @@ export function useProfileEditor(
               (e) => setProblem(message(e)),
             );
           },
-          save: () => void save(),
-          ...(PUBLISH_TO_NEAR_SOCIAL && near ? { publish: () => void publish() } : {}),
+          // one Save: with a NEAR account it goes onto NEAR Social, which the person's own NEAR wallet
+          // signs and pays for (Petals keeps the same copy after); with none, it's kept on Petals
+          save: () => void (PUBLISH_TO_NEAR_SOCIAL && near ? publish() : save()),
+          onSocial: Boolean(PUBLISH_TO_NEAR_SOCIAL && near),
           cancel: () => setEditing(false),
         }
       : null;

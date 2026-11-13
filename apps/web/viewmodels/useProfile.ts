@@ -1,11 +1,18 @@
-// The person's profile (in the same data shape as NEAR Social, with a publish button): the wallet this
-// session signed in with, and the profile the page shows: Petals' own copy (GET /api/v1/me/profile), or,
-// before Petals keeps one, the account's NEAR Social profile, which the editor then starts from; or none
-// anywhere; or that it couldn't be read. Read when the page opens and again after the person saves. There is no timer. lib/agent-client.ts reads, lib/near-social.ts shapes,
-// and lib/lobby-view.ts holds the words and the states.
+// The person's profile, one and the same as NEAR Social: the wallet this session signed in with, and the profile
+// the page shows. For a person with a NEAR account on mainnet (the one they signed in with, or a NEAR wallet
+// they added), that's their NEAR Social profile, read fresh each time, so an edit made there shows here; with
+// none on NEAR Social, or no NEAR account, it's the one they set on Petals (GET /api/v1/me/profile); or none
+// anywhere; or that it couldn't be read. Petals' own copy is read too, for the editor's picture. Read when the
+// page opens and again after the person saves. There is no timer. lib/agent-client.ts reads, lib/near-social.ts
+// shapes, and lib/lobby-view.ts holds the words and the states.
 import { useCallback, useEffect, useState } from 'react';
-import { readMyProfile, readSignedIn, readSocialProfile } from '../lib/agent-client.ts';
-import type { SocialState } from '../lib/lobby-view.ts';
+import {
+  readMyProfile,
+  readSignedIn,
+  readSocialProfile,
+  readWallets,
+} from '../lib/agent-client.ts';
+import { nearAccountOf, type SocialState } from '../lib/lobby-view.ts';
 import { fromPetals, type PetalsProfile } from '../lib/near-social.ts';
 
 export function useProfile(): {
@@ -23,23 +30,24 @@ export function useProfile(): {
 
   const read = useCallback(async (who: string, on: string) => {
     let mine: PetalsProfile | null;
+    let wallets: Awaited<ReturnType<typeof readWallets>>;
     try {
-      mine = await readMyProfile();
+      [mine, wallets] = await Promise.all([readMyProfile(), readWallets()]);
     } catch {
       setSocial({ kind: 'unread' });
       return;
     }
     setKept(mine);
-    const shown = fromPetals(mine);
-    if (shown) {
-      setSocial({ kind: 'profile', profile: shown, source: 'petals' });
+    // the NEAR account on mainnet, if there's one: its NEAR Social profile is the profile
+    const near = nearAccountOf({ network: on, account: who }, wallets ?? []);
+    const mainnet = near && (on === 'mainnet' || near !== who) ? near : null;
+    const public_ = mainnet ? await readSocialProfile(mainnet).catch(() => null) : null;
+    if (public_) {
+      setSocial({ kind: 'profile', profile: public_, source: 'near-social' });
       return;
     }
-    // Nothing kept yet: the account's NEAR Social profile, on mainnet, is where the editor starts.
-    const public_ = on === 'mainnet' ? await readSocialProfile(who).catch(() => null) : null;
-    setSocial(
-      public_ ? { kind: 'profile', profile: public_, source: 'near-social' } : { kind: 'none' },
-    );
+    const shown = fromPetals(mine);
+    setSocial(shown ? { kind: 'profile', profile: shown, source: 'petals' } : { kind: 'none' });
   }, []);
 
   useEffect(() => {

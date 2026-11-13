@@ -30,6 +30,7 @@ import { publishRoutes } from './publish-routes.ts';
 import { recordedClient, SKELETON_TRANSCRIPT } from './recorded.ts';
 import { type AgentRouteOptions, createAgentRoutes, stateDirOf } from './routes.ts';
 import { importRunFiles, interruptRuns, sqliteRunStore } from './runs.ts';
+import { nearSocialReader, type PublicProfileReader } from './social-read.ts';
 import { walletCipherFrom } from './wallet-cipher.ts';
 import { workspaceRoutes } from './workspace.ts';
 
@@ -42,6 +43,8 @@ export interface PetalAppOptions extends AgentRouteOptions {
   env?: Record<string, string | undefined>;
   /** NEAR RPC per network, for sign-in; default the public RPC, or the context's in fake mode */
   rpcFor?: (network: Network) => Rpc;
+  /** NEAR Social's profile of an account, for a public profile; default: its indexer, none when faked */
+  socialProfile?: PublicProfileReader;
   /** for tests: how a payment is read on chain, NEAR's price, and the credit contract */
   pay?: Pick<PayDeps, 'readTransfer' | 'readIntentsWithdraw' | 'nearUsd' | 'credit' | 'oneClick'>;
   /** for tests: search's models; default the ones at PETAL_SEARCH_URL */
@@ -121,11 +124,16 @@ export function buildPetalApp(cfg: Config, o: PetalAppOptions = {}): Hono {
       : () => nearUsd({ onWarning: (m: string) => console.warn(`petal: ${m}`) }));
   // A public site runs Petals' agent too: for a person who has paid for it, or holds an invite.
   const access = agentAccess(env);
+  // the one key wallets are sealed and found under, for sign-in and for a public profile by account
+  const cipher = walletCipherFrom(env, {
+    gated: access === 'gated',
+    spends: llm.kind !== 'recorded',
+  });
   const auth = createAuth({
     store,
     // the same table as publish's nonces: nonceStore(cfg) in @petal/tools opens this very store
     nonces: durableNonceStore(store.challenge),
-    cipher: walletCipherFrom(env, { gated: access === 'gated', spends: llm.kind !== 'recorded' }),
+    cipher,
     rpcFor: o.rpcFor ?? (config.fake ? () => ctx.rpc : nearRpc),
     access,
     site: siteOf(config.apiBase),
@@ -211,6 +219,10 @@ export function buildPetalApp(cfg: Config, o: PetalAppOptions = {}): Hono {
     meRoutes({
       store,
       gate: auth.gate,
+      cipher,
+      ...(o.socialProfile || !config.fake
+        ? { socialProfile: o.socialProfile ?? nearSocialReader() }
+        : {}),
       tools: ctx,
       llm,
       ...(o.price ? { price: o.price } : {}),
