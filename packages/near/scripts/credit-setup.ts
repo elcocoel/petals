@@ -4,8 +4,8 @@
 //   PETAL_KEYS_DIR=<folder> node packages/near/scripts/credit-setup.ts [--network testnet]
 //       opens a page on http://127.0.0.1:3189 where the owner's own wallet approves one plain transfer,
 //       then does the rest by itself
-//   PETAL_KEYS_DIR=<folder> node packages/near/scripts/credit-setup.ts --network testnet --owner <account> --owner-key-file <file>
-//       --credit <name> --charger <name>
+//   PETAL_KEYS_DIR=<folder> node packages/near/scripts/credit-setup.ts --network testnet --owner <account>
+//       --owner-key-file <file> --credit <name> --charger <name>
 //       a rehearsal, with that account's key file making the transfer instead of a wallet
 //
 // The wallet is asked for one thing only: a plain NEAR transfer to a new account this script made on this
@@ -101,7 +101,8 @@ if (!existsSync(WASM)) {
     `no contract build at ${WASM}. Build it first: cd packages/near/contract && cargo near build non-reproducible-wasm --locked`,
   );
 }
-if (!SECRETS) fail('set PETAL_KEYS_DIR to the folder, outside the repo, where this run keeps its keys.');
+if (!SECRETS)
+  fail('set PETAL_KEYS_DIR to the folder, outside the repo, where this run keeps its keys.');
 const wasm = readFileSync(WASM);
 const sha = createHash('sha256').update(wasm).digest('hex');
 if (sha !== WASM_SHA256)
