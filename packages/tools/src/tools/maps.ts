@@ -26,6 +26,7 @@ import { cardProposals } from '../proposals.ts';
 import { publishable } from '../publish-data.ts';
 import type { ToolContext } from '../types.ts';
 import { valuesOf } from '../value-store.ts';
+import { vestingNow } from '../vesting.ts';
 import { layerOwnerOf } from './datasets.ts';
 import { open, REF } from './explorations.ts';
 import { base, obj } from './shared.ts';
@@ -172,7 +173,8 @@ export const getMap = defineTool<{ map: string }, Record<string, unknown>>({
     "One map on the Power Map, by its address (look_up's maps give it) or its link: everything already there, " +
     'to interpret without reading anew. Its link; its readings, each with its date, size and who mapped it; its ' +
     'proposals and the period they cover; its value (price, supply, market cap, treasury), each with its source ' +
-    "and date; its payouts in short; Insights, the claims Petals' mapping made about its accounts and those people " +
+    "and date; its vesting now, where it was read (each allocation's unlocked, next unlock and later, and their " +
+    "totals, by its schedules); its payouts in short; Insights, the claims Petals' mapping made about its accounts and those people " +
     'published, each with who answers for it; and the ' +
     "signed-in person's own names for its accounts, which are theirs alone until they publish them. " +
     'describe_snapshot and compute_figures count a reading; find_voting_blocs and list_payouts go deeper.',
@@ -225,6 +227,11 @@ export const getMap = defineTool<{ map: string }, Record<string, unknown>>({
       },
       proposals: { type: ['object', 'null'] },
       value: { type: ['object', 'null'] },
+      vesting: {
+        type: ['object', 'null'],
+        description:
+          'the kept vesting at now, by its schedules: totals and each allocation, unlocked, next_unlock {at, amount}, later',
+      },
       payouts: { type: ['object', 'null'] },
       insights: {
         type: 'array',
@@ -256,13 +263,14 @@ export const getMap = defineTool<{ map: string }, Record<string, unknown>>({
       );
     const card = found.card;
     const accounts = await cardAccounts(ctx, card);
-    const [proposals, paid, claims, own] = await Promise.all([
+    const [proposals, paid, claims, own, vesting] = await Promise.all([
       proposalsFor(ctx, card.id),
       payoutsOf(ctx, card.id),
       claimsAbout(ctx, accounts),
       ctx.caller?.subject
         ? privateStore(ctx.config).annotation.list(ctx.caller.subject)
         : Promise.resolve([]),
+      vestingNow(ctx, card.id, ctx.now()),
     ]);
     const totals = paid ? payoutsIn(paid).totals : null;
     const dates = (paid?.payouts ?? [])
@@ -291,6 +299,7 @@ export const getMap = defineTool<{ map: string }, Record<string, unknown>>({
       })),
       proposals,
       value: card.value,
+      vesting,
       payouts:
         paid && totals
           ? {

@@ -10,6 +10,7 @@ import {
   compose,
   creditOf,
   type Entry,
+  IMPORTED_AUTHOR,
   type Publication,
   publicationHash,
   sha256Hex,
@@ -80,11 +81,15 @@ const NEAR_ACCOUNT =
 /**
  * An author as the record names them (CAIP-10), from what a page or a person gives: a bare NEAR account reads as
  * near:mainnet:<it>, or near:testnet:<it> for a .testnet one, as the rest of the API reads it; anything else as given.
+ * Petals' own mapping is the one author the record names bare (core's IMPORTED_AUTHOR: imported, never a wallet's
+ * signature), so it reads as itself however it's written.
  */
 export const authorOf = (given: string) =>
-  NEAR_ACCOUNT.test(given)
-    ? `near:${given.endsWith('.testnet') ? 'testnet' : 'mainnet'}:${given}`
-    : given;
+  given === IMPORTED_AUTHOR || given === `near:mainnet:${IMPORTED_AUTHOR}`
+    ? IMPORTED_AUTHOR
+    : NEAR_ACCOUNT.test(given)
+      ? `near:${given.endsWith('.testnet') ? 'testnet' : 'mainnet'}:${given}`
+      : given;
 
 /** One author's credit (credit/v1), from the whole record, with its hash. */
 export async function creditFor(
@@ -159,7 +164,7 @@ export async function appendPublication(
 
 /** An author in words: an account's own name, and Petals' mapping as itself. */
 export const authorName = (author: string) =>
-  author === 'mapping.petals.near' ? "Petals' own mapping" : (author.split(':').at(-1) ?? author);
+  author === IMPORTED_AUTHOR ? "Petals' own mapping" : (author.split(':').at(-1) ?? author);
 
 /** The map's layers, authors and differences, as GET /api/v1/maps/:id adds them (composition.md, section 9). */
 export async function mapRecord(ctx: ToolContext, about: string) {

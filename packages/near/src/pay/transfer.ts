@@ -5,7 +5,7 @@
 
 import { describe, NearError } from '../errors.ts';
 import type { NearNetwork } from '../network.ts';
-import { RPC_URLS } from '../network.ts';
+import { ARCHIVAL_RPC_URLS } from '../network.ts';
 
 /** Where a person's NEAR goes, per network: Petals' own accounts (T147). */
 export const PAY_RECEIVER: Record<NearNetwork, string> = {
@@ -46,7 +46,7 @@ interface TxView {
 
 export interface TransferDeps {
   fetch?: typeof fetch;
-  /** the RPC address; default RPC_URLS[network] */
+  /** the RPC address; default ARCHIVAL_RPC_URLS[network], which still has a transfer days later */
   url?: string;
 }
 
@@ -67,7 +67,7 @@ export async function readTransfer(
   const transport = deps.fetch ?? globalThis.fetch;
   let body: { result?: TxView; error?: { cause?: { name?: string } } };
   try {
-    const res = await transport(deps.url ?? RPC_URLS[network], {
+    const res = await transport(deps.url ?? ARCHIVAL_RPC_URLS[network], {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({

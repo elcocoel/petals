@@ -7,7 +7,13 @@ import { describe, expect, test } from 'vitest';
 import { piecesOf } from '../src/reading/view.ts';
 import type { SeamPiece } from '../src/seam.ts';
 import type { Snapshot } from '../src/types/index.ts';
-import { type Allocation, type Vesting, validateVesting, vestingPieces } from '../src/vesting.ts';
+import {
+  type Allocation,
+  type Vesting,
+  validateVesting,
+  vestingAt,
+  vestingPieces,
+} from '../src/vesting.ts';
 
 const SOL = 'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp';
 const MINT = '6p6xgHyF7AeE6TZkSmFsko444wqoP15icUSqi2jfGiPN';
@@ -157,5 +163,33 @@ describe("vestingPieces: each petal that holds allocations, cut at its reading's
     expect(names(vestingPieces(reading(), vesting()))).toEqual(
       expect.arrayContaining(['vesting', 'next_unlock', 'tranche']),
     );
+  });
+});
+
+describe('vestingAt: the vesting now, for an agent to say', () => {
+  test('a stream halfway: half unlocked, nothing stepped next (continuous), the rest later; totals add up', () => {
+    const at = vestingAt(vesting([team]), Date.parse('2026-07-02T12:00:00Z'));
+    const [t] = at.allocations;
+    expect(t?.next_unlock).toBeNull();
+    expect(Number(t?.unlocked) + Number(t?.later)).toBe(1000);
+    expect(Number(t?.unlocked)).toBeGreaterThan(499);
+    expect(Number(t?.unlocked)).toBeLessThan(501);
+    expect(at.totals.total).toBe('1000');
+  });
+
+  test("the fixture's allocations: each with its next step and when, the totals' next unlock the soonest of all", () => {
+    const t = Date.parse('2026-11-05T11:54:31Z');
+    const at = vestingAt(vesting(fixture.allocations), t);
+    expect(at.at).toBe('2026-11-05T11:54:31.000Z');
+    expect(at.read_at).toBe(fixture.read_at);
+    const soonest = at.allocations
+      .map((a) => a.next_unlock?.at)
+      .filter((x): x is string => !!x)
+      .sort()[0];
+    expect(at.totals.next_unlock?.at).toBe(soonest);
+    for (const a of at.allocations) {
+      const sum = Number(a.unlocked) + Number(a.next_unlock?.amount ?? 0) + Number(a.later);
+      expect(sum).toBeCloseTo(Number(a.total), 3);
+    }
   });
 });
