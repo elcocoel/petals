@@ -21,6 +21,7 @@ import type { BenchLandscape } from '../landscape/land.ts';
 import type { ConnectedAgent } from './agents.ts';
 import type { AnnotationRow } from './claim-lines.ts';
 import type { Catalogue, Settings } from './composer-options.ts';
+import type { CreditRecord } from './contribution-view.ts';
 import type { ListedConversation, ListedProject } from './conversation-list.ts';
 import { decodeDraft } from './draft.ts';
 import type { ElsewhereRead } from './elsewhere.ts';
@@ -37,7 +38,6 @@ import {
 } from './near-social.ts';
 import type { Credit, PayInfo } from './pay.ts';
 import type { PersonView } from './person-view.ts';
-import type { CreditRecord } from './points-view.ts';
 import type { ProvenWallet, UsageCall } from './profile-view.ts';
 import type { EntryDraft, Prepared, Published } from './publish.ts';
 import { readSse } from './sse.ts';
@@ -717,19 +717,6 @@ export async function readKeptPicture(
   };
 }
 
-/**
- * A key's latest value under an account in NEAR Social's FastData KV, from its public reader
- * (kv.main.fastnear.com), for keys NEAR Social's indexer doesn't read (petals/credit); null when there's none.
- */
-export async function readSocialKv(account: string, key: string): Promise<unknown> {
-  const res = await fetch(
-    `https://kv.main.fastnear.com/v0/latest/social/${encodeURIComponent(account)}/${key}`,
-  );
-  if (!res.ok) return null;
-  const json = (await res.json()) as { entries?: { value?: unknown }[]; value?: unknown };
-  return json.entries?.[0]?.value ?? json.value ?? null;
-}
-
 /** Whether FastFS serves a stored file yet. Asked with a fresh query each time: its CDN keeps a 404. */
 export async function fastfsServes(url: string, fresh: string): Promise<boolean> {
   const res = await fetch(`${url}?v=${encodeURIComponent(fresh)}`);
@@ -752,7 +739,7 @@ export async function readCredit(): Promise<Credit | null> {
   return json.credit ?? null;
 }
 
-/** The person's credit record (SYSTEMS's credit/v1, wave 8's points); null for nobody or no answer. */
+/** The person's credit record (SYSTEMS's credit/v1, wave 8); null for nobody or no answer. */
 export async function readMyCredit(): Promise<CreditRecord | null> {
   const res = await fetch('/api/v1/me/credit', { cache: 'no-store' });
   if (!res.ok) return null;

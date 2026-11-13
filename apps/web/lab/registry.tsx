@@ -107,12 +107,12 @@ import { Wordmark } from '../components/ui/Wordmark.tsx';
 import { ViewLegend } from '../components/ViewLegend.tsx';
 import { WalletFacts } from '../components/WalletFacts.tsx';
 import { Claims } from '../components/workspace/Claims.tsx';
+import { Contribution } from '../components/workspace/Contribution.tsx';
 import { Conversations } from '../components/workspace/Conversations.tsx';
 import { FlowerShelf } from '../components/workspace/FlowerShelf.tsx';
 import { Funds } from '../components/workspace/Funds.tsx';
 import { MappingBox } from '../components/workspace/MappingBox.tsx';
 import { NotSignedIn } from '../components/workspace/NotSignedIn.tsx';
-import { Points } from '../components/workspace/Points.tsx';
 import { Profile } from '../components/workspace/Profile.tsx';
 import { ProfileEditor } from '../components/workspace/ProfileEditor.tsx';
 import { ProfileHead } from '../components/workspace/ProfileHead.tsx';
@@ -123,6 +123,7 @@ import { Wallets } from '../components/workspace/Wallets.tsx';
 import { FlowerPanel } from '../flower/FlowerPanel.tsx';
 import { ceremonyView } from '../lib/ceremony.ts';
 import type { AnnotationRow } from '../lib/claim-lines.ts';
+import { contributionView } from '../lib/contribution-view.ts';
 import type { DrawingKind } from '../lib/figures.ts';
 import { keysOf, oneKey, readingKey, svgImage } from '../lib/flower-view.ts';
 import { settledMs } from '../lib/hero-story.ts';
@@ -138,7 +139,6 @@ import { oopsWords } from '../lib/oops-words.ts';
 import { openingMessage } from '../lib/opening.ts';
 import { flowerPanelView, type PanelFlower, shelfView } from '../lib/panel-view.ts';
 import { viewChoices } from '../lib/person-view.ts';
-import { type CreditRecord, pointsView } from '../lib/points-view.ts';
 import { POWER_QUOTES } from '../lib/power-quotes.ts';
 import { claimsView, usageView, walletRows } from '../lib/profile-view.ts';
 import { publishPressView } from '../lib/publish-press.ts';
@@ -644,37 +644,6 @@ const LAB_CLAIMS: AnnotationRow[] = [
     added_at: '2026-11-10T18:00:00Z',
   },
 ];
-
-/** A credit record for the lab (SYSTEMS's credit/v1 shape): two layers, others built on and reused them. */
-const LAB_CREDIT: CreditRecord = {
-  petal: 'credit/v1',
-  author: 'near:mainnet:a-name.near',
-  layers: [
-    {
-      sha256: 'a1'.repeat(32),
-      petal: 'layer/v1',
-      map: 'eip155:100:0xfe1084bc16427e5eb7f13fc19bcd4e641f7d571f',
-      title: 'RaidGuild: who holds the shares',
-      published_at: '2026-11-11T10:00:00Z',
-      built_on_by: ['near:mainnet:b.near', 'near:mainnet:c.near', 'eip155:0xabc'],
-      reused_by: ['near:mainnet:d.near'],
-      points: 4,
-    },
-    {
-      sha256: 'b2'.repeat(32),
-      petal: 'layer/v1',
-      map: 'near:mainnet:astro-stakers.poolv1.near',
-      title: 'Astro Stakers: its delegators',
-      published_at: '2026-11-12T18:00:00Z',
-      built_on_by: [],
-      reused_by: ['near:mainnet:b.near'],
-      points: 1,
-    },
-  ],
-  totals: { points: 5, layers: 2, accounts: 4 },
-  composed_from: { rule: 'credit/v1' },
-  hash: 'c3'.repeat(32),
-};
 
 /** The editor's view for the lab: every control does nothing. */
 const editorView = (over: Partial<ProfileEditorView>): ProfileEditorView => ({
@@ -2878,33 +2847,52 @@ export const registry: LabEntry[] = [
     ],
   },
   {
-    id: 'Points',
+    id: 'Contribution',
     group: 'The workspace',
     figmaName: null,
     figmaNode: null,
-    source: 'apps/web/components/workspace/Points.tsx',
+    source: 'apps/web/components/workspace/Contribution.tsx',
     states: [
       {
-        name: 'points from two layers others built on',
-        render: () => <Points points={pointsView(LAB_CREDIT)} onPublish={() => {}} />,
-      },
-      {
-        name: 'published on NEAR Social',
+        name: 'three counts',
         render: () => (
-          <Points
-            points={pointsView(LAB_CREDIT)}
-            publishing={{ kind: 'published' }}
-            onPublish={() => {}}
+          <Contribution
+            contribution={contributionView({
+              petal: 'credit/v1',
+              layers: [
+                {
+                  sha256: 'a1'.repeat(32),
+                  map: 'eip155:100:0xfe1084bc16427e5eb7f13fc19bcd4e641f7d571f',
+                  title: 'RaidGuild: who holds the shares',
+                  published_at: '2026-11-11T10:00:00Z',
+                },
+                {
+                  sha256: 'b2'.repeat(32),
+                  map: 'near:mainnet:astro-stakers.poolv1.near',
+                  title: 'Astro Stakers: its delegators',
+                  published_at: '2026-11-12T18:00:00Z',
+                },
+              ],
+              totals: { facts_first: 128, facts_matched: 35, points: 4 },
+              hash: 'c3'.repeat(32),
+            })}
           />
         ),
       },
       {
-        name: 'none yet',
+        name: 'nothing yet',
         render: () => (
-          <Points points={pointsView({ ...LAB_CREDIT, totals: { points: 0 }, layers: [] })} />
+          <Contribution
+            contribution={contributionView({
+              petal: 'credit/v1',
+              layers: [],
+              totals: { facts_first: 0, facts_matched: 0, points: 0 },
+              hash: 'c3'.repeat(32),
+            })}
+          />
         ),
       },
-      { name: 'still reading', render: () => <Points points="reading" /> },
+      { name: 'still reading', render: () => <Contribution contribution="reading" /> },
     ],
   },
   {

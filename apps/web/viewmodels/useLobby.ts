@@ -14,16 +14,8 @@ import {
   readWallets,
   sessionClient,
 } from '../lib/agent-client.ts';
+import { type CreditRecord, contributionView } from '../lib/contribution-view.ts';
 import { hasEvmWallet, NO_EVM_WALLET } from '../lib/evm-wallet.ts';
-import { editorWords } from '../lib/lobby-view.ts';
-import { KV_METHOD } from '../lib/near-social.ts';
-import {
-  CREDIT_KEY,
-  type CreditRecord,
-  creditSummary,
-  type PointsPublish,
-  pointsView,
-} from '../lib/points-view.ts';
 import {
   type AddWalletPhase,
   type ClaimsView,
@@ -37,7 +29,6 @@ import {
 } from '../lib/profile-view.ts';
 import { hasSolanaWallet, NO_SOLANA_WALLET } from '../lib/solana-wallet.ts';
 import { connectWallet, SIGN_IN_NETWORK, signPrepared } from '../lib/wallet.ts';
-import { keptOnKv, message, Stop, send } from './socialWrite.ts';
 import { usePowerQuote } from './usePowerQuote.ts';
 import { evmProof, solanaProof } from './useSession.ts';
 import { useWorkPanel } from './useWorkPanel.ts';
@@ -57,7 +48,6 @@ export function useLobby() {
   );
   const [adding, setAdding] = useState<AddWalletPhase>({ kind: 'ready' });
   const [credit, setCredit] = useState<CreditRecord | 'reading' | 'unread'>('reading');
-  const [publishing, setPublishing] = useState<PointsPublish>({ kind: 'ready' });
 
   useEffect(() => {
     let gone = false;
@@ -88,7 +78,7 @@ export function useLobby() {
     claims: usePowerQuote(1),
     usage: usePowerQuote(2),
     conversations: usePowerQuote(3),
-    points: usePowerQuote(4),
+    contribution: usePowerQuote(4),
   };
   const nearUsd = funds.where?.near_usd ?? null;
   const usageShown = useMemo(
@@ -144,31 +134,6 @@ export function useLobby() {
     }
   }, []);
 
-  /**
-   * Puts the credit record on NEAR Social under the person's account (wave 8): their own wallet signs one
-   * write to `social`, the key petals/credit; NEAR Social's indexer doesn't read keys outside its standard,
-   * so the write is confirmed by reading the key back from FastData KV's public reader.
-   */
-  const account = profile.account;
-  const publishPoints = useCallback(async () => {
-    if (typeof credit === 'string' || !account) return;
-    setPublishing({ kind: 'signing' });
-    try {
-      const wallet = await connectWallet('mainnet').catch(() => {
-        throw new Stop(editorWords.refused);
-      });
-      if (wallet !== account) throw new Stop(editorWords.otherWallet(wallet, account));
-      const summary = creditSummary(credit, window.location.host);
-      await send(KV_METHOD, { [CREDIT_KEY]: summary });
-      setPublishing({ kind: 'checking' });
-      const kept = (await keptOnKv(account, CREDIT_KEY)) as { hash?: string } | null;
-      if (kept?.hash !== summary.hash) throw new Stop(editorWords.slow);
-      setPublishing({ kind: 'published' });
-    } catch (e) {
-      setPublishing({ kind: 'failed', why: e instanceof Stop ? e.message : message(e) });
-    }
-  }, [credit, account]);
-
   return {
     profile: {
       account: profile.account,
@@ -185,9 +150,7 @@ export function useLobby() {
     addWallet: (kind: WalletKind) => void addWallet(kind),
     claims,
     conversations: bus.rows,
-    points: typeof credit === 'string' ? credit : pointsView(credit),
-    publishing,
-    publishPoints: () => void publishPoints(),
+    contribution: typeof credit === 'string' ? credit : contributionView(credit),
     quotes,
   };
 }
