@@ -45,28 +45,29 @@ async function setup() {
     rpcFor: () => fakeRpcFor([alice, bob]),
     env: { PETAL_AGENT_ACCESS: 'gated', PETAL_WALLET_KEY: 'ab'.repeat(32), NODE_ENV: 'test' },
   });
-  const jar = { cookie: '' };
-  const request = async (path: string, method = 'GET', json?: unknown) => {
-    const res = await app.request(path, {
-      method,
-      headers: {
-        origin: SITE,
-        ...(json === undefined ? {} : { 'content-type': 'application/json' }),
-        ...(jar.cookie ? { cookie: jar.cookie } : {}),
-      },
-      ...(json === undefined ? {} : { body: JSON.stringify(json) }),
-    });
-    const set = res.headers.getSetCookie().find((l) => l.startsWith(`${COOKIE}=`));
-    if (set) jar.cookie = set.split(';')[0] as string;
-    return { status: res.status, body: (await res.json()) as Out };
+  const browser = () => {
+    const jar = { cookie: '' };
+    return async (path: string, method = 'GET', json?: unknown) => {
+      const res = await app.request(path, {
+        method,
+        headers: {
+          origin: SITE,
+          ...(json === undefined ? {} : { 'content-type': 'application/json' }),
+          ...(jar.cookie ? { cookie: jar.cookie } : {}),
+        },
+        ...(json === undefined ? {} : { body: JSON.stringify(json) }),
+      });
+      const set = res.headers.getSetCookie().find((l) => l.startsWith(`${COOKIE}=`));
+      if (set) jar.cookie = set.split(';')[0] as string;
+      return { status: res.status, body: (await res.json()) as Out };
+    };
   };
-  const signIn = async () => {
-    const c = (await request('/api/v1/auth/challenge', 'POST', {})).body;
-    await request('/api/v1/auth/verify', 'POST', {
-      network: 'mainnet',
-      proof: alice.sign(c as never),
-    });
+  const request = browser();
+  const signInWith = async (r: typeof request, who: typeof alice) => {
+    const c = (await r('/api/v1/auth/challenge', 'POST', {})).body;
+    await r('/api/v1/auth/verify', 'POST', { network: 'mainnet', proof: who.sign(c as never) });
   };
+  const signIn = () => signInWith(request, alice);
   /** Another wallet for the person signed in, proved as its chain signs. */
   const addWallet = async (
     chain: 'eip155' | 'solana',
@@ -87,7 +88,7 @@ async function setup() {
     };
     return request('/api/v1/me/wallets', 'POST', { network: chain, proof });
   };
-  return { map, request, signIn, addWallet, ctx };
+  return { map, request, signIn, addWallet, ctx, browser, signInWith };
 }
 
 const SOLANA = 'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp';
@@ -389,6 +390,65 @@ describe('the press: a signed version on the shared map', () => {
     // the layer's body is kept once, by its hash, for anyone to recompose
     const kept = await privateStore(w.ctx.config).publication.layer(mine);
     expect(kept?.body && JSON.parse(kept.body)).toMatchObject({ petal: 'layer/v1', about: w.map });
+  });
+
+  test("two people on one map: the second confirms the first one's layer and builds on it, and every count says so", async () => {
+    const w = await setup();
+    const press = async (r: typeof w.request, who: typeof alice, author: string) => {
+      const prep = (await r('/api/v1/publish/data/prepare', 'POST', { map: w.map, author })).body;
+      const s = who.sign({
+        message: prep.text,
+        nonce: prep.nonce,
+        recipient: prep.recipient,
+      } as never);
+      const done = await r('/api/v1/publish/data', 'POST', {
+        sha256: prep.sha256,
+        proof: {
+          standard: 'nep413',
+          signature: s.signature,
+          public_key: s.public_key,
+          nonce: s.nonce,
+        },
+      });
+      expect(done.status, JSON.stringify(done.body)).toBe(200);
+      return done.body;
+    };
+    const ALICE = 'near:mainnet:alice.near';
+    const BOB = 'near:mainnet:bob.near';
+    // Alice keeps a layer and publishes it
+    await w.signIn();
+    const aliceId = (await w.request('/api/v1/me')).body.person_id;
+    const hers = await keepLayer(w.ctx, aliceId, layerAbout(w.map));
+    await press(w.request, alice, ALICE);
+    // Bob, in another browser, reads the same fact on his own, and builds a layer on hers
+    const b = w.browser();
+    await w.signInWith(b, bob);
+    const bobId = (await b('/api/v1/me')).body.person_id;
+    expect(bobId).not.toBe(aliceId);
+    const same = layerAbout(w.map);
+    (same as unknown as { how: { method: string } }).how.method = 'counted again, by another hand';
+    await keepLayer(w.ctx, bobId, same);
+    await keepLayer(w.ctx, bobId, layerAbout(w.map, [hers], '3'));
+    const ready = (await b(mapQ(w.map))).body;
+    expect(ready.totals.match.count).toBeGreaterThan(0);
+    expect(ready.totals.match.authors.map((a: Out) => a.author ?? a)).toContain(ALICE);
+    await press(b, bob, BOB);
+
+    // the map's authors, and each one's own counts
+    const map = (await b(`/api/v1/maps/${encodeURIComponent(w.map)}`)).body;
+    const by = Object.fromEntries(map.authors.map((a: Out) => [a.author, a]));
+    expect(by[ALICE]).toMatchObject({ first: 1, built_on: 1 });
+    // the same fact in two of his layers is one confirmation
+    expect(by[BOB]).toMatchObject({ first: 0, confirmed: 1 });
+    const mine = (await b('/api/v1/me/credit')).body;
+    expect(mine.author).toBe(BOB);
+    expect(mine.totals).toMatchObject({ confirmed: 1, built_on: 0 });
+    const hersNow = (await w.request('/api/v1/me/credit')).body;
+    expect(hersNow.author).toBe(ALICE);
+    expect(hersNow.totals).toMatchObject({ first: 1, built_on: 1 });
+    expect((await b(`/api/v1/credit/${encodeURIComponent('alice.near')}`)).body.hash).toBe(
+      hersNow.hash,
+    );
   });
 
   test('an EVM wallet signs the version with EIP-191, a Solana wallet with ed25519', async () => {

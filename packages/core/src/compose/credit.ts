@@ -111,6 +111,9 @@ export function creditOf(
         if (!firstStated.has(k)) firstStated.set(k, e.publication.author);
       }
   const layers: CreditLayer[] = [];
+  // one fact counts once for its author, under the first of their layers that carried it: the same fact in two of
+  // their layers isn't two contributions (firstBy is in record order)
+  const seen = new Set<string>();
   for (const [k, e] of firstBy) {
     const [who, sha] = k.split('\u0001') as [string, string];
     if (who !== author) continue;
@@ -128,7 +131,6 @@ export function creditOf(
     let first = 0;
     let matched = 0;
     const doc = docs.get(sha);
-    const seen = new Set<string>();
     for (const f of factsOf(doc)) {
       const fk = `${e.publication.about}\u0000${slotOf(f)}\u0000${f.value}`;
       if (seen.has(fk)) continue;
