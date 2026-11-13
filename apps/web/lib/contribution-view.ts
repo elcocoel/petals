@@ -6,7 +6,7 @@
 // points for mapping, 004-workspace): core's Credit, totals { first, confirmed, built_on }. Pure. LOBBY's drafts.
 
 import type { Credit } from '@petal/core';
-import { dateLabel } from './flower-view.ts';
+import { dateLabel, shortId } from './flower-view.ts';
 import { subjectOf } from './profile-view.ts';
 
 export const contributionWords = {
@@ -34,6 +34,10 @@ export interface ContributionView {
   empty: boolean;
 }
 
+/** An account named inside a title, `eip155:100:0x…` or `solana:…:…`: shortened as every address on the site is. */
+const REF = /\b(?:[a-z0-9]+:){1,2}(0x[0-9a-fA-F]{40}|[1-9A-HJ-NP-Za-km-z]{32,44}|[0-9a-f]{64})\b/g;
+const readable = (title: string) => title.replace(REF, (_, id: string) => shortId(id));
+
 export function contributionView(record: Credit): ContributionView {
   const { first, confirmed, built_on } = record.totals;
   return {
@@ -48,7 +52,7 @@ export function contributionView(record: Credit): ContributionView {
         const about = subjectOf(l.map);
         return {
           key: l.sha256,
-          title: l.title || about.shown,
+          title: l.title ? readable(l.title) : about.shown,
           about,
           when: l.published_at ? dateLabel(l.published_at) : null,
         };
