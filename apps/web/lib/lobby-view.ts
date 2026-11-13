@@ -59,11 +59,12 @@ export const profileWords = {
   edit: 'Edit',
   /** A link's badge: the account says so; nobody checked it. */
   declared: 'Declared',
-  /** Under a profile kept in Petals: who sees it. */
-  notePetals: 'Kept in Petals, for you only. Links are what you declare; nobody checks them.',
-  /** Under the account's NEAR Social profile, before Petals keeps a copy. */
+  /** Under a profile set on Petals, for a person with no NEAR account: where it is. */
+  notePetals:
+    'Your profile on Petals. Add a NEAR wallet to have it on NEAR Social too. Links are what you declare; nobody checks them.',
+  /** Under the account's NEAR Social profile: it's the one profile, edited here or anywhere else. */
   noteSocial:
-    'This is your profile on NEAR Social, which anyone can see. Edit it here and Petals keeps your copy. Links are what you declare; nobody checks them.',
+    'Your profile on NEAR Social, which anyone can see. Edit it here and it changes there. Links are what you declare; nobody checks them.',
   /** No profile anywhere yet: what goes there, and the one thing to do. */
   none: 'You don’t have a profile yet. Make one here: a name, a picture, a short bio and your links.',
   create: 'Create your profile',
@@ -94,13 +95,9 @@ export const editorWords = {
   preview: 'Preview: how it shows',
   /** The link's service, before one is picked. */
   pick: 'Pick one',
-  /**
-   * Where it's kept, said once, under the buttons, not repeated: with Publish off, and with it on.
-   */
-  keptNote:
-    'Save keeps it in Petals, for you only, and costs nothing. Publishing it to NEAR Social, where anyone can see it, comes later.',
-  publicNote:
-    'Save keeps it in Petals, for you only. Publish puts it on NEAR Social, where anyone can see it, and earlier versions stay public there.',
+  /** Where Save puts it, said once, under the buttons: with a NEAR account, NEAR Social. */
+  socialNote:
+    'Save puts it on NEAR Social, where anyone can see it: your NEAR wallet signs it and pays its small fee. Earlier versions stay public there.',
   save: 'Save',
   saving: 'Saving…',
   publish: 'Publish to NEAR Social',
@@ -111,7 +108,7 @@ export const editorWords = {
   signing: 'Waiting for your wallet…',
   checking: 'Checking NEAR Social has it…',
   saved: 'Saved',
-  savedLine: 'Saved in Petals.',
+  savedLine: 'Saved on Petals.',
   /** After Publish went through: NEAR Social has it, on mainnet. */
   published: 'Published',
   publishedLine: 'On NEAR Social now, where anyone can see it.',
@@ -123,9 +120,9 @@ export const editorWords = {
   otherWallet: (wallet: string, account: string) =>
     `Your wallet is on ${wallet}. Switch it to ${account} to publish.`,
   tryAgain: 'Try again',
-  /** Signed in with an Ethereum or Solana wallet and no NEAR wallet added: what publishing needs. */
+  /** Signed in with an Ethereum or Solana wallet and no NEAR wallet added: where Save puts it, and why. */
   needsNear:
-    'NEAR Social is on NEAR, so publishing needs a NEAR wallet. Add one in Wallets, then publish.',
+    'Save keeps it on Petals. NEAR Social is on NEAR, so having it there needs a NEAR wallet: add one in Wallets.',
   goToWallets: 'Go to Wallets',
 } as const;
 
@@ -184,9 +181,10 @@ export interface ProfileEditorView {
   addLink: () => void;
   removeLink: (i: number) => void;
   choosePicture: (file: File) => void;
+  /** The one Save: onto NEAR Social with a NEAR account, kept on Petals without one. */
   save: () => void;
-  /** Publishing to NEAR Social; absent while it's off. */
-  publish?: () => void;
+  /** Save goes onto NEAR Social: the person's NEAR wallet signs it and pays its fee. */
+  onSocial: boolean;
   cancel: () => void;
 }
 

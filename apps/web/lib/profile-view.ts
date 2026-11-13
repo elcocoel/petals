@@ -21,6 +21,11 @@ export const profilePageWords = {
   connectNear: 'Connect a NEAR wallet',
   connectEvm: 'Connect an Ethereum wallet',
   connectSolana: 'Connect a Solana wallet',
+  /** Over the three buttons, each its chain's logo and name. */
+  connectAnother: 'Connect a wallet',
+  near: 'NEAR',
+  evm: 'Ethereum',
+  solana: 'Solana',
   adding: 'Waiting for your wallet…',
   /** While a wallet is asked: which one, so the person knows where to answer. */
   waitingFor: (wallet: string) => `Waiting for ${wallet}. Answer it there.`,
@@ -48,6 +53,13 @@ export const profilePageWords = {
   unread: 'This can’t be read right now.',
   reading: 'Reading…',
 } as const;
+
+/** Each chain's logo for the Wallets card's buttons, as a data URL, or null where there's none. */
+export interface WalletLogos {
+  near: string | null;
+  evm: string | null;
+  solana: string | null;
+}
 
 /** Which wallet to add: NEAR, an EVM one, or a Solana one. */
 export type WalletKind = 'near' | 'evm' | 'solana';

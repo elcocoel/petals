@@ -9,18 +9,28 @@ import {
   type AddWalletPhase,
   profilePageWords,
   type WalletKind,
+  type WalletLogos,
   type WalletRow,
 } from '../../lib/profile-view.ts';
 import { Badge } from '../ui/Badge.tsx';
 import { Button } from '../ui/Button.tsx';
 import { Card } from '../ui/Card.tsx';
+import { Logo } from '../ui/Logo.tsx';
 import { Mono } from '../ui/Mono.tsx';
+
+/** The three kinds of wallet to add, each by its chain's name, read aloud in full. */
+const CHAINS: { kind: WalletKind; name: string; label: string }[] = [
+  { kind: 'near', name: profilePageWords.near, label: profilePageWords.connectNear },
+  { kind: 'evm', name: profilePageWords.evm, label: profilePageWords.connectEvm },
+  { kind: 'solana', name: profilePageWords.solana, label: profilePageWords.connectSolana },
+];
 
 export function Wallets({
   wallets,
   adding = { kind: 'ready' },
   onAdd,
   onStop,
+  logos,
 }: {
   wallets: WalletRow[] | 'reading' | 'unread';
   adding?: AddWalletPhase;
@@ -28,6 +38,8 @@ export function Wallets({
   onAdd?: (kind: WalletKind, pick?: string) => void;
   /** Stops waiting, or puts the pick away. */
   onStop?: () => void;
+  /** Each chain's logo, on its button. */
+  logos?: WalletLogos;
 }) {
   const rows = Array.isArray(wallets) ? wallets : [];
   return (
@@ -65,28 +77,22 @@ export function Wallets({
         </>
       )}
       {onAdd && (
-        <div className="flex flex-wrap items-center gap-text-gap">
-          <Button
-            variant="secondary"
-            disabled={adding.kind === 'adding'}
-            onClick={() => onAdd('near')}
-          >
-            {profilePageWords.connectNear}
-          </Button>
-          <Button
-            variant="secondary"
-            disabled={adding.kind === 'adding'}
-            onClick={() => onAdd('evm')}
-          >
-            {profilePageWords.connectEvm}
-          </Button>
-          <Button
-            variant="secondary"
-            disabled={adding.kind === 'adding'}
-            onClick={() => onAdd('solana')}
-          >
-            {profilePageWords.connectSolana}
-          </Button>
+        <div className="flex flex-col gap-space-8 border-t border-hairline pt-text-gap">
+          <p className="my-0 type-caption text-muted">{profilePageWords.connectAnother}</p>
+          <div className="flex flex-wrap items-center gap-space-8">
+            {CHAINS.map((c) => (
+              <Button
+                key={c.kind}
+                variant="pill"
+                aria-label={c.label}
+                disabled={adding.kind === 'adding'}
+                onClick={() => onAdd(c.kind)}
+              >
+                {logos?.[c.kind] && <Logo src={logos[c.kind] as string} />}
+                {c.name}
+              </Button>
+            ))}
+          </div>
         </div>
       )}
       {adding.kind === 'choose' && onAdd && (

@@ -291,8 +291,8 @@ const CHAIN_LOGOS: Record<string, string> = {
   solana: 'solana',
 };
 
-/** A chain's logo as a data URL, or null where it has none. */
-function chainLogo(root: string, chain: string): string | null {
+/** A chain's logo as a data URL, or null where it has none. The lobby's Wallets card shows them too. */
+export function chainLogo(root: string, chain: string): string | null {
   const name = CHAIN_LOGOS[chain] ?? CHAIN_LOGOS[chain.split(':')[0] ?? ''];
   if (!name) return null;
   const path = join(root, LOGOS_DIR, 'chains', `${name}.png`);
