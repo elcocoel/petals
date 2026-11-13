@@ -1,19 +1,13 @@
 // The work menu (specs/004-workspace, B1): the side panel on the left of the lobby and of the workspace, the
 // same piece in both, held by the layout they share, so it stays while the page beside it changes. A
-// professional tool's panel and a bar of sections, each a set of tools: Conversations, Projects, Your agents
-// and Lobby, then the person's own two, Profile and Settings, at the bar's foot. Open, every section is in the
-// panel, one after the other, in that order, scrolling as one; a section's icon brings it to the top.
+// professional tool's panel and a bar: the collapse control, the person's own place (the lobby, which holds
+// the account, its settings and its money), then the work, three sections, each a set of tools. Open, every
+// section is in the panel, one after the other, in that order, scrolling as one; a section's icon brings it to
+// the top. How petals draw is set where they're drawn, in Tools, not here.
 // - Conversations: every conversation, newest first, each with who and when, and the way to a project;
 //   New conversation is its first row, where a new one appears.
 // - Projects: each holding its conversations, named in place; New project is its last row.
 // - Your agents: each with its state and a way to end it; connecting one is at the panel's top, once.
-// - Lobby: the balance and the map, each opening its card on /lobby; the head says Lobby, so no row does,
-//   and the balance's amount is on the page beside it. Withdraw stays on the card.
-// - Profile: who's signed in, their public profile's state (it opens their profile page, /profile), and
-//   Disconnect, the one place to sign out.
-// - Settings: first the tip, an optional donation to Petals on the price's scale (TipControl); then the
-//   person's view, how each dimension draws data for every petal they look at (ViewControls), saved at
-//   once and drawn everywhere without a reload.
 // It lies in the page's flow, open or collapsed, so a page that lays out beside it isn't covered.
 // Props only: its state comes from viewmodels/useWorkMenu.ts and useWorkPanel.ts. Every word from
 // lib/panel-words.ts.
@@ -28,9 +22,7 @@ import {
   type ListedProject,
   type RowRef,
 } from '../../lib/conversation-list.ts';
-import { type SocialState, shownAccount } from '../../lib/lobby-view.ts';
 import { panelWords, type SectionKey } from '../../lib/panel-words.ts';
-import { SETTINGS_ROWS } from '../../lib/person-view.ts';
 import { siteLinks } from '../../lib/site-links.ts';
 import { ConversationList, type RowActions } from '../chat/ConversationList.tsx';
 import { Dialog } from '../ui/Dialog.tsx';
@@ -41,17 +33,12 @@ import { RowField } from '../ui/RowField.tsx';
 import { SectionHead } from '../ui/SectionHead.tsx';
 import { type RailSection, type RailWidth, SideRail } from '../ui/SideRail.tsx';
 import { Tip } from '../ui/Tip.tsx';
-import { TipControl, type TipView } from './TipControl.tsx';
-import { ViewControls } from './ViewControls.tsx';
 
 /** The bar, top to bottom, and the panel's sections in the same order. */
 const SECTIONS: (Omit<RailSection, 'content'> & { key: SectionKey })[] = [
   { key: 'conversations', icon: 'conversation', label: panelWords.sections.conversations },
   { key: 'projects', icon: 'project', label: panelWords.sections.projects },
   { key: 'agents', icon: 'agent', label: panelWords.sections.agents },
-  { key: 'lobby', icon: 'home', label: panelWords.sections.lobby },
-  { key: 'profile', icon: 'profile', label: panelWords.sections.profile, foot: true },
-  { key: 'settings', icon: 'settings', label: panelWords.sections.settings, foot: true },
 ];
 
 /** What viewmodels/useWorkMenu.ts gives the menu, the same on both pages. */
@@ -127,17 +114,6 @@ export interface WorkMenuView {
   disconnectAll: () => void;
 }
 
-/** The person, as the Profile and Lobby sections say it: read once, in the layout, with the lobby's. */
-export interface PanelYou {
-  account: string | null;
-  social: SocialState;
-  /** Signs out. */
-  leave: () => void;
-}
-
-/** The person's view, as the Settings section sets it: what ViewControls takes, but the dimensions. */
-export type SettingsView = Omit<Parameters<typeof ViewControls>[0], 'dimensions'>;
-
 /**
  * A section of the panel: its head, then its rows, the last of which is its one action, if it has one.
  * Pressing the head folds it to the head: the rows stay, out of reach, so the fold can settle
@@ -170,14 +146,9 @@ function Group({
   );
 }
 
-const lobbyAt = (card: string) => `${siteLinks.lobby}#${card}`;
-
 export function WorkMenu({
   conversations,
   menu,
-  you,
-  settings,
-  tip,
   width,
   over = false,
   here,
@@ -185,10 +156,6 @@ export function WorkMenu({
 }: {
   conversations: ConversationRow[];
   menu: WorkMenuView;
-  you: PanelYou;
-  settings: SettingsView;
-  /** The tip, Settings' first row. */
-  tip: TipView;
   /** The sash's hands: the panel's width is sized at its edge. */
   width: RailWidth;
   /** The window is narrow: opened, the panel lies over the page. */
@@ -288,9 +255,6 @@ export function WorkMenu({
           p.name.toLowerCase().includes(menu.query.trim().toLowerCase()),
       )
     : [];
-  const who = you.account ? shownAccount(you.account) : null;
-  const name = you.social.kind === 'profile' ? you.social.profile.name : null;
-
   const sections: Record<SectionKey, ReactNode> = {
     conversations: (
       <Group
@@ -412,57 +376,6 @@ export function WorkMenu({
         </ul>
       </Group>
     ),
-    lobby: (
-      <Group
-        title={panelWords.sections.lobby}
-        folded={menu.folded.includes('lobby')}
-        onFold={() => menu.fold('lobby')}
-      >
-        <NavItem href={lobbyAt('lobby-balance')} icon="balance" label={panelWords.balance} />
-        <NavItem href={lobbyAt('lobby-map')} icon="map" label={panelWords.onTheMap} />
-      </Group>
-    ),
-    profile: (
-      <Group
-        title={panelWords.sections.profile}
-        folded={menu.folded.includes('profile')}
-        onFold={() => menu.fold('profile')}
-      >
-        {/* the person, opening their profile page; the trail says where the profile is kept */}
-        <NavItem
-          href={siteLinks.profile}
-          icon="profile"
-          current={here === 'profile'}
-          label={name ?? who?.shown ?? '…'}
-          {...(who ? { title: who.full } : {})}
-          // nothing at its end while there's no profile, rather than a "None"
-          {...(you.social.kind === 'none'
-            ? {}
-            : {
-                trail:
-                  panelWords.socialState[
-                    you.social.kind === 'profile'
-                      ? you.social.source === 'petals'
-                        ? 'petals'
-                        : 'profile'
-                      : you.social.kind
-                  ],
-              })}
-        />
-        {/* rule 4: the one place to sign out */}
-        <NavItem onClick={you.leave} icon="leave" label={panelWords.signOut} muted />
-      </Group>
-    ),
-    settings: (
-      <Group
-        title={panelWords.sections.settings}
-        folded={menu.folded.includes('settings')}
-        onFold={() => menu.fold('settings')}
-      >
-        <TipControl {...tip} />
-        <ViewControls dimensions={SETTINGS_ROWS} {...settings} />
-      </Group>
-    ),
   };
 
   // always in sight, under the wordmark
@@ -508,6 +421,11 @@ export function WorkMenu({
         jump={menu.jump}
         width={width}
         over={over}
+        account={{
+          href: siteLinks.lobby,
+          label: panelWords.account,
+          current: here === 'lobby' || here === 'profile',
+        }}
       />
       {/* line 26: move to a project, found by name */}
       <Dialog

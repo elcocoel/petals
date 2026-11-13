@@ -122,7 +122,7 @@ import { ProfileEditor } from '../components/workspace/ProfileEditor.tsx';
 import { ProfileHead } from '../components/workspace/ProfileHead.tsx';
 import { ReadingKey } from '../components/workspace/ReadingKey.tsx';
 import { TipControl } from '../components/workspace/TipControl.tsx';
-import { DimensionChoices, ViewControls } from '../components/workspace/ViewControls.tsx';
+import { DimensionChoices } from '../components/workspace/ViewControls.tsx';
 import { Wallets } from '../components/workspace/Wallets.tsx';
 import { FlowerPanel } from '../flower/FlowerPanel.tsx';
 import type { PublishableData } from '../lib/agent-client.ts';
@@ -1984,50 +1984,6 @@ export const registry: LabEntry[] = [
     ],
   },
   {
-    id: 'ViewControls',
-    group: 'The workspace',
-    figmaName: null,
-    figmaNode: null,
-    source: 'apps/web/components/workspace/ViewControls.tsx',
-    states: [
-      {
-        name: 'the default, colour open (all of it, live: /lab/panel?state=settings)',
-        render: () => (
-          <ViewControls
-            dimensions={DIMENSIONS}
-            view={DEFAULT_VIEW}
-            defaults={DEFAULT_VIEW}
-            choices={viewChoices()}
-            pieces={EVERY_FLOWER}
-            open="colour"
-            onOpen={() => {}}
-            onPick={() => {}}
-            onScale={() => {}}
-            failed={null}
-          />
-        ),
-      },
-      {
-        name: 'height open on a number, with its scale, and the default to put back',
-        render: () => (
-          <ViewControls
-            dimensions={DIMENSIONS}
-            view={withScale(DEFAULT_VIEW, 'height', 'linear')}
-            defaults={DEFAULT_VIEW}
-            choices={viewChoices()}
-            pieces={EVERY_FLOWER}
-            open="height"
-            onOpen={() => {}}
-            onPick={() => {}}
-            onScale={() => {}}
-            onReset={() => {}}
-            failed={null}
-          />
-        ),
-      },
-    ],
-  },
-  {
     id: 'DimensionChoices',
     group: 'The workspace',
     figmaName: null,
@@ -2035,7 +1991,7 @@ export const registry: LabEntry[] = [
     source: 'apps/web/components/workspace/ViewControls.tsx',
     states: [
       {
-        name: 'height’s choices, with its scale (Settings and the legend open these)',
+        name: 'height’s choices, with its scale (the legend opens these)',
         render: () => (
           <DimensionChoices
             dimension="height"
@@ -2058,7 +2014,7 @@ export const registry: LabEntry[] = [
     source: 'apps/web/components/workspace/TipControl.tsx',
     states: [
       {
-        name: 'folded, at 5% (live with the panel: /lab/panel?state=settings)',
+        name: 'folded, at 5%',
         render: () => (
           <TipControl
             percent={5}

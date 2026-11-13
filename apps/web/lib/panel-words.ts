@@ -3,7 +3,7 @@
 import { agentWords } from './agents.ts';
 
 /** The side panel's sections, as WorkMenu draws them and useWorkMenu keeps which one is open. */
-export type SectionKey = 'conversations' | 'projects' | 'agents' | 'lobby' | 'profile' | 'settings';
+export type SectionKey = 'conversations' | 'projects' | 'agents';
 
 /** What every flower has (core's EVERY_FLOWER), in plainer words. */
 const PIECE_WORDS: Record<string, string> = {
@@ -37,22 +37,10 @@ export const panelWords = {
     conversations: 'Conversations',
     projects: 'Projects',
     agents: 'Your agents',
-    lobby: 'Lobby',
-    profile: 'Profile',
-    settings: 'Settings',
   },
+  /** The person's icon in the bar: the lobby, where the account and its settings are kept. */
+  account: 'Lobby',
   newConversation: 'New conversation',
-  /** The Lobby section's rows: each opens its card on /lobby. */
-  balance: 'Balance',
-  onTheMap: 'On the map',
-  /** The Profile section: the public profile's state, a few characters at its row's end. */
-  socialState: {
-    petals: 'In Petals',
-    profile: 'NEAR Social',
-    reading: '…',
-    unread: 'No answer',
-  },
-  signOut: 'Disconnect',
   /** The legend's head: the person's view as a key. */
   legend: 'Legend',
   /** Under its Colour, on a map: each flower keys its own kinds (by how many petals carry each). */

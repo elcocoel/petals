@@ -4,10 +4,8 @@
 // is open from the address, which the page keeps true. The page tells it two things through WorkPanelContext:
 // when to read the list again (a turn started or ended, a job moved) and the name Petals' agent just gave the
 // open conversation. It also holds the person's own state (the session, the profile and its editor, the
-// credit), once, which the panel's Profile and Lobby sections and the lobby page all read. No timer.
+// credit), once, which the lobby page reads. No timer.
 
-import type { View } from '@petal/core/types';
-import type { Dimension, Piece } from '@petal/core/view';
 import { floatBox, layout, sizes } from '@petal/tokens';
 import { usePathname, useSearchParams } from 'next/navigation';
 import {
@@ -20,17 +18,12 @@ import {
   useState,
 } from 'react';
 import { type ConversationRow, conversationRows } from '../lib/conversation-list.ts';
-import { CHOOSABLE, DEFAULT_PERSON_VIEW } from '../lib/person-view.ts';
-import { tipLine } from '../lib/tip.ts';
-import { isDefault, type Scale, withData, withScale } from '../lib/view-edit.ts';
 import { useConversations } from './useConversations.ts';
 import { useFunds } from './useFunds.ts';
 import { usePanelWidth } from './usePanelWidth.ts';
-import { usePersonView } from './usePersonView.ts';
 import { useProfile } from './useProfile.ts';
 import { useProfileEditor } from './useProfileEditor.ts';
 import { useSession } from './useSession.ts';
-import { useTip } from './useTip.ts';
 import { useWorkMenu } from './useWorkMenu.ts';
 
 /** The person's own state, read once here for the panel and the lobby page alike (one state,
@@ -40,20 +33,6 @@ export interface PanelPerson {
   profile: ReturnType<typeof useProfile>;
   editor: ReturnType<typeof useProfileEditor>;
   funds: ReturnType<typeof useFunds>;
-}
-
-/** The Settings section's state: the person's view and what a choice does to it (ViewControls' props). */
-export interface PanelSettings {
-  view: View;
-  defaults: View;
-  choices: Record<Dimension, readonly Piece[]>;
-  pieces: readonly Piece[];
-  open: Dimension | null;
-  onOpen: (d: Dimension) => void;
-  onPick: (d: Dimension, data: string | null) => void;
-  onScale: (d: Dimension, scale: Scale) => void;
-  onReset: (() => void) | undefined;
-  failed: string | null;
 }
 
 /** What the page beside the panel reads from it and tells it. */
@@ -168,12 +147,28 @@ export function usePanelState() {
   const width = usePanelWidth();
   const narrow = useNarrow(width.width);
   // on a narrow window the panel starts folded and folds back on every move; opened, it lies over the page
-  const { shut } = menu;
+  const { shut, show } = menu;
   const moves = visits.current;
   // biome-ignore lint/correctness/useExhaustiveDependencies: `moves` is the signal: each move folds it again
   useEffect(() => {
     if (narrow) shut();
   }, [narrow, moves, shut]);
+  // the person's own place (the lobby, and the profile it keeps) opens on its own, the panel folded to its
+  // bar, whose icons still open the panel there; leaving it shows the panel again as it was before
+  const here: 'lobby' | 'profile' | undefined =
+    pathname === '/lobby' ? 'lobby' : pathname === '/profile' ? 'profile' : undefined;
+  const openNow = useRef(menu.open);
+  openNow.current = menu.open;
+  const before = useRef<boolean | null>(null);
+  useEffect(() => {
+    if (here) {
+      if (before.current === null) before.current = openNow.current;
+      shut();
+    } else if (before.current !== null) {
+      if (before.current && !narrow) show();
+      before.current = null;
+    }
+  }, [here, narrow, shut, show]);
   // the bar (a control with Space 8 around it, and its hairline), and the panel beside it when it's open
   // and beside the page, not over it
   const edge = BAR + (menu.open && !narrow ? width.width : 0);
@@ -206,76 +201,13 @@ export function usePanelState() {
     }),
     [signedIn, person, rows, visit, claim, restart, edge],
   );
-  // the Settings section: the person's view, read once for the whole site (usePersonView), each
-  // choice saved at once, and everything drawn in it again without a reload
-  const personView = usePersonView();
-  const [openDimension, setOpenDimension] = useState<Dimension | null>(null);
-  const [failed, setFailed] = useState<string | null>(null);
-  const keep = useCallback(
-    (next: View) => {
-      setFailed(null);
-      personView
-        .save(next)
-        .catch((e: unknown) => setFailed(e instanceof Error ? e.message : String(e)));
-    },
-    [personView],
-  );
-  const defaults = DEFAULT_PERSON_VIEW.view;
-  const settings: PanelSettings = {
-    view: personView.view,
-    defaults,
-    choices: personView.choices,
-    pieces: CHOOSABLE,
-    open: openDimension,
-    onOpen: (d: Dimension) => setOpenDimension((now) => (now === d ? null : d)),
-    onPick: (d: Dimension, data: string | null) =>
-      keep(withData(personView.view, d, data, CHOOSABLE, defaults)),
-    onScale: (d: Dimension, scale: Scale) => keep(withScale(personView.view, d, scale)),
-    // usePersonView's reset puts the default back: the person's own choice, in the one place
-    onReset: isDefault(personView.view, defaults)
-      ? undefined
-      : () => {
-          setFailed(null);
-          personView
-            .reset()
-            .catch((e: unknown) => setFailed(e instanceof Error ? e.message : String(e)));
-        },
-    failed,
-  };
-  // the tip, Settings' first row: what it adds to a typical turn reads as the balance does, at NEAR's price
-  // from the one balance
-  const tipped = useTip(signedIn);
-  const tip = {
-    percent: tipped.percent,
-    scale: tipped.scale,
-    open: tipped.open,
-    onOpen: tipped.toggle,
-    onSlide: tipped.slide,
-    onSet: tipped.set,
-    line: tipLine(tipped.percent ?? 0, tipped.turn, funds.where?.near_usd ?? null),
-    failed: tipped.failed,
-  };
-  // what the Profile and Lobby sections say: the lobby's own state, not a second read of it
-  const you = {
-    account: session.account,
-    social: profile.social,
-    leave: session.disconnect,
-  };
   return {
     bus,
     menu,
     rows,
-    you,
-    settings,
-    tip,
     width: width.hand,
     over: narrow,
-    here:
-      pathname === '/lobby'
-        ? ('lobby' as const)
-        : pathname === '/profile'
-          ? ('profile' as const)
-          : undefined,
+    here,
     // New, pressed where a new conversation already is: the address won't change, so it says so itself
     atNew: address === '/make',
     restart,

@@ -23,20 +23,12 @@ import { panelWords, type SectionKey } from '../lib/panel-words.ts';
 
 /** Folded sections, kept in this browser, as the width is. */
 const FOLDED = 'petals:panel-folded';
-const SECTIONS: readonly SectionKey[] = [
-  'conversations',
-  'projects',
-  'agents',
-  'lobby',
-  'profile',
-  'settings',
-];
+const SECTIONS: readonly SectionKey[] = ['conversations', 'projects', 'agents'];
 
 function keptFolds(): SectionKey[] {
   try {
     const kept = window.localStorage.getItem(FOLDED);
-    // Settings starts folded until the person opens it once
-    if (kept === null) return ['settings'];
+    if (kept === null) return [];
     const raw: unknown = JSON.parse(kept);
     return Array.isArray(raw) ? SECTIONS.filter((k) => raw.includes(k)) : [];
   } catch {
@@ -74,8 +66,10 @@ export function useWorkMenu(
   // box.fold: the panel starts open, as an IDE's does; the one collapse control
   // hides it to the bar and shows it again; a section's icon opens it, if need be, and asks for that section
   const [open, setOpen] = useState(true);
-  // a narrow window folds it back to the bar (useWorkPanel.ts)
+  // a narrow window folds it back to the bar, and so does the lobby; leaving the lobby shows it again
+  // (useWorkPanel.ts)
   const shut = useCallback(() => setOpen(false), []);
+  const show = useCallback(() => setOpen(true), []);
   const [jump, setJump] = useState<{ key: SectionKey; n: number } | null>(null);
   // sections folded to their heads; read after the first paint, so the server's page and the browser's agree
   const [folded, setFolded] = useState<SectionKey[]>([]);
@@ -253,6 +247,7 @@ export function useWorkMenu(
     open,
     toggleOpen: () => setOpen((now) => !now),
     shut,
+    show,
     jump,
     jumpTo: (key: SectionKey) => {
       setOpen(true);
