@@ -93,3 +93,30 @@ test('a wallet it no longer has closes into its seam, a ghost that fades as it g
   near(g.ghosts.h[0] as number, 0);
   expect(g.e).toBe(1);
 });
+
+// on live the server's reading lands half way through the browser's own, the same: the flower glides on, no jump
+test('the same reading landing half way through a glide carries it on where it was', () => {
+  const W1 = [1, 1, 1, 1, 1, 1];
+  const H1 = [60, 20, 30, 40, 50, 10];
+  const g = glideBetween(before, ['a', 'b', 'c', 'd', 'e', 'f'], rest(W1, H1));
+  if (!g) throw new Error('no glide');
+  const half = ringOf(W1, H1);
+  stepGlide(g, half, GLIDE / 2);
+  const mid = half.h[0] as number;
+  const taken = drawnOf(half, ['a', 'b', 'c', 'd', 'e', 'f'], [], rest(W1, H1), g);
+  const again = glideBetween(taken, ['a', 'b', 'c', 'd', 'e', 'f'], rest(W1, H1));
+  expect(again).toBe(g);
+  // the next frame goes on from there, not from the start or the end
+  const next = ringOf(W1, H1);
+  stepGlide(g, next, 1 / 60);
+  expect(next.h[0] as number).toBeGreaterThan(mid);
+  expect(next.h[0] as number).toBeLessThan(60);
+  // a flower that had finished its glide still never moves for the same reading
+  expect(
+    glideBetween(
+      drawnOf(ringOf(W1, H1), ['a', 'b', 'c', 'd', 'e', 'f'], [], rest(W1, H1)),
+      ['a', 'b', 'c', 'd', 'e', 'f'],
+      rest(W1, H1),
+    ),
+  ).toBeNull();
+});
