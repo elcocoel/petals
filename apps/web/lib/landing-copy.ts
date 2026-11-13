@@ -314,16 +314,16 @@ const written = {
     /** A leaderboard only hinted: no money, tokens or rewards. */
     hint: 'Right now there is no leaderboard. But if there was, these are the things that would take you to the top.',
     /**
-     * Four cards in one line, the cards the links, ordered from the lightest way in to the most involved. `link` is
-     * where a card goes: `lobby` is Connect (mapping,
-     * the agent and publishing are one card), `github` the repo; an empty one is a slot waiting for its address
-     * (the community's links, the merch), so its card shows without a link.
+     * Four cards in one line, the cards the links, in the order a person takes part: map a network and talk to the
+     * agent, join the community, develop with us, then the merch drop. `link` is where a card goes: `lobby` is
+     * Connect (mapping, the agent and publishing are one card), `github` the repo, `telegram` and `merch` their
+     * addresses in siteLinks; a card whose address isn't set yet shows without a link.
      */
     ways: [
-      { title: 'Join the community', link: 'telegram' },
-      { title: 'The merch', link: '' },
       { title: 'Map a network', link: 'lobby' },
+      { title: 'Join the community', link: 'telegram' },
       { title: 'Develop with us', link: 'github' },
+      { title: 'Petals Drop #1', link: 'merch' },
     ],
   },
   builders: {
@@ -338,17 +338,15 @@ const written = {
     ],
   },
   footer: {
-    /** The footer's three groups; the socials take their names from hero.socials. */
+    /** The footer's three groups; the socials take their names from hero.socials. The drop is Petal Mania's merch card. */
     groups: { petals: 'Petals', build: 'Build', community: 'Community' },
     links: {
       map: 'Power Map',
-      gallery: 'Gallery',
       leaderboard: 'Leaderboard',
+      drop: 'Petals Drop #1',
       docs: 'Docs',
       github: 'GitHub',
-      api: 'API',
       brandKit: 'Brand kit',
-      merch: 'Merch',
     },
     built: 'Built for the NEAR Hackathon, November 2026. By Elementary Complexity.',
     /** The words in `built` that link to Elementary Complexity's site (siteLinks.elementaryComplexity). */
