@@ -1,18 +1,18 @@
-# The visual protocol (W8): options for Elco
+# The visual protocol (W8): options
 
-**Created**: 2026-11-09, overnight, for Elco's morning
-**Status**: Options only. Nothing is chosen or built. Each question has a lean; Elco decides.
-**Feeds**: `spec.md`, W8. The data side and the seam are SYSTEMS's, in `005-mapping-brain/spec.md`. What exists today is in `research-primitives.md`.
+**Created**: 2026-11-09
+**Status**: Options only. Nothing is chosen or built. Each question has a lean.
+**Feeds**: `spec.md`, W8. The data side and the seam are in `005-mapping-brain/spec.md`. What exists today is in `research-primitives.md`.
 
 ## What it is
 
-Elco, 9 Nov: "We need 2 different systems that shouldn't block each other - one is the data protocol and the other is "how to make it visual" protocol." And: "right now we don't have color, we don't have texture, we don't have the internal relationships inside the graph."
+Two systems that don't block each other: the data protocol, and the visual protocol. Today a flower has no colour, no texture and no relationships inside the graph.
 
 So there are two protocols, each with its own version:
-- **The data protocol (SYSTEMS):** a petal is a dataset. Its measures come in dated layers, each with a name, a unit and a kind: amount, count, share or category. Relations between petals are a layer of their own: from, to, a kind (sent to, delegated to, voted with), a weight and a date.
+- **The data protocol:** a petal is a dataset. Its measures come in dated layers, each with a name, a unit and a kind: amount, count, share or category. Relations between petals are a layer of their own: from, to, a kind (sent to, delegated to, voted with), a weight and a date.
 - **The visual protocol (this file):** how a view turns those layers into a flower. Which channel shows which measure, how relations are drawn inside the flower, and how time shows.
 
-**The seam between them is a list of bindings:** each channel names a measure, such as `height: shares`, `marks: proposals` or `lines: delegated_to`. SYSTEMS's check refuses a binding whose kind doesn't fit. Either side can change without breaking the other: new data needs no new drawing, and a new drawing needs no new data.
+**The seam between them is a list of bindings:** each channel names a measure, such as `height: shares`, `marks: proposals` or `lines: delegated_to`. The data side's check refuses a binding whose kind doesn't fit. Either side can change without breaking the other: new data needs no new drawing, and a new drawing needs no new data.
 
 ## The channels a flower has
 
@@ -20,8 +20,8 @@ Ranked by how accurately people read them. The ranking comes from Bertin, Mackin
 
 | Channel | Best for | Takes | Limits in a flower |
 |---|---|---|---|
-| **Height** (how far a petal reaches) | The main measure | amount, count, share | Already used. Stays true to the reading: no stretching short petals (Elco, 5 Nov) |
-| **Order** (where on the ring) | Rank, or grouping | any | Sorted reads as a nautilus; unsorted looks alive but is harder to compare (`flower-language.md`) |
+| **Height** (how far a petal reaches) | The main measure | amount, count, share | Already used. Stays true to the reading: no stretching short petals |
+| **Order** (where on the ring) | Rank, or grouping | any | Sorted reads as a nautilus; unsorted looks alive but is harder to compare |
 | **Width** (the angle a petal takes) | A second amount, roughly | amount, count | Kept within 1.5 to 3×, or the shape breaks. Read poorly next to height |
 | **Marks on the rim** (a dot or tick at each petal's tip) | A count or a yes/no beside the main measure | count, yes/no | Small. Clear only up to about a dozen sizes |
 | **A second ring** (a track inside or outside the petals) | A second measure, read as fully as the first | amount, count, share | Busier centre. This is how genome maps carry many measures around one circle (Circos) |
@@ -34,14 +34,14 @@ Ranked by how accurately people read them. The ranking comes from Bertin, Mackin
 | **The centre** | One number for the whole group | amount, count | Holds the title today |
 | **Time** | Change between dates | dated layers | A faint earlier outline, a slider, or flowers side by side |
 
-## Questions for Elco, one at a time
+## Questions, one at a time
 
 **V1. How many measures can one flower show at once?**
 - **A.** One main measure, plus one second measure at most. Lean: a flower stays readable at a glance.
 - **B.** As many as the data has, each on its own channel.
 - **C.** One per flower, and a second flower beside it for the second measure.
 
-**V2. Where does a second measure go?** This is your live case: proposals per holder next to shares.
+**V2. Where does a second measure go?** This is the live case: proposals per holder next to shares.
 - **A. Marks on the rim** (lean): the shape stays a flower, and it reads as "and also this".
 - **B. A second ring:** both measures read fully, but the centre gets busy.
 - **C. Bands inside each petal:** only when both are parts of the same whole.
@@ -72,10 +72,10 @@ Ranked by how accurately people read them. The ranking comes from Bertin, Mackin
 - **C. The person only.**
 
 **V8. How does it version?**
-- **A. Each flower names its visual protocol version** (`petals-visual/1`), and the renderer can draw older versions (lean). This follows your 5 Nov rule: hash the data, and keep a translator for the rendering so the look can evolve.
+- **A. Each flower names its visual protocol version** (`petals-visual/1`), and the renderer can draw older versions (lean). This follows the 5 Nov rule: hash the data, and keep a translator for the rendering so the look can evolve.
 - **B. Always the latest look,** with no versions kept.
 
-## Your case, written out
+## The live case, written out
 
 With the leans, a DAO's flower with shares and proposals per holder would be:
 
@@ -91,14 +91,14 @@ time:    outline at 30 days ago
 
 The agent writes that in one line. The data side checks each name against the petal's layers.
 
-## What W8 needs from SYSTEMS (to agree)
+## What W8 needs from the data side
 
 1. **Channel names in the seam,** from this file: height, width, order, marks, ring, colour, texture, outline, bands, lines, centre, time.
-2. **The kind of each measure,** which SYSTEMS already has: amount, count, share, category, yes/no.
+2. **The kind of each measure,** which the data side already has: amount, count, share, category, yes/no.
 3. **A certainty on each petal,** observed, declared or inferred, if texture is to show it (V4).
-4. **Dated layers,** for time (V6), which SYSTEMS already plans.
+4. **Dated layers,** for time (V6), which the data side already plans.
 
-**SYSTEMS, 9 Nov: it fits.** Certainty ("standing": verified, inferred, lead) is per layer today, so certainty per petal would be an optional standing on each row, an easy addition if Elco picks texture for it (V4). SYSTEMS's first version of the seam is a composed reading in today's `snapshot/v1` (holdings from several layers, each listed as a source), so today's renderer draws `height: m:<measure>` with no change on the visual side.
+**The data side, 9 Nov: it fits.** Certainty ("standing": verified, inferred, lead) is per layer today, so certainty per petal would be an optional standing on each row, an easy addition if texture is picked for it (V4). The first version of the seam is a composed reading in today's `snapshot/v1` (holdings from several layers, each listed as a source), so today's renderer draws `height: m:<measure>` with no change on the visual side.
 
 ## References worth a look
 
@@ -109,4 +109,4 @@ The agent writes that in one line. The data side checks each name against the pe
 - **Circos** (http://circos.ca). Genome maps: many measures as concentric tracks around one circle, with links drawn inside. The nearest relative of "a second ring" and "lines inside".
 - **Holten, "Hierarchical Edge Bundles" (2006).** Why links inside a circle become a hairball, and how bundling fixes it.
 - **Nightingale's rose diagram (1858).** The first famous radial chart where a wedge's reach carries the measure, which is our flower's ancestor.
-- **Our own 5 Nov sketch,** `research/spikes/flower/index.html`, opened straight from the folder. It has colour, outlines, inner lines and a comparison of two dates, all switchable.
+- **Our own 5 Nov sketch.** It has colour, outlines, inner lines and a comparison of two dates, all switchable.

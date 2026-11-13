@@ -6,13 +6,13 @@
 
 ## In one paragraph
 
-None of these products uses a connected wallet to suggest what to investigate: each opens on a search bar, a template or a public feed. Most cut each investigation into its own graph (Maltego, Arkham, Bubblemaps). The tools that keep one shared store behind many views (Kumu, Obsidian) are the closest model for Elco's one continuous space. Every one of them has a central reviewer deciding what's publicly true, and none shows a disputed claim on the canvas.
+None of these products uses a connected wallet to suggest what to investigate: each opens on a search bar, a template or a public feed. Most cut each investigation into its own graph (Maltego, Arkham, Bubblemaps). The tools that keep one shared store behind many views (Kumu, Obsidian) are the closest model for Petals' one continuous space. Every one of them has a central reviewer deciding what's publicly true, and none shows a disputed claim on the canvas.
 
 ## The three that matter most for Petals
 
 - **Kumu: one master list, many maps.** A project keeps one list of items, and each map borrows from it. Edit an item on one map and it changes everywhere, while each map keeps its own positions ([Architecture](https://docs.kumu.io/overview/kumus-architecture)). "Focus" shows only what's within N steps of a selection ([First steps](https://docs.kumu.io/getting-started/first-steps)). This is the nearest precedent for "flow through the spaces of what got mapped".
-- **Arkham's "snitch-to-earn" backlash.** Paid, staked attributions of who owns a wallet drew public anger, with Arkham as "the central arbiter" ([Cointelegraph](https://cointelegraph.com/news/arkham-on-chain-intel-exchange-labeled-snitch-to-earn-by-crypto-twitter)). "This wallet belongs to X" is a Petals claim kind, and points for mapping could draw the same framing (inferred).
-- **Nobody suggests from the wallet.** Elco's idea that a connected wallet hints at where to look has no precedent here.
+- **Arkham's "snitch-to-earn" backlash.** Paid, staked attributions of who owns a wallet drew public anger, with Arkham as "the central arbiter" ([Cointelegraph](https://cointelegraph.com/news/arkham-on-chain-intel-exchange-labeled-snitch-to-earn-by-crypto-twitter)). "This wallet belongs to X" is a Petals claim kind, and could draw the same framing (inferred).
+- **Nobody suggests from the wallet.** The idea that a connected wallet hints at where to look has no precedent here.
 
 ---
 
@@ -139,10 +139,10 @@ None of these products uses a connected wallet to suggest what to investigate: e
 1. **Search first, no personal lobby.** Arkham, Maltego, Bubblemaps and Kumu all open on a search bar, a template or a public feed.
    - *Gains:* no setup.
    - *Costs:* a new person gets no hint of where to start.
-   - None of them suggests investigations from your wallet. That idea of Elco's has no precedent here.
+   - None of them suggests investigations from your wallet. That idea has no precedent here.
 2. **One graph per investigation vs. one store with many views.** Maltego (separate graphs, copy and paste between them), Arkham (separate visualizations and traces) and Bubblemaps (one map per token) make each graph its own universe. Kumu (one master list behind many maps) and Obsidian (canvases point at shared notes) keep one store.
    - *Separate graphs gain* focus and an easy unit to share. *They cost* repeated work, and you can't move from one network into the next.
-   - *The shared store* is the nearest precedent for Elco's "one continuous space". *Its cost:* an edit spreads everywhere (Kumu warns about this).
+   - *The shared store* is the nearest precedent for Petals' "one continuous space". *Its cost:* an edit spreads everywhere (Kumu warns about this).
 3. **Pivot in place.** Maltego (right-click, run a Transform), Arkham (expand an entity into its wallets), Bubblemaps (Show All Transfers, Magic Nodes), Kumu ("focus" on N steps) and Obsidian (local graph depth).
    - *Gains:* you stay in context.
    - *Costs:* the graph grows into a hairball.
@@ -169,7 +169,7 @@ None of these products uses a connected wallet to suggest what to investigate: e
 - **No maintainer.** Every product here has a central labeler or reviewer: Arkham, Bubblemaps' reviewers, Nansen. In Petals, claims are signed by anyone and can be challenged. So who made a claim and whether it is contested must show on the flower itself, and none of these products shows that.
 - **The privacy model is inverted.** They are private by default and curate what goes public. Arkham even sells 90 days of secrecy. Petals claims are public from the start.
 - **The profile is a different thing.** Their profiles hold portfolios: Arkham's are private, and no signature is mentioned. Petals' profile is proven wallets plus social accounts. Intel Desk's case list on a profile is the nearest match.
-- **Petals claims are de-anonymisation.** "This wallet belongs to X" is exactly what drew Arkham's dox-to-earn backlash. Token-staked claims would likely bring the same framing (inferred).
+- **Petals claims are de-anonymisation.** "This wallet belongs to X" is exactly what drew Arkham's dox-to-earn backlash.
 - **Graphs, not flowers.** All of them draw node-and-link graphs. "Expand a node" and "fold a collection" need a flower version, perhaps a petal opening into its own flower (inferred).
 - **Whose AI.** Nansen and Arkham run AI on their own servers for credits. Petals uses the person's own agent, and those two MCP servers show the market already moving that way.
 - **Separate universes.** Maltego and Bubblemaps cut networks into separate graphs. Petals wants one continuous landscape, which only Kumu's shared master list and Obsidian's shared notes resemble.
@@ -187,11 +187,11 @@ None of these products uses a connected wallet to suggest what to investigate: e
 
 ---
 
-## W7 storage: SYSTEMS's options, 8 Nov
+## W7 storage: the data side's options, 8 Nov
 
-Asked by LOOK; options only, nothing built. Today a private note (`workspace_note`) is about one thing (`about`: a conversation, a flower's recipe, a network, or an account or group) and holds text and evidence. A person's agent can only write notes on an exploration, which link holders read.
+Options only, nothing built. Today a private note (`workspace_note`) is about one thing (`about`: a conversation, a flower's recipe, a network, or an account or group) and holds text and evidence. A person's agent can only write notes on an exploration, which link holders read.
 
 1. **What a note can be about.** Additive. `about` stays the one main subject, because search and each thing's list hang on it. New forms: `relation:<ref>|<ref>` for a relation, and `canvas:<view>@<x>,<y>,<z>` for a place on the canvas. Several things at once go in a small join table (note, ref) beside it, not packed into one string.
 2. **What it holds.** Lean: free-form metadata as a JSON field (text now, Postgres `jsonb` later), as `evidence` is today. Real columns only for what gets filtered or sorted, such as confidence. Tags get a join table if people search by them.
-3. **An agent writing private notes.** Possible: a tool on the owner's session or a continue link, written as the agent's (`agent:<client>`), with the credential that authorised it, which every row already records (TGT-005). The cost to trust: today a continue link writes only to its own exploration, and this would let it write into the account's private notes. So it needs its own scope: revocable, write-only (no reading other notes), and what it wrote is treated as untrusted by later readers. SYSTEMS's lean: notes on the exploration first, workspace notes only with that separate scope.
-4. **The Postgres move** blocks none of it. Search and reads are already limited to the account, and every row keeps its credential. Row-level security, if Elco wants it, would cover these tables the same way.
+3. **An agent writing private notes.** Possible: a tool on the owner's session or a continue link, written as the agent's (`agent:<client>`), with the credential that authorised it, which every row already records (TGT-005). The cost to trust: today a continue link writes only to its own exploration, and this would let it write into the account's private notes. So it needs its own scope: revocable, write-only (no reading other notes), and what it wrote is treated as untrusted by later readers. The lean: notes on the exploration first, workspace notes only with that separate scope.
+4. **The Postgres move** blocks none of it. Search and reads are already limited to the account, and every row keeps its credential. Row-level security, if wanted, would cover these tables the same way.

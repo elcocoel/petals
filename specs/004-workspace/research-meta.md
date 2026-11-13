@@ -1,7 +1,7 @@
 # Research: private commentary and metadata over a public map (W7)
 
 **Created**: 2026-11-08
-**Feeds**: `spec.md`, W7. Storage options from SYSTEMS are at the end of `research.md`.
+**Feeds**: `spec.md`, W7. Storage options from the data side are at the end of `research.md`.
 **Method**: public docs only. Solscan and Miro refused direct fetch; their lines come from search excerpts and say "excerpt". Anything read between the lines says "inferred".
 
 ## In one paragraph
