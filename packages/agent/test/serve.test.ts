@@ -163,7 +163,7 @@ describe('what the server serves for agents', () => {
     expect((await call(none, '/petal.mjs')).status).toBe(404);
   });
 
-  test('the file carries the brain version it was served with (step 4)', async () => {
+  test('the file carries the brain version it was served with', async () => {
     const root = mkdtempSync(join(tmpdir(), 'petal-root-'));
     mkdirSync(join(root, 'apps/cli/dist'), { recursive: true });
     cpSync(join(REPO, 'brain'), join(root, 'brain'), { recursive: true });

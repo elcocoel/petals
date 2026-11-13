@@ -1,5 +1,5 @@
-// calls/v1 (12 Nov; Elco: "open calls is the most useful ... helping people make money from daos and helping
-// daos to source talent"): one open call, every field as its source says it. The schema is
+// calls/v1 (12 Nov), so people find paid work in DAOs and DAOs find talent: one open call, every field as its
+// source says it. The schema is
 // schema/calls-v1.schema.json; this is its type and its check.
 import { createAjv, schemaId } from './schema/ajv.ts';
 import type { Result, ValidationIssue } from './types/index.ts';

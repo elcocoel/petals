@@ -1,4 +1,4 @@
-// The flower Elco's art direction was drawn on (#76): RaidGuild's RG delegates on Gnosis, 9 Nov 2026. Its snapshot
+// The flower the art direction was drawn on: RaidGuild's RG delegates on Gnosis, 9 Nov 2026. Its snapshot
 // and spec sit in fixtures/lab/, taken from the live site by apps/web/scripts/lab-petal-data.ts.
 
 export const LAB_DIR = 'fixtures/lab';

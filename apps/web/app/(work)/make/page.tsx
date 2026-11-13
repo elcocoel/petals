@@ -23,9 +23,8 @@ async function recordedHere(): Promise<boolean> {
 
 export default async function MakePage({ searchParams }: { searchParams: Promise<Query> }) {
   const q = await searchParams;
-  // Signed out, /make is the oops page (Elco, 11 Nov, #78: "i dont think signed out make has a reason to
-  // exist?"). /api/v1/me answers only for a person with a wallet. Another door's conversation (?elsewhere=)
-  // needs no wallet here, and a recorded run plays for anyone.
+  // Signed out, /make is the oops page. /api/v1/me answers only for a person with a wallet. Another door's
+  // conversation (?elsewhere=) needs no wallet here, and a recorded run plays for anyone.
   const me = await api<{ person_id: string }>('/api/v1/me', {
     cookie: (await headers()).get('cookie'),
   });
@@ -34,12 +33,12 @@ export default async function MakePage({ searchParams }: { searchParams: Promise
   }
   const person = await viewerView();
   return (
-    // A conversation opened by a move (a link, New, back or forward) starts clean (design/minimally-good.md,
-    // rule 3), inside the panel that stays; a refresh of this page's data keeps the one that's open.
+    // A conversation opened by a move (a link, New, back or forward) starts clean, inside the
+    // panel that stays; a refresh of this page's data keeps the one that's open.
     <OpenedConversation opens={conversationAt(q)}>
       <InteractionSurface
         {...(await workspaceHome(q, person.hash))}
-        // Elco's open choices, read from the address until they're chosen: ?box=ink and ?order=scatter.
+        // Open choices of look, read from the address: ?box=ink and ?order=scatter.
         surface={q.box === 'ink' ? 'ink' : 'ground'}
         scatter={q.order === 'scatter'}
         // An instrument for checking by script. It stays out of production, like the lab.

@@ -2,7 +2,7 @@
 // `__fastdata_kv` function call per write: 1 Ggas, deposit 0, to a receiver that has no contract,
 // signed with a function-call key limited to that receiver and that method.
 //
-// The traps (research/build-primer.md, section 1):
+// The traps:
 // - The receipt fails with CodeDoesNotExist because there is no contract. That is the expected
 //   outcome: FastData indexes the call anyway. So throwOnFailure is false and the failure is
 //   classified; it is never retried.
@@ -138,7 +138,10 @@ export function fastDataWriter(
   deps: WriterDeps = {},
 ): MapWriter {
   if (cfg.network !== 'testnet')
-    throw new NearError('internal', 'fastDataWriter: testnet only; mainnet writes need Elco’s OK');
+    throw new NearError(
+      'internal',
+      'fastDataWriter: testnet only; mainnet writes need the operator’s OK',
+    );
   const provider = deps.provider ?? new JsonRpcProvider({ url: deps.rpcUrl ?? RPC_URLS.testnet });
   const kv = kvClient(cfg.network, deps.kv);
   const confirmTimeoutMs = deps.confirmTimeoutMs ?? 30_000;

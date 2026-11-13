@@ -38,7 +38,7 @@ const QUESTION_MAX = 2000;
 const NOTE_MAX = 2000;
 /** A mirrored reply comes word for word, so the page gets all of it. */
 const NOTE_TEXT_MAX = 8000;
-/** A conversation's name, sent with a note (Elco, 10 Nov: 3 to 6 plain words, the subject). */
+/** A conversation's name, sent with a note (3 to 6 plain words, the subject). */
 export const CONVERSATION_TITLE_MAX = 80;
 const TARGET_MAX = 300;
 const CLIENT_MAX = 80;
@@ -106,7 +106,7 @@ export async function open(ctx: ToolContext, ref: string): Promise<Opened> {
   if (!link || link.revoked_at) throw missing();
   const row = await store.exploration.get(link.exploration);
   if (!row) throw missing();
-  // A worker's link for its job (swarm.md step 3): each call marks the job alive, and once the job is
+  // A worker's link for its job: each call marks the job alive, and once the job is
   // stopped or handed on, its next call is told, and nothing more of its work lands.
   const job = await store.job.ofLink(link.id);
   if (job) {
@@ -289,7 +289,7 @@ async function explorationOfRun(store: Store, runId: string, at: string): Promis
 }
 
 /**
- * A job's own conversation (10 Nov, swarm.md step 2): an exploration of the run's owner, in the run's folder,
+ * A job's own conversation: an exploration of the run's owner, in the run's folder,
  * named by the job, where the worker that takes it works. Null for a run nobody owns, or a store that keeps
  * nothing.
  */
@@ -319,7 +319,7 @@ export async function jobConversation(
 }
 
 /**
- * The exploration a run of Petals' agent works in (9 Nov, the jobs it hands out live there), made now if
+ * The exploration a run of Petals' agent works in (the jobs it hands out live there), made now if
  * the run has none yet. Null for a run nobody owns, or a store that keeps nothing.
  */
 export async function runExplorationOf(ctx: ToolContext, runId: string): Promise<string | null> {

@@ -1,7 +1,6 @@
 // field.type: the ask box's placeholder types its lines in and out, in order, then loops. It stops for good
-// when the box gets focus. Elco, on the copy doc: "they should animate in and out typewriter style in the
-// order above." It starts holding the first line, which is what the page already shows, so nothing flashes.
-// Under reduced motion, or in v1, the box just shows that line. Off-screen or in a hidden tab it waits.
+// when the box gets focus. It starts holding the first line, which is what the page already shows, so nothing
+// flashes. Under reduced motion, or in v1, the box just shows that line. Off-screen or in a hidden tab it waits.
 import { v2 } from '@petal/tokens';
 
 const T = v2.script.typed;

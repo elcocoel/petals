@@ -1,7 +1,7 @@
 // The pages /docs shows, read from the repo as the site reads them (apps/web/components/docs/content.ts, catalog()),
-// for search (Elco, 12 Nov: "another feature for us to add on the docs that make us legit -> the search function").
+// for search.
 // Each section's index.md says what it includes and excludes; the data protocol adds each format's newest schema.
-// A page is known by its repo path, as CONNECTORS' box on /docs maps it to its address; a long page is cut into
+// A page is known by its repo path, as the search box on /docs maps it to its address; a long page is cut into
 // its sections (## and ###), each known by the path and its heading's anchor, made as rehype-slug makes it.
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join, posix } from 'node:path';
@@ -74,7 +74,7 @@ function plain(md: string): string {
 }
 
 /**
- * A page's words in plain text, as search shows them around a match (CONNECTORS, 12 Nov: raw Markdown read badly
+ * A page's words in plain text, as search shows them around a match (raw Markdown reads badly
  * in the snippets): each line's links, ticks and emphasis gone; no fence marks, table rules, quote or heading
  * marks, or link definitions; a table's cells apart by spaces.
  */

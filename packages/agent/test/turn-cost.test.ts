@@ -1,5 +1,5 @@
-// What a turn really costs (Elco, 10 Nov: "how fast my balance is going down (the price estimates seem
-// incorrect)"): the catalogue gives each model the median cost of its last turns here, priced as NEAR AI
+// What a turn really costs, so a person can see how fast their balance goes down, where an estimate can be
+// wrong: the catalogue gives each model the median cost of its last turns here, priced as NEAR AI
 // bills them (cached input at the cache-read rate), and nothing until it has one. Scripted model, no spend.
 import { join } from 'node:path';
 import { fakeRpcFor, testSigner } from '@petal/near/auth/testing';

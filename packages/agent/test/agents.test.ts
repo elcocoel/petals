@@ -1,4 +1,4 @@
-// A person's agents across their projects (9 Nov, agent-house-test.md): an agent link that only waits for jobs,
+// A person's agents across their projects: an agent link that only waits for jobs,
 // agents named by what they call themselves, a job aimed at one, a wait the bell wakes, nothing taken for a wait
 // nobody's holding, and a report taken up at once as a turn in its run. Through petalApp, scripted model.
 import { join } from 'node:path';
@@ -90,7 +90,7 @@ function setup(turns: ScriptTurn[]) {
       body: JSON.stringify({ as, wait_s }),
       ...(signal ? { signal } : {}),
     });
-  /** A wait from one worker of an agent: a window or a sub-agent that joined as `as` (swarm.md step 1). */
+  /** A wait from one worker of an agent: a window or a sub-agent that joined as `as`. */
   const waitAs = (token: string, as: string, worker: unknown, wait_s = 0) =>
     app.request('/api/v1/agents/wait', {
       method: 'POST',
@@ -103,11 +103,11 @@ function setup(turns: ScriptTurn[]) {
 const link = async (w: ReturnType<typeof setup>) =>
   ((await (await w.call('POST', '/api/v1/agents/link', {})).json()) as Out).token as string;
 
-describe('several workers of one agent (swarm.md step 1)', () => {
+describe('several workers of one agent', () => {
   const list = async (w: ReturnType<typeof setup>) =>
     ((await (await w.call('GET', '/api/v1/agents')).json()) as Out).agents as Out[];
 
-  test("what an agent says it can do (swarm lean 2): each wait says it, the latest wins, and Petals' agent reads it as data", async () => {
+  test("what an agent says it can do: each wait says it, the latest wins, and Petals' agent reads it as data", async () => {
     const w = setup([{ content: 'Noted.' }]);
     await w.signInFunded();
     const token = await link(w);
@@ -189,7 +189,7 @@ describe('several workers of one agent (swarm.md step 1)', () => {
   });
 });
 
-describe('a conversation per job (swarm.md step 2)', () => {
+describe('a conversation per job', () => {
   test("a job's work goes in its own conversation, named by it, which says who's on it; its report lands in both", async () => {
     const w = setup([
       {
@@ -252,7 +252,7 @@ describe('a conversation per job (swarm.md step 2)', () => {
   });
 });
 
-describe('supervision, without timers (swarm.md step 3)', () => {
+describe('supervision, without timers', () => {
   const HAND = {
     calls: [{ name: 'hand_job', args: { title: 'Map the shares', brief: 'who holds shares' } }],
   };
@@ -357,7 +357,7 @@ describe('supervision, without timers (swarm.md step 3)', () => {
     expect(jobs.jobs[0]).toMatchObject({ id: job.id, status: 'open' });
   });
 
-  test("Petals' agent stops a taken job with stop_job (swarm lean 3): its worker is told on its next call", async () => {
+  test("Petals' agent stops a taken job with stop_job: its worker is told on its next call", async () => {
     const turns: ScriptTurn[] = [HAND, { content: 'Sent.' }];
     const w = setup(turns);
     await w.signInFunded();
@@ -402,7 +402,7 @@ describe('supervision, without timers (swarm.md step 3)', () => {
   });
 });
 
-describe('a job in parts (swarm.md step 4)', () => {
+describe('a job in parts', () => {
   test('one research job in four parts, four workers, comes back as one answer, in one turn', async () => {
     const parts = [
       'proposals 1-60',

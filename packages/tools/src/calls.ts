@@ -1,4 +1,4 @@
-// Petals' open-calls feed (Elco, 12 Nov: "open calls is the most useful ... let's bias towards keyless"):
+// Petals' open-calls feed, keyless first:
 // each source's open calls read keyless and kept as calls/v1, a source's replaced as a whole on each read,
 // so a call no longer open leaves. A source that doesn't answer keeps what it had. The server serves them
 // from the store (list_calls, GET /api/v1/calls and its RSS), so no visitor's request makes it read the web.
@@ -66,7 +66,7 @@ export async function readCalls(
         name,
         calls.map((c) => ({
           id: c.id,
-          // one form for every source, so the text sorts as time (SYSTEMS's review)
+          // one form for every source, so the text sorts as time
           closes: c.closes ? new Date(c.closes).toISOString() : null,
           body: JSON.stringify(c),
           read_at: readAt,

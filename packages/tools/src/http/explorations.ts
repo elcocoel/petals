@@ -202,7 +202,7 @@ export function explorationRoutes(
       ...(q.hash ? { hash: q.hash } : {}),
     });
   });
-  // annotations, what a person or an agent adds about an account (annotation-layer.md, annotations.ts)
+  // annotations, what a person or an agent adds about an account (annotations.ts)
   app.post('/api/v1/explorations/:ref/annotations', async (c) =>
     answer(c, 'add_annotation', await withRef(c)),
   );
@@ -213,7 +213,7 @@ export function explorationRoutes(
       ...(about ? { about } : {}),
     });
   });
-  // what an agent keeps in the project (#98, data.ts): a reading, a mark, a value, proposals or a claim
+  // what an agent keeps in the project (data.ts): a reading, a mark, a value, proposals or a claim
   app.post('/api/v1/explorations/:ref/data', async (c) => answer(c, 'keep_data', await withRef(c)));
   app.get('/api/v1/explorations/:ref/data', (c) => {
     const petal = c.req.query('petal');
@@ -222,7 +222,7 @@ export function explorationRoutes(
       ...(petal ? { petal } : {}),
     });
   });
-  // what the project's owner could publish on a map (publish-data.ts, 12 Nov): for their own agent, read only
+  // what the project's owner could publish on a map (publish-data.ts): for their own agent, read only
   app.get('/api/v1/explorations/:ref/publishable', (c) =>
     answer(c, 'list_publishable', {
       exploration: c.req.param('ref'),

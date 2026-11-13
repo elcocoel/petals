@@ -73,14 +73,14 @@ export interface LandscapeData {
   layout?: string;
   /**
    * The map's keys, ranked once over every flower (core mapKeys): a value has one colour on every flower, so the
-   * map's legend can say what each colour stands for (Elco, 12 Nov). Without, each flower its own.
+   * map's legend can say what each colour stands for. Without, each flower its own.
    */
   keyed?: readonly Keyed[];
 }
 
 /**
- * A page that opens the map at one flower (coordinator/one-source.md, step 6): which flower it opens in, and
- * what a click inside that flower tells the page, as a flower's own canvas does (flower/FlowerCanvas.tsx).
+ * A page that opens the map at one flower: which flower it opens in, and what a click inside that flower
+ * tells the page, as a flower's own canvas does (flower/FlowerCanvas.tsx).
  * `choose` is set by the map, so the page can mark a petal without the scene being built again.
  */
 /** What the page shows on the map, by each flower's place on this chain's map (LandscapeCanvas resolves it). */
@@ -96,26 +96,26 @@ export interface LandscapeAt {
   choose?: (id: string | null) => void;
   /** Inside a page that scrolls (the landing): the wheel scrolls the page unless Ctrl or ⌘ is held, or a pinch. */
   inPage?: boolean;
-  /** How a far flower is drawn: the lab's far wave (#84), or its silhouette. Read when the scene is built. */
+  /** How a far flower is drawn: the lab's far wave, or its silhouette. Read when the scene is built. */
   far?: FarStyle;
-  /** When connections show: the lab's lines lean (#87), or as always. Read when the scene is built. */
+  /** When connections show: the lab's focused lines, or as always. Read when the scene is built. */
   lines?: LineStyle;
-  /** Told when the map goes into a flower and when it comes out of it (#78: the chains step aside inside). */
+  /** Told when the map goes into a flower and when it comes out of it (the chains step aside inside). */
   inside?: (yes: boolean, at: number) => void;
   /**
    * The map's home keeps clear of the chain list down its left, measured from `aside` (a page where the map's
-   * room is narrow: /make, #78). Off, the home fills the whole map, as on /map. Read when the scene is built.
+   * room is narrow: /make). Off, the home fills the whole map, as on /map. Read when the scene is built.
    */
   clearOfChains?: boolean;
   /**
    * Set by the map once it's built, as `choose` is: the wallets (petal ids) to highlight inside the flower you're
-   * in (#94: the chosen bloc, from the legend's Highlight row), or null for none. They stay on that flower until
+   * in (the chosen bloc, from the legend's Highlight row), or null for none. They stay on that flower until
    * the next call.
    */
   highlight?: (ids: readonly string[] | null) => void;
   /**
-   * Set by the map once it's built, as `enter` is: shows what the page's conversation is about (Elco, 12 Nov on
-   * /make: "the power map should always be there ... an answer moves the map"), with the four clicks' own states:
+   * Set by the map once it's built, as `enter` is: shows what the page's conversation is about (on /make the map
+   * is always there, and an answer moves it), with the four clicks' own states:
    * a DAO flown to and entered; a wallet lit everywhere it sits, the camera taking in the DAOs that hold it; the line
    * between two DAOs lit; a proposal pinned in its DAO. null lets go of what it lit.
    */
@@ -128,29 +128,28 @@ export interface LandscapeAt {
   fit?: (room: { cx: number; cy: number; r: number }) => void;
   /**
    * Set by the map once it's built, as `choose` is: flies to a flower, by its place on this chain's map, and
-   * enters it, as a click on it does (board 105: a search's answer, pressed).
+   * enters it, as a click on it does (a search's answer, pressed).
    */
   enter?: (i: number) => void;
   /**
-   * The wallet level (Elco, 11 Nov: "Where it sits everywhere", "Its votes"): told when a wallet is chosen, by a
-   * press on its petal inside the flower you're in, and when it's let go (null), so the page can show what's known
-   * about it.
+   * The wallet level (where it sits everywhere, its votes): told when a wallet is chosen, by a press on its petal
+   * inside the flower you're in, and when it's let go (null), so the page can show what's known about it.
    */
   onWallet?: (id: string | null) => void;
   /**
-   * Told which DAO a click puts in the middle (Elco, 12 Nov walk: "one click put something in the center"), by its
-   * map, or null to put the saved map back; the page arranges the rest round it.
+   * Told which DAO a click puts in the middle, by its map, or null to put the saved map back; the page arranges
+   * the rest round it.
    */
   onCentre?: (id: string | null) => void;
   /**
    * Told which proposal a click pins, by its flower (as `onCentre` names it) and its id, with the proposal as the
    * ring read it (the server's whole object, proposals/v3's summary and link with it), and when it's let go (null),
-   * so the page can say what it's about (OVERLAYS's Information box; Elco, 12 Nov walk 3 on Ref Finance).
+   * so the page can say what it's about (in the Information box).
    */
   onProposal?: (p: { flower: string; id: string; proposal: Proposal | null } | null) => void;
-  /** Treasury and token price under the names at some magnification (Elco, 12 Nov walk 3); on unless off. */
+  /** Treasury and token price under the names at some magnification; on unless off. */
   worth?: boolean;
-  /** Labels None in the view: the petals say nothing, but the one pointed at (VISUAL QA, 12 Nov). */
+  /** Labels None in the view: the petals say nothing, but the one pointed at. */
   unlabelled?: boolean;
   /** Set by the map once it's built: draws it again, for a change it reads on each frame (`worth`). */
   redraw?: () => void;
@@ -164,9 +163,9 @@ const FARTHEST = 0.6;
 const quiet = () => window.matchMedia('(prefers-reduced-motion: reduce)');
 
 /**
- * How far in from the chain's home the far wave hands over to petals, for every flower at once (Elco, 12 Nov walk:
- * "we have to hold on to the mini shape longer until I'm actually focusing on one or another group of dowels"): at
- * four times the home's zoom, over a short stretch so the mid-state where both show is brief.
+ * How far in from the chain's home the far wave hands over to petals, for every flower at once, so the far shape
+ * holds until a group of DAOs is in focus: at four times the home's zoom, over a short stretch so the mid-state
+ * where both show is brief.
  */
 export const FAR_HOLD: readonly [number, number] = [3.6, 4.4];
 
@@ -188,11 +187,11 @@ interface Kept {
   layout: string | undefined;
   /** where each flower stood, by its map, so a new arrangement glides in from there */
   places: Map<string, { x: number; y: number }>;
-  /** each flower as it was drawn, by its map, so one whose reading changed glides from there (wave 8) */
+  /** each flower as it was drawn, by its map, so one whose reading changed glides from there */
   drawn: Map<string, Drawn>;
 }
 
-/** How long a new arrangement takes to glide in, in seconds (Elco, 12 Nov walk 3: "if it was animated"). */
+/** How long a new arrangement takes to glide in, in seconds. */
 const GLIDE = 0.8;
 
 export function useLandscape(
@@ -203,8 +202,8 @@ export function useLandscape(
   aside?: RefObject<HTMLElement | null>,
   at?: RefObject<LandscapeAt | null>,
 ): void {
-  // The map's data comes again when the view changes (the legend, Elco, 11 Nov: "I want to see me being able to
-  // switch the legends live and watching the map adapt"): the scene is built again where you were.
+  // The map's data comes again when the view changes (the legend switched live, the map adapting): the scene is
+  // built again where you were.
   const kept = useRef<Kept | null>(null);
   useEffect(() => {
     const node = svg.current;
@@ -213,11 +212,10 @@ export function useLandscape(
     const box = node.getBoundingClientRect();
     const { flowers, roads, home } = data;
     // A new arrangement on the same page (a DAO put in the middle, or let go) glides in from where each flower stood
-    // while the camera moves to it (Elco, 12 Nov walk 3: "the camera should move to it and the other ones should be
-    // organized around it. If it was animated would be much more elegant"); with reduced motion, it's there at once.
+    // while the camera moves to it, the others arranged around it; with reduced motion, it's there at once.
     const prior = kept.current;
     // a flower whose reading changed (a layer switched on or off, a slice chosen, a layer published, a change in
-    // Tools) glides from what it drew to what the new one draws (wave 8, Elco: "fuller and fuller maps")
+    // Tools) glides from what it drew to what the new one draws, so a map is seen filling out
     const priorDrawn = prior?.drawn ?? null;
     const builtAt = performance.now();
     const earlyFocus = at?.current?.focus ?? -1;
@@ -269,14 +267,14 @@ export function useLandscape(
     let speaking = -1;
     let marked = -1;
     let hits: ArrowHit[] = [];
-    // The lab's lines lean (#87): inside a flower, the wallets it shares with the flower you came from, or the way
+    // The lab's focused lines: inside a flower, the wallets it shares with the flower you came from, or the way
     // out you point at, take the highlight (relations/shared, by each one's snapshot).
     const focusLines = at?.current?.lines === 'focus';
     let cameFrom = -1;
     let pointedWay = -1;
     let shown: { flower: number; other: number; ids: string[] } | null = null;
     let asking = '';
-    // Each map's proposals on its flower's ring up close (#93), read once a flower of a map with any comes alive.
+    // Each map's proposals on its flower's ring up close, read once a flower of a map with any comes alive.
     const rings = new Map<string, VoteRing | null>();
     const ringOf = (i: number): VoteRing | null => {
       const f = flowers[i];
@@ -303,12 +301,12 @@ export function useLandscape(
     ): PetalLook => ({
       ...lookFills(f.model.petals, data.keyed),
       highlight: ids,
-      // round tops on every flower, its ring or not (one look, Elco, 12 Nov walk)
+      // round tops on every flower, its ring or not (one look)
       roundTops: true,
       ...(ring ? { votes: ring } : {}),
       voter: wallet,
     });
-    // The wallet level (Elco, 11 Nov): one wallet chosen, lit in every flower that holds it, its votes on their
+    // The wallet level: one wallet chosen, lit in every flower that holds it, its votes on their
     // rings; the flowers that don't hold it recede.
     let wallet: string | null = null;
     let holds: Set<number> | null = null;
@@ -327,9 +325,8 @@ export function useLandscape(
       at?.current?.onWallet?.(wallet);
       wake();
     };
-    // Two clicks Elco named (12 Nov): a line lights, in both its flowers, the wallets it stands for ("a click on the
-    // line can do is highlight the petals that hold that token"); a proposal lights the wallets that voted on it, its
-    // dots for and against kept ("clicking a proposal should highlight the wallets that voted").
+    // Two clicks: a line lights, in both its flowers, the wallets it stands for (the petals that hold that token);
+    // a proposal lights the wallets that voted on it, its dots for and against kept.
     let line: { a: number; b: number; ids: string[] } | null = null;
     let voted: { flower: number; id: string } | null = null;
     /** the proposal pressed, read as the press starts (the map takes the pointer after), for the click to pin */
@@ -376,10 +373,10 @@ export function useLandscape(
       ringOf(i)
         ?.proposals.find((p) => p.id === id)
         ?.votes.map((v) => v.account) ?? [];
-    // The chosen group's wallets (#94: a bloc, from the legend's Highlight row), on the flower they were chosen in.
+    // The chosen group's wallets (a bloc, from the legend's Highlight row), on the flower they were chosen in.
     let groupIds: readonly string[] = [];
     let groupFlower = -1;
-    /** A live flower's look: its shared wallets (#87) and its chosen group (#94) highlighted, its ring (#93). */
+    /** A live flower's look: its shared wallets and its chosen group highlighted, its ring. */
     const lookOf = (i: number): PetalLook => {
       const f = flowers[i] as LandFlower;
       const shared = shown && shown.flower === i ? shown.ids : [];
@@ -448,8 +445,8 @@ export function useLandscape(
       if (!at?.current?.clearOfChains || !r || r.width === 0) return NO_CLEAR;
       const from = node.getBoundingClientRect();
       // beside it while it's a tall column, below it while it's a bar along the top: whichever leaves the map
-      // more room, so a folded box doesn't take the room's whole left (WORKSPACE, 12 Nov: on /make the map,
-      // always the ground now, sat small against the right edge)
+      // more room, so a folded box doesn't take the room's whole left (on /make, where the map is always the
+      // ground, it would sit small against the right edge)
       const left = Math.max(0, r.right - from.left + (r.left - from.left));
       const top = Math.max(0, r.bottom - from.top + (r.top - from.top));
       const besideRoom = Math.min(from.width - left, from.height);
@@ -477,7 +474,7 @@ export function useLandscape(
     };
 
     // the one that speaks goes over the other flowers, under the names, so no name or arrow is ever under its
-    // petals or its proposals (META's QA, 12 Nov: "labels never sit on each other"); its notes keep clear of them
+    // petals or its proposals (labels never sit on each other); its notes keep clear of them
     const lift = (i: number, onTop: boolean) => {
       const d = lives.get(i);
       if (!d) return;
@@ -597,7 +594,7 @@ export function useLandscape(
           readout: false,
           bloom: false,
           // the art direction's colours, as the far wave's; inside a flower, the wallets it shares with the other one
-          // (#87) and the chosen group's (#94) take the highlight
+          // and the chosen group's take the highlight
           look: lookOf(i),
         });
         const was = priorDrawn?.get(idOf(flowers[i]) ?? '');
@@ -634,7 +631,7 @@ export function useLandscape(
         const p = d.live.pointer;
         p.x = pointer.x;
         p.y = pointer.y;
-        // on a way out, the pointer is the way's, not a petal's (META's QA, 12 Nov: a note over the way's count)
+        // on a way out, the pointer is the way's, not a petal's (so no note covers the way's count)
         p.inside =
           pointer.inside && i === under && (entered < 0 || i === entered) && pointedWay < 0;
         p.dragging = pointer.dragging;
@@ -799,7 +796,7 @@ export function useLandscape(
           }
         }
       }
-      // a folded stack pressed opens, its proposals each their own arc again (Elco, 12 Nov walk 3)
+      // a folded stack pressed opens, its proposals each their own arc again
       if (pressedStack) {
         const { flower, petal } = pressedStack;
         const set = opened.get(flower) ?? new Set<number>();
@@ -822,7 +819,7 @@ export function useLandscape(
       }
       const f = flowerAt(cam, places, reach, x, y);
       const tells = entered >= 0 && entered === at?.current?.focus ? at.current.onPick : undefined;
-      // Elco, 12 Nov walk: "one click put something in the center"; with one there, Shift and a click on another
+      // one click puts a DAO in the centre; with one there, Shift and a click on another
       // shows only the connection between the two; a click on the one in the middle goes into it
       const centre = data.centre ?? -1;
       const toCentre = at?.current?.onCentre;
@@ -872,7 +869,7 @@ export function useLandscape(
       const r = roadAt(x, y);
       marked = r >= 0 && r !== marked ? r : -1;
       lightLine();
-      // a click on empty space clears the choice (Elco's four clicks, 12 Nov): the wallet, the pinned proposal, the
+      // a click on empty space clears the choice (of the four clicks): the wallet, the pinned proposal, the
       // line (above), and on the map the DAO in the middle
       if (r < 0) {
         chooseWallet(null);
@@ -1046,7 +1043,7 @@ export function useLandscape(
       // the same page with new data: where you were, at once, inside the flower you were in
       const j = was.entered ? flowers.findIndex((f) => idOf(f) === was.entered) : -1;
       // the flower you're in (or the DAO in the middle) stays where it was on screen when the places move under it
-      // (a gravity change: VISUAL QA, 12 Nov, the DAO you were in went off the window)
+      // (after a gravity change, the DAO you were in would otherwise go off the window)
       const anchor = j >= 0 ? j : (data.centre ?? -1);
       const moved = anchor >= 0 ? flowers[anchor] : undefined;
       const from = moved ? was.places.get(idOf(moved) ?? '') : undefined;

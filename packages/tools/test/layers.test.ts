@@ -70,7 +70,7 @@ describe('a flower from two layers', () => {
     expect(proposed.spec.encodings.height.by).toBe('m:proposals_written');
     expect(proposed.spec.encodings.height.sources).toEqual([`layer:${added.hash.slice(0, 12)}`]);
 
-    // what draws it is the viewer's view, never the spec's choice (one-source.md, step 2): here a view
+    // what draws it is the viewer's view, never the spec's choice: here a view
     // whose height is the agent's layer, as a person would set it
     const glasses = {
       ...DEFAULT_VIEW,

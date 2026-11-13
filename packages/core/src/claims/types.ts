@@ -1,9 +1,9 @@
 // claim/v1 and claim/v2: the shapes (specs/002-system/contracts/claims.md). The JSON Schemas are
 // packages/core/schema/claim.schema.json and claim-v2.schema.json; test/claims.test.ts keeps them in step.
 // v2 adds annotations: named, noted and linked, a person's own word (stated), research as a ground, and a
-// transaction, a proposal and a quote in the evidence. v3 (11 Nov, Elco: "space for discovered, inferred, osint
-// gathered claims and their evidence") types each piece of evidence and says who found it and when, with an
-// open source's platform and an archived copy.
+// transaction, a proposal and a quote in the evidence. v3 makes room for discovered, inferred and OSINT-gathered
+// claims: it types each piece of evidence and says who found it and when, with an open source's platform and an
+// archived copy.
 import type { Nep413Proof } from '../types/generated/flower.ts';
 import type { Verb } from './verbs.ts';
 

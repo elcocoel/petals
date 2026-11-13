@@ -1,4 +1,4 @@
-// What a layer, or one reading or name in it, adds to the map in front (lib/mapping.ts, wave 8): each line its
+// What a layer, or one reading or name in it, adds to the map in front (lib/mapping.ts): each line its
 // kind as a badge (New data, New period, New wallets, Match) and its words. Props only.
 import type { ToMapLine } from '../lib/mapping.ts';
 import { Badge } from './ui/Badge.tsx';

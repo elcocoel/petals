@@ -1,4 +1,4 @@
-// render/v2, the one look (specs/006-the-map, milestone 3; Elco: "one first look that we improve on"): the
+// render/v2, the one look (specs/006-the-map, milestone 3), a first look to improve on: the
 // wedge flower the live canvas draws, as a still picture. It fits the flower to the picture as the canvas
 // fits it to a window, asks the same table what shows at that size (wedge/marks.ts), and writes what it
 // answers as SVG text, with no DOM. Each petal is painted by its colour from the reading, "everyone else"
@@ -51,7 +51,7 @@ export const skinV2: Skin = (reading, { size, thumb }) => {
     height: size,
   };
   const mk = marks(m, view, null, m.ring, new Float64Array(m.n), false, -1);
-  // the art direction's colours, as the live flower paints them (#76; wedge/keys.ts lookFills)
+  // the art direction's colours, as the live flower paints them (wedge/keys.ts lookFills)
   const look = lookFills(reading.petals);
   const out: string[] = [
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" role="img" aria-label="${esc(reading.title)}" data-petal="render/v2" data-spec="${reading.spec_sha256}">`,

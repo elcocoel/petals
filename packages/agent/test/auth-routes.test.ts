@@ -229,7 +229,7 @@ describe('T192: POST /api/v1/auth/verify', () => {
   });
 });
 
-describe('POST /api/v1/me/wallets: another wallet for the person signed in (Elco, 12 Nov)', () => {
+describe('POST /api/v1/me/wallets: another wallet for the person signed in', () => {
   /** A fresh challenge, signed by this wallet, sent to add it. */
   async function addWallet(b: Browser, signer = maker, network = 'testnet') {
     const ch = (await (await b.post('/api/v1/auth/challenge')).json()) as Challenge;
@@ -1254,7 +1254,7 @@ describe('T192, T196: the key at start', () => {
   });
 });
 
-describe('EVM and Solana wallets (12 Nov, wave 5: "multi chain wallet connection")', () => {
+describe('EVM and Solana wallets (multi-chain wallet connection)', () => {
   const evm = evmTestSigner('wave5');
   const sol = solanaTestSigner('wave5');
   /** A challenge for this wallet, signed as its wallet would, sent to verify or to /me/wallets. */

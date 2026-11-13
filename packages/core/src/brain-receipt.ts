@@ -1,5 +1,4 @@
-// brain-receipt/v1 (research/brain-departments-2026-11-11.md, step 5; Elco, 11 Nov: "keep it exactly like harness
-// does"): one serving of the brain's text by a door, the Harness's brain_access_log field for field.
+// brain-receipt/v1: one serving of the brain's text by a door, the Harness's brain_access_log field for field.
 import { createAjv, schemaId } from './schema/ajv.ts';
 import type { Result, ValidationIssue } from './types/index.ts';
 

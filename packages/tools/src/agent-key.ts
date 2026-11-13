@@ -1,4 +1,4 @@
-// A person's agent key (Elco, 9 Nov; agent-links.ts in @petal/agent makes them): it takes and reports that
+// A person's agent key (agent-links.ts in @petal/agent makes them): it takes and reports that
 // person's jobs and keeps layers in their projects, nothing else, and it's revocable. The wait over HTTP
 // and take_job over MCP check it the same way, here.
 import { createHash } from 'node:crypto';
@@ -25,7 +25,7 @@ export async function agentKeyOf(
 }
 
 /**
- * Whether the person disconnected this agent after this key was made (10 Nov). A key made after the
+ * Whether the person disconnected this agent after this key was made. A key made after the
  * disconnection connects it again, and says so here.
  */
 export async function disconnectedFor(

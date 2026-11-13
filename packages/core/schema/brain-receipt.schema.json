@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:petal:schema:brain-receipt:v1",
   "title": "Petal brain receipt v1",
-  "description": "One serving of the brain's text by a door (research/brain-departments-2026-11-11.md, section 3; Elco, 11 Nov: \"keep it exactly like harness does\"): the Harness's brain_access_log, field for field, with the brain version as its commit. Written the moment the door answers, never rewritten; every count is worked out from these.",
+  "description": "One serving of the brain's text by a door: the Harness's brain_access_log, field for field, with the brain version as its commit. Written the moment the door answers, never rewritten; every count is worked out from these.",
   "type": "object",
   "additionalProperties": false,
   "required": ["petal", "id", "at", "version", "keywords", "matched_entries", "served_docs", "doc_count", "chars_served", "core_doctrine", "client_id", "client_label", "consumer_context"],

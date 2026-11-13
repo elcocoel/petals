@@ -85,7 +85,7 @@ describe('the schemas', () => {
     expect(viewProblem(DEFAULT_VIEW)).toBeNull();
     expect(viewProblem(DEFAULT_VIEW_V1)).toBeNull();
     expect(viewProblem({ ...DEFAULT_VIEW, petal: 'view/v1' })).toMatch(/labels/);
-    // view/v3 only adds colour's keys, so the default is a valid v3 too (12 Nov, wave 4); a v4 is no version
+    // view/v3 only adds colour's keys, so the default is a valid v3 too (12 Nov); a v4 is no version
     expect(viewProblem({ ...DEFAULT_VIEW, petal: 'view/v3' })).toBeNull();
     expect(viewProblem({ ...DEFAULT_VIEW, petal: 'view/v4' })).toMatch(/view\/v4/);
     expect(viewProblem(null)).toMatch(/not view\/v1, view\/v2 or view\/v3/);
@@ -149,7 +149,7 @@ describe('the fixtures', () => {
     expect(FORMER_DEFAULTS.get(viewHash(DEFAULT_VIEW_V1))).toBe(DEFAULT_VIEW_V1);
   });
 
-  test("Elco's case is the v1 default with proposals as marks", () => {
+  test('the proposals case is the v1 default with proposals as marks', () => {
     const v = fixture('view.v1.proposals.json') as ViewV1;
     expect({ ...v.dimensions, markings: null }).toEqual(DEFAULT_VIEW_V1.dimensions);
     expect(v.dimensions.markings).toEqual({ data: 'proposals' });
@@ -193,7 +193,7 @@ describe('a view/v1 still reads', () => {
 });
 
 describe('the default', () => {
-  test("since 11 Nov, the art direction's: straight heights, every petal as wide, the rest as before (#76)", () => {
+  test("since 11 Nov, the art direction's: straight heights, every petal as wide, the rest as before", () => {
     expect(DEFAULT_VIEW.dimensions).toEqual({
       ...DEFAULT_VIEW_V2_0.dimensions,
       height: { data: 'share', scale: 'linear' },
@@ -227,7 +227,7 @@ describe('dimensions and kinds', () => {
       height: ['amount', 'count', 'share'],
       width: ['amount', 'count', 'share'],
       order: ['amount', 'count', 'share', 'category', 'date'],
-      // a category's values, or a number's or a date's grade (wave 4)
+      // a category's values, or a number's or a date's grade
       colour: ['category', 'amount', 'count', 'share', 'date'],
       outline: ['flag', 'category'],
       // texture and markings take nothing until the look draws them (12 Nov: a choice draws, or isn't offered)
@@ -286,7 +286,7 @@ describe('a view meeting a flower', () => {
     v.dimensions.order = { data: 'proposals' };
     v.dimensions.height = { data: 'proposals' };
     expect(inUse(v, moloch)).toMatchObject({ order: 'proposals', height: 'proposals' });
-    // Colour takes a count as a grade (wave 4)
+    // Colour takes a count as a grade
     v.dimensions.colour = { data: 'proposals' };
     expect(inUse(v, moloch).colour).toBe('proposals');
   });
@@ -305,7 +305,7 @@ describe('a view meeting a flower', () => {
   });
 });
 
-describe('view/v3: the key each value of colour takes, as the person chose it (Elco, 12 Nov, wave 4)', () => {
+describe('view/v3: the key each value of colour takes, as the person chose it (12 Nov)', () => {
   const keyed = fixture('view.v3.json');
 
   test("colour names its keys from the look's six; any other key or field is refused", () => {

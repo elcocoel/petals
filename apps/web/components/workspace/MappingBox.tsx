@@ -1,5 +1,5 @@
 // The mapping state's box on /make (lib/mapping.ts): the map in front, and what the person would add to it in
-// their name. Layer by layer, each says what it adds to that map (wave 8: new data, a new moment, new subjects, a
+// their name. Layer by layer, each says what it adds to that map (new data, a new moment, new subjects, a
 // match credited to both, or a value that differs, both standing). Then what can't go yet, saying why, and the
 // publish press. Props only.
 import type { ReactNode } from 'react';
@@ -20,7 +20,7 @@ export function MappingBox({
   onPublish: () => void;
   /** the wallet chosen on the map: what can be added about it (a note or a name, or having it mapped) */
   wallet?: { heading: string; body: ReactNode } | undefined;
-  /** what stands in the box while there's nothing to add (a power quote, #89) */
+  /** what stands in the box while there's nothing to add (a power quote) */
   quote?: ReactNode;
 }) {
   return (

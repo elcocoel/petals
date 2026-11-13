@@ -1,8 +1,8 @@
-// One overlay over the map (design/overlays.md; Elco, 11 Nov: "the general element of overlays on the map
-// needs a specific and consistent design language"; board #95). The floating boxes' own surface and edge
-// (BarBox kind float: the conversation's and the flower box's glass), their bar with the overlay's name in
-// mono; pressing the bar folds it to the bar and back, with the side panel's chevron. What goes in it is the
-// panel's rows (NavItem): the app scale, and a chosen row's soft fill is what's selected. Props only.
+// One overlay over the map, in one consistent design language for every overlay. The floating boxes' own
+// surface and edge (BarBox kind float: the conversation's and the flower box's glass), their bar with the
+// overlay's name in mono; pressing the bar folds it to the bar and back, with the side panel's chevron. What
+// goes in it is the panel's rows (NavItem): the app scale, and a chosen row's soft fill is what's selected.
+// Props only.
 import type { ReactNode } from 'react';
 import { BarBox } from './BarBox.tsx';
 import { Icon } from './Icon.tsx';

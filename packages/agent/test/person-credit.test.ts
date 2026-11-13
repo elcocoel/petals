@@ -92,7 +92,7 @@ describe('a person’s own credit', () => {
     const w = setup();
     const { person_id: person, credit } = await w.signIn();
     expect(credit).toBeNull();
-    // signed in, with nothing paid and no invite: they're asked to pay (9 Nov)
+    // signed in, with nothing paid and no invite: they're asked to pay
     expect((await w.post('/api/v1/agent/chat', QUESTION)).status).toBe(402);
 
     await withStore(w.store(), async (s) => fundPerson(s, person, 5));

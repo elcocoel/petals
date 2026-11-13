@@ -136,7 +136,7 @@ function roomFor(box: Omit<Box, 'opacity'>, above: Box[]): number {
     const gap = Math.max(o.x0 - box.x1, box.x0 - o.x1, o.y0 - box.y1, box.y0 - o.y1);
     if (gap >= CLEAR) continue;
     // a note there that shows at all takes the place: words never sit on words, even while they fade in
-    // (VISUAL QA, 12 Nov: faint notes on each other at a middle zoom)
+    // (faint notes had sat on each other at a middle zoom)
     room *= 1 - ramp(0, SHOWS, o.opacity) * (1 - ramp(0, CLEAR, gap));
     if (room <= 0) return 0;
   }
@@ -183,15 +183,15 @@ function panelOf(
   const inner = Math.max(header, ...lines.map((s) => textWidth(s)));
   const width = Math.min(v.width - 2 * INSET, inner + 2 * PANEL_PAD);
   const height = 2 * PANEL_PAD + LINE * PANEL_HEADER + lines.length * LINE;
-  // where the petal points as it's drawn now, opened toward the pointer, not where it rested (Elco, 12 Nov:
-  // Arcadia's 'long line' crossed the flower to a panel in the corner opposite its open petal)
+  // where the petal points as it's drawn now, opened toward the pointer, not where it rested (Arcadia's
+  // 'long line' crossed the flower to a panel in the corner opposite its open petal)
   const right = (ring.nx[i] as number) >= 0;
   const bottom = (ring.ny[i] as number) >= 0;
   // the small map is at the top right (way-back-map): a panel there stands under it
   const rowOf = (r: boolean, b: boolean) =>
     b ? v.height - PANEL_BOTTOM - height : r ? MAP_INSET + MAP_SIZE + PANEL_PAD : PANEL_INSET;
-  // its own corner first, then the other row, then the other side: the first with nothing under it (Elco, 12 Nov:
-  // Arcadia's 'long line' ran to a panel under Tools)
+  // its own corner first, then the other row, then the other side: the first with nothing under it (Arcadia's
+  // 'long line' ran to a panel under Tools)
   const { x, y } = spot(
     [
       [right, bottom],
@@ -234,8 +234,8 @@ export function marks(
   chosen = -1,
   /**
    * What's already on the screen around it, in screen px (on the map: the names, the neighbours' names, the boxes
-   * over the map): the notes give way to it, and the chosen petal's slides clear of it (META's QA, 12 Nov: "labels
-   * never sit on each other or run off the window").
+   * over the map): the notes give way to it, and the chosen petal's slides clear of it (labels never
+   * sit on each other or run off the window).
    */
   taken: readonly { x0: number; y0: number; x1: number; y1: number }[] = [],
 ): Marks {
@@ -350,8 +350,8 @@ export function marks(
     // doesn't lie across it. How far is how much it had to slide, so there's no jump.
     const halfBar = ((ring.len[fi] as number) * k) / 2 + 8;
     const left1 = elbowX0 - (width * (1 - s)) / 2;
-    // clear of the boxes over the map as of the window's edge (12 Nov, wave 4: a chosen wallet's address ran under
-    // Tools), sliding along its line as the clicked petal's note does
+    // clear of the boxes over the map as of the window's edge (a chosen wallet's address ran under Tools),
+    // sliding along its line as the clicked petal's note does
     const atEdge = clamp(left1, INSET, v.width - INSET - width);
     const left0 = atEdge;
     // the step off its bar's end is for the window's edge only
@@ -362,8 +362,8 @@ export function marks(
     const below = LINE * (1 + listed.length * ramp(0, 0.2, shown));
     const elbowY1 = clamp(elbowY0 + (ny > 0 ? off : -off), INSET + LINE, v.height - INSET - below);
     const slidY = Math.abs(elbowY0 - elbowY1);
-    // clear of the boxes over the map, where the note finally stands (12 Nov, wave 4: a chosen wallet's address
-    // ran under Tools, and at the window's top under Information), sliding along its line as the clicked petal's does
+    // clear of the boxes over the map, where the note finally stands (a chosen wallet's address ran under Tools,
+    // and at the window's top under Information), sliding along its line as the clicked petal's does
     const elbowX1 =
       clamp(
         clearOfTaken(
@@ -463,8 +463,7 @@ export function marks(
   claim(titleBox(titleOutside.y), titleOutside.opacity);
 
   // figure.way-back-map
-  // The small map claims its corner: the top right, as a game's minimap (Elco, 12 Nov, wave 4: "I think it should be
-  // on the top right as if I was playing a video game"), left of any box over the map there
+  // The small map claims its corner: the top right, as a game's minimap, left of any box over the map there
   const mapOpacity = fade(DETAIL.wayBack, radius / (Math.min(v.width, v.height) / 2));
   const mapX = clamp(
     clearOfTaken(v.width - MAP_INSET - MAP_SIZE, MAP_SIZE, MAP_INSET, MAP_INSET + MAP_SIZE, 1),

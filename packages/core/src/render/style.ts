@@ -1,7 +1,7 @@
 // Colours are CSS custom properties defined in the SVG's own <style>: a light set, and a dark set
 // the host page picks with a `.petal-dark` class (on the svg or an ancestor), so both themes share
 // the same bytes (renderer.md). Selectors are scoped to svg[data-petal] because an inline SVG's
-// <style> applies to the whole page. Values are the spike's (research/spikes/flower).
+// <style> applies to the whole page. Values are the flower spike's.
 import { BACKER_ORDER, type BackerClass } from '../segments/backers.ts';
 import type { Kind } from '../types/index.ts';
 import { GREY, KEYS, type KeyName } from './wedge/keys.ts';
@@ -20,7 +20,7 @@ export const KIND_STYLE: Record<Kind, { cls: string; swatch: string }> = {
   person: { cls: 'c-org', swatch: 'var(--k-org)' },
   delegator: { cls: 'c-delegator', swatch: 'var(--k-delegator)' },
   // its own colour, a warm brown, so a key never shows two labels in one swatch and no hue means two things
-  // (the selection is mint; META, 10 Nov, fix 4)
+  // (the selection is mint)
   group: { cls: 'c-group', swatch: 'var(--k-group)' },
   unknown: { cls: 'c-unknown', swatch: 'var(--unknown)' },
 };
@@ -48,7 +48,7 @@ export function colourStyle(key: string): { cls: string; swatch: string } {
   return KIND_STYLE[key as Kind] ?? KIND_STYLE.unknown;
 }
 
-/** The art direction's keys as properties (#76, wedge/keys.ts): one set for both themes, as the live flower has. */
+/** The art direction's keys as properties (wedge/keys.ts): one set for both themes, as the live flower has. */
 const KEY_ALL = [...KEYS, GREY];
 const KEY_VARS = KEY_ALL.map((k) => `--key-${k.name}:${k.hex.toLowerCase()}`).join(';');
 /** Each key's class and swatch, written out so the token checks can read them. */

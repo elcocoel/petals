@@ -128,8 +128,8 @@ describe('an alternative', () => {
   });
 });
 
-// The seed grows forwards, as a saved crystal: system-v1, then system-v1.1, which added the app's scale
-// (Elco, 10 Nov: "Grow the seed"), the side panel's 13px words, 32px rows, 16px icons and its tint.
+// The seed grows forwards, as a saved crystal: system-v1, then system-v1.1, which added the app's scale,
+// the side panel's 13px words, 32px rows, 16px icons and its tint.
 const SEED = 'system-v1.5';
 
 describe('v1 is untouched', () => {

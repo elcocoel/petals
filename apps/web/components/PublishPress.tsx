@@ -13,7 +13,7 @@ export function PublishPress({
 }) {
   return (
     <section className="flex flex-col items-start gap-space-4">
-      {/* every name, read before the press (Elco: "Let me look first") */}
+      {/* every name, to read before the press */}
       {view.rows && (
         <>
           {view.rows.going.length > 0 && <Rows heading={view.rows.goes} rows={view.rows.going} />}
