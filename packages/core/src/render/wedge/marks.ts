@@ -127,12 +127,17 @@ interface Box {
 }
 
 /** How much a text is allowed, given the ones above it. Purely a matter of distance. */
+/** A note this faint is drawn, and reads as there: below it, a note isn't drawn at all. */
+const SHOWS = 0.01;
+
 function roomFor(box: Omit<Box, 'opacity'>, above: Box[]): number {
   let room = 1;
   for (const o of above) {
     const gap = Math.max(o.x0 - box.x1, box.x0 - o.x1, o.y0 - box.y1, box.y0 - o.y1);
     if (gap >= CLEAR) continue;
-    room *= 1 - ramp(0.02, 0.2, o.opacity) * (1 - ramp(0, CLEAR, gap));
+    // a note there that shows at all takes the place: words never sit on words, even while they fade in
+    // (VISUAL QA, 12 Nov: faint notes on each other at a middle zoom)
+    room *= 1 - ramp(0, SHOWS, o.opacity) * (1 - ramp(0, CLEAR, gap));
     if (room <= 0) return 0;
   }
   return room;
@@ -144,7 +149,19 @@ const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 const bandLine = (seg: { label: string; frac: number }) => `${seg.label} ${pct(seg.frac)}`;
 
 /** The account's panel, in the corner its petal points at, so the note has little way to travel. */
-function panelOf(m: Model, v: View, i: number, opacity: number, band: number): PanelMark {
+function panelOf(
+  m: Model,
+  v: View,
+  i: number,
+  opacity: number,
+  band: number,
+  ring: Ring,
+  spot: (
+    corners: readonly { x: number; y: number; s: number }[],
+    width: number,
+    height: number,
+  ) => { x: number; y: number },
+): PanelMark {
   const p = m.petals[i];
   const lines: string[] = [];
   const quiet = new Set<string>();
@@ -166,15 +183,29 @@ function panelOf(m: Model, v: View, i: number, opacity: number, band: number): P
   const inner = Math.max(header, ...lines.map((s) => textWidth(s)));
   const width = Math.min(v.width - 2 * INSET, inner + 2 * PANEL_PAD);
   const height = 2 * PANEL_PAD + LINE * PANEL_HEADER + lines.length * LINE;
-  const right = (m.ring.nx[i] as number) >= 0;
-  const bottom = (m.ring.ny[i] as number) >= 0;
+  // where the petal points as it's drawn now, opened toward the pointer, not where it rested (Elco, 12 Nov:
+  // Arcadia's 'long line' crossed the flower to a panel in the corner opposite its open petal)
+  const right = (ring.nx[i] as number) >= 0;
+  const bottom = (ring.ny[i] as number) >= 0;
   // the small map is at the top right (way-back-map): a panel there stands under it
-  const x = right ? v.width - PANEL_INSET - width : PANEL_INSET;
-  const y = bottom
-    ? v.height - PANEL_BOTTOM - height
-    : right
-      ? MAP_INSET + MAP_SIZE + PANEL_PAD
-      : PANEL_INSET;
+  const rowOf = (r: boolean, b: boolean) =>
+    b ? v.height - PANEL_BOTTOM - height : r ? MAP_INSET + MAP_SIZE + PANEL_PAD : PANEL_INSET;
+  // its own corner first, then the other row, then the other side: the first with nothing under it (Elco, 12 Nov:
+  // Arcadia's 'long line' ran to a panel under Tools)
+  const { x, y } = spot(
+    [
+      [right, bottom],
+      [right, !bottom],
+      [!right, bottom],
+      [!right, !bottom],
+    ].map(([r, b]) => ({
+      x: r ? v.width - PANEL_INSET - width : PANEL_INSET,
+      y: rowOf(r as boolean, b as boolean),
+      s: r ? 1 : -1,
+    })),
+    width,
+    height,
+  );
   return {
     opacity,
     x,
@@ -254,7 +285,27 @@ export function marks(
   // The panel comes first: nothing may sit under it.
   let panel: PanelMark | null = null;
   if (focus && panelOpacity > 0.001) {
-    panel = panelOf(m, v, fi, panelOpacity, band);
+    panel = panelOf(m, v, fi, panelOpacity, band, ring, (corners, width, height) => {
+      let best = { x: 0, y: 0, under: Number.POSITIVE_INFINITY };
+      for (const c of corners) {
+        // slid along its row clear of the boxes over the map, as the notes are
+        const x = clamp(
+          clearOfTaken(c.x, width, c.y, c.y + height, c.s),
+          INSET,
+          v.width - INSET - width,
+        );
+        const under = taken.reduce(
+          (sum, t) =>
+            sum +
+            Math.max(0, Math.min(x + width, t.x1) - Math.max(x, t.x0)) *
+              Math.max(0, Math.min(c.y + height, t.y1) - Math.max(c.y, t.y0)),
+          0,
+        );
+        if (under === 0) return { x, y: c.y };
+        if (under < best.under) best = { x, y: c.y, under };
+      }
+      return best;
+    });
     claim(
       {
         x0: panel.x,
@@ -336,8 +387,11 @@ export function marks(
     const panelX = panel ? panel.x + PANEL_PAD : leftFinal;
     const panelY = panel ? panel.y + PANEL_PAD + LINE : elbowY1 - 4;
     // The leader lands on the panel's corner that faces the flower.
-    const cornerX = panel ? panel.x + ((m.ring.nx[fi] as number) >= 0 ? 0 : panel.width) : elbowX1;
-    const cornerY = panel ? panel.y + ((m.ring.ny[fi] as number) >= 0 ? 0 : panel.height) : elbowY1;
+    // the corner that faces the flower, wherever the panel found room
+    const cornerX = panel ? panel.x + (panel.x + panel.width / 2 >= ox ? 0 : panel.width) : elbowX1;
+    const cornerY = panel
+      ? panel.y + (panel.y + panel.height / 2 >= oy ? 0 : panel.height)
+      : elbowY1;
     const x = lerp(leftFinal, panelX, e);
     const y = lerp(elbowY1 - 4, panelY, e);
     // Its box holds its list too, which can be wider than its name.
