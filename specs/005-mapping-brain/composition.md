@@ -153,17 +153,19 @@ Elco: "our system should otherwise communicate that these issues have been consi
 
 ## 8. Facts by format (`compose/v1`)
 
-| Format | Subject | What | State | Value |
-|---|---|---|---|---|
-| `snapshot/v1` | each holding's participant | `snapshot/<measure> <unit>` | its chain and `block_height`, or `as_of`; plus its window | the amount |
-| `snapshot/v1` | each relationship's `from→to` | `snapshot/<type> <unit>` | as above | its amount, or `1` |
-| `layer/v1` | each row's participant | `layer/<measure> <unit> <kind>` | `when.block_height`, or `when.as_of` | the row's value |
-| value | the map | `value/price usd`, `value/circulating`, `value/max`, `value/market_cap usd`, `value/treasury usd` | the document's `read_at` (an outside price holds at its own time) | each figure; its source stays with the layer |
-| proposals | each proposal, `proposal:<map>:<id>` | `proposals/outcome`; `proposals/vote` per voter (subject `<proposal>#<account>`) | the source's block or `at`; the window read | the outcome word; the choice and weight |
-| mark | the map | `mark/name`, `mark/symbol`, `mark/logo` | the document's `read_at` | the name; the symbol; the logo's sha256 |
-| vesting | each allocation, `<holder>#<name>` | `vesting/schedule` | the document's `read_at` | the hash of its total and schedule |
-| payouts | each payout, by its transaction | `payouts/paid` | its block | the asset and the raw amount |
-| claims | the claim's subject | `claim/<verb>` | its `as_of`, or its `issued_at` | the hash of its object |
+| Format | Subject | What | Of | State | Value |
+|---|---|---|---|---|---|
+| `snapshot/v1` | each holding's participant | `snapshot/<measure> <unit>` | the holding's `asset`, where it names one | its chain and `block_height`, or `as_of`; plus its window | the amount |
+| `snapshot/v1` | each relationship's `from→to` | `snapshot/<type> <unit>` | — | as above | its amount, or `1` |
+| `layer/v1` | each row's participant | `layer/<measure> <unit> <kind>` | — | `when.block_height`, or `when.as_of` | the row's value |
+| value | the map | `value/price usd`, `value/circulating`, `value/max`, `value/market_cap usd`, `value/treasury usd` | — | the document's `read_at` (an outside price holds at its own time) | each figure; its source stays with the layer |
+| proposals | each proposal, `proposal:<map>:<id>` | `proposals/outcome`; `proposals/vote` per voter (subject `<proposal>#<account>`) | — | the source's block or `at`; the window read | the outcome word; the choice and weight |
+| mark | the map | `mark/name`, `mark/symbol`, `mark/logo` | — | the document's `read_at` | the name; the symbol; the logo's sha256 |
+| vesting | each allocation, `<holder>#<name>` | `vesting/schedule` | — | the document's `read_at` | the hash of its total and schedule |
+| payouts | each payout, by its transaction | `payouts/paid` | its recipient and asset | its block | the asset and the raw amount |
+| claims | the claim's subject | `claim/<verb>` | — | its `as_of`, or its `issued_at` | the hash of its object |
+
+A slot is a fact's subject, what, of and state. **Of** is what, within its subject, a fact is about, where one subject holds several at one moment: a participant's deposits of two governing mints (a realm's community and council tokens), a transaction's payouts to several recipients. Without it those would be several values in one slot, and read as "differs" when nothing disagrees. It is part of the slot, never of `what`, so the words for a kind of data are the same.
 
 A format not in this table can be published as a layer, but it gives no facts until a later `compose` version adds its rule.
 

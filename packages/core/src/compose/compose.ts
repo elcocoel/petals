@@ -108,6 +108,8 @@ export interface Credited {
 export interface Slot {
   subject: string;
   what: string;
+  /** what within its subject, where a format names it (a holding's asset, a payout's recipient and asset) */
+  of?: string;
   state: State;
   /** each value stated, the first stated first, with every author who stated it, first to last */
   values: { value: string; by: Credited[] }[];
@@ -233,7 +235,14 @@ export function compose(
         const sk = slotOf(f);
         let slot = slots.get(sk);
         if (!slot) {
-          slot = { subject: f.subject, what: f.what, state: f.state, values: [], differs: false };
+          slot = {
+            subject: f.subject,
+            what: f.what,
+            ...(f.of !== undefined ? { of: f.of } : {}),
+            state: f.state,
+            values: [],
+            differs: false,
+          };
           slots.set(sk, slot);
         }
         let v = slot.values.find((x) => x.value === f.value);
@@ -280,7 +289,7 @@ export function compose(
   };
 }
 
-const slotKey = (s: Slot) => `${s.subject}\u0000${s.what}\u0000${stateKey(s.state)}`;
+const slotKey = (s: Slot) => slotOf(s);
 
 /** The four cases (section 5), for what a layer would bring to a composed map. */
 export interface Cases {
