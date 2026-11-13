@@ -36,7 +36,7 @@ const { values } = parseArgs({
     'web-port': { type: 'string', default: '3190' },
     // the server the site forwards to; default the web port plus 1000
     'api-port': { type: 'string' },
-    // lanes run side by side, and each needs its own stub
+    // servers run side by side, and each needs its own stub
     'stub-port': { type: 'string', default: '3189' },
     state: { type: 'string' },
     seed: { type: 'boolean', default: false },
@@ -142,7 +142,7 @@ A person's own credit needs no invite. Sign in, read the id from /api/v1/me, the
 Or pay for it as a visitor does, for free: sign in on testnet as alice or bob, whose testnet accounts hold
 testnet NEAR, and approve the transfer the chat asks for. This server sends it on testnet, for real, to
 petals.testnet, and the API server reads it back from the chain. On mainnet a test wallet refuses to send.
-To pay into the credit contract instead (Elco, 9 Nov), start the server with these two as well; a test
+To pay into the credit contract instead, start the server with these two as well; a test
 wallet then deposits and withdraws there for real, and each chat is charged there when it ends:
 
    PETAL_CREDIT_CONTRACT=credit.petals-paytest.testnet PETAL_CHARGER_KEY_FILE=<the charge-only key file>
