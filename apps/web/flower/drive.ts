@@ -31,9 +31,9 @@ export function newDriven(
     relations: FakeRelations | null;
     readout: boolean;
     bloom?: boolean;
-    /** the lab's look (#76): colours, bands at rest, the highlight */
+    /** the lab's look: colours, bands at rest, the highlight */
     look?: PetalLook | null;
-    /** the map's proposals on the ring (#93), in the flower's own look, with round tops */
+    /** the map's proposals on the ring, in the flower's own look, with round tops */
     votes?: VoteRing | null;
   },
 ): Driven {
@@ -90,7 +90,7 @@ export function driveFlower(
   const said = marks(m, live.camera, focus, live.ring, d.scratch, d.readout, live.chosen, taken);
   const spoken = quiet ? { ...said, notes: [], labels: [] } : said;
   // on the map (a view is the map's camera) the map's badge names the flower, so its own title keeps quiet: a
-  // reading landed on a map has a title of its own, and the two sat on each other (WORKSPACE's walk, 12 Nov)
+  // reading landed on a map has a title of its own, and the two sat on each other
   const mk = view
     ? {
         ...spoken,
