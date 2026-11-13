@@ -288,7 +288,7 @@ describe('the first paint', () => {
           initialRun: o.run,
           initialQuestion: o.q ?? null,
           recorded: o.recorded ?? false,
-          opening: 'Hi. I’m Petals.',
+          starts: [],
           shelf: [],
           initialOpen: o.stored ? { kind: 'stored', id: o.stored } : { kind: 'latest' },
           initialPetal: null,

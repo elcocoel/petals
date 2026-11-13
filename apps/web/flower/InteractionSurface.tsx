@@ -12,7 +12,9 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Composer } from '../components/chat/Composer.tsx';
 import { ConnectWallet } from '../components/chat/ConnectWallet.tsx';
 import { ConversationThread } from '../components/chat/ConversationThread.tsx';
+import { CreditPointer } from '../components/chat/CreditPointer.tsx';
 import { ModelOptions } from '../components/chat/ModelOptions.tsx';
+import { NewConversation } from '../components/chat/NewConversation.tsx';
 import { useFollowScroll } from '../components/chat/useFollowScroll.ts';
 import { PetalClaims } from '../components/PetalClaims.tsx';
 import { PowerQuote } from '../components/PowerQuote.tsx';
@@ -52,6 +54,7 @@ export function InteractionSurface({
   scatter,
   probe,
   surface,
+  starts,
   ...workspace
 }: {
   scatter: boolean;
@@ -63,7 +66,8 @@ export function InteractionSurface({
   catalogue?: Catalogue | null;
   initialQuestion: string | null;
   recorded: boolean;
-  opening: string;
+  /** where an empty conversation offers to start: the page's own suggestions, not the agent's words */
+  starts: { label: string; href: string }[];
   shelf: MapCard[];
   initialOpen: Opened;
   initialPetal: string | null;
@@ -340,6 +344,7 @@ export function InteractionSurface({
                         {state.balance && (
                           <span className="type-mono text-muted">{state.balance}</span>
                         )}
+                        {state.noCredit && <CreditPointer />}
                       </span>
                     )
                   }
@@ -352,7 +357,7 @@ export function InteractionSurface({
           )
         }
       >
-        {/* Petals' greeting and the thread. */}
+        {/* The thread; empty, where to start. */}
         <ConversationThread
           recorded={state.recorded}
           rows={state.rows}
@@ -364,7 +369,11 @@ export function InteractionSurface({
           onOpenStored={actions.openStored}
           onRefollow={actions.refollow}
           onLink={actions.followLink}
-          pay={{ ...state.pay, onPay: actions.pay }}
+          empty={
+            state.recorded ? undefined : (
+              <NewConversation starts={starts} onOpen={(href) => actions.followLink(href)} />
+            )
+          }
           jobs={state.jobs}
           jobControls={state.jobControls}
           onMapIt={actions.mapIt}

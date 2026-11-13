@@ -1,15 +1,14 @@
 // The thread as every surface shows it: its rows, the recorded notice, and a flower's row wired to what
 // opens it. A surface says only where the thread sits and what the open row says.
 import type { NextStep as StepOnMap } from '@petal/core/types';
-import type { Ref } from 'react';
-import type { TopUpView } from '../../lib/intents.ts';
+import type { ReactNode, Ref } from 'react';
 import { type Job, type JobControlsView, jobLine } from '../../lib/jobs.ts';
-import type { PayPhase } from '../../lib/pay.ts';
+import { payWords } from '../../lib/pay.ts';
 import type { Row } from '../../lib/thread-view.ts';
 import { NextSteps } from '../NextSteps.tsx';
 import { CeremonyCard } from './CeremonyCard.tsx';
+import { CreditPointer } from './CreditPointer.tsx';
 import { JobRow } from './JobRow.tsx';
-import { PayRow } from './PayRow.tsx';
 import { Thread } from './Thread.tsx';
 import { TurnFlower } from './TurnFlower.tsx';
 
@@ -24,7 +23,7 @@ export function ConversationThread({
   onOpenStored,
   onRefollow,
   onLink,
-  pay,
+  empty,
   jobs,
   jobControls,
   onMapIt,
@@ -41,19 +40,8 @@ export function ConversationThread({
   onOpenStored: (id: string) => void;
   onRefollow: () => void;
   onLink: (href: string) => boolean;
-  /** Paying for Petals' agent, for the live pay row (B). */
-  pay?: {
-    asking: string | null;
-    phase: PayPhase;
-    added: string | null;
-    onPay: () => void;
-    label?: string;
-    amount?: { usd: string; label: string; onUsd: (usd: string) => void } | null;
-    failedWords?: string;
-    canPay?: boolean;
-    /** Paying with any other token, through NEAR Intents. */
-    topUp?: TopUpView;
-  };
+  /** What an empty conversation shows instead of a thread: the page's own suggestions (NewConversation). */
+  empty?: ReactNode;
   /** Where each handed job stands, and the hand-over (C). */
   jobs?: Record<string, Job>;
   /** The person's say over each job: its state after a move, and its controls (swarm.md, step 3). */
@@ -76,7 +64,9 @@ export function ConversationThread({
               </p>
             ),
           }
-        : {})}
+        : rows.length === 0 && empty
+          ? { notice: empty }
+          : {})}
       rows={rows}
       {...(threadRef ? { threadRef } : {})}
       renderFlower={(row) => {
@@ -93,22 +83,12 @@ export function ConversationThread({
           />
         );
       }}
-      renderPay={(row) =>
-        pay && row.key === pay.asking ? (
-          <PayRow
-            key={row.key}
-            first={row.first === true}
-            phase={pay.phase}
-            added={pay.added}
-            onPay={pay.onPay}
-            {...(pay.label ? { label: pay.label } : {})}
-            {...(pay.amount !== undefined ? { amount: pay.amount } : {})}
-            {...(pay.failedWords ? { failedWords: pay.failedWords } : {})}
-            {...(pay.canPay !== undefined ? { canPay: pay.canPay } : {})}
-            {...(pay.topUp ? { topUp: pay.topUp } : {})}
-          />
-        ) : null
-      }
+      // credit is added in the lobby's Balance: a refusal for want of it points there
+      renderPay={(row) => (
+        <p key={row.key} className="my-0">
+          <CreditPointer line={payWords.outOf} />
+        </p>
+      )}
       renderJob={(row) => {
         const listed = jobs?.[row.job.id];
         const known = listed && jobControls ? jobControls.now(listed) : listed;

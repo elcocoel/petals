@@ -21,8 +21,10 @@ import { AnsweredBy } from '../components/chat/AnsweredBy.tsx';
 import { CeremonyCard } from '../components/chat/CeremonyCard.tsx';
 import { ConnectWallet } from '../components/chat/ConnectWallet.tsx';
 import { ConversationList } from '../components/chat/ConversationList.tsx';
+import { CreditPointer } from '../components/chat/CreditPointer.tsx';
 import { JobRow } from '../components/chat/JobRow.tsx';
 import { ModelOptions } from '../components/chat/ModelOptions.tsx';
+import { NewConversation } from '../components/chat/NewConversation.tsx';
 import { PayRow } from '../components/chat/PayRow.tsx';
 import { Speech } from '../components/chat/Speech.tsx';
 import { Steps } from '../components/chat/Steps.tsx';
@@ -141,8 +143,9 @@ import { mappingView, toMapLines } from '../lib/mapping.ts';
 import { drawingTile, type MapCard, mapTile } from '../lib/maps.ts';
 import { parseMarkdown } from '../lib/markdown.ts';
 import { oopsWords } from '../lib/oops-words.ts';
-import { openingMessage } from '../lib/opening.ts';
+import { newConversationWords } from '../lib/opening.ts';
 import { flowerPanelView, type PanelFlower, shelfView } from '../lib/panel-view.ts';
+import { payWords } from '../lib/pay.ts';
 import { viewChoices } from '../lib/person-view.ts';
 import { POWER_QUOTES } from '../lib/power-quotes.ts';
 import { claimsView, usageView, walletRows } from '../lib/profile-view.ts';
@@ -2492,6 +2495,44 @@ export const registry: LabEntry[] = [
     ],
   },
   {
+    id: 'NewConversation',
+    group: 'The conversation',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/chat/NewConversation.tsx',
+    states: [
+      {
+        name: 'maps to start from',
+        wide: true,
+        render: () => (
+          <NewConversation
+            starts={[
+              { label: 'Uniswap', href: '/m/uni' },
+              { label: 'Marinade MNDE deposits and lock schedules', href: '/m/mnde' },
+              { label: 'ENS DAO', href: '/m/ens' },
+              { label: newConversationWords.powerMap, href: '/map' },
+            ]}
+            onOpen={() => {}}
+          />
+        ),
+      },
+    ],
+  },
+  {
+    id: 'CreditPointer',
+    group: 'The conversation',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/chat/CreditPointer.tsx',
+    states: [
+      { name: 'in the composer', render: () => <CreditPointer /> },
+      {
+        name: 'in the thread, out of credit',
+        render: () => <CreditPointer line={payWords.outOf} />,
+      },
+    ],
+  },
+  {
     id: 'ConnectWallet',
     group: 'The conversation',
     figmaName: null,
@@ -4169,11 +4210,6 @@ export const registry: LabEntry[] = [
         name: 'every block',
         wide: true,
         render: () => <Markdown blocks={parseMarkdown(MARKDOWN)} />,
-      },
-      {
-        name: 'the agent’s opening',
-        wide: true,
-        render: () => <Markdown blocks={parseMarkdown(openingMessage([]))} />,
       },
     ],
   },
