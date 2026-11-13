@@ -3,9 +3,15 @@
 import { expect, test } from 'vitest';
 import type { Reading } from '../src/index.ts';
 import { FAR_WAVE, farPath, farRuns } from '../src/render/wedge/far.ts';
-import { roundedPath } from '../src/render/wedge/highlight.ts';
+import { bandCorners, insetBy, roundedPath } from '../src/render/wedge/highlight.ts';
 import { modelOf } from '../src/render/wedge/model.ts';
-import { bandPath, polygonPath, SHAPE, silhouettePath } from '../src/render/wedge/ring.ts';
+import {
+  bandPath,
+  polygonPath,
+  roundTopPath,
+  SHAPE,
+  silhouettePath,
+} from '../src/render/wedge/ring.ts';
 
 const valid = (d: string) => d === '' || (/^M/.test(d) && !/NaN/.test(d));
 
@@ -55,5 +61,43 @@ test('a flower whose petals are all zero draws valid paths', () => {
       FAR_WAVE,
     ))
       expect(valid(run.d)).toBe(true);
+  }
+});
+
+const petal = (i: number, share: number) => ({
+  ...zero(i),
+  amount: String(share * 100),
+  share,
+  width: 1,
+  height: share,
+});
+
+/** Every path a flower writes for its petals: the ring, the silhouette, each wedge, its far shape and bands, and a lit
+ * petal's rounded piece. */
+const everyPath = (m: ReturnType<typeof modelOf>): string[] => [
+  polygonPath(m.ring),
+  silhouettePath(m.ring),
+  farPath(m, SHAPE, FAR_WAVE),
+  ...farRuns(
+    m,
+    SHAPE,
+    m.petals.map(() => '#000'),
+    FAR_WAVE,
+  ).map((r) => r.d),
+  ...m.petals.flatMap((_, i) => {
+    const h = m.ring.h[i] as number;
+    const inset = insetBy(bandCorners(m.ring, i, 0, h), 1);
+    return [bandPath(m.ring, i, 0, h), roundTopPath(m.ring, i, h), roundedPath(inset ?? [], 2)];
+  }),
+];
+
+test('a flower of one petal draws valid paths, whether it holds something or nothing', () => {
+  for (const petals of [[petal(0, 1)], [zero(0)]]) {
+    const m = modelOf({ title: 'one', petals } as unknown as Reading);
+    expect(m.n).toBe(1);
+    for (const d of everyPath(m)) {
+      expect(d).not.toBe('Z');
+      expect(valid(d)).toBe(true);
+    }
   }
 });
