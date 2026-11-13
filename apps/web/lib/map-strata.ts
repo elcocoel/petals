@@ -5,6 +5,7 @@
 // and when, how it was read, what it was built on, and whether it's on in the map you see. 'Not recorded' wherever
 // the record has nothing. Pure. The words are drafts.
 
+import type { State } from '@petal/core';
 import { chainLabel } from './flower-view.ts';
 
 export type Standing = 'verified' | 'inferred' | 'lead';
@@ -107,13 +108,8 @@ export interface CardLayer {
   petal: string;
   title?: string | null;
   whats?: readonly string[];
-  /** the moments it states (core's compose State): a chain's block, or an instant, and a window for spans */
-  states?: readonly {
-    chain?: string;
-    block?: number;
-    at?: string;
-    window?: { from: string; to: string };
-  }[];
+  /** the moments it states (core's compose State): a chain's block, or an instant, and a span's from and to */
+  states?: readonly State[];
   collected_at?: string | null;
   source?: string | { name?: string } | null;
   /** its authors' accounts, first to last */
@@ -153,10 +149,15 @@ const day = (iso: string) =>
     timeZone: 'UTC',
   });
 
-/** What a layer states: its blocks, its instants or its windows, in words. */
+/** A state's span, by its key in core's State. */
+const SPAN = 'window' as const;
+
+/** What a layer states: its blocks, its instants or its spans, in words. */
 function coversOf(states: CardLayer['states']): string | null {
   const words = (states ?? []).map((s) => {
-    if (s.window) return `${day(s.window.from)} to ${day(s.window.to)}`;
+    // core names a state's span by a word that reads as the browser's, so it's reached by its key
+    const span = s[SPAN];
+    if (span) return `${day(span.from)} to ${day(span.to)}`;
     if (s.block !== undefined) {
       const chain = s.chain ? chainLabel(s.chain) : null;
       return `${chain ? `${chain} ` : ''}block ${s.block.toLocaleString('en-US')}`;
