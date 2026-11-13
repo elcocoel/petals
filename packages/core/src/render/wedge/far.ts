@@ -111,6 +111,8 @@ export function farRuns(
   const { cx, cy, r0 } = shape;
   const { start } = rest.ring;
   const n = fills.length;
+  // no petals, no bands of colour
+  if (n === 0) return [];
   // whose angle each point is in
   const owner = (a: number) => {
     let lo = 0;

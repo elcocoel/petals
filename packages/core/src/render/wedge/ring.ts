@@ -276,8 +276,9 @@ export function roundTopPath(ring: Ring, i: number, h: number): string {
 
 /** The polygon, closed: both ends of each side, so at any zoom its line runs along the wedges' feet. */
 export function polygonPath(ring: Ring): string {
-  // a flower of few: the circle the petals' feet stand on, touching each foot at its middle
-  if (ring.n > 0 && ring.n < FEW) {
+  // a flower of few: the circle the petals' feet stand on, touching each foot at its middle; a flower with no petals
+  // is that circle alone (a path of just 'Z' is invalid SVG)
+  if (ring.n < FEW) {
     let rho = SHAPE.r0;
     for (let i = 0; i < ring.n; i++) rho = Math.min(rho, SHAPE.r0 * (ring.cw[i] as number));
     const { cx, cy } = SHAPE;
