@@ -1,7 +1,6 @@
-// Figma's Footer (66:2360), a band as tall as the screen on the FAQ's grey, everything at its bottom edge: the
-// small print bottom left, the site's pages and the outside links bottom right, and under them the wordmark from
-// one edge of the window to the other (mark.fill), flush with the bottom. It spans the window, not the page's
-// column. Only links that go somewhere: an outside link shows once its address is set.
+// Figma's Footer (66:2360), a band as tall as the screen on the FAQ's grey, everything at its bottom edge: on the
+// left half, the wordmark as wide as that half (mark.fill) with the small print under it; bottom right, the site's
+// pages and the outside links. Only links that go somewhere: an outside link shows once its address is set.
 import type { ReactNode } from 'react';
 import { landingCopy } from '../../lib/landing-copy.ts';
 import { siteLinks } from '../../lib/site-links.ts';
@@ -36,14 +35,17 @@ export function Footer() {
       className="@container relative flex min-h-svh flex-col justify-end overflow-hidden border-t border-hairline"
     >
       <div className="flex flex-col gap-column-gap px-block-gap pb-column-gap antialiased md:flex-row md:items-end md:justify-between md:px-page-inset">
-        <p className="my-0 max-w-conversation-width type-lead">
-          {copy.built.split(copy.by)[0]}
-          <TextLink href={siteLinks.elementaryComplexity} variant="inline">
-            {copy.by}
-          </TextLink>
-          {copy.built.split(copy.by)[1]}
-        </p>
-        <div className="flex flex-wrap gap-x-section-padding gap-y-column-gap">
+        <div className="@container flex w-full flex-col gap-block-gap md:w-1/2">
+          <Wordmark size="fill" />
+          <p className="my-0 type-lead">
+            {copy.built.split(copy.by)[0]}
+            <TextLink href={siteLinks.elementaryComplexity} variant="inline">
+              {copy.by}
+            </TextLink>
+            {copy.built.split(copy.by)[1]}
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-x-column-gap gap-y-column-gap md:justify-end">
           <Group name={copy.groups.petals}>
             <TextLink href={siteLinks.map}>{copy.links.gallery}</TextLink>
             <TextLink href={siteLinks.howItWorks}>{copy.links.howItWorks}</TextLink>
@@ -64,9 +66,6 @@ export function Footer() {
             ))}
           </Group>
         </div>
-      </div>
-      <div className="flex justify-center">
-        <Wordmark size="fill" />
       </div>
     </footer>
   );
