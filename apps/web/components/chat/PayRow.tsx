@@ -20,6 +20,7 @@ export function PayRow({
   amount,
   failedWords = payWords.failed,
   canPay = true,
+  addedWords,
 }: {
   /** offered before the first question, to someone with no credit yet: its words say so */
   first?: boolean;
@@ -36,10 +37,18 @@ export function PayRow({
   /** what a failed press says: a transfer that went out says it isn't confirmed yet */
   failedWords?: string;
   canPay?: boolean;
+  /** what the row says once a payment was added, where the page has its own words for it */
+  addedWords?: (near: string) => string;
 }) {
   if (phase === 'added' && added) {
     return (
-      <p className="my-0 type-ui">{first ? payWords.addedFirst(added) : payWords.added(added)}</p>
+      <p className="my-0 type-ui">
+        {addedWords
+          ? addedWords(added)
+          : first
+            ? payWords.addedFirst(added)
+            : payWords.added(added)}
+      </p>
     );
   }
   const sent = topUp?.sent ?? null;
