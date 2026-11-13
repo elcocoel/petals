@@ -45,7 +45,7 @@ Elco, 9 Nov: "anyone can add, fork and use the prior."
 
 **Later, not now:**
 - **Named branches.**
-- **Points or rewards** for credit (Elco's points idea, 004-workspace): the record they'd rest on is `composition.md`'s.
+- **Points** for credit: the record they rest on is `composition.md`'s.
 
 ## Where layers live
 
