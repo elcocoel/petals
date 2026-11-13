@@ -83,6 +83,21 @@ export async function phoneSession(
   };
 }
 
+/**
+ * The phone wallet's open session that holds this account on this chain, if there is one: for a signature the
+ * site asks of a wallet the person added by phone (a publication's), with no new QR code.
+ */
+export async function phoneSessionFor(chain: Chain, account: string): Promise<PhoneSession | null> {
+  const c = await walletConnectClient();
+  const want = account.toLowerCase();
+  for (const s of c.session.getAll()) {
+    const held = s.namespaces[chain]?.accounts.find((a) => accountOf(a).toLowerCase() === want);
+    if (held)
+      return { topic: s.topic, address: accountOf(held), name: s.peer.metadata.name || PHONE_NAME };
+  }
+  return null;
+}
+
 /** The QR code of a WalletConnect address, as a picture's data: URL. */
 export async function qrOf(uri: string): Promise<string> {
   const { toDataURL } = await import('qrcode');
