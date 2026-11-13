@@ -1,6 +1,7 @@
 // Figma's Footer (66:2360), a band as tall as the screen on the FAQ's grey, everything at its bottom edge: on the
 // left half, the wordmark as wide as that half (mark.fill) with the small print under it; bottom right, the site's
-// pages and the outside links. Only links that go somewhere: an outside link shows once its address is set.
+// pages and the outside links. The content sits one block gap from the window's own edges (left, right, bottom),
+// not on the page's inset column. Only links that go somewhere: an outside link shows once its address is set.
 import type { ReactNode } from 'react';
 import { landingCopy } from '../../lib/landing-copy.ts';
 import { siteLinks } from '../../lib/site-links.ts';
@@ -34,7 +35,7 @@ export function Footer() {
       data-b="surface"
       className="@container relative flex min-h-svh flex-col justify-end overflow-hidden border-t border-hairline"
     >
-      <div className="flex flex-col gap-column-gap px-block-gap pb-column-gap antialiased md:flex-row md:items-end md:justify-between md:px-page-inset">
+      <div className="flex flex-col gap-column-gap px-block-gap pb-block-gap antialiased md:flex-row md:items-end md:justify-between">
         <div className="@container flex w-full flex-col gap-block-gap md:w-1/2">
           <Wordmark size="fill" />
           <p className="my-0 type-lead">
