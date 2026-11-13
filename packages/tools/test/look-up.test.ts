@@ -1,5 +1,5 @@
 // T390, T391: look_up, with no network. Any word gets an answer that says how each thing is known,
-// and a guess never fails. The dead ends of the stress test (design/stress-report.md) are the cases.
+// and a guess never fails. The dead ends of a stress test are the cases.
 import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';

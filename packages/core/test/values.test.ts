@@ -1,4 +1,4 @@
-// value/v1 (board #91): a map's token in dollars, its reading's totals, and each petal's value as a piece of
+// value/v1: a map's token in dollars, its reading's totals, and each petal's value as a piece of
 // data beside the snapshot's. No price: no pieces and no dollars, never a guess.
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';

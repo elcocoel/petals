@@ -57,7 +57,7 @@ describe('a snapshot is not a group', () => {
 });
 
 describe('a view made with compose_view', () => {
-  test('is no group, so never a second observation of its base (LOOK, 9 Nov)', () => {
+  test('is no group, so never a second observation of its base', () => {
     const base = snap({
       id: 'moloch-v3',
       chain: 'eip155:100',

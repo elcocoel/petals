@@ -1,6 +1,6 @@
-// Maps hidden from the Power Map, never deleted (board #96; Elco approved DAO SET's review, 11 Nov): each
-// stays in the store and its flower still opens; every list of the map leaves it out, its own card says why,
-// and taking its line out of hidden-maps.json brings it back. The file is the record of who decided and why.
+// Maps hidden from the Power Map by a curation review, never deleted: each stays in the store and its flower
+// still opens; every list of the map leaves it out, its own card says why, and taking its line out of
+// hidden-maps.json brings it back. The file is the record of what was decided and why.
 import hidden from './hidden-maps.json' with { type: 'json' };
 import retired from './retired-readings.json' with { type: 'json' };
 
@@ -8,13 +8,13 @@ export interface Hidden {
   about: string;
   name: string;
   why: string;
-  /** who decided, where it isn't the file's own decision */
+  /** the decision, where it isn't the file's own */
   decided?: string;
 }
 
 const BY_ABOUT = new Map<string, Hidden>((hidden.hidden as Hidden[]).map((h) => [h.about, h]));
 
-/** Why a map is hidden, and who decided, or null for a map that's shown. */
+/** Why a map is hidden, and the decision, or null for a map that's shown. */
 export function hiddenMap(about: string): (Hidden & { decided: string }) | null {
   const h = BY_ABOUT.get(about);
   return h ? { ...h, decided: h.decided ?? hidden.decided } : null;
@@ -26,7 +26,7 @@ export const hiddenCount = () => BY_ABOUT.size;
 export interface Retired {
   snapshot: string;
   replaced_by: string;
-  /** the wave's own record of the change */
+  /** what changed */
   from: string;
 }
 
@@ -35,7 +35,7 @@ const RETIRED = new Map<string, Retired>(
 );
 
 /**
- * A reading the mapping waves replaced (retired-readings.json; META, 11 Nov: retire, never delete), or null: it
+ * A reading a mapping run replaced (retired-readings.json: retire, never delete), or null: it
  * stays in the store and its flower still opens by its hash, but no list of the map shows it.
  */
 export function retiredReading(snapshot: string): (Retired & { decided: string }) | null {
@@ -46,7 +46,7 @@ export function retiredReading(snapshot: string): (Retired & { decided: string }
 export interface RetiredClaim {
   id: string;
   replaced_by: string;
-  /** the wave's own record of the change */
+  /** what changed */
   from: string;
 }
 
@@ -55,7 +55,7 @@ const RETIRED_CLAIMS = new Map<string, RetiredClaim>(
 );
 
 /**
- * A mapping claim a wave reissued (retired-readings.json, claims; DAO SET, 12 Nov), or null: it stays in the store,
+ * A mapping claim a mapping run reissued (retired-readings.json, claims), or null: it stays in the store,
  * but no map's list of the mapping's claims shows it, and search leaves it out.
  */
 export function retiredClaim(id: string): (RetiredClaim & { decided: string }) | null {

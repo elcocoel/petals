@@ -1,5 +1,5 @@
-// The Snapshot proposals on the shared map given their own text and their page (proposals/v3, walk 3, 12 Nov):
-// only summary and link are added; everything else a wave wrote stays.
+// The Snapshot proposals on the shared map given their own text and their page (proposals/v3):
+// only summary and link are added; everything else a mapping run wrote stays.
 import { validateProposals } from '@petal/core';
 import { describe, expect, test } from 'vitest';
 import { privateStore } from '../src/drafts.ts';
@@ -35,7 +35,7 @@ const wave = {
 };
 
 describe('Snapshot texts', () => {
-  test("a wave's Snapshot proposal gains its own text and its page, where it was made; the rest stays", async () => {
+  test("a mapping run's Snapshot proposal gains its own text and its page, where it was made; the rest stays", async () => {
     const r = await rig();
     const store = privateStore(r.ctx.config);
     await store.proposals.put({

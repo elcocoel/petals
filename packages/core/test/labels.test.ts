@@ -1,6 +1,6 @@
-// The labels dimension (annotation-layer.md, step 6; view/v2): with labels on a person's names, each petal an
+// The labels dimension (view/v2): with labels on a person's names, each petal an
 // annotation names shows that name, and the rest keep their short address; the tail keeps its own label.
-// Outline can take how the name is known, but no visual meaning is fixed for it (Elco, 11 Nov), so it draws
+// Outline can take how the name is known, but no visual meaning is fixed for it, so it draws
 // nothing yet. By default every flower reads as it always did. The names here are invented.
 import { describe, expect, test } from 'vitest';
 import { makeClaim } from '../src/claims/index.ts';
@@ -129,8 +129,8 @@ describe('labels on names', () => {
 });
 
 describe('outline on how the name is known', () => {
-  // Elco, 11 Nov: "dont give data hard coded use of visual manifestations - outlines are being designed and
-  // could mean different things". Outline takes name_kind as a category, and nothing yet says how it looks.
+  // Data gets no hard-coded visual meaning: outlines are still being designed and could mean different
+  // things. Outline takes name_kind as a category, and nothing yet says how it looks.
   const r = readFlower(spec, s, both, pieces);
 
   test('is a choice the view can make, and draws nothing until the look designs it', () => {

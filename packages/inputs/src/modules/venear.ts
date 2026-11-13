@@ -1,5 +1,5 @@
-// veNEAR voting power, ported from house-of-stake-contracts common/src (account.rs, types.rs),
-// as ../research/spikes/near-dao/house_of_stake.py did. BigInt throughout.
+// veNEAR voting power, ported from house-of-stake-contracts common/src (account.rs, types.rs).
+// BigInt throughout.
 //
 // `get_accounts` returns each account with its balances already grown to the block's time
 // (update_timestamp is the block time in whole seconds), so power needs no growth step here:

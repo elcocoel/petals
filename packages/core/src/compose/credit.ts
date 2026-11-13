@@ -41,7 +41,7 @@ export interface Credit {
   compose: typeof COMPOSE_RULE;
   layers: CreditLayer[];
   /**
-   * Elco's three counts (13 Nov: "who's helping a lot or a little"): facts added to the map first, facts confirmed
+   * The three counts, who's helping a lot or a little: facts added to the map first, facts confirmed
    * independently, and accounts that built on their work, once per layer
    */
   totals: { layers: number; first: number; confirmed: number; built_on: number };

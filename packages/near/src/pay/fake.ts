@@ -43,7 +43,7 @@ function units(raw: string, decimals: number): string {
 /** Map a dry 1Click response to QuoteResult. Refuses anything that is not dry. */
 export function toQuoteResult(r: OneClickQuoteResponse, decimals = 6): QuoteResult {
   if (r.quoteRequest.dry !== true || r.quote.depositAddress) {
-    throw new Error('not a dry quote: FR-031 forbids real payments without Elco’s OK');
+    throw new Error('not a dry quote: FR-031 forbids real payments without the operator’s OK');
   }
   const fees: Record<string, string> = {};
   if (r.quote.refundFee) fees.refund_fee = units(r.quote.refundFee, decimals);

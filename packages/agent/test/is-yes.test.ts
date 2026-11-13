@@ -1,4 +1,4 @@
-// J4 (#49): what counts as a yes. When unsure it isn't one: the agent asks again, which is cheap.
+// J4: what counts as a yes. When unsure it isn't one: the agent asks again, which is cheap.
 import { describe, expect, test } from 'vitest';
 import { askedYesOrNo, asksToDraw, isYes } from '../src/is-yes.ts';
 

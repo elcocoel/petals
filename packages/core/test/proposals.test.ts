@@ -1,4 +1,4 @@
-// proposals/v2 (11 Nov; the L2 wave and LOOK): v1 and an outcome its source doesn't state, each proposal's
+// proposals/v2 (11 Nov): v1 and an outcome its source doesn't state, each proposal's
 // recipient and options, and a ballot's choices and weights as said. v1 still reads. Nothing guessed.
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';

@@ -1,4 +1,4 @@
-// Petals' agent keeps what the person tells it (annotation-layer.md step 3): "this is Dekan's wallet" becomes a
+// Petals' agent keeps what the person tells it: "this is Dekan's wallet" becomes a
 // name in their project, in the same message as its answer, at no model call of its own, with their account
 // answering for it. Through petalApp, signed in with a test wallet, scripted model. The names are invented.
 import { join } from 'node:path';

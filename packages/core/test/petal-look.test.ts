@@ -1,4 +1,4 @@
-// The petal look, V1 (#76; design/flower-art-direction/default-system-vnext.md, Elco 11 Nov), for /lab first: five
+// The petal look, V1 (the art direction's default system, 11 Nov), for /lab first: five
 // keys handed out from the most common value to the rarest, grey apart; the highlight's tones from the petal's own
 // colour; its stroke inside the petal; and straight heights with no minimum (the default since 11 Nov).
 import { describe, expect, test } from 'vitest';
@@ -61,7 +61,7 @@ describe("a flower's key (flowerKeys) and its fills (lookFills)", () => {
 });
 
 describe('the keys', () => {
-  test("Elco's five, most common first, and grey apart from them", () => {
+  test('the five keys, most common first, and grey apart from them', () => {
     expect(KEYS.map((k) => [k.name, k.hex])).toEqual([
       ['mint', '#8BC9BD'],
       ['blue', '#96D4E3'],
@@ -107,7 +107,7 @@ describe('the keys', () => {
 describe('the highlight', () => {
   test('its tones come from the fill: stroke × 0.62, light lifted without changing the hue, shade × 0.78', () => {
     const t = tonesOf('#8BC9BD');
-    // Figma's mint stroke, about #567D75 (design/flower-art-direction/handoff-draft-2026-11-10.md)
+    // Figma's mint stroke, about #567D75 (the art direction's handoff)
     expect(t.stroke).toBe('#567D75');
     expect(t.shade).toBe('#6C9D93');
     // 1.15 lifts mint's brightest channel (201) to 231: under 255, so the whole 1.15 applies
@@ -199,7 +199,7 @@ describe('a reading with no minimum height', () => {
   });
 });
 
-describe('the highlight on a petal of bands: the outside only (Elco, 11 Nov)', () => {
+describe('the highlight on a petal of bands: the outside only', () => {
   test('the foot corners soften on the first band, the tip on the last, none between', () => {
     expect(outsideRadii(true, false, 2)).toEqual([0, 0, 2, 2]);
     expect(outsideRadii(false, true, 2)).toEqual([2, 2, 0, 0]);

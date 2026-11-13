@@ -1,4 +1,4 @@
-// usage/v1 (Elco, 10 Nov: "count usage like pros"): every model call is kept with NEAR AI's id for it, the
+// usage/v1: every model call is kept with NEAR AI's id for it, the
 // tokens and the price it was counted at, and what was charged; NEAR AI's own bill is read by that id, and
 // the person is charged the bill: the difference goes back as its own entry. A scripted model with a fake
 // billing, so nothing is spent.

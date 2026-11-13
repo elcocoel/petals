@@ -1,5 +1,5 @@
-// Petals' own mapping's claims, for every viewer (Elco, 11 Nov: "show them"; META: readable for every viewer,
-// through the seam): the waves' checked claims, kept as the mapping's own annotations, apart from any person's.
+// Petals' own mapping's claims, readable for every viewer through the seam: the mapping runs' checked claims,
+// kept as the mapping's own annotations, apart from any person's.
 // None names a person: the loader checks each as a published claim. A map's are the claims about its accounts,
 // any of its readings' petals, the accounts its readings name in their params (its DAO, its governance
 // contract) or the map's own address, oldest first, the same for every viewer.
@@ -18,12 +18,12 @@ export const ADDRESS =
 export const MAPPING = 'mapping.petals.near';
 
 /**
- * What people published to the shared map (publish-data.ts, 12 Nov): everyone's to read, beside the mapping's,
+ * What people published to the shared map (publish-data.ts): everyone's to read, beside the mapping's,
  * each claim saying who answers for it (its `by`), and its row keeping the signature that published it.
  */
 export const PUBLISHED = 'published';
 
-/** Keep a wave's checked claims as the mapping's; one kept already stays as it was. How many are new. */
+/** Keep a mapping run's checked claims as the mapping's; one kept already stays as it was. How many are new. */
 export async function keepMappingClaims(
   ctx: ToolContext,
   wave: string,

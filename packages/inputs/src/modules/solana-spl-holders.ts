@@ -40,7 +40,7 @@ import { paramModule } from './stored.ts';
 export const SOLANA_CHAIN = 'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp';
 export const SOLANA_OFFICIAL = 'https://api.mainnet-beta.solana.com';
 export const SOLANA_VIBE_STATION = 'https://public.rpc.solanavibestation.com/';
-/** Helius's RPC (12 Nov, Elco's free key): its key follows in the query and is never written anywhere. */
+/** Helius's RPC (a free key): its key follows in the query and is never written anywhere. */
 export const HELIUS_RPC = 'https://mainnet.helius-rpc.com';
 export const SPL_MODULE_ID = 'solana-spl-holders';
 export const SPL_MODULE_VERSION = 'solana/1';
@@ -162,7 +162,7 @@ export interface PullSplOptions {
   keep?: number;
   /** the size where a scan stops, default 200 MB. Offline pulls lift it */
   maxBytes?: number;
-  /** Helius's key (12 Nov): its paged token accounts (DAS getTokenAccounts) are read first */
+  /** Helius's key: its paged token accounts (DAS getTokenAccounts) are read first */
   heliusKey?: string;
   onProgress?: Progress;
 }

@@ -1,4 +1,4 @@
-// A Baal DAO's (Moloch v3, DAOhaus) proposals and each member's vote (board #93; META's pick, 11 Nov: RaidGuild's
+// A Baal DAO's (Moloch v3, DAOhaus) proposals and each member's vote (RaidGuild's next,
 // after NEAR's Marketing DAO), as proposals/v1, from the DAO's own events, keyless, in one log read: each
 // proposal's submission, its sponsoring (when voting starts), every vote (approved or not) and its processing
 // (passed, and whether its action ran) or cancelling. Baal has no abstain. Each vote and decision has its block

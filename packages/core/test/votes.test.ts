@@ -1,4 +1,4 @@
-// Proposals on the ring and each wallet's vote (#93): each proposal an arc from when it was put up to when it was
+// Proposals on the ring and each wallet's vote: each proposal an arc from when it was put up to when it was
 // decided, else when its voting closed, else the ring's end; a vote's dot just inside the polygon; no vote, no dot.
 import { describe, expect, test } from 'vitest';
 import { lay, newRing } from '../src/render/wedge/ring.ts';

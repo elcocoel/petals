@@ -17,8 +17,8 @@ describe('SYSTEM_PROMPT', () => {
 
   test('came out shorter, because every byte is resent each turn', () => {
     // 8,122 before the cut, which came to about 8,100; the section on investigating adds about 450, and
-    // who's behind an address (Elco, 10 Nov, run 9c599a61) about 160; what's already on the map (Elco, 12 Nov,
-    // run 421a5e8a: thirteen tool calls to count what the map held) about 1,040; publishing (12 Nov) about 160.
+    // who's behind an address (run 9c599a61) about 160; what's already on the map (run 421a5e8a: thirteen
+    // tool calls to count what the map held) about 1,040; publishing about 160.
     expect(Buffer.byteLength(readFileSync(PROMPT_FILE, 'utf8'))).toBeLessThan(10500);
   });
 
@@ -84,7 +84,7 @@ describe('SYSTEM_PROMPT', () => {
     expect(SYSTEM_PROMPT).toMatch(
       /No source ids, `fig:` ids, tool, module or field names, ids with underscores, hashes/,
     );
-    // the reading's own labels, in people's words (WORKSPACE's walk, 11 Nov: it said 'fastnear-rpc-validators')
+    // the reading's own labels, in people's words (a reply once said 'fastnear-rpc-validators')
     expect(SYSTEM_PROMPT).toMatch(
       /Say what the reading's labels say: the petals, what each dimension shows/,
     );
@@ -110,7 +110,7 @@ describe('SYSTEM_PROMPT', () => {
     expect(SYSTEM_PROMPT).toMatch(/Publish, only when asked/);
   });
 
-  test("what the doctrine says left the prompt (the brain's step 11): the agent reads the brain first", () => {
+  test('what the doctrine says left the prompt: the agent reads the brain first', () => {
     expect(SYSTEM_PROMPT).toMatch(/Before your first answer about a network, an address or a name/);
     expect(SYSTEM_PROMPT).toMatch(/call `brain_context`/);
     const doctrine = readFileSync(

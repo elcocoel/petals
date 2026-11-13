@@ -97,7 +97,7 @@ export async function creditFor(
   return { ...credit, hash: sha256Hex(canonicalJson(credit)) };
 }
 
-/** Each author's three counts on one map (Elco, 13 Nov: "who's helping a lot or a little"): first, confirmed, built on. */
+/** Each author's three counts on one map, how much each one helps: first, confirmed, built on. */
 export async function authorsOn(
   ctx: ToolContext,
   about: string,

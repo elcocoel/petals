@@ -1,4 +1,4 @@
-// A map card's value (#91, value/v2 on 11 Nov, value/v3 on 12 Nov): a treasury's priced total and how many of its assets have no
+// A map card's value (value/v2 on 11 Nov, value/v3 on 12 Nov): a treasury's priced total and how many of its assets have no
 // price beside the token's own worth; none for a value/v1.
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';

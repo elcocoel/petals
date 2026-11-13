@@ -1,8 +1,8 @@
-// Publishing to the shared map (Elco, 12 Nov: "we need this live soon, it's a big part of my test"; wave 8, 13 Nov:
-// a signed version, specs/005-mapping-brain/composition.md): what a signed-in person kept about a map goes to
-// everyone's Power Map with one press, as a publication/v1 in the record signed by one of their wallets (NEP-413,
-// EIP-191 or ed25519), at once, credited to it; a name goes only as the DAO's own records declare it (people.ts,
-// 12 Nov). Through petalApp, signed in with test wallets, on the real NEAR validators fixture. No model is called.
+// Publishing to the shared map (a signed version, specs/005-mapping-brain/composition.md): what a signed-in
+// person kept about a map goes to everyone's Power Map with one press, as a publication/v1 in the record signed
+// by one of their wallets (NEP-413, EIP-191 or ed25519), at once, credited to it; a name goes only as the DAO's
+// own records declare it (people.ts). Through petalApp, signed in with test wallets, on the real NEAR validators
+// fixture. No model is called.
 import { fileURLToPath } from 'node:url';
 import {
   canonicalJson,
@@ -68,7 +68,7 @@ async function setup() {
     await r('/api/v1/auth/verify', 'POST', { network: 'mainnet', proof: who.sign(c as never) });
   };
   const signIn = () => signInWith(request, alice);
-  /** Another wallet for the person signed in, proved as its chain signs (12 Nov, wave 5). */
+  /** Another wallet for the person signed in, proved as its chain signs. */
   const addWallet = async (
     chain: 'eip155' | 'solana',
     signer: { address: string; sign(m: string): string },
@@ -148,7 +148,7 @@ async function keepLayer(ctx: ToolContext, owner: string, l: Layer) {
 
 const mapQ = (map: string) => `/api/v1/publish/data?map=${encodeURIComponent(map)}`;
 
-describe('the press: a signed version on the shared map (wave 8)', () => {
+describe('the press: a signed version on the shared map', () => {
   test('one press: what each layer adds, the wallet signs the version, and it goes in the record, credited', async () => {
     const w = await setup();
     // a visitor has nothing of their own to publish
@@ -159,7 +159,7 @@ describe('the press: a signed version on the shared map (wave 8)', () => {
     });
     expect(kept.body, JSON.stringify(kept.body)).toMatchObject({ added: 2 });
 
-    // every item, one row each, read before the press (Elco: 'Let me look first'), with the qualifier's confidence
+    // every item, one row each, read before the press (look first), with the qualifier's confidence
     const ready = await w.request(mapQ(w.map));
     expect(ready.body).toMatchObject({
       about: w.map,

@@ -260,7 +260,7 @@ export function compose(
   for (const slot of slots.values()) {
     for (const v of slot.values) v.by.sort((a, b) => a.seq - b.seq);
     // where values differ, the first shown is the qualifier's best, then the one stated first; the others stand
-    // beside it, to switch to (Elco, 13 Nov: "let's not make this more complicated than it has to be")
+    // beside it, to switch to, and nothing more complicated than that
     slot.values.sort(
       (a, b) =>
         qualified(b) - qualified(a) ||

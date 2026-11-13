@@ -72,9 +72,9 @@ export function moduleFor(ctx: ToolContext, id: string): InputModule {
 
 /** The descriptor for a snapshot's network, if a module reads it. */
 /**
- * A reading made by a reader Petals doesn't have (a mapping wave's, read elsewhere with the brain as its method,
- * #96's loader): described by the reading itself, a plain flower of its own amounts, each a measure as it named
- * it, the first its coverage names first; nothing read live. Only a stored reading has one.
+ * A reading made by a reader Petals doesn't have (a mapping run's, read elsewhere with the brain as its method,
+ * loaded by mapping-load.ts): described by the reading itself, a plain flower of its own amounts, each a measure as
+ * it named it, the first its coverage names first; nothing read live. Only a stored reading has one.
  */
 export function readingDescriptor(s: Snapshot): NetworkDescriptor {
   const seen = new Map<string, { id: string; unit: string; label: string }>();
@@ -125,8 +125,8 @@ function fits(d: NetworkDescriptor, s: Snapshot): boolean {
 
 export function descriptorOf(ctx: ToolContext, s: Snapshot): NetworkDescriptor | null {
   const own = ctx.modules[s.network.id]?.descriptor ?? null;
-  // a reading its reader's descriptor doesn't fit (a mapping wave's, with its own measures and sources), or by a
-  // reader Petals doesn't have, is described by itself (#96); a composed view keeps its base's
+  // a reading its reader's descriptor doesn't fit (a mapping run's, with its own measures and sources), or by a
+  // reader Petals doesn't have, is described by itself; a composed view keeps its base's
   const d = s.module.id === COMPOSED ? own : own && fits(own, s) ? own : readingDescriptor(s);
   if (!d || s.module.id !== COMPOSED) return d;
   // A view over layers (005 seam/v1): what its base reads, plus every measure the layers brought,

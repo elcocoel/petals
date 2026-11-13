@@ -1,4 +1,4 @@
-// The workspace (W1, T310 to T316; design/workspace-data.md, design/workspace-api-map.md): coming back to
+// The workspace (W1, T310 to T316): coming back to
 // conversations, following shapes, a person's own notes, and search across them.
 //   GET   /api/v1/catalogue                 what each provider offers; no session
 //   GET   /api/v1/conversations             a person's conversations, and work from other doors
@@ -388,7 +388,7 @@ export function workspaceRoutes(d: WorkspaceDeps): Hono {
 
   const noConversation = (c: Context, id: string) => fail(c, 'not_found', `no conversation ${id}`);
 
-  // Each model with what a turn on it really costs here (Elco, 10 Nov: "the price estimates seem incorrect"):
+  // Each model with what a turn on it really costs here, as a list estimate can be wrong:
   // the median of its last turns priced as NEAR AI bills, cached input included; null until it has one.
   app.get('/api/v1/catalogue', async (c) => {
     const turns = new Map<string, number[]>();
@@ -419,7 +419,7 @@ export function workspaceRoutes(d: WorkspaceDeps): Hono {
   });
 
   /**
-   * Delete (Elco, 10 Nov): gone for good, the run with its events and thread, and its project when no other
+   * Delete: gone for good, the run with its events and thread, and its project when no other
    * conversation carries it on (its steps, notes, jobs and links), the person's own notes about it, and its
    * rows in search. What it drew stays on the shared map, the layers they kept stay theirs, and their credit
    * and every charge stay. A chat still answering is stopped first, by the person.
@@ -1143,7 +1143,7 @@ export function workspaceRoutes(d: WorkspaceDeps): Hono {
     });
   }
 
-  // Everything on the map, and the person's own work, by words and by meaning (#105, search-petals.ts). A
+  // Everything on the map, and the person's own work, by words and by meaning (search-petals.ts). A
   // visitor finds what's on the map; what a person keeps is found by them alone.
   app.get('/api/v1/search', async (c) => {
     const q = c.req.query('q') ?? '';

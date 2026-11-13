@@ -1,4 +1,4 @@
-// keep_data and list_data (#98; CONNECTORS, 11 Nov: so people's agents can keep what they find): any Petals
+// keep_data and list_data (so people's agents can keep what they find): any Petals
 // document an agent found or made (a reading, a mark, a value, proposals, vesting, a claim), kept private to the person's
 // project, named by its canonical sha256, until a review takes it to the shared map. Checked by its own format as
 // the person's own project checks it, so a claim may name a person there. A claim goes to the project's

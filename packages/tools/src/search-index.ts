@@ -1,6 +1,6 @@
-// Search by words and by meaning (#105; Elco, 11 Nov: "search with the embedding model on the server being super
-// smart to find shit all sorts of different ways"). Each document is ranked two ways: by its words (BM25, as the
-// brain's routing ranks its headers) and by its meaning (the question's embedding against each document's). The
+// Search by words and by meaning, with the embedding model on the server, to find a thing many different ways.
+// Each document is ranked two ways: by its words (BM25, as the brain's routing ranks its headers) and by its
+// meaning (the question's embedding against each document's). The
 // two rankings are fused (reciprocal rank), and the reranker reads the question with the best of them and orders
 // those. A document's vector is kept by the model and its text's sha256, so a text is embedded once, ever.
 import { sha256Hex } from '@petal/core';

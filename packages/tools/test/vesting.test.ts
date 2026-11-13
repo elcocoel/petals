@@ -1,5 +1,5 @@
-// Each petal's vesting reaches every drawing of its map (vesting.ts; Elco, 12 Nov, wave 7: "it's vesting reader for
-// anything"): a vesting/v1 loaded as Petals' mapping, by its map's address, cuts the petals that hold its
+// Each petal's vesting reaches every drawing of its map (vesting.ts, a vesting reader for any token): a vesting/v1
+// loaded as Petals' mapping, by its map's address, cuts the petals that hold its
 // allocations, in the map's views (pieces, given) and in render_flower. Offline.
 import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -99,7 +99,7 @@ describe("each petal's vesting reaches every drawing of its map", () => {
     expect(sum).toBeCloseTo(Number(holds), 6);
     expect(await names()).toEqual(expect.arrayContaining(['vesting', 'next_unlock', 'tranche']));
 
-    // given with the view, for the drawn petals only (LOOK: redraw at once)
+    // given with the view, for the drawn petals only (redrawn at once)
     const [view] = await mapViews(r.ctx);
     if (!view) throw new Error('no view on the map');
     const given = view.given.find((p) => p.name === 'vesting') as {

@@ -1,4 +1,4 @@
-// A map's voting blocs (board #94; LOOK, 11 Nov: the site reads them over HTTP): its DAO's proposals as kept,
+// A map's voting blocs (the site reads them over HTTP): its DAO's proposals as kept,
 // the pairs and blocs core finds over a period, and every member as the petal id it has in the map's newest
 // reading, so a flower can colour its blocs. A voter with no petal there keeps its account as the claim names it.
 import {
@@ -25,7 +25,7 @@ export async function keptProposals(ctx: ToolContext, id: string): Promise<Propo
 }
 
 /**
- * The vote ring's stretch (LOOK, 11 Nov: one period for the ring and the blocs): the 90 days up to the map's newest
+ * The vote ring's stretch (one period for the ring and the blocs): the 90 days up to the map's newest
  * proposal's close (decided_at, else closes_at, else when it was submitted, at its latest), so a quiet DAO still
  * shows its last stretch. Null with no proposals.
  */
@@ -65,8 +65,8 @@ export interface BlocRun extends BlocsAsk {
 }
 
 /**
- * Every DAO map's blocs over one period, said and kept nowhere (scripts/map-blocs.ts; META, 11 Nov: keep nothing
- * as Petals' mapping's claims for now, compute them live; an agent keeps what it needs in its person's project).
+ * Every DAO map's blocs over one period, said and kept nowhere (scripts/map-blocs.ts: nothing is kept as Petals'
+ * mapping's claims, they're computed live; an agent keeps what it needs in its person's project).
  */
 export async function blocMaps(
   ctx: ToolContext,
