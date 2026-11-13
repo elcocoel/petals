@@ -21,15 +21,33 @@ In a version, a **layer** is any of Petals' documents about the address, by its 
 
 ### 1b. Three kinds of unit, always told apart
 
-Every unit a layer carries is one of three kinds, and a reader can always tell which:
+Every unit a layer carries, down to each figure, is one of three kinds, and its own fields say which. Nothing is guessed: the same unit always reads as the same kind.
 
-| Kind | What it is | How it's marked today | Where it isn't yet |
-|---|---|---|---|
-| **Claim** | what someone asserts about an account: a name, a role, a note | its own format (`claim/v*`): `kind` stated or sourced, `evidence` (a proposal or a transaction quoted, or a page), `by` who answers for it | nothing missing |
-| **On-chain data** | read from a chain: who holds what, who voted, what was paid | `snapshot/v1` (its chain, `block_height`, `sources`), proposals (the source's block, every vote), payouts (each with its transaction and block) | `value` mixes it with outside prices (each figure names its `source`), and `vesting` with published and inferred schedules (each allocation names how it's `known`) |
-| **Deterministic result** | computed from on-chain data by a named method | `layer/v1`: `from` (the hashes it was computed from), `how.method`, `standing` | `how.method` is free text: it must name the method and its version (for example `blocs/agreement@2`), so anyone can recompute it from `from` and get the same rows |
+| Kind | What it is | What it names, so anyone can check it |
+|---|---|---|
+| **On-chain data** | read from a chain: who holds what, who voted, what was paid | its chain and the block, transaction or call it was read at (or the instant, where the chain's answer names no block): anyone can read it again there |
+| **Deterministic result** | worked out from other units by a fixed method | the method and its version, `name@version` (for example `blocs/agreement@2`), and its inputs by hash: anyone can run that method on those inputs and get the same value |
+| **Claim** | what someone answers for: a name for an account, a project's own table, an outside source's price | who answers for it (a person, the project, the source: 1Click, DefiLlama, CoinGecko, Snapshot) and what it rests on |
 
-So the kind of a unit is its format's, except in the two mixed formats, where each figure or allocation says its own (`value`'s `source`, `vesting`'s `known`); a reader that separates the three reads those fields. A deterministic result names the units it came from (`from`) and the versioned method, and its rows are what that method gives from them, so two authors who run the same method on the same data at the same block state the same facts (sections 3 and 5). A claim is never composed as chain data: claims stand side by side (section 8, `claim/<verb>`), and only chain data and results can "differ".
+**The rule, in this order:**
+1. A unit that names a versioned method (`name@version`, as a claim's `method` is written) and its inputs by hash is a **deterministic result**.
+2. Else, a unit read from a chain, naming the chain and its block, transaction or call, is **on-chain data**.
+3. Anything else is a **claim**. That includes an inference with a method in words, or with no inputs by hash: nobody can recompute it, so its author answers for it.
+
+**Where each format says it:**
+
+| Format | Its kind, and the field that says it |
+|---|---|
+| `snapshot/v1` | on-chain data: its network's chain, `block_height` (or `as_of`), its `sources` |
+| proposals | on-chain data when read from the DAO's contract (`source.contract`, the calls in `source.ref`); a claim of Snapshot when `source.kind` is `snapshot` (off-chain votes, as its hub lists them) |
+| payouts | on-chain data: each payout's transaction (`evidence`) and block (`when`). Its `usd` is an outside price, a claim of `usd.source`, and is no part of the fact (section 8) |
+| `layer/v1` | a deterministic result when `how.method` is `name@version` and `from` names its inputs; on-chain data when `standing` is verified and `when.block_height` names its block; otherwise a claim (a method in words, an inference, a lead) |
+| `value` | per figure, by its `source`: `chain` is on-chain data (`ref` names the call, `at` when); any other word (`1click`, `defillama`, `coingecko`) is a claim of that source. Its `totals` and the treasury's `total` are deterministic results by the format's own rule, named by its version (`value/v3`), from its `snapshot` (by hash) and the figures beside them. A treasury item summed from the reading (`source.snapshot`) is a result the same way; one read by a call is on-chain data; one from an outside address is a claim of that source |
+| `vesting` | per allocation, by `known`: verified is on-chain data (its `evidence` of kind chain names the account or transaction); published is a claim of the project (its `evidence`: the project's page); inferred is a claim of its author, since `vesting/v1` names no versioned method for it. A vesting version that adds `method` and `from` to an allocation makes an inferred one a deterministic result |
+| mark | per field, by its `source`: read from the chain (`chain`, `ft_metadata`, `metaplex`, `poster`) is on-chain data; any other source (a curated list, an app's API such as `daohaus`, CoinGecko) is a claim of that source; `petals` (status inferred) is Petals' claim |
+| `claim/v*` | a claim, whatever its `kind` (an observed claim quotes the chain as its evidence). An inferred claim is a deterministic result only when it names a versioned `method` and its inputs by hash (`evidence[].snapshot_sha256`). Voting blocs name `blocs/agreement@2` with their thresholds' hash, and their proposals by id, so they read as claims until they also name the proposals document's hash |
+
+**What the kind changes, and what it doesn't.** The kind is read beside each fact, never part of its slot (section 8), so composing doesn't change: facts meet by slot as before. A claim's facts (`claim/<verb>`) stand side by side whatever their kind, since one account can hold many names or partners. Two values in one slot of on-chain data or of a deterministic result should be impossible, so it's flagged as a probable read or method error (section 6). Two authors who run the same method on the same inputs state the same facts (sections 3 and 5). Core reads the kind with one pure function beside `factsOf`, so a map's layers can say which kinds they hold, and any reader can show the three apart. Whoever writes a computed layer (`add_layer`, an agent following the brain) writes its method as `name@version` and its inputs in `from`.
 
 ## 2. Publishing: a signed version (`publication/v1`)
 
