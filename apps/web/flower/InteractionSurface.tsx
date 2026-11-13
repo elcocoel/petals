@@ -504,14 +504,17 @@ function EmptyGround({
   /** on the map, whose Tools and Information stand in a column at its left: the quote keeps beside it */
   besideColumn?: boolean;
 }) {
+  // measured, so it's painted as the boxes are, as the map's own room is
+  const el = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const s = el.current?.style;
+    if (!s) return;
+    s.left = clear ? `${clear.left}px` : '';
+    s.bottom = clear ? `${clear.bottom}px` : '';
+    s.paddingLeft = besideColumn ? `${PANEL_W + 2 * floatBox.inset}px` : '';
+  }, [clear?.left, clear?.bottom, besideColumn]);
   return (
-    <div
-      className="pointer-events-none absolute inset-0 flex items-center justify-center"
-      style={{
-        ...(clear ? { left: clear.left, bottom: clear.bottom } : {}),
-        ...(besideColumn ? { paddingLeft: PANEL_W + 2 * floatBox.inset } : {}),
-      }}
-    >
+    <div ref={el} className="pointer-events-none absolute inset-0 flex items-center justify-center">
       <PowerQuote quote={quote} />
     </div>
   );
