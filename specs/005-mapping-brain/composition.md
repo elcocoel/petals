@@ -32,7 +32,7 @@ Publishing is the step `data.md` left open: **an author signs one of their versi
 | `layers` | the version's layers: `{ sha256, petal }` each |
 | `parent` | the publication this version came from: the author's own previous one, or another author's when it's a fork. Null for a first |
 | `previous` | this author's previous publication about this map, or null. So each author's record is a chain that can't be reordered or cut |
-| `published_at` | when the press was made. When the data was collected belongs to each layer |
+| `published_at` | when the server prepared the press (never the page's or the author's clock). When the data was collected belongs to each layer |
 | `proof` | the wallet's signature, as its chain signs: `{ standard, public_key?, signature, message, nonce?, recipient? }` |
 
 **What the wallet signs** is one readable text that names the hash of the publication's canonical JSON without its `proof`, so the signature covers every field and the person can read what they sign:
@@ -44,9 +44,12 @@ Publication 3f9a…(64 hex)
 
 NEAR signs it with NEP-413 (`recipient` this site, a fresh 32-byte `nonce`), as signing in does. EVM signs it with EIP-191 (`personal_sign`), Solana with ed25519 over its UTF-8 bytes; the wallets' checks are `@petal/near/auth/wallets.ts`'s. A publication is named by the hash of its canonical JSON, proof included.
 
+- **Order is the record's, never the author's.** The server appends each publication with its own sequence number and time (`seq`, `appended_at`), kept beside the signed body. Every "first", "earlier" and "before" in this spec is by `seq`. Nobody can set it or backdate it (PM, 13 Nov).
+- **A published version names only what's public.** Its layers, every hash in their `from`, and its `parent` must be published already, or published in this same version. The credit chain never points into the dark (PM).
 - **Withdrawing is a new version without the layer.** An author's **latest** publication about a map is what they contribute to it now, as `data.md` says. Their earlier publications stay in the record with their times, so credit is never lost.
 - **Who the author is.** The author is the wallet that signed, never Petals' internal person id. A person with several bound wallets (`me/wallets`) chooses which one signs. Anyone can check the signature against the account.
 - **Petals' own mapping** publishes the same way: an author like any other.
+- **Presses signed before this protocol keep their signatures.** Elco's 35 RaidGuild names (12 Nov, 22:07 UTC) were signed with NEP-413 by their wallet. They enter the record as that author's publication, with that proof, whose message names the hash of what it signed. They are never folded into the import (PM).
 - **What was loaded before this protocol** enters the record once per map, as an import. That covers the waves' readings, values, proposals, marks, vesting and payouts under `mapping.petals.near`. The import's `author` is `mapping.petals.near` and its `proof` is null, said plainly as "imported, unsigned". It is never presented as signed.
 - **Where it lives:** Petals' server keeps the record append-only. Entries are added, never updated or deleted. Anchoring each author's latest publication on NEAR (`data.md`, "Where layers live") is the next step, not built here.
 
@@ -90,7 +93,7 @@ Facts are grouped by their **slot**: `subject`, `what` and `state`. Every fact a
 
 The map's composition is a pure function of the record. Given the same publications, and a moment if one is asked, anyone gets the same answer, byte for byte.
 
-1. Take each author's **latest** publication about the map. Order the authors by when their first fact on the map was published, then by the publication's hash.
+1. Take each author's **latest** publication about the map. Order the authors by the `seq` of their first publication on the map.
 2. Turn each of its layers into facts (section 8). Each fact carries its author and the publication that first brought it.
 3. Group the facts by slot. Each slot has its distinct values; each value lists its authors, first to last. A slot with two or more values "differs".
 4. **What a drawing shows for a slot that differs:** the value published first, marked as differing, with the others beside it, so a person can switch to any author's value. A later publication never changes what an earlier drawing showed.
@@ -117,7 +120,8 @@ A deterministic summary per author, built from the record alone, shaped so a fut
 
 - **A layer earns one point for each distinct other account that built on it or reused it.** Building on follows `from` the whole chain back: a layer built on a layer that was built on yours counts for yours too, once.
 - Only published layers count, and only other authors' published versions count as use.
-- An author's points are the sum over their layers. When several authors published the same layer, each of them earns its points.
+- **A use gives its point only to the authors who had published that layer before the use was appended** (by `seq`). Publishing an already-used layer again by its hash earns "matched" credit, an independent confirmation, never points from earlier uses. Copying earns nothing (PM).
+- An author's points are the sum over their layers.
 - Matching or stating facts first is credit, not points.
 - The record keeps who used what, so a later split of revenue (a DAO, the work, the devs) can read it. There is no token and no money now.
 - **Readable on NEAR Social under the author's account:** the author can post their record's hash and address to `social.near` under their own account. That is one call from their wallet, which needs Elco's go before any real NEAR moves. Anyone can recompute it from Petals' record and compare.
