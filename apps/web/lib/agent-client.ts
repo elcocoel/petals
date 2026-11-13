@@ -369,8 +369,10 @@ export interface PressAll {
 }
 
 /** What one press over many maps would publish; null for nobody, or a server that can't say. */
-export async function readPressAll(): Promise<PressAll | null> {
-  const res = await fetch('/api/v1/publish/data?maps=all', { cache: 'no-store' });
+export async function readPressAll(author: string): Promise<PressAll | null> {
+  const res = await fetch(`/api/v1/publish/data?maps=all&author=${encodeURIComponent(author)}`, {
+    cache: 'no-store',
+  });
   if (!res.ok) return null;
   return (await res.json()) as PressAll;
 }
@@ -990,6 +992,22 @@ export function addMyWallet(
 }
 
 /** The wallets the person proved by signing in, as GET /api/v1/me lists them; null for nobody or no answer. */
+/** Who's signed in, as GET /api/v1/me says: the wallet this session signed in with, and all their wallets. */
+export async function readSession(): Promise<{
+  network: string;
+  account: string | null;
+  wallets: ProvenWallet[];
+} | null> {
+  const res = await fetch('/api/v1/me', { cache: 'no-store' });
+  if (!res.ok) return null;
+  const me = (await res.json()) as {
+    network?: string;
+    account?: string | null;
+    wallets?: ProvenWallet[];
+  };
+  return { network: me.network ?? '', account: me.account ?? null, wallets: me.wallets ?? [] };
+}
+
 export async function readWallets(): Promise<ProvenWallet[] | null> {
   const res = await fetch('/api/v1/me', { cache: 'no-store' });
   if (!res.ok) return null;

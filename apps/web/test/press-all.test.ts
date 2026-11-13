@@ -4,7 +4,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, test } from 'vitest';
 import { PublishPress } from '../components/PublishPress.tsx';
 import { pressAllView, pressAllWords } from '../lib/press-all.ts';
-import { publishWords } from '../lib/publish-press.ts';
+import { nearSigner, publishWords } from '../lib/publish-press.ts';
 
 const READ = {
   author: 'near:mainnet:petals.near',
@@ -47,5 +47,33 @@ describe('one press over many maps', () => {
     const done = pressAllView(READ, 'published', pressAllWords.published(2));
     expect(done?.press).toBeNull();
     expect(done?.said).toBe('On the shared map in your name: 2 maps.');
+  });
+});
+
+describe('the press over many maps signs as the profile’s NEAR wallet', () => {
+  const w = (network: string, account_id: string) => ({
+    network,
+    account_id,
+    proved_at: '2026-11-13T00:00:00Z',
+    author: network === 'eip155' ? `eip155:1:${account_id}` : `near:${network}:${account_id}`,
+  });
+  const wallets = [w('eip155', '0xabc'), w('mainnet', 'first.near'), w('mainnet', 'own.near')];
+
+  test('the NEAR wallet this session signed in with, even when it isn’t the first', () => {
+    expect(nearSigner({ network: 'mainnet', account: 'own.near', wallets })?.author).toBe(
+      'near:mainnet:own.near',
+    );
+  });
+
+  test('signed in with a linked Ethereum wallet: the first NEAR wallet, never the Ethereum one', () => {
+    expect(nearSigner({ network: 'eip155', account: '0xabc', wallets })?.author).toBe(
+      'near:mainnet:first.near',
+    );
+  });
+
+  test('no NEAR wallet: nobody to sign as', () => {
+    expect(
+      nearSigner({ network: 'eip155', account: '0xabc', wallets: wallets.slice(0, 1) }),
+    ).toBeNull();
   });
 });

@@ -1,23 +1,24 @@
 // One press over many maps (lib/press-all.ts): read, while the Mapping box has no single map in front, which maps
 // the person has something on (GET /api/v1/publish/data?maps=all, nothing kept); on the press, prepare every
 // map's version and the one text (its nonce lasts minutes, so only then), have the wallet sign it once, and send
-// the proof. NEAR signs in NEAR's own picker, a phone's row included. `landed` reads the Power Map again.
+// the proof. The author is the profile's NEAR wallet (nearSigner), named the same in the read and the prepare; it
+// signs in NEAR's own picker, a phone's row included. `landed` reads the Power Map again.
 import { useCallback, useEffect, useState } from 'react';
 import {
   type PressAll,
   preparePress,
   publishPress,
   readPressAll,
-  readWallets,
+  readSession,
 } from '../lib/agent-client.ts';
 import { pressAllView, pressAllWords } from '../lib/press-all.ts';
-import type { ProvenWallet } from '../lib/profile-view.ts';
 import { signPublication } from '../lib/publication-sign.ts';
-import { type PublishPhase, publishWords, signerOf } from '../lib/publish-press.ts';
+import { nearSigner, type PublishPhase, publishWords, type Signer } from '../lib/publish-press.ts';
 
 export function usePressAll(active: boolean, landed: () => void) {
   const [read, setRead] = useState<PressAll | null>(null);
-  const [wallets, setWallets] = useState<ProvenWallet[]>([]);
+  /** the author: the profile's NEAR wallet, the one the read and the prepare both name */
+  const [signer, setSigner] = useState<Signer | null>(null);
   const [phase, setPhase] = useState<PublishPhase>('ready');
   const [said, setSaid] = useState<string | null>(null);
   useEffect(() => {
@@ -25,18 +26,18 @@ export function usePressAll(active: boolean, landed: () => void) {
     let gone = false;
     setPhase('ready');
     setSaid(null);
-    void Promise.all([readPressAll(), readWallets()])
-      .then(([got, mine]) => {
-        if (gone) return;
-        setRead(got);
-        setWallets(mine ?? []);
-      })
-      .catch(() => {});
+    void (async () => {
+      const me = await readSession();
+      const who = me ? nearSigner(me) : null;
+      const got = who ? await readPressAll(who.author) : null;
+      if (gone) return;
+      setSigner(who);
+      setRead(got);
+    })().catch(() => {});
     return () => {
       gone = true;
     };
   }, [active]);
-  const signer = signerOf(wallets);
   const publish = useCallback(async () => {
     if (!signer || !read?.maps.length) return;
     setPhase('signing');
