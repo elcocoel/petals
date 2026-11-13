@@ -13,6 +13,7 @@ import {
   type Catalogue,
   modelOptions,
   modelPill,
+  ranModel,
   type Settings,
   withModel,
 } from '../lib/composer-options.ts';
@@ -40,6 +41,7 @@ import {
   storedPanelFlower,
 } from '../lib/panel-view.ts';
 import { payWords } from '../lib/pay.ts';
+import { publishWords } from '../lib/publish-press.ts';
 import type { Opened, PanelSection } from '../lib/thread.ts';
 import {
   type ComposerTarget,
@@ -489,6 +491,14 @@ export function useWorkspace(props: {
           ? modelOptions(catalogue, settings, funds?.where?.near_usd ?? null)
           : [],
       modelsOpen: showModel && modelsOpen,
+      /** who does the work here, as a publication records it (composition.md §2: never credited in their place) */
+      via: {
+        kind: 'agent' as const,
+        name: publishWords.agent,
+        ...(catalogue && settings
+          ? { model: ranModel(catalogue, settings, conversation?.answered ?? null) }
+          : {}),
+      },
       recorded,
     },
     actions: {

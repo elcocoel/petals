@@ -49,6 +49,8 @@ export interface ProvenWallet {
   network: string;
   account_id: string;
   proved_at: string;
+  /** the wallet in CAIP-10, as a publication names its author (SYSTEMS, wave 8) */
+  author?: string;
 }
 
 /** A wallet, as the Wallets card shows it. */

@@ -64,6 +64,7 @@ import { PublishFlow } from '../components/PublishFlow.tsx';
 import { PublishPress } from '../components/PublishPress.tsx';
 import { QuotePanel } from '../components/QuotePanel.tsx';
 import { SourceList } from '../components/Sources.tsx';
+import { ToMapLines } from '../components/ToMapLines.tsx';
 import { ActionRow } from '../components/ui/ActionRow.tsx';
 import { AskBlock } from '../components/ui/AskBlock.tsx';
 import { AskBox } from '../components/ui/AskBox.tsx';
@@ -120,6 +121,7 @@ import { TipControl } from '../components/workspace/TipControl.tsx';
 import { DimensionChoices, ViewControls } from '../components/workspace/ViewControls.tsx';
 import { Wallets } from '../components/workspace/Wallets.tsx';
 import { FlowerPanel } from '../flower/FlowerPanel.tsx';
+import type { PublishableData } from '../lib/agent-client.ts';
 import { ceremonyView } from '../lib/ceremony.ts';
 import type { AnnotationRow } from '../lib/claim-lines.ts';
 import type { DrawingKind } from '../lib/figures.ts';
@@ -130,7 +132,7 @@ import { type JobControlsView, jobMoves, jobWords } from '../lib/jobs.ts';
 import { landingCopy } from '../lib/landing-copy.ts';
 import type { ProfileEditorView } from '../lib/lobby-view.ts';
 import { mapClaimGroups } from '../lib/map-claims.ts';
-import { mappingView } from '../lib/mapping.ts';
+import { mappingView, toMapLines } from '../lib/mapping.ts';
 import { drawingTile, type MapCard, mapTile } from '../lib/maps.ts';
 import { parseMarkdown } from '../lib/markdown.ts';
 import { oopsWords } from '../lib/oops-words.ts';
@@ -139,7 +141,7 @@ import { flowerPanelView, type PanelFlower, shelfView } from '../lib/panel-view.
 import { viewChoices } from '../lib/person-view.ts';
 import { POWER_QUOTES } from '../lib/power-quotes.ts';
 import { claimsView, usageView, walletRows } from '../lib/profile-view.ts';
-import { publishPressView } from '../lib/publish-press.ts';
+import { publishPressView, publishWords, signersOf } from '../lib/publish-press.ts';
 import type { Done } from '../lib/thread.ts';
 import { answeredBy, composerView, type TurnRow, threadView } from '../lib/thread-view.ts';
 import { tipLine } from '../lib/tip.ts';
@@ -665,6 +667,69 @@ const editorView = (over: Partial<ProfileEditorView>): ProfileEditorView => ({
   cancel: () => {},
   ...over,
 });
+
+/** Wave 8's fixtures: two authors on TRUMP, Petals' mapping first (specs/005-mapping-brain/composition.md). */
+const LAB_PETALS = { author: 'near:mainnet:mapping.petals.near', name: 'Petals’ mapping' };
+const LAB_PUBLISH: PublishableData = {
+  about: 'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp:6p6x',
+  name: 'TRUMP',
+  ready: 0,
+  private: [],
+  published: 0,
+  layers: [
+    {
+      sha256: 'a1',
+      petal: 'snapshot/v1',
+      title: 'TRUMP holders on Solana',
+      cases: {
+        new_moment: { states: [{ state: { block: 465695924 }, newest: { block: 465600000 } }] },
+        new_subjects: { count: 212 },
+        match: { count: 60, authors: [LAB_PETALS] },
+      },
+    },
+    {
+      sha256: 'b2',
+      petal: 'vesting/v1',
+      title: 'TRUMP vesting',
+      cases: { new_data: { whats: ['vesting schedule'] } },
+    },
+  ],
+  totals: {
+    new_data: { whats: ['vesting schedule'] },
+    new_moment: { states: [{ state: { block: 465695924 }, newest: { block: 465600000 } }] },
+    new_subjects: { count: 212 },
+    match: { count: 60, authors: [LAB_PETALS] },
+  },
+  adds: [
+    {
+      layer: 'Proposals',
+      kind: 'proposals',
+      label: 'Proposals kept',
+      count: 1,
+      goes: false,
+      why: 'proposals you kept publish later',
+    },
+  ],
+};
+const LAB_SIGNERS = signersOf([
+  {
+    network: 'mainnet',
+    account_id: 'alice.near',
+    proved_at: '2026-11-11T09:00:00Z',
+    author: 'near:mainnet:alice.near',
+  },
+  {
+    network: 'eip155',
+    account_id: '0xced608aa29bb92185d9b6340adcbfa263dae075b',
+    proved_at: '2026-11-12T09:00:00Z',
+    author: 'eip155:1:0xced608aa29bb92185d9b6340adcbfa263dae075b',
+  },
+]);
+const LAB_SIGN = {
+  signers: LAB_SIGNERS,
+  chosen: LAB_SIGNERS[0]?.key ?? null,
+  via: { kind: 'agent' as const, name: publishWords.agent, model: 'Qwen3 30B' },
+};
 
 export const registry: LabEntry[] = [
   {
@@ -2928,36 +2993,13 @@ export const registry: LabEntry[] = [
     source: 'apps/web/components/workspace/MappingBox.tsx',
     states: [
       {
-        name: 'names that go, readings not yet',
+        name: 'what each layer adds to the map, then the press (wave 8)',
         render: () => (
           <MappingBox
-            view={mappingView('eip155:100:0xf02f', 'RaidGuild', {
-              about: 'eip155:100:0xf02f',
-              name: 'RaidGuild',
-              ready: 35,
-              private: [],
-              published: 0,
-              adds: [
-                {
-                  layer: 'Insights',
-                  kind: 'claims',
-                  verb: 'named',
-                  label: 'Names',
-                  count: 35,
-                  goes: true,
-                },
-                {
-                  layer: 'Readings',
-                  kind: 'readings',
-                  label: 'Readings',
-                  count: 2,
-                  goes: false,
-                  why: 'Publishing a reading in your name comes later.',
-                },
-              ],
-            })}
-            press={null}
+            view={mappingView(LAB_PUBLISH.about, 'TRUMP', LAB_PUBLISH)}
+            press={publishPressView(LAB_PUBLISH, 'ready', null, LAB_SIGN)}
             onPublish={() => {}}
+            onSigner={() => {}}
           />
         ),
       },
@@ -2970,6 +3012,31 @@ export const registry: LabEntry[] = [
     ],
   },
   {
+    id: 'ToMapLines',
+    group: 'The workspace',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/ToMapLines.tsx',
+    states: [
+      {
+        name: 'the cases (wave 8)',
+        render: () => (
+          <ToMapLines
+            lines={toMapLines({
+              new_data: { whats: ['vesting schedule'] },
+              new_moment: {
+                states: [{ state: { block: 465695924 }, newest: { block: 465600000 } }],
+              },
+              new_subjects: { count: 212 },
+              match: { count: 60, authors: [LAB_PETALS] },
+              differs: { count: 3, authors: [LAB_PETALS] },
+            })}
+          />
+        ),
+      },
+    ],
+  },
+  {
     id: 'PublishPress',
     group: 'The conversation',
     figmaName: null,
@@ -2977,25 +3044,22 @@ export const registry: LabEntry[] = [
     source: 'apps/web/components/PublishPress.tsx',
     states: [
       {
-        name: 'names that can go, some private',
+        name: 'two wallets to sign with, the agent recorded',
+        render: () => {
+          const view = publishPressView(LAB_PUBLISH, 'ready', null, LAB_SIGN);
+          return view ? (
+            <PublishPress view={view} onPublish={() => {}} onSigner={() => {}} />
+          ) : null;
+        },
+      },
+      {
+        name: 'published',
         render: () => {
           const view = publishPressView(
-            {
-              about: 'eip155:100:0xf02f',
-              name: 'RaidGuild',
-              ready: 63,
-              private: [
-                {
-                  id: 'c1',
-                  subject: '0xced6…075b',
-                  verb: 'named',
-                  why: 'No proposal or transaction declares it.',
-                },
-              ],
-              published: 0,
-            },
-            'ready',
-            null,
+            LAB_PUBLISH,
+            'published',
+            publishWords.published('1 new kind of data · 212 new subjects · 60 facts match'),
+            LAB_SIGN,
           );
           return view ? <PublishPress view={view} onPublish={() => {}} /> : null;
         },

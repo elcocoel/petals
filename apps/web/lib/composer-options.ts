@@ -41,6 +41,10 @@ export function modelPill(c: Catalogue, s: Settings, answered: string | null): s
   return `${picked}  ·  ran ${modelOf(c, answered)?.name ?? answered}`;
 }
 
+/** The model the conversation ran on, by its name: the one that answered, else the one picked. */
+export const ranModel = (c: Catalogue, s: Settings, answered: string | null): string =>
+  modelOf(c, answered ?? s.model)?.name ?? answered ?? s.model;
+
 export interface ModelOption {
   id: string;
   label: string;

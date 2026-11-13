@@ -229,6 +229,57 @@ export interface PublishableData {
     as_of: string;
     accounts: number;
   }[];
+  /**
+   * each layer the press would publish, and what it adds to the map in front, by case (SYSTEMS, wave 8:
+   * specs/005-mapping-brain/composition.md §9, a draft until Elco's OK)
+   */
+  layers?: PublishLayer[];
+  /** the same cases, summed for the whole publication */
+  totals?: LayerCases;
+}
+
+/**
+ * The ways a published fact meets the map in front (composition.md §5; Elco, 13 Nov: "how do different data layers
+ * from different people contribute to fuller and fuller maps"): a kind of data it has no fact of, another moment of
+ * one it has, subjects it had no fact for, or the same slot, where the same value is a match credited to every
+ * author who stated it and a different one differs, both standing. No one's layer wins.
+ */
+export type MapCase = 'new_data' | 'new_moment' | 'new_subjects' | 'match' | 'differs';
+
+/** An author already credited on the map: their account (CAIP-10) and the name the box says. */
+export interface Credited {
+  author: string;
+  name: string;
+}
+
+/** When on the chain a fact holds (composition.md §4, as core names it): a block on its chain, or an instant, and a window. */
+export interface ChainState {
+  chain?: string;
+  block?: number | string;
+  at?: string;
+  window?: { from: number | string; to: number | string };
+}
+
+/** What one layer, or a whole publication, adds to the map in front, by case. */
+export interface LayerCases {
+  /** the data the map has no fact of, in words: 'vesting schedule' */
+  new_data?: { whats: string[] };
+  /** each moment it adds, beside the map's newest of that data (null when the map has none) */
+  new_moment?: { states: { state: ChainState; newest: ChainState | null }[] };
+  /** how many subjects it states facts for that the map had none for */
+  new_subjects?: { count: number };
+  /** facts the same as ones on the map, and who they're credited to already */
+  match?: { count: number; authors: Credited[] };
+  /** facts in a slot the map has with another value, and whose that value is */
+  differs?: { count: number; authors: Credited[] };
+}
+
+/** A layer the press would publish: its name (sha256), its format, its title, and what it adds. */
+export interface PublishLayer {
+  sha256: string;
+  petal: string;
+  title: string;
+  cases: LayerCases;
 }
 
 /** One layer's share of a publish: Insights · Names · 35, or Readings, which can't go yet, and why. */
@@ -258,45 +309,68 @@ export async function readPublishable(map: string): Promise<PublishableData | nu
   return (await res.json()) as PublishableData;
 }
 
-/** The message the wallet signs for it, good for five minutes (POST /api/v1/publish/data/prepare). */
-export interface PublishPrepared {
-  sha256: string;
-  message: string;
-  nonce: string;
-  recipient: string;
-  expires_at: string;
+/** Who did the work on the author's behalf, as the author says it: recorded, never credited in their place. */
+export interface PublicationVia {
+  kind: 'agent';
+  name: string;
+  model?: string;
 }
 
-export async function preparePublishable(map: string): Promise<PublishPrepared> {
-  const res = await fetch('/api/v1/publish/data/prepare', {
+/**
+ * One press, prepared (POST /api/v1/publish/prepare, composition.md §2 and §9): the unsigned publication/v1, the
+ * hash of its canonical JSON, and the two lines the wallet signs, which name that hash. A NEAR wallet signs them
+ * with NEP-413 to this site's recipient and the nonce given.
+ */
+export interface PreparedPublication {
+  publication: unknown;
+  sha256: string;
+  text: string;
+  recipient?: string;
+  nonce?: string;
+}
+
+export async function preparePublication(o: {
+  map: string;
+  /** the wallet that signs, CAIP-10: the author the publication names */
+  author: string;
+  via?: PublicationVia | null;
+}): Promise<PreparedPublication> {
+  const res = await fetch('/api/v1/publish/prepare', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ map }),
+    body: JSON.stringify(o),
   });
   if (!res.ok) throw new Error(await failureOf(res));
-  return (await res.json()) as PublishPrepared;
+  return (await res.json()) as PreparedPublication;
 }
 
-/** Sends the signed proof: the claims go on the shared map in the person's name. 401: another wallet signed. */
-export async function publishPublishable(
+/** The wallet's signature of the text, as its chain signs. */
+export interface PublicationProof {
+  standard: 'nep413' | 'eip191' | 'ed25519';
+  signature: string;
+  public_key?: string;
+  nonce?: string;
+}
+
+/** What a press published: the signed record's hash, its layers, and what they added. */
+export interface PublishedVersion {
+  publication: string;
+  layers: { sha256: string; petal: string }[];
+  totals: LayerCases;
+}
+
+/** Sends the signed proof: the version goes on the shared map in the author's name. 401: another wallet signed. */
+export async function publishPublication(
   sha256: string,
-  proof: unknown,
-): Promise<
-  | { published: number; by: string; map_url: string; readings?: number }
-  | { refused: number; message: string }
-> {
+  proof: PublicationProof,
+): Promise<PublishedVersion | { refused: number; message: string }> {
   const res = await fetch('/api/v1/publish/data', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ sha256, proof }),
   });
   if (!res.ok) return { refused: res.status, message: await failureOf(res) };
-  return (await res.json()) as {
-    published: number;
-    by: string;
-    map_url: string;
-    readings?: number;
-  };
+  return (await res.json()) as PublishedVersion;
 }
 
 async function failureOf(res: Response): Promise<string> {

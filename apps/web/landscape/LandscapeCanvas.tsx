@@ -1,15 +1,4 @@
 'use client';
-// The map, live (specs/006-the-map, bench v2): one chain at a time, chosen down the left as on an exchange,
-// and an empty SVG for that chain's scene and its live flowers to draw in, filling the window, or the area
-// under the site's nav on the Power Map (app/(canvas)/map). Each
-// flower's drawing model is made here from its reading, once. The words are the data's: each chain's name
-// and how many flowers it has. The chain list is one of the overlays (design/overlays.md, line 7; #95): on a
-// phone it starts folded to its bar with the chain on show, so it never covers the map (META, 11 Nov: at 390
-// wide it did, on the landing and the hero); pressing the bar opens it, and choosing a chain folds it again.
-// Where a page asks, the legend is the other overlay, under the chain list: the person's view as a key (#92);
-// and inside a flower, under it, what Petals' own mapping says about that map, folded until asked. Where a page
-// asks (the Power Map), a search field tops the chain list, and while something's typed the maps it finds stand
-// in the chains' place; pressing one goes to its chain and into its flower (board 105).
 import { type Proposal, redress, type SeamPiece } from '@petal/core';
 import type { View } from '@petal/core/types';
 import { colourKeysOf, EVERY_FLOWER, inUse, latestView } from '@petal/core/view';
@@ -43,6 +32,18 @@ import type { Rect, Size } from '../lib/float-box.ts';
 import { mapClaimGroups, mapClaimWords } from '../lib/map-claims.ts';
 import { layerWords, mapLayers } from '../lib/map-layers.ts';
 import { MAP_SEARCH_ID, mapSearchWords, type SearchRow, searchRows } from '../lib/map-search.ts';
+// The map, live (specs/006-the-map, bench v2): one chain at a time, chosen down the left as on an exchange,
+// and an empty SVG for that chain's scene and its live flowers to draw in, filling the window, or the area
+// under the site's nav on the Power Map (app/(canvas)/map). Each
+// flower's drawing model is made here from its reading, once. The words are the data's: each chain's name
+// and how many flowers it has. The chain list is one of the overlays (design/overlays.md, line 7; #95): on a
+// phone it starts folded to its bar with the chain on show, so it never covers the map (META, 11 Nov: at 390
+// wide it did, on the landing and the hero); pressing the bar opens it, and choosing a chain folds it again.
+// Where a page asks, the legend is the other overlay, under the chain list: the person's view as a key (#92);
+// and inside a flower, under it, what Petals' own mapping says about that map, folded until asked. Where a page
+// asks (the Power Map), a search field tops the chain list, and while something's typed the maps it finds stand
+// in the chains' place; pressing one goes to its chain and into its flower (board 105).
+import type { Joined } from '../lib/mapping.ts';
 import type { CanvasHit } from '../lib/panel-view.ts';
 import { panelWords } from '../lib/panel-words.ts';
 import { CHOOSABLE } from '../lib/person-view.ts';
@@ -506,6 +507,13 @@ export function LandscapeCanvas({
    * its flower is drawn from it; a completely new one stands where its placeholder stood.
    */
   landed?: MapLanded | null | undefined;
+  /**
+   * A publication that just joined a map (wave 8: "publishing is the moment your layer joins the map in your name"):
+   * which map, which publication, whose, its layers and what they added. The map reads the composed map again
+   * through its one path, keyed on the publication, and marks the moment (LOOK); Information lights its layers
+   * (OVERLAYS). WORKSPACE's press hands it.
+   */
+  joined?: Joined | null | undefined;
   /** What the page says about where it is (a map's page: what it maps, its worth, its readings), first in Information. */
   information?: { title: string; body: ReactNode } | undefined;
   /**

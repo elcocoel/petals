@@ -1,25 +1,49 @@
-// The publish press's state for one map (lib/publish-press.ts): what can go, and the one press that signs
-// and publishes it. The wallet is asked once, on the network sign-in uses.
-import { useCallback, useEffect, useState } from 'react';
+// The publish press's state for one map (lib/publish-press.ts, wave 8): what the person would publish there, the
+// wallet that signs (theirs to choose, the first by default), and the one press. It prepares the publication in
+// that wallet's name, has the wallet sign its two lines, and sends the proof. When it lands, `joined` says which
+// publication joined which map, so the map (LOOK) and Information (OVERLAYS) read the map again and mark it.
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
+  type PublicationVia,
   type PublishableData,
-  preparePublishable,
-  publishPublishable,
+  preparePublication,
+  publishPublication,
   readPublishable,
+  readWallets,
 } from '../lib/agent-client.ts';
-import type { Prepared } from '../lib/publish.ts';
-import { proofFrom } from '../lib/publish.ts';
-import { type PublishPhase, publishPressView, publishWords } from '../lib/publish-press.ts';
-import { SIGN_IN_NETWORK, signPrepared } from '../lib/wallet.ts';
+import { casesLine, countsOf, type Joined, joinedOf } from '../lib/mapping.ts';
+import type { ProvenWallet } from '../lib/profile-view.ts';
+import { signPublication } from '../lib/publication-sign.ts';
+import {
+  type PublishPhase,
+  publishPressView,
+  publishWords,
+  signersOf,
+} from '../lib/publish-press.ts';
 
-export function usePublishPress(map: string | null) {
+export function usePublishPress(map: string | null, via: PublicationVia | null) {
   const [data, setData] = useState<PublishableData | null>(null);
+  const [wallets, setWallets] = useState<ProvenWallet[]>([]);
+  const [chosen, setChosen] = useState<string | null>(null);
   const [phase, setPhase] = useState<PublishPhase>('ready');
   const [said, setSaid] = useState<string | null>(null);
+  const [joined, setJoined] = useState<Joined | null>(null);
+  useEffect(() => {
+    let gone = false;
+    void readWallets()
+      .then((got) => {
+        if (!gone) setWallets(got ?? []);
+      })
+      .catch(() => {});
+    return () => {
+      gone = true;
+    };
+  }, []);
   useEffect(() => {
     setData(null);
     setPhase('ready');
     setSaid(null);
+    setJoined(null);
     if (!map) return;
     let gone = false;
     void readPublishable(map)
@@ -31,31 +55,35 @@ export function usePublishPress(map: string | null) {
       gone = true;
     };
   }, [map]);
+  const signers = useMemo(() => signersOf(wallets), [wallets]);
+  const signer = signers.find((s) => s.key === chosen) ?? signers[0] ?? null;
   const publish = useCallback(async () => {
-    if (!map) return;
+    const wallet = wallets.find((w) => `${w.network}:${w.account_id}` === signer?.key);
+    if (!map || !signer || !wallet || !data?.layers?.length) return;
+    const layers = data.layers;
     setPhase('signing');
     try {
-      const p = await preparePublishable(map);
-      const prepared: Prepared = {
-        entry_sha256: p.sha256,
-        nonce: p.nonce,
-        recipient: p.recipient,
-        message: p.message,
-        expires_at: p.expires_at,
-      };
-      const signed = await signPrepared(prepared, SIGN_IN_NETWORK);
-      const out = await publishPublishable(p.sha256, proofFrom(signed, prepared));
+      const p = await preparePublication({ map, author: signer.author, via });
+      const proof = await signPublication(wallet, p);
+      const out = await publishPublication(p.sha256, proof);
       if ('refused' in out) {
         setSaid(out.refused === 401 ? publishWords.otherWallet : publishWords.failed);
         setPhase('failed');
         return;
       }
-      setSaid(publishWords.publishedAll(out.published, out.readings ?? 0));
+      setSaid(publishWords.published(casesLine(countsOf(out.totals))));
       setPhase('published');
+      setJoined(joinedOf(map, signer.shown, layers, out, Date.now()));
     } catch {
       setSaid(publishWords.failed);
       setPhase('failed');
     }
-  }, [map]);
-  return { data, view: publishPressView(data, phase, said), publish };
+  }, [map, signer, wallets, data, via]);
+  return {
+    data,
+    view: publishPressView(data, phase, said, { signers, chosen: signer?.key ?? null, via }),
+    publish,
+    choose: setChosen,
+    joined,
+  };
 }
