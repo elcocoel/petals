@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:petal:schema:credit:v1",
+  "title": "Petal credit v1",
+  "description": "credit/v1 (13 Nov, wave 8; specs/005-mapping-brain/composition.md, section 7): one author's credit, computed from the publication record alone, so anyone can recompute it. Every layer they published, the facts they stated first and those they matched, and who else used it. points/v1: a layer earns one point for each distinct other account that built on it (from, the whole chain back) or reused it (published a version including it), only from uses appended after the author published it; an author's own use never counts. Not money, and no token: the record a later split (a DAO, the work, the devs) could read. Before any reward, a curator confirms usefulness and attribution, and that decision is recorded too.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["petal", "author", "rule", "compose", "layers", "totals", "composed_from"],
+  "properties": {
+    "petal": { "const": "credit/v1" },
+    "author": { "type": "string", "minLength": 3 },
+    "rule": { "const": "points/v1" },
+    "compose": { "const": "compose/v1" },
+    "layers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["sha256", "petal", "map", "title", "publication", "seq", "published_at", "first", "confirmed", "built_on_by", "reused_by", "built_on"],
+        "properties": {
+          "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "petal": { "type": "string", "minLength": 1 },
+          "map": { "type": "string", "minLength": 3 },
+          "title": { "type": "string", "minLength": 1 },
+          "publication": { "description": "the author's first publication that included it", "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "seq": { "description": "that publication's place in the record", "type": "integer", "minimum": 1 },
+          "published_at": { "type": "string", "format": "date-time" },
+          "first": { "description": "facts this author added to the map first: new data, new moments, new subjects", "type": "integer", "minimum": 0 },
+          "confirmed": { "description": "facts someone had stated before, confirmed independently", "type": "integer", "minimum": 0 },
+          "built_on_by": { "type": "array", "items": { "type": "string", "minLength": 3 } },
+          "reused_by": { "type": "array", "items": { "type": "string", "minLength": 3 } },
+          "built_on": { "description": "distinct other accounts that built on or reused it, once each (points/v1)", "type": "integer", "minimum": 0 }
+        }
+      }
+    },
+    "totals": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["layers", "first", "confirmed", "built_on"],
+      "properties": {
+        "layers": { "type": "integer", "minimum": 0 },
+        "first": { "type": "integer", "minimum": 0 },
+        "confirmed": { "type": "integer", "minimum": 0 },
+        "built_on": { "description": "accounts that built on their work, once per layer", "type": "integer", "minimum": 0 }
+      }
+    },
+    "composed_from": { "description": "every publication it was computed from, in the record's order", "type": "array", "items": { "type": "string", "pattern": "^[0-9a-f]{64}$" } }
+  }
+}

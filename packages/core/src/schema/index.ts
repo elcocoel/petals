@@ -10,6 +10,7 @@ import claimSchema from '../../schema/claim.schema.json' with { type: 'json' };
 import claimV2Schema from '../../schema/claim-v2.schema.json' with { type: 'json' };
 import claimV3Schema from '../../schema/claim-v3.schema.json' with { type: 'json' };
 import claimV4Schema from '../../schema/claim-v4.schema.json' with { type: 'json' };
+import creditSchema from '../../schema/credit.schema.json' with { type: 'json' };
 import flowerSchema from '../../schema/flower.schema.json' with { type: 'json' };
 import layerSchema from '../../schema/layer.schema.json' with { type: 'json' };
 import markSchema from '../../schema/mark.schema.json' with { type: 'json' };
@@ -20,6 +21,7 @@ import priceV2Schema from '../../schema/price-v2.schema.json' with { type: 'json
 import proposalsSchema from '../../schema/proposals.schema.json' with { type: 'json' };
 import proposalsV2Schema from '../../schema/proposals-v2.schema.json' with { type: 'json' };
 import proposalsV3Schema from '../../schema/proposals-v3.schema.json' with { type: 'json' };
+import publicationSchema from '../../schema/publication.schema.json' with { type: 'json' };
 import seamSchema from '../../schema/seam.schema.json' with { type: 'json' };
 import snapshotSchema from '../../schema/snapshot.schema.json' with { type: 'json' };
 import usageSchema from '../../schema/usage.schema.json' with { type: 'json' };
@@ -97,6 +99,10 @@ export const schemas: {
   payouts: object;
   /** a token's vesting schedules, one allocation each, each saying how it's known (12 Nov, wave 7) */
   vesting: object;
+  /** an author signing one version of their dataset for a map: the record's entry (13 Nov, wave 8) */
+  publication: object;
+  /** one author's credit and points, computed from the record alone (13 Nov, wave 8) */
+  credit: object;
 } = {
   snapshot: snapshotSchema,
   spec: view('spec'),
@@ -128,6 +134,8 @@ export const schemas: {
   proposalsV3: proposalsV3Schema,
   payouts: payoutsSchema,
   vesting: vestingSchema,
+  publication: publicationSchema,
+  credit: creditSchema,
 };
 
 /** The two source documents, unchanged. */
