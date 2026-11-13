@@ -1,6 +1,6 @@
 'use client';
-// Overlays with a hand in the lab (design/overlays.md, design/legend.md): a view, a chain and a fold held
-// here, so a choice redraws at once, as on /make and /map. Nothing is saved.
+// Overlays with a hand in the lab: a view, a chain and a fold held here, so a choice redraws at
+// once, as on /make and /map. Nothing is saved.
 import type { View } from '@petal/core/types';
 import { DEFAULT_VIEW, type Dimension, EVERY_FLOWER, inUse } from '@petal/core/view';
 import { useState } from 'react';
@@ -42,7 +42,7 @@ const CHAINS = [
   ['NEAR', '2'],
 ] as const;
 
-/** The chain list as one of the overlays (design/overlays.md, line 7): pick a chain, fold it to its bar. */
+/** The chain list as one of the overlays: pick a chain, fold it to its bar. */
 export function LabChains({ startsFolded = false }: { startsFolded?: boolean }) {
   const [chain, setChain] = useState('Solana');
   const [open, setOpen] = useState(!startsFolded);

@@ -1,9 +1,9 @@
-// What moves on a textured band: three children of `surface`, and nothing here answers the pointer (Elco:
-// the colour behind the mouse "affects my capacity to judge things"). Elco: "All of them need to be softer
-// and softly in motion", and nothing should catch the eye, so every cycle runs to minutes.
+// What moves on a textured band: three children of `surface`, and nothing here answers the pointer (a colour
+// moving behind the mouse gets in the way of judging what's on the page). All of them are soft and softly in
+// motion, and nothing should catch the eye, so every cycle runs to minutes.
 //
 // surface.drift: the tile holds still and carries the detail, and a soft tone moves over it. Where it lays
-// Ground the tile sinks, and where it lifts the tile comes forward, like the bands in Elco's Offset screen
+// Ground the tile sinks, and where it lifts the tile comes forward, like the bands in the Offset screen
 // (Figma 33:648). It's soft enough to draw on a canvas of a few dozen cells a side and let the compositor
 // stretch it, and slow enough to draw four times a second, off a plain timer, only while its band is on
 // screen. With reduced motion it's drawn once and holds; without a canvas there's only the tile.

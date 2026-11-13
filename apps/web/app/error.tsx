@@ -1,5 +1,5 @@
 'use client';
-// A page that broke (#78, 11 Nov): the bouncer (components/Oops.tsx), Try again, which renders the page
+// A page that broke: the bouncer (components/Oops.tsx), Try again, which renders the page
 // again, and the way back to the front page. Next.js hands it the error and the way to retry.
 import { Oops } from '../components/Oops.tsx';
 import { Button } from '../components/ui/Button.tsx';

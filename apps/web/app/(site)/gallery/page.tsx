@@ -1,6 +1,6 @@
-// The Gallery (T063): one card per map, an address with every reading of it together (Elco,
-// 10 Nov: one map per address; SYSTEMS's GET /api/v1/maps). Each card is its newest drawing's picture, drawn
-// by the server in the person's view (lib/viewer-view.ts), and opens the map's page. No sign-in.
+// The Gallery (T063): one card per map, an address with every reading of it together (one map per address;
+// GET /api/v1/maps). Each card is its newest drawing's picture, drawn by the server in the person's
+// view (lib/viewer-view.ts), and opens the map's page. No sign-in.
 
 import { LegendKeys } from '../../../components/Legend.tsx';
 import { MapList } from '../../../components/MapList.tsx';

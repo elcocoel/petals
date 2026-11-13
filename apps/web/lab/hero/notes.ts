@@ -1,5 +1,5 @@
-// The hero story's editorial notes, for the lab only (HERO ART's V2, design/hero-illustration/hero-layers-v2.html):
-// what each beat should make someone see and feel. They never reach the landing.
+// The hero story's editorial notes, for the lab only (the hero art's V2): what each beat should make someone see
+// and feel. They never reach the landing.
 export const storyNotes = [
   {
     title: 'A community takes shape',

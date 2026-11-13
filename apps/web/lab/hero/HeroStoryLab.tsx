@@ -1,5 +1,5 @@
 'use client';
-// The hero story with its review controls, for the lab only (HERO ART's V2): the same hero as the landing's,
+// The hero story with its review controls, for the lab only (the hero art's V2): the same hero as the landing's,
 // one layer at a time if asked (all, the words, the petals), and each beat's editorial note under it.
 import { useState } from 'react';
 import { HeroStoryView, type StoryLayer } from '../../components/landing/HeroStory.tsx';
