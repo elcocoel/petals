@@ -97,12 +97,12 @@ function setup(balances: Record<string, bigint>, txs: Record<string, Partial<Tra
     };
     return call('POST', '/api/v1/me/wallets', { network: 'mainnet', proof: who.sign(c) });
   };
-  /** Signs in with an Ethereum wallet instead (SIWE, EIP-191). */
-  const signInEvm = async (evm = evmTestSigner('credit')) => {
+  /** Signs in with an Ethereum wallet instead (SIWE, EIP-191), or links it to the person signed in. */
+  const signInEvm = async (evm = evmTestSigner('credit'), path = '/api/v1/auth/verify') => {
     const c = (await (
       await call('POST', '/api/v1/auth/challenge', { chain: 'eip155', address: evm.address })
     ).json()) as { message: string };
-    return call('POST', '/api/v1/auth/verify', {
+    return call('POST', path, {
       network: 'eip155',
       proof: {
         type: 'eip191',
@@ -282,8 +282,10 @@ describe('the credit contract', () => {
 
   test('an Ethereum person with a linked NEAR wallet: its deposit counts, the credit is what it holds, and a chat is charged there', async () => {
     const w = setup({ 'alice.near': 0n }, { [HASH]: {} });
+    // the account starts with NEAR, links its Ethereum wallet, which then signs in to the same profile
+    await w.signIn();
+    expect((await w.signInEvm(undefined, '/api/v1/me/wallets')).status).toBe(200);
     expect((await w.signInEvm()).status).toBe(200);
-    expect((await w.addWallet(alice)).status).toBe(200);
     w.balances['alice.near'] = NEAR;
     const paid = (await (
       await w.call('POST', '/api/v1/pay', {

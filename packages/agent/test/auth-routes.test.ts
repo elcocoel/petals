@@ -15,6 +15,7 @@ import {
 import { openStore } from '@petal/store';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { buildPetalApp } from '../src/app.ts';
+import { NEAR_FIRST } from '../src/auth-routes.ts';
 import { mintInvite, revokeInvite } from '../src/invites.ts';
 import type { LlmClient } from '../src/llm.ts';
 import { HAND_TRANSCRIPT, recordedClient } from '../src/recorded.ts';
@@ -1272,8 +1273,28 @@ describe('EVM and Solana wallets (multi-chain wallet connection)', () => {
     return { res: await b.post(path, { network: chain, proof }), ch, proof };
   }
 
-  test('an EVM wallet signs in with one Sign-In with Ethereum message; one binding for every EVM chain', async () => {
+  /** A NEAR profile with this chain's wallet linked to it, as the lobby links one. */
+  async function linked(app: App, chain: 'eip155' | 'solana') {
+    const near = new Browser(app);
+    await near.signIn();
+    expect((await prove(near, chain, '/api/v1/me/wallets')).res.status).toBe(200);
+    return ((await (await near.get('/api/v1/me')).json()) as { person_id: string }).person_id;
+  }
+
+  test('an account starts with NEAR: an Ethereum or Solana wallet linked to no NEAR profile is refused, and makes no one', async () => {
     const { app } = setup();
+    for (const chain of ['eip155', 'solana'] as const) {
+      const b = new Browser(app);
+      const { res } = await prove(b, chain);
+      expect(res.status).toBe(401);
+      expect(((await res.json()) as { error: { message: string } }).error.message).toBe(NEAR_FIRST);
+      expect((await b.get('/api/v1/me')).status).toBe(401);
+    }
+  });
+
+  test('an EVM wallet linked to a NEAR profile signs in to it with one Sign-In with Ethereum message; one binding for every EVM chain', async () => {
+    const { app } = setup();
+    const owner = await linked(app, 'eip155');
     const b = new Browser(app);
     const { res, ch } = await prove(b, 'eip155');
     expect(ch.message).toMatch(
@@ -1288,18 +1309,19 @@ describe('EVM and Solana wallets (multi-chain wallet connection)', () => {
     };
     expect(me.network).toBe('eip155');
     expect(me.account).toBe(evm.address);
-    expect(me.wallets).toEqual([
+    expect(me.wallets).toContainEqual(
       expect.objectContaining({
         caip10: `eip155:1:${evm.address}`,
         network: 'eip155',
         account_id: evm.address,
       }),
-    ]);
+    );
+    expect(((await res.json()) as { person_id: string }).person_id).toBe(owner);
     // signing in again, from any chain id, is the same person
     const again = new Browser(app);
     await prove(again, 'eip155');
     const me2 = (await (await again.get('/api/v1/me')).json()) as { person_id: string };
-    expect(me2.person_id).toBe(((await res.json()) as { person_id: string }).person_id);
+    expect(me2.person_id).toBe(owner);
   });
 
   test("a NEAR person adds an EVM wallet and a Solana one; another person can't take them", async () => {
@@ -1326,8 +1348,10 @@ describe('EVM and Solana wallets (multi-chain wallet connection)', () => {
 
   test("refused: another site's message, another address, a spent nonce, a bad signature", async () => {
     const { app } = setup();
+    await linked(app, 'eip155');
     const b = new Browser(app);
-    const { proof } = await prove(b, 'eip155');
+    const { res: first, proof } = await prove(b, 'eip155');
+    expect(first.status).toBe(200);
     // the nonce was spent by the first sign-in
     const reused = await new Browser(app).post('/api/v1/auth/verify', { network: 'eip155', proof });
     expect(reused.status).toBe(401);
@@ -1363,8 +1387,9 @@ describe('EVM and Solana wallets (multi-chain wallet connection)', () => {
     );
   });
 
-  test('a Solana wallet signs in with its signMessage', async () => {
+  test('a Solana wallet linked to a NEAR profile signs in to it with its signMessage', async () => {
     const { app } = setup();
+    const owner = await linked(app, 'solana');
     const b = new Browser(app);
     const { res, ch } = await prove(b, 'solana');
     expect(ch.message).toMatch(/^petals\.example wants you to sign in with your Solana account:\n/);
@@ -1374,6 +1399,9 @@ describe('EVM and Solana wallets (multi-chain wallet connection)', () => {
       wallets: { caip10: string }[];
     };
     expect(me.network).toBe('solana');
-    expect(me.wallets[0]?.caip10).toBe(`solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp:${sol.address}`);
+    expect(me.wallets.map((w) => w.caip10)).toContain(
+      `solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp:${sol.address}`,
+    );
+    expect(((await res.json()) as { person_id: string }).person_id).toBe(owner);
   });
 });

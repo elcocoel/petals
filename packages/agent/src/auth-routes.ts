@@ -65,6 +65,10 @@ export type WalletNetwork = Network | 'eip155' | 'solana';
 /** Solana's mainnet, as CAIP-2 names it. */
 const SOLANA_MAINNET = 'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp';
 
+/** Said to an Ethereum or Solana wallet that isn't linked to a NEAR profile: an account starts with NEAR. */
+export const NEAR_FIRST =
+  'Sign up with a NEAR wallet first. Then link this wallet in your lobby, and it signs you in too.';
+
 /** A wallet as its binding keeps it, in CAIP-10: an EVM one once for every chain, by Ethereum's id, in lower case. */
 export function caip10Of(network: WalletNetwork, account: string): string {
   if (network === 'eip155') return `eip155:1:${account.toLowerCase()}`;
@@ -463,6 +467,15 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
     if ('refused' in proven) return proven.refused;
     const { network, accountId } = proven;
     const known = await store.walletBinding.byHash(d.cipher().index(caip10Of(network, accountId)));
+    // A new account starts with a NEAR wallet, its master key. An Ethereum or Solana wallet signs in only to the
+    // NEAR profile it was linked to (POST /api/v1/me/wallets); one linked to nothing, or to a profile with no NEAR
+    // wallet, is refused before any session or person is made.
+    if (network === 'eip155' || network === 'solana') {
+      const owner = known ? await walletsOf(known.person) : [];
+      if (!owner.some((w) => w.network === 'mainnet' || w.network === 'testnet')) {
+        return fail(c, 'unauthorised', NEAR_FIRST);
+      }
+    }
     if (!known && (await d.full?.())) return fail(c, 'budget_exhausted', DATA_FULL);
     const { person, claimed, explorations } = await signIn(c, network, accountId);
     return ok(c, {
