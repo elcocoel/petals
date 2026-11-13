@@ -251,7 +251,7 @@ export const publishFlower = defineTool<{ entry_sha256: string; proof: Nep413Pro
       throw new ToolFailure(
         'source_failed',
         "Petals' map writer is not configured on this server, so nothing was written.",
-        'Set PETAL_WRITER_ACCOUNT and PETAL_WRITER_KEY_FILE (testnet only).',
+        'Set PETAL_WRITER_ACCOUNT and PETAL_WRITER_KEY_FILE.',
       );
     }
     await assertRoom(ctx.config, ctx.now());
