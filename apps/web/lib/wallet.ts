@@ -4,6 +4,13 @@
 // near-connect touches window, localStorage and IndexedDB, so it is imported only when used.
 import type { EventMap, NearConnector } from '@hot-labs/near-connect';
 import type { PayAction } from './pay.ts';
+import { walletConnectClient } from './phone-wallet.ts';
+
+/** The WalletConnect client near-connect takes, as its options name it. */
+type NearConnectorWalletConnect = NonNullable<
+  ConstructorParameters<typeof NearConnector>[0]
+>['walletConnect'];
+
 import { base64ToBytes, type Prepared, type WalletSignature } from './publish.ts';
 
 export type Network = 'testnet' | 'mainnet';
@@ -23,7 +30,12 @@ async function connectorFor(network: Network): Promise<NearConnector> {
   const lib = await import('@hot-labs/near-connect');
   let connector = connectors.get(network);
   if (!connector) {
-    connector = new lib.NearConnector({ network, excludedWallets: ['mynearwallet'] });
+    connector = new lib.NearConnector({
+      network,
+      excludedWallets: ['mynearwallet'],
+      // the site's one WalletConnect client: any NEAR phone wallet that connects by a QR code shows too
+      walletConnect: walletConnectClient() as unknown as NearConnectorWalletConnect,
+    });
     connectors.set(network, connector);
   }
   return connector;
