@@ -96,22 +96,33 @@ The map's composition is a pure function of the record. Given the same publicati
 1. Take each author's **latest** publication about the map. Order the authors by the `seq` of their first publication on the map.
 2. Turn each of its layers into facts (section 8). Each fact carries its author and the publication that first brought it.
 3. Group the facts by slot. Each slot has its distinct values; each value lists its authors, first to last. A slot with two or more values "differs".
-4. **What a drawing shows for a slot that differs:** the value published first, marked as differing, with the others beside it, so a person can switch to any author's value. A later publication never changes what an earlier drawing showed.
+4. **What a drawing shows for a slot that differs** (Elco, 13 Nov: "classifier outcome / score of author for ordering, showing the options of double maps would be 'ideal'"):
+   - The first value shown is the qualifier's best, where the server recorded its verdict when it appended the layer; then the one published first, by the record's order.
+   - The other values stand beside it as options, the "double maps" a person can switch to.
+   - **For chain data, a difference should be impossible**, or nearly: a read at a block is deterministic. So a "differs" there is flagged as a probable read error, to check.
+   - **Claims are interpretations:** every value shows side by side, and none is "differs". Their full treatment comes after the hackathon.
 5. **A slice for drawing** is one `what` at one state. By default it's the newest state of each `what`. A person can choose another state, or switch any author's layers off.
 
 The answer names the publications it was composed from (their hashes) and its rule (`compose/v1`). The same inputs give the same answer.
 
-## 7. The credit record (`credit/v1`)
+## 7. A contribution to the public good
+
+Elco, 13 Nov: "it's all part of our protocol and people have contributed it to the 'public good' - what im saying is like - let's imagine an airdrop, or a governance token even without economic value - this contribution would be one of the major 'points' counter that people could have as proof of work for the common good in the case of this protocol".
+
+- **Publishing is a contribution to the public good, under the protocol.** There is no licence field.
+- **Points are proof of work for the common good.** A future airdrop or governance token, even one with no economic value, could read them.
+
+## 7b. The credit record (`credit/v1`)
 
 A deterministic summary per author, built from the record alone, shaped so a future reward could be split from it. It is **not money now**. What credit is worth (points, rewards, income) is Elco's to design later.
 
 | Field | What it holds |
 |---|---|
 | `author` | the account |
-| `layers` | each layer they published: its hash, format and map; when they first published it; the facts they stated **first** and the facts they **matched**; and who used it |
+| `layers` | each layer they published: its hash, format and map; when they first published it; the facts they added **first**, the facts they **confirmed**; and who built on it |
 | `layers[].built_on_by` | other authors whose published layers name it in `from` |
 | `layers[].reused_by` | other authors whose published versions include it, or fork a version that includes it (`parent`) |
-| `totals` | layers published, facts first, facts matched, distinct other accounts that built on or reused their layers, and points (`points/v1`, below) |
+| `totals` | Elco's three counts, "who's helping a lot or a little": `first` (facts they added to the map first: new data, new moments, new subjects), `confirmed` (facts they matched independently) and `built_on` (accounts that built on their work, once per layer: `points/v1`, below); and `layers` |
 | `composed_from` | the publications it was computed from, by hash, and its rule (`credit/v1`) |
 
 - **Counted once each:** another account counts once per layer, however many times it used it. An author's own use never counts.
@@ -124,12 +135,25 @@ A deterministic summary per author, built from the record alone, shaped so a fut
 - An author's points are the sum over their layers.
 - Matching or stating facts first is credit, not points.
 - The record keeps who used what, so a later split of revenue (a DAO, the work, the devs) can read it. There is no token and no money now.
-- **Readable on NEAR Social under the author's account:** the author can post their record's hash and address to `social.near` under their own account. That is one call from their wallet, which needs Elco's go before any real NEAR moves. Anyone can recompute it from Petals' record and compare.
+- **Anyone can recompute it** from Petals' record and compare. Posting it to NEAR Social under the author's account waits, as does anchoring (Elco, 13 Nov: "let's not make this more complicated than it has to be").
 - **The caveats, named.** ATTRIBUTION, section 5 says:
   - No count here proves usefulness.
   - Several wallets can be one person (sock puppets), and colluding accounts can reuse each other.
   - "Imported, unsigned" credit is a collective label, not a person's.
   - **Before any reward, a curator confirms usefulness and attribution, and that decision is itself recorded.**
+
+## 7c. Considered, and how each is handled
+
+Elco: "our system should otherwise communicate that these issues have been considered and are solveable and we are not naive about it."
+
+| The worry | How it's handled now | Later |
+|---|---|---|
+| Two authors give different values for the same block | Both stand. The qualifier's verdict, then the record's order, decide which shows first; the others are options. For chain data it's flagged as a probable read error | A re-read at the block, by anyone, is a third author who matches one of them |
+| Backdating, to be "first" | Order is the record's own sequence and time, set by the server when it appends. Nobody can choose it | Anchoring each author's latest publication on NEAR |
+| Copying a popular layer to share its points | A use's point goes only to the authors who published the layer before that use. A copy earns "matched" credit, never earlier points | — |
+| Sock puppets and colluding accounts | Named, not solved. Each account counts once per layer, and its own use never counts | A curator confirms usefulness and attribution before any reward, and that decision is recorded too |
+| Claims that disagree (two names for one account) | All shown side by side; none wins | The full treatment of interpretations, after the hackathon |
+| What was loaded before the protocol | Said plainly as "imported, unsigned", by `mapping.petals.near`, never shown as signed | Petals' own mapping signs its future publications like any author |
 
 ## 8. Facts by format (`compose/v1`)
 

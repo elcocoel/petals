@@ -877,3 +877,60 @@ describe('migration 34, the vesting', () => {
     await store.close();
   });
 });
+
+describe('migration 35, the publication record', () => {
+  test('append-only: each entry at the next seq, its layers kept once, the same publication never twice', async () => {
+    const store = openStore(':memory:');
+    const layer = {
+      sha256: 'a'.repeat(64),
+      petal: 'value/v3',
+      about: 'near:mainnet:x.near',
+      body: '{"n":1}',
+    };
+    const one = await store.publication.append(
+      {
+        hash: '1'.repeat(64),
+        about: 'near:mainnet:x.near',
+        author: 'near:mainnet:a.near',
+        appended_at: AT,
+        body: '{}',
+        scores: null,
+      },
+      [layer],
+    );
+    const two = await store.publication.append(
+      {
+        hash: '2'.repeat(64),
+        about: 'near:mainnet:x.near',
+        author: 'near:mainnet:b.near',
+        appended_at: LATER,
+        body: '{}',
+        scores: '{"a":0.9}',
+      },
+      [{ ...layer, body: '{"n":2}' }],
+    );
+    const again = await store.publication.append(
+      {
+        hash: '1'.repeat(64),
+        about: 'near:mainnet:x.near',
+        author: 'near:mainnet:a.near',
+        appended_at: LATER,
+        body: '{}',
+        scores: null,
+      },
+      [],
+    );
+    expect([one.seq, two.seq, again.seq]).toEqual([1, 2, 1]);
+    expect(
+      (await store.publication.list({ about: 'near:mainnet:x.near' })).map((r) => r.seq),
+    ).toEqual([1, 2]);
+    expect(
+      (await store.publication.list({ author: 'near:mainnet:b.near' })).map((r) => r.hash),
+    ).toEqual(['2'.repeat(64)]);
+    // a layer is kept once, as first published
+    expect((await store.publication.layer('a'.repeat(64)))?.body).toBe('{"n":1}');
+    expect(await store.publication.layers('near:mainnet:x.near')).toHaveLength(1);
+    expect('update' in store.publication || 'delete' in store.publication).toBe(false);
+    await store.close();
+  });
+});

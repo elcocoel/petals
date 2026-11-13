@@ -1,0 +1,159 @@
+{
+  "petal": "publication/v1",
+  "about": "eip155:100:0x372fc5a6b0b12ae174f09f6fc849a83de6b503b6",
+  "author": "near:mainnet:petals.near",
+  "via": null,
+  "layers": [
+    {
+      "sha256": "1b3afdd836e290036f26d6c438acf9384da9e44d05339a53123c4b40cfe6b66e",
+      "petal": "claim/v3"
+    },
+    {
+      "sha256": "821377a307099c9cf0a192481f4b4ac34df8e05973438567580d68b04541b03a",
+      "petal": "claim/v3"
+    },
+    {
+      "sha256": "2caa99cb0efcd9c7376dc1a025070311c52a4d5949b7c07af4dbf8d7b2d82df5",
+      "petal": "claim/v3"
+    },
+    {
+      "sha256": "e4f262dabfa5510939736ed0a394f6aafdff5bc9554deb07a8893b963a38b1f3",
+      "petal": "claim/v3"
+    },
+    {
+      "sha256": "0b2cca1838d497aea8c65902d15161b9501adc3a7d0eca13c9e2571bab856488",
+      "petal": "claim/v3"
+    },
+    {
+      "sha256": "3c57ba2947c52a3f791d353cb5d50af8fab9d24861a4188bae9b1648d16adff5",
+      "petal": "claim/v3"
+    },
+    {
+      "sha256": "2cb84300b69231f87149292f7be4b4cef56b4a9a44c753f7063ecbff7005e987",
+      "petal": "claim/v3"
+    },
+    {
+      "sha256": "cbf73068c01579d121cfe9834f34f1003609be9f4821f980f0b680c30161d2b2",
+      "petal": "claim/v3"
+    },
+    {
+      "sha256": "87d50e18db5af8c65671176e19ace35340eccac62e9b4364656189fc5aff7d44",
+      "petal": "claim/v3"
+    },
+    {
+      "sha256": "67b56366eb57a24ac27aa02353a12824c92add03727850f39f0b76f6ac4693b3",
+      "petal": "claim/v3"
+    },
+    {
+      "sha256": "28f00e7489a678c1edb7da8f8e8a232c00dc8a407ab14d9085ddd1f8e7b7d2c0",
+      "petal": "claim/v3"
+    },
+    {
+      "sha256": "4ae829eccc56c535f01506bd8c5de29fd2dd18bc7c57b2c26135ca6b433a40f6",
+      "petal": "claim/v3"
+    },
+    {
+      "sha256": "03f7c963e04dee8596ac6f40bb299ce82766d3941f8939290043fce87d9b652c",
+      "petal": "claim/v3"
+    },
+    {
+      "sha256": "1f1e8280a4036bc221785b40b0a566e90f6e5e40af976574bf82966a84e905a1",
+      "petal": "claim/v3"
+    },
+    {
+      "sha256": "6005cf7e28b049e6ce150a9fb8bb9c933477e54f0540f102eb53d54e164e9c15",
+      "petal": "claim/v3"
+    },
+    {
+      "sha256": "05a18db5e0e2bdb9e405e90b0749dacde0a00db1207ad93f82b4f7ab3ba15f0e",
+      "petal": "claim/v3"
+    },
+    {
+      "sha256": "3b9ab4359f84884e3ea0ab86d6cbbcfbfa0419fa55d323a556f66083f2050bdf",
+      "petal": "claim/v3"
+    },
+    {
+      "sha256": "5842f7fe635a69b311e58e886e319502a239b65b55d9c446f55b8edac16a0187",
+      "petal": "claim/v3"
+    },
+    {
+      "sha256": "1f5af01ad35b9062722703420ca2ec76661df48e4d46b62185efb6af13ae174d",
+      "petal": "claim/v3"
+    },
+    {
+      "sha256": "3ae26f52cae64827f23fc4bf91b092d5198ce9b20d9f877bac50c2245814bba6",
+      "petal": "claim/v3"
+    },
+    {
+      "sha256": "0c385cb26dc37fa2079763aaf5ecf704ed5e51508b30d8cf0c3d4ac13fdf21f5",
+      "petal": "claim/v3"
+    },
+    {
+      "sha256": "6932137e3472b15cb6f0eb7becd931e399351e9355ea90426210d387a76aef3e",
+      "petal": "claim/v3"
+    },
+    {
+      "sha256": "82338cbb3ec7e7d625c61e3d48fd9f6bffee3096d2cb487a672f351dc21a5322",
+      "petal": "claim/v3"
+    },
+    {
+      "sha256": "e27d5f8f522fe3251337b838d030742d7c6e409e2b5ecded8c637099213687fb",
+      "petal": "claim/v3"
+    },
+    {
+      "sha256": "69acce3a2adb440d12063f78aaae35081d140fa79311e15f4c1a21f5fa7cc716",
+      "petal": "claim/v3"
+    },
+    {
+      "sha256": "ad4843407b3f3b7737a2cc12788a85b9d32ca812953651c646e37f8348babbd9",
+      "petal": "claim/v3"
+    },
+    {
+      "sha256": "def0b39a95033f45cc2078b6e290848affe5ea7ad90f934924f4a74f93152358",
+      "petal": "claim/v3"
+    },
+    {
+      "sha256": "c037e8815edd89459622eb093e6ddea42b66fa17bcce9dc26988a1e33964bfa2",
+      "petal": "claim/v3"
+    },
+    {
+      "sha256": "6097dbac19c87bd317c4deab58fdfce1e95c9d68e5a060c8566eece4ee5ca438",
+      "petal": "claim/v3"
+    },
+    {
+      "sha256": "c4290aca78e522007ac43818f72d316b6efbfc68f25c9b36e275ae09c3808465",
+      "petal": "claim/v3"
+    },
+    {
+      "sha256": "f7da1569aa5781ff9780a20102dadc38544721096088594d7ba309deb50f6f9a",
+      "petal": "claim/v3"
+    },
+    {
+      "sha256": "4bf043d20ddb8e13d6e405f1f0e2f78c708063154deecbc82222782ff604ab73",
+      "petal": "claim/v3"
+    },
+    {
+      "sha256": "ebdc29f2e623fabbc584f1c0706a7edfe5ffe771111c6f4d4f6ce788f252318c",
+      "petal": "claim/v3"
+    },
+    {
+      "sha256": "3115f019a1fb6a7deede0d4732fba879af4e9d104d5332f1972d37baa9536dd9",
+      "petal": "claim/v3"
+    },
+    {
+      "sha256": "e4285fb84fe3cd7d21be075a20ce7d0b77adaa2a385b7a1365db7f8df1a8802d",
+      "petal": "claim/v3"
+    }
+  ],
+  "parent": null,
+  "previous": null,
+  "published_at": "2026-11-12T22:07:10.243Z",
+  "proof": {
+    "standard": "nep413",
+    "signature": "4Zgdb6p8hHRRO8Y2P26q3pRKpsyiTAns7G5n023q9JYNS0cfBQPKnliP5wrXbYALQWaLeViUe6HDeVibQsnxCw==",
+    "message": "{\"petal\":\"publish-data/v1\",\"about\":\"eip155:100:0x372fc5a6b0b12ae174f09f6fc849a83de6b503b6\",\"claims\":35,\"sha256\":\"9e7673029417c49ebf96f6c73dcb0a276a69740b8af82f1c378d8ed782b50d9d\"}",
+    "public_key": "ed25519:EwQxqYjxwcMdQSxeLcbD4DGJBunDGMMfdYT1cgDt4ijQ",
+    "nonce": "Dz/HxGhUBCmwOu71HIkX6vjQNOb3kjZXVZv7uAz12JY=",
+    "recipient": "petals.elementarycomplexity.com"
+  }
+}
