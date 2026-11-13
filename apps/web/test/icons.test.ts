@@ -16,6 +16,8 @@ const DRAWINGS = [
   // a logo (an organisation's, a chain's), a picture, drawn round as the map draws it (corners are refused in
   // classes)
   'components/ui/Logo.tsx',
+  // a person's picture, drawn round through an SVG clip, as Logo is
+  'components/ui/Avatar.tsx',
   // the hero story's flower: a symbol of its own, not the renderer, so it never goes out of date
   'components/landing/StoryFlower.tsx',
   // the hero's glass: the drawn material behind its two bubbles
