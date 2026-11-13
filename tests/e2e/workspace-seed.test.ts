@@ -1,4 +1,4 @@
-// What `journey-server.ts --seed` hands INTERACTION: every kind of thing on the real routes, through a
+// What `journey-server.ts --seed` hands the interaction pages: every kind of thing on the real routes, through a
 // stub model, and a second run on the same folder leaves it alone. $0: nothing leaves this machine.
 import { createHash } from 'node:crypto';
 import { mkdtempSync, rmSync } from 'node:fs';

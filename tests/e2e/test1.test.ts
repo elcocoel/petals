@@ -1,4 +1,4 @@
-// Test 1, lines 2 and 3 (coordinator/test-1.md), at $0: the real routes, the real NEAR AI client, the real
+// Test 1, lines 2 and 3, at $0: the real routes, the real NEAR AI client, the real
 // tools and SQLite, on the stub model. What isn't real: the model, and the chain behind sign-in (a fake RPC,
 // so it needs no network). tests/e2e/test1-path.ts does this over HTTP, through Next, on NEAR's real RPC.
 import { spawnSync } from 'node:child_process';
@@ -22,7 +22,7 @@ const HAIKU = 'anthropic/claude-haiku-5-5';
 const SONNET = 'anthropic/claude-sonnet-5-5';
 const QUESTION = 'Who stands behind NEAR’s validators?';
 
-/** A script as SYSTEMS runs it: its own process, its own environment, and its print or its error. */
+/** A script as the operator runs it: its own process, its own environment, and its print or its error. */
 function script(name: string, args: string[], env: Record<string, string> = {}) {
   const out = spawnSync(process.execPath, [join(REPO, 'scripts', name), ...args], {
     env,
@@ -194,7 +194,7 @@ describe('line 2: one person, whichever wallet', () => {
       walletKey: WALLET_KEY,
       inviteId: invite.id,
     });
-    // The seeded browser signs in, as Elco's first did: its work moves to the person.
+    // The seeded browser signs in, as a first sign-in does: its work moves to the person.
     const first = browser(w, `${SESSION_COOKIE}=${seed.session}`);
     const signedIn = await first.signIn(implicitSigner('alice'));
     expect(signedIn.status).toBe(200);
@@ -285,7 +285,7 @@ describe('line 2: one person, whichever wallet', () => {
     expect(read).toContain('sealed');
   });
 
-  test('Elco’s wallets: named accounts sign with their own keys, on their own networks, and no one else’s do', async () => {
+  test('named wallets: named accounts sign with their own keys, on their own networks, and no one else’s do', async () => {
     const petals = testSigner('petals.near');
     const near = testSigner('elcocoel.near');
     const testnet = testSigner('elcocoel.testnet');
@@ -508,7 +508,7 @@ describe('line 3: the model they picked, on their own money', () => {
     expect(JSON.stringify(refused)).toMatch(/credit is used up/i);
     expect(w.stub.calls).toBe(calls);
 
-    // Elco changes it.
+    // The operator changes it.
     const out = await fundPerson(['--state', w.stateDir, '--person', person, '--total', '5']);
     expect(out).toContain('funded $5');
     const back = (await b.say(QUESTION, { settings: { model: GLM, effort: 'low' } })) as Said;
