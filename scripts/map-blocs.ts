@@ -1,5 +1,5 @@
-// Every DAO map's voting blocs over a period, said (board #94; META, 11 Nov: keep nothing as Petals' mapping's
-// claims for now, the site and agents compute them live): how many pairs and blocs each map has. It reads the
+// Every DAO map's voting blocs over a period, said (nothing is kept as Petals' mapping's claims: the site and
+// agents compute them live): how many pairs and blocs each map has. It reads the
 // server's own store, so run it where the server runs:
 //   container exec petals node /app/scripts/map-blocs.ts [--from <ISO time>] [--to <ISO time>]
 //     [--min-shared <n>] [--min-agreement <0 to 1>] [--min-kappa <-1 to 1>] [--only <part of a map's address>]

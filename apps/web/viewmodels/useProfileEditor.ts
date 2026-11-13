@@ -12,10 +12,22 @@
 // `social` has no contract, so every receipt fails with CodeDoesNotExist, as expected: confirmation comes
 // from the indexer (GET /v1/tx/{hash}), never from the receipt. The waits ask a few times, a moment apart,
 // and only after the person pressed Publish. lib/near-social.ts holds the data and lib/lobby-view.ts the words.
-import { useCallback, useState } from 'react';
-import { fastfsServes, readKeptPicture, readSocialTx, saveMyProfile } from '../lib/agent-client.ts';
+import { useCallback, useEffect, useState } from 'react';
+import {
+  fastfsServes,
+  readKeptPicture,
+  readSignedIn,
+  readSocialTx,
+  readWallets,
+  saveMyProfile,
+} from '../lib/agent-client.ts';
 import type { EditPhase, ProfileEditorView, SocialState } from '../lib/lobby-view.ts';
-import { editorWords, PUBLISH_TO_NEAR_SOCIAL, shownAccount } from '../lib/lobby-view.ts';
+import {
+  editorWords,
+  nearAccountOf,
+  PUBLISH_TO_NEAR_SOCIAL,
+  shownAccount,
+} from '../lib/lobby-view.ts';
 import {
   dataUri,
   draftOf,
@@ -134,6 +146,8 @@ export function useProfileEditor(
   view: ProfileEditorView | null;
   saved: boolean;
   published: boolean;
+  /** Reads the person's wallets again: Wallets calls it when it adds one. */
+  readNear: () => void;
 } {
   const profile = social.kind === 'profile' ? social.profile : null;
   const [editing, setEditing] = useState(false);
@@ -147,6 +161,19 @@ export function useProfileEditor(
   const [problem, setProblem] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [published, setPublished] = useState(false);
+  /** The NEAR account it publishes as: undefined while it's read, null when the person has none. */
+  const [near, setNear] = useState<string | null | undefined>(undefined);
+
+  /**
+   * Reads which NEAR account it publishes as: when the editor opens, and again whenever a wallet is added
+   * while it's open (the verifier's walk, 13 Nov: a NEAR wallet added in Wallets didn't reach the open editor).
+   */
+  const readNear = useCallback(() => {
+    void Promise.all([readSignedIn(), readWallets()]).then(
+      ([me, wallets]) => setNear(nearAccountOf(me, wallets ?? [])),
+      () => setNear(null),
+    );
+  }, []);
 
   const open = useCallback(() => {
     setDraft(draftOf(profile));
@@ -156,7 +183,24 @@ export function useProfileEditor(
     setSaved(false);
     setPublished(false);
     setEditing(true);
-  }, [profile]);
+    setNear(undefined);
+    readNear();
+  }, [profile, readNear]);
+
+  // While Publish waits for a NEAR wallet, coming back to the page reads the wallets again, so one added
+  // elsewhere (another tab, an agent) reaches the open editor too.
+  useEffect(() => {
+    if (!editing || near !== null) return;
+    const again = () => {
+      if (document.visibilityState === 'visible') readNear();
+    };
+    window.addEventListener('focus', again);
+    document.addEventListener('visibilitychange', again);
+    return () => {
+      window.removeEventListener('focus', again);
+      document.removeEventListener('visibilitychange', again);
+    };
+  }, [editing, near, readNear]);
 
   const save = useCallback(async () => {
     setProblem(null);
@@ -179,13 +223,13 @@ export function useProfileEditor(
   }, [picture, kept, draft, reload]);
 
   const publish = useCallback(async () => {
-    if (!account) return;
+    if (!near) return;
     setProblem(null);
     try {
       const wallet = await connectWallet('mainnet').catch(() => {
         throw new Stop(editorWords.refused);
       });
-      if (wallet !== account) throw new Stop(editorWords.otherWallet(wallet, account));
+      if (wallet !== near) throw new Stop(editorWords.otherWallet(wallet, near));
       // the picture to store: a new one, or the one Petals keeps at its own address (a fastfs:// one is
       // on NEAR Social already, so it stays as it is)
       let bytes = picture.bytes;
@@ -204,8 +248,8 @@ export function useProfileEditor(
         const hash = await send(FASTFS_METHOD, fastfsSimple(path, mime, bytes));
         setPhase('storing');
         accepted(await confirmed(hash));
-        if (!(await served(fastfsUrl(account, path)))) throw new Stop(editorWords.slow);
-        avatar = fastfsUri(account, path);
+        if (!(await served(fastfsUrl(near, path)))) throw new Stop(editorWords.slow);
+        avatar = fastfsUri(near, path);
       }
       setPhase('signing');
       const hash = await send(KV_METHOD, profileArgs(profile, draft, avatar));
@@ -222,13 +266,14 @@ export function useProfileEditor(
       setProblem(e instanceof Stop ? e.message : editorWords.refused);
       setPhase('failed');
     }
-  }, [account, picture, profile, draft, kept, reload]);
+  }, [near, picture, profile, draft, kept, reload]);
 
   const view: ProfileEditorView | null =
     editing && account
       ? {
           creating: !profile,
-          account: shownAccount(account),
+          account: shownAccount(near ?? account),
+          needsNearWallet: PUBLISH_TO_NEAR_SOCIAL && near === null,
           draft,
           picture: picture.src,
           phase,
@@ -255,12 +300,12 @@ export function useProfileEditor(
             );
           },
           save: () => void save(),
-          ...(PUBLISH_TO_NEAR_SOCIAL ? { publish: () => void publish() } : {}),
+          ...(PUBLISH_TO_NEAR_SOCIAL && near ? { publish: () => void publish() } : {}),
           cancel: () => setEditing(false),
         }
       : null;
 
   // Opening needs an account whose profile has been read: a profile, or none there yet.
   const canOpen = account && (social.kind === 'profile' || social.kind === 'none');
-  return { open: canOpen ? open : undefined, view, saved, published };
+  return { open: canOpen ? open : undefined, view, saved, published, readNear };
 }

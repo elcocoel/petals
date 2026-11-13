@@ -3,7 +3,9 @@
 // picture, the name, the bio and the links on the left, each link's service picked by name (X, GitHub, …) so
 // what's picked is what shows; on the right a preview. Then Save, the one main action, Cancel, and Publish
 // as its own button, off until it's set up on mainnet, and under them the one line on where it's kept (the
-// walk, 11 Nov: it was said four times). The Profile card opens into this.
+// walk, 11 Nov: it was said four times); for someone signed in with an Ethereum or Solana wallet and no NEAR
+// wallet yet, that line says publishing needs one and leads to Wallets (Front 1, 13 Nov). The Profile card
+// opens into this.
 // Props only: viewmodels/useProfileEditor.ts holds it. Words from lib/lobby-view.ts, drafts.
 import {
   busyPhase,
@@ -18,6 +20,7 @@ import { Card } from '../ui/Card.tsx';
 import { ChooseFile } from '../ui/ChooseFile.tsx';
 import { Field } from '../ui/Field.tsx';
 import { Mono } from '../ui/Mono.tsx';
+import { TextLink } from '../ui/TextLink.tsx';
 
 /** Publish's words while it works, step by step. */
 const PUBLISHING: Partial<Record<EditPhase, string>> = {
@@ -162,9 +165,18 @@ export function ProfileEditor({ view }: { view: ProfileEditorView }) {
           </span>
         )}
       </div>
-      <p className="my-0 type-caption text-muted">
-        {view.publish ? editorWords.publicNote : editorWords.keptNote}
-      </p>
+      {view.needsNearWallet ? (
+        <p className="my-0 flex flex-wrap items-center gap-text-gap">
+          <span className="type-caption">{editorWords.needsNear}</span>
+          <TextLink variant="quiet" href="#profile-wallets">
+            {editorWords.goToWallets}
+          </TextLink>
+        </p>
+      ) : (
+        <p className="my-0 type-caption text-muted">
+          {view.publish ? editorWords.publicNote : editorWords.keptNote}
+        </p>
+      )}
     </Card>
   );
 }

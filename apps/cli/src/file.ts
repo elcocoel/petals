@@ -17,7 +17,7 @@ import { pathToFileURL } from 'node:url';
 
 /** The site that serves this file writes its own origin over this. Untouched, it means none. */
 const SERVED_FROM: string = '%%PETALS_SITE%%';
-/** And the brain version it served then (systems check, step 4). Untouched, it means none. */
+/** And the brain version it served then. Untouched, it means none. */
 const BRAIN_SERVED: string = '%%PETALS_BRAIN%%';
 
 /** The brain version the site that served this file had then, or none. */

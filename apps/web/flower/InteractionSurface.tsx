@@ -299,6 +299,8 @@ export function InteractionSurface({
                   busy={state.session.busy}
                   failed={state.session.failed}
                   onConnect={state.session.connect}
+                  onConnectEvm={state.session.connectEvm}
+                  onConnectSolana={state.session.connectSolana}
                 />
               )}
               {/* Hidden, not gone, so what's in it and the way to it stay while someone connects. */}

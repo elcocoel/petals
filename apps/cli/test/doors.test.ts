@@ -135,7 +135,7 @@ describe('config from the environment', () => {
       NEAR_AI_API_KEY: 'k2',
       PETAL_LLM_DAILY_USD: '2.5',
       PETAL_LIVE: '1',
-      PETAL_WRITER_KEY_FILE: '../.secrets/w.json',
+      PETAL_WRITER_KEY_FILE: '../keys/w.json',
       PETAL_TRUSTED_WRITERS: 'a.testnet, b.testnet',
     };
     expect(configFromEnv(env, '/repo/build')).toEqual(toolsConfigFromEnv(env, '/repo/build'));

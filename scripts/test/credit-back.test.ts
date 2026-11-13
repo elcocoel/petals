@@ -1,4 +1,4 @@
-// Correcting a charge (Elco, 10 Nov): one entry with its reason, which changes what was spent and isn't
+// Correcting a charge: one entry with its reason, which changes what was spent and isn't
 // funding; positive goes back, negative is charged; run again, it changes nothing. On a real private.db in a
 // temp folder.
 import { mkdtempSync } from 'node:fs';

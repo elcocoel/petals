@@ -1,5 +1,5 @@
-// "Use it a lot and learn": the real conversations on this Mac that nobody has read yet, from every
-// Petal store (the app's and each lane's). Read-only, no model. Each one that went badly becomes a case
+// The real conversations on this machine that nobody has read yet, from every
+// Petal store (the app's and each worktree's). Read-only, no model. Each one that went badly becomes a case
 // in scripts/stress-cases.ts. Run it from any worktree.
 //
 //   node scripts/new-runs.ts            what's new since the last --mark
@@ -34,7 +34,7 @@ const clip = (s: unknown, n: number) => {
 
 const HOME_DIR = join(homedir(), 'Library/Application Support/Petals');
 const stores = [
-  // Elco's app, since 6 Nov (scripts/serve-testnet.sh), and the container
+  // The operator's app (scripts/serve-testnet.sh), and the container
   { name: 'elco', path: join(HOME_DIR, 'elco/private.db') },
   { name: 'container', path: join(HOME_DIR, 'data/private.db') },
   ...readdirSync(PROJECT)
@@ -49,7 +49,7 @@ const next: Record<string, string> = existsSync(SEEN) ? JSON.parse(readFileSync(
 let shown = 0;
 
 // The container's SQLite locks live in its own kernel, so nothing on this Mac may open a database it
-// holds (coordinator/backup.sh). That one is read from a copy made from inside it.
+// holds. That one is read from a copy made from inside it.
 const FOLDER_FILE = join(HOME_DIR, 'data-folder');
 const held = existsSync(FOLDER_FILE)
   ? readFileSync(FOLDER_FILE, 'utf8').trim()

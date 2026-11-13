@@ -1448,7 +1448,9 @@ export function createScene(
       return stackPointed;
     },
     pointedProposal() {
-      return pointed >= 0 ? (markSlots[pointed]?.pl.id ?? null) : null;
+      // the arc under the pointer only: a pinned proposal stays pointed wherever the pointer is, and a press on the
+      // empty ground must not read as a press on it (flow 17, 13 Nov: empty space clears the wallet as well)
+      return overArc && pointed >= 0 ? (markSlots[pointed]?.pl.id ?? null) : null;
     },
     dispose() {
       root.remove();
