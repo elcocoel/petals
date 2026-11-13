@@ -464,13 +464,13 @@ const groups = {
     'nav-clear': '84px',
     'underline-at': '-3px',
     'card-underline': '6px',
-    /** The landing FAQ's answers sit roomier than body text (Elco, 13 Nov: "more spacious more calmness"). */
+    /** The landing FAQ's answers sit roomier than body text. */
     'answer-leading': '1.75',
-    /** An answer's key words, between regular and bold (Elco, 13 Nov: bold was "too black"). */
+    /** An answer's key words, between regular and bold, lighter than the browser's bold. */
     'answer-bold': '550',
-    /** A section name's mint base: the pixel face's cells solid, so the small name reads (Elco, 13 Nov). */
+    /** A section name's mint base: the pixel face's cells solid, so the small name reads. */
     'mark-base-axes': '"CRSV" 0, "ELSH" 0, "ELXP" 0, "slnt" -8, "wght" 358',
-    /** The footer's wordmark fills its column: the face's six letters run 3.6 times its size (Elco, 13 Nov). */
+    /** The footer's wordmark fills its column: the face's six letters run 3.6 times its size. */
     'wordmark-fill': 'calc(100cqi / 3.62)',
     'sign-turn': '90deg',
     'sign-rest': '0deg',

@@ -10,7 +10,7 @@ const SIZES = {
   fill: 'wordmark-nav md:wordmark-footer',
 } as const;
 
-/** `mono`: in the band's greys, pressed into it (mark.mono; the footer, Elco 13 Nov). */
+/** `mono`: in the band's greys, pressed into it (mark.mono). */
 export function Wordmark({
   size = 'nav',
   mono = false,

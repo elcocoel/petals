@@ -1,5 +1,4 @@
-// row.peek. Elco, 13 Nov: opening a new question "closes the open one first" (otherwise it's "jarring"), and
-// "drop the automation and keep it to clicks, which is simpler": a click opens and folds, one at a time.
+// row.peek: a click opens and folds, one row open at a time.
 import { describe, expect, test } from 'vitest';
 import { peekRows } from '../app/versions/peek.ts';
 

@@ -1,10 +1,8 @@
-// A section's name, small and in the Petals logo's own face (Elco, 13 Nov: the giant "How it works" "doesn't do
-// any work ... section names should be smaller and maybe cooler ... something related to the Petals logo and the
-// pixel font"; "the cards should do the talking"). Elco chose the `logo` look for every section: the name drawn as
-// the wordmark is, its three layers at one origin, on one more layer in mint with its cells solid (mark.base), so
-// it reads at this small size and still opens as the pointer nears; the footer's wordmark is its big show. The
-// other two looks stay for the lab: `pixel`, two layers a size smaller; `signed`, the small wordmark before it.
-// Only the name is read aloud.
+// A section's name, small and in the Petals wordmark's own face, so the cards under it carry the section. The
+// `logo` look, used by every landing section: the name drawn as the wordmark is, its three layers at one origin, on
+// one more layer in mint with its cells solid (mark.base), so it reads at this small size and still opens as the
+// pointer nears. Two more looks stay for the lab: `pixel`, two layers a size smaller; `signed`, the small wordmark
+// before it. Only the name is read aloud.
 import { Wordmark } from './Wordmark.tsx';
 
 export type SectionNameLook = 'logo' | 'pixel' | 'signed';

@@ -893,7 +893,7 @@ export const registry: LabEntry[] = [
       () => <BackIt />,
     ),
     states: [
-      // Petal Mania since Elco's answers (13 Nov): four cards in a line, the cards the buttons
+      // Petal Mania: four cards in a line, the cards the links
       { name: 'Petal Mania', wide: true, render: () => <BackIt /> },
     ],
   },

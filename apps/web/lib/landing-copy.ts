@@ -182,12 +182,11 @@ const written = {
     open: 'Explore the Power Map',
   },
   questions: {
-    /** Elco, 13 Nov: the header "just says FAQ". */
     title: 'FAQ',
     sign: '−',
     /**
-     * The FAQ tab's thirteen, word for word, in its order (Elco, 10 Nov). Words between ** are bold: each answer's
-     * key concepts, so it reads "without having to read the whole text" (Elco, 13 Nov); LANDING's picks, for Elco.
+     * The FAQ tab's thirteen, word for word, in its order. Words between ** are bold: each answer's key concepts,
+     * so an answer can be read at a glance.
      */
     items: [
       {
@@ -309,15 +308,14 @@ const written = {
     ],
   },
   backIt: {
-    /** Elco, 13 Nov: "we can call it petal mania. Doesn't matter if it's cheesy." */
     title: 'Petal Mania',
-    /** Elco's words: points and a leaderboard only hinted, never money, tokens or rewards. */
+    /** A leaderboard only hinted: no money, tokens or rewards. */
     hint: 'Right now there is no leaderboard. But if there was, these are the things that would take you to the top.',
     /**
-     * Four cards in one line, the cards the buttons (Elco, 13 Nov), in an order that grows in power (Elco: "we
-     * want to grow in power"; LANDING's order, for Elco). `link` is where a card goes: `lobby` is Connect (mapping,
+     * Four cards in one line, the cards the links, ordered from the lightest way in to the most involved. `link` is
+     * where a card goes: `lobby` is Connect (mapping,
      * the agent and publishing are one card), `github` the repo; an empty one is a slot waiting for its address
-     * (the community's links, the merch), so its card shows without a link. The names are Elco's words.
+     * (the community's links, the merch), so its card shows without a link.
      */
     ways: [
       { title: 'Join the community', link: 'telegram' },
@@ -329,8 +327,7 @@ const written = {
   builders: {
     title: 'Petals is open source. Build it with us.',
     /**
-     * Elco, 13 Nov: the little text blocks ("built in the open under MIT", "the brain" ...) are "visual noise";
-     * the links go to the docs, to GitHub, and "give us a star". The doors' names are Elco's words.
+     * Three links under the system's graph: the docs, GitHub, and a star on GitHub.
      */
     doors: [
       { title: 'Docs', link: 'docs', icon: 'arrow' },
@@ -350,7 +347,7 @@ const written = {
       contribute: 'Contribute',
     },
     built: 'Built for the NEAR Hackathon, November 2026. By Elementary Complexity.',
-    /** The words in `built` that link to Elco's site (siteLinks.elementaryComplexity): Elco's name. */
+    /** The words in `built` that link to Elementary Complexity's site (siteLinks.elementaryComplexity). */
     by: 'Elementary Complexity',
   },
 } as const;

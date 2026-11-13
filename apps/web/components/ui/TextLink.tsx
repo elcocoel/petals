@@ -10,7 +10,7 @@ const VARIANTS = {
   quiet: 'type-caption text-muted hover:text-primary',
   rail: 'flex items-center gap-space-8 py-space-8 type-label whitespace-nowrap text-primary',
   mono: 'type-mono text-primary',
-  /** In a sentence: the sentence's own size (the footer's name, 13 Nov). */
+  /** In a sentence: the sentence's own size. */
   inline: 'text-primary',
 } as const;
 

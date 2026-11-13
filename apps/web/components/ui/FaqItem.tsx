@@ -1,10 +1,9 @@
 // Petals / FAQ item 67:2538: native <details>, open by default as in Figma's frame (its Open property),
 // so it needs no JavaScript. A numbered item lines its answer up under the question on one twelve-column grid.
-// The landing's, unnumbered, reads calmer (Elco, 13 Nov: "more spacious more calmness more joy ... it shouldn't
-// feel like a page of a book"): the question a lead's size, room under it, the answer in two short columns
-// with roomier lines and room from its edges (row.answer), its key concepts in a lighter bold, written between
-// ** in the copy. In version 2
-// it starts folded and opens by a click, one at a time: apps/web/app/versions/peek.ts, `row.peek`.
+// An unnumbered item (the landing's) is calmer: the question at a lead's size, room under it and from the row's
+// edges, the answer in two short columns with roomier lines (row.answer) and its key concepts in a lighter bold,
+// written between ** in the copy. In version 2 it starts folded and opens by a click, one at a time:
+// apps/web/app/versions/peek.ts, `row.peek`.
 import type { ReactNode } from 'react';
 import type { GlyphKind } from '../../lib/figures.ts';
 import { landingCopy } from '../../lib/landing-copy.ts';
@@ -29,7 +28,7 @@ export function FaqItem({
 }: {
   /** A small drawing beside the number, if the item has one. */
   glyph?: GlyphKind;
-  /** Its number; without one it's the landing's calmer item (12 and 13 Nov). */
+  /** Its number; without one it's the calmer, unnumbered item. */
   index?: string;
   question: string;
   answer: readonly AnswerBlock[];
@@ -57,7 +56,7 @@ export function FaqItem({
   );
   if (!index)
     return (
-      // room from its edges as between its columns (Elco, 13 Nov: open, the words were "cramped")
+      // room from its edges as between its columns, more under it while open
       <details
         open={open}
         data-b="row"

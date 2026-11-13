@@ -1,9 +1,7 @@
-// Figma's Footer (66:2360), styled in the system (11 Nov, board card 104), and since Elco's checklist (13 Nov:
-// "one of those hipster footers where it's a calm moment of reflection") on the FAQ's grey: the wordmark
-// "obnoxiously bigger", in the band's greys and pressed into it (mark.fill, mark.mono), the small print under it
-// considerably bigger, both bottom left; the site's own pages in two short groups bottom right. Room above, about
-// four fifths of before, everything settling to the bottom. Elco's name, Elementary Complexity, links to Elco's
-// site. Only links that go somewhere; the socials come from Elco.
+// Figma's Footer (66:2360), on the FAQ's grey band: the wordmark large, filling its column and pressed into the
+// band's greys (mark.fill, mark.mono), with the small print under it at a lead's size, both bottom left; the site's
+// own pages in two short groups bottom right. Generous room above, everything settling to the bottom. The small
+// print's name links to Elementary Complexity's site. Only links that go somewhere.
 import type { ReactNode } from 'react';
 import { landingCopy } from '../../lib/landing-copy.ts';
 import { siteLinks } from '../../lib/site-links.ts';

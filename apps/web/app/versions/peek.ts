@@ -1,7 +1,6 @@
-// row.peek, for the rows that fold, which is FaqItem. They come folded, and since Elco's word on 13 Nov a click
-// is the only hand on them, with no timer: "opening a new question closes the open one first", or it's
-// "jarring", and "drop the automation and keep it to clicks, which is simpler". So a click, a tap or Enter
-// opens a folded row and folds the one that was open; on an open row it folds it.
+// row.peek, for the rows that fold, which is FaqItem. They come folded and open by a click, a tap or Enter, with
+// no timer, one at a time: opening a folded row folds the one that was open, and pressing an open row folds it.
+// Opening one row while another stays open would shift the page under the reader.
 //
 // `peekRows` is what happens, with no DOM in it, so a test can run it. `peek` is the DOM around it: it folds
 // the rows the server sent open, and while a row is moving it holds what's under the pointer still on screen.

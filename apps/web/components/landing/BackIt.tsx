@@ -1,8 +1,7 @@
-// Petal Mania, what was Make Petals stronger (Figma's Join the community, 66:2346). Elco, 13 Nov: four cards in one
-// line, "the card themselves should be the buttons and the thing that does the thing", far less text; the actions
-// that matter, in an order that grows in power, with a leaderboard only hinted. Each card is a plate you press
-// (PlateLink: it rises and tilts); a card whose address isn't in yet shows without a link. The section's name is
-// in the logo's face (SectionName); its hint is Elco's words.
+// Petal Mania, the band of ways to take part (Figma's Join the community, 66:2346): a short hint about a
+// leaderboard, then four cards in one line, ordered from the lightest way in to the most involved. Each card is
+// itself the link, a plate you press (PlateLink: it rises and tilts), with no text beyond its name; a card whose
+// address isn't set yet shows without a link. The section's name is in the logo's face (SectionName).
 import { landingCopy } from '../../lib/landing-copy.ts';
 import { siteLinks } from '../../lib/site-links.ts';
 import { Icon } from '../ui/Icon.tsx';
