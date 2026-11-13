@@ -246,6 +246,11 @@ export interface Scene {
     band: number;
     /** What's already on the screen around it (the map's names and boxes), in screen px: its words keep clear. */
     taken?: readonly { x0: number; y0: number; x1: number; y1: number }[];
+    /**
+     * The petals a new reading no longer has, closing into their seams as the flower glides to it (wave 8): their
+     * wedges, their fills as they were, and how far the glide has gone. Null when nothing glides.
+     */
+    ghosts?: { ring: Ring; fills: readonly string[]; done: number } | null;
   }): void;
   /** Is this screen point on the small map? */
   onMap(x: number, y: number, marks: Marks): boolean;
@@ -326,6 +331,28 @@ export function createScene(
   // One path, or with the lab's look one path per colour.
   // figure.flower-silhouette
   const silhouette = slot(el('path', { fill: look ? 'none' : PETAL }, worldNode));
+  // the petals a new reading no longer has, under the others as they close (wave 8)
+  const ghostGroup = slot(el('g', { fill: PETAL, display: 'none' }, worldNode));
+  const ghostPaths: SVGPathElement[] = [];
+  const writeGhosts = (ghosts: { ring: Ring; fills: readonly string[]; done: number } | null) => {
+    if (!ghosts || ghosts.done >= 1 || ghosts.ring.n === 0) {
+      ghostGroup.set('display', 'none');
+      return;
+    }
+    ghostGroup.set('display', 'inline');
+    ghostGroup.set('opacity', o2(1 - ghosts.done));
+    for (let i = 0; i < ghosts.ring.n; i++) {
+      const path = ghostPaths[i] ?? el('path', {}, ghostGroup.node);
+      ghostPaths[i] = path;
+      path.setAttribute('fill', ghosts.fills[i] || PETAL);
+      const h = ghosts.ring.h[i] as number;
+      path.setAttribute(
+        'd',
+        look?.roundTops ? roundTopPath(ghosts.ring, i, h) : bandPath(ghosts.ring, i, 0, h),
+      );
+    }
+    for (let i = ghosts.ring.n; i < ghostPaths.length; i++) ghostPaths[i]?.setAttribute('d', '');
+  };
   // figure.petal-wedge
   const petalsGroup = slot(el('g', { fill: PETAL }, worldNode));
   // figure.flower-ring
@@ -1209,6 +1236,7 @@ export function createScene(
       bandsMoved,
       band,
       taken = [],
+      ghosts = null,
     }) {
       const { k } = view;
       lastView = view;
@@ -1273,6 +1301,7 @@ export function createScene(
       }
       petalsOn = showPetals;
       if (ringMoved) polygon.node.setAttribute('d', polygonPath(ring));
+      if (ringMoved || ghosts) writeGhosts(ghosts);
       polygon.set('stroke-opacity', o2(mk.polygon));
       if (accentMoved || lastLit !== focusIndex) writeAccent(accent);
       lastLit = focusIndex;
