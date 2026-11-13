@@ -97,7 +97,7 @@ Locally `pnpm api` (or `petal api`) runs `petalApp` under Node on `http://localh
 | `GET /api/v1/attestations/:sha256` | the NEAR AI attestation report Petal stored for a model signature (`report_sha256`), `application/json`, immutable cache headers. Agent route. |
 | `GET /api/v1/health` | `{ ok, map: "up"|"down"|"mirror", llm: "up"|"down"|"recorded", agent_access: "gated"|"open", version, tools_version, commit, brain_version }`; `commit` is what a deploy witnesses, null locally; `brain_version` (additive, 9 Nov) is the brain every door serves, `<16 hex of its index hash>@<12 hex of its commit>`, also in `/skill.md`, the MCP instructions and a served `petal.mjs`, and kept with each layer |
 | `POST /api/v1/auth/challenge` | `{ nonce, message, recipient, expires_at }` ([below](#sign-in-sessions-and-invites)) |
-| `POST /api/v1/auth/verify` | body `{ network, proof }`: `{ person_id, network, wallets, claimed_runs, claimed_explorations }`, and sets the session |
+| `POST /api/v1/auth/verify` | body `{ network, proof }`: `{ person_id, network, wallets, claimed_runs, claimed_explorations }`, and sets the session. A new account starts with a NEAR wallet: an `eip155` or `solana` proof signs in only to the person it was linked to (`POST /api/v1/me/wallets`) when that person has a NEAR wallet; otherwise `401` `unauthorised`, "Sign up with a NEAR wallet first. Then link this wallet in your lobby, and it signs you in too.", and no person or session is made |
 | `POST /api/v1/auth/logout` | `{ ok: true }`, and clears the session |
 | `POST /api/v1/auth/invite` | body `{ token }`: `{ invite }`, and holds it in this session |
 | `GET /api/v1/auth/invite` | `{ invite }` this session holds, or `{ invite: null }` |

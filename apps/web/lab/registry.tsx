@@ -121,7 +121,7 @@ import { Conversations } from '../components/workspace/Conversations.tsx';
 import { FlowerShelf } from '../components/workspace/FlowerShelf.tsx';
 import { Funds } from '../components/workspace/Funds.tsx';
 import { MappingBox } from '../components/workspace/MappingBox.tsx';
-import { NotSignedIn } from '../components/workspace/NotSignedIn.tsx';
+import { LinkedWays, NotSignedIn } from '../components/workspace/NotSignedIn.tsx';
 import { Profile } from '../components/workspace/Profile.tsx';
 import { ProfileEditor } from '../components/workspace/ProfileEditor.tsx';
 import { ProfileHead } from '../components/workspace/ProfileHead.tsx';
@@ -2606,6 +2606,21 @@ export const registry: LabEntry[] = [
       {
         name: 'in the thread, out of credit',
         render: () => <CreditPointer line={payWords.outOf} />,
+      },
+    ],
+  },
+  {
+    id: 'LinkedWays',
+    group: 'The conversation',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/workspace/NotSignedIn.tsx',
+    states: [
+      {
+        name: 'a linked wallet signs in too',
+        render: () => (
+          <LinkedWays busy={false} onConnectEvm={() => {}} onConnectSolana={() => {}} />
+        ),
       },
     ],
   },

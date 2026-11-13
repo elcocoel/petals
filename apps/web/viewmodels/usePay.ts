@@ -3,8 +3,9 @@
 // as `where`; `paid` reads both again once a payment lands. lib/pay.ts holds the arithmetic and the words.
 // The person sets how many dollars (about $1 to start), and a transfer the wallet sent is kept until the
 // server confirms it, so pressing again never sends a second one. The NEAR comes from one of the person's own
-// wallets: signed in with Ethereum or Solana, the NEAR wallet is bound first, with one signature and nothing
-// spent, so the server never refuses a transfer that has already gone.
+// wallets: a NEAR wallet in the browser that isn't theirs yet (a second one, or none chosen since they signed in
+// with a linked wallet) is bound first, with one signature and nothing spent, so the server never refuses a
+// transfer that has already gone.
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { addMyWallet, confirmPay, readWallets, sessionClient } from '../lib/agent-client.ts';
 import {
@@ -56,8 +57,8 @@ export interface PayFrom {
 
 /**
  * Makes sure a payment's NEAR comes from one of this person's wallets before any leaves: the
- * server credits only a transfer from a wallet bound to the person (POST /api/v1/pay), and signed in with
- * Ethereum or Solana, the connected NEAR wallet is bound to no one yet. `account` is the one that has to be
+ * server credits only a transfer from a wallet bound to the person (POST /api/v1/pay), and the NEAR wallet in
+ * the browser may be one they haven't bound. `account` is the one that has to be
  * theirs, a transfer already out; else it's the connected wallet's. False when the person closed the wallet.
  */
 export async function payFromMine(d: PayFrom, account?: string): Promise<boolean> {
