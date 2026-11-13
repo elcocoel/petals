@@ -1320,7 +1320,7 @@ export const registry: LabEntry[] = [
           <ActionRow gap="tight">
             <Button href="#actionrow">{landingCopy.nav.ask}</Button>
             <Button variant="secondary" href="#actionrow">
-              {landingCopy.builders.actions.docs}
+              {landingCopy.builders.doors[0].title}
             </Button>
           </ActionRow>
         ),

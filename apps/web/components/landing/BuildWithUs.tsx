@@ -1,12 +1,9 @@
-// Build it with us, on Figma's For builders (66:2316): the ink band, and the doors into the system Elco named
-// (11 Nov, board card 103): the brain, the data protocol, the rendering protocol, connecting an agent, the API,
-// contributing. Each opens its page in /docs, as a plate with only its name (Elco, 12 Nov: "the six things are
-// boring ... a bunch of text"). GitHub joins them once the repo is public; until then a link to it would go
-// nowhere (design/minimally-good.md, rule 10).
+// Build it with us, on Figma's For builders (66:2316): the ink band and its headline, and three doors, the
+// sleek black boxes Elco keeps ("I want all of our black things to be like this", 13 Nov): the docs, Petals on
+// GitHub, and a star for it there. The little text blocks went (Elco: "visual noise"); the animated graph of
+// the system waits for Elco's Figma.
 import { landingCopy } from '../../lib/landing-copy.ts';
 import { siteLinks } from '../../lib/site-links.ts';
-import { ActionRow } from '../ui/ActionRow.tsx';
-import { Button } from '../ui/Button.tsx';
 import { Icon } from '../ui/Icon.tsx';
 import { PlateLink } from '../ui/PlateLink.tsx';
 import { Section } from '../ui/Section.tsx';
@@ -22,21 +19,17 @@ export function BuildWithUs() {
       head={
         // balanced, so no word is left alone on the headline's last line (11 Nov, at 1280)
         <div className="text-balance lg:w-2/3">
-          <SectionHead title={copy.title} body={copy.body} />
+          <SectionHead title={copy.title} />
         </div>
-      }
-      foot={
-        <ActionRow>
-          <Button href={siteLinks.docs}>{copy.actions.docs}</Button>
-        </ActionRow>
       }
     >
       {copy.doors.map((door) => (
-        // A door is a tile with only its name and an arrow, on the ink band's own glass.
-        <PlateLink key={door.slug} href={`${siteLinks.docs}/${door.slug}`} glass>
+        // A door is a box you press (box.glass, the ink band's own: it rises and tilts), only its name and an
+        // arrow, or GitHub's star for the star.
+        <PlateLink key={door.title} href={siteLinks[door.link]} glass>
           <span className="flex min-h-drawing-72 items-end justify-between gap-block-gap">
             <span className="type-title">{door.title}</span>
-            <Icon name="arrow" />
+            <Icon name={door.icon} />
           </span>
         </PlateLink>
       ))}

@@ -785,6 +785,24 @@
   opacity: 1;
 }
 
+/* mark.fill */
+:root[data-version="2"] [data-kind="wordmark"][data-size="fill"] {
+  font-size: var(--joy-move-wordmark-fill);
+}
+
+/* One grey for the word, its widest layer a lighter edge around it, so it looks pressed into the band. */
+/* mark.mono */
+:root[data-version="2"] [data-kind="wordmark"][data-tone="mono"] {
+  --figure-accent: var(--joy-paint-ground);
+  --figure-petal: var(--hairline);
+  --text-primary: var(--hairline);
+}
+
+/* row.answer */
+:root[data-version="2"] [data-b="row"] [data-answer] {
+  line-height: var(--joy-move-answer-leading);
+}
+
 /* row.sign */
 :root[data-version="2"] [data-b="row"] [data-sign] {
   position: relative;

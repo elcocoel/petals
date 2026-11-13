@@ -183,9 +183,10 @@ export const behaviours = [
   },
   {
     name: 'row.peek',
-    purpose: 'A pointer at rest opens a folded row; it closes softly a little after it leaves',
+    purpose: 'A click opens a folded row and folds the one that was open: one at a time, no timer',
     via: 'script',
   },
+  { name: 'row.answer', purpose: "An answer's lines sit roomier than body text", via: 'css' },
   { name: 'row.sign', purpose: 'The sign turns between plus and minus', via: 'css' },
   { name: 'row.cursor', purpose: "The transcript's cursor blinks", via: 'css' },
   // item
@@ -246,6 +247,12 @@ export const behaviours = [
     via: 'both',
   },
   { name: 'mark.tight', purpose: 'The nav wordmark settles smaller with the nav', via: 'css' },
+  { name: 'mark.fill', purpose: "The footer's wordmark fills the width of its column", via: 'css' },
+  {
+    name: 'mark.mono',
+    purpose: "A wordmark in its band's greys, pressed into it rather than printed on it",
+    via: 'css',
+  },
   // head
   {
     name: 'head.settle',
