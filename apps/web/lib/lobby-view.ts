@@ -53,7 +53,7 @@ export const fundsWords = {
 export const profileWords = {
   /** The badges beside the account where its profile is (the chain's badge is its name, lib/profile-view.ts). */
   social: 'NEAR Social',
-  inPetals: 'In Petals',
+  inPetals: 'On Petals',
   noProfile: 'No profile',
   title: 'Profile',
   edit: 'Edit',
