@@ -124,8 +124,17 @@ export interface PetalSnapshotCommonTableV1 {
     participant: string;
     asset: string;
     measure: string;
-    amount: Decimal;
+    /**
+     * how much, in whole tokens (or whole units of what unit names), as decimal text: never a JSON number, so every digit survives hashing
+     */
+    amount: string;
+    /**
+     * the same in the chain's base units, amount times ten to the token's decimals, as whole-number text
+     */
     amount_raw?: string;
+    /**
+     * what amount counts: a token's symbol, or a word such as votes
+     */
     unit: string;
     as_of: Datetime;
     source: string;
@@ -137,8 +146,17 @@ export interface PetalSnapshotCommonTableV1 {
      * delegates_to, owned_by, member_of_role, holds_role:*, proposed, voted:*, ...
      */
     type: string;
-    amount?: Decimal;
+    /**
+     * how much, in whole tokens (or whole units of what unit names), as decimal text: never a JSON number, so every digit survives hashing
+     */
+    amount?: string;
+    /**
+     * the same in the chain's base units, amount times ten to the token's decimals, as whole-number text
+     */
     amount_raw?: string;
+    /**
+     * what amount counts: a token's symbol, or a word such as votes
+     */
     unit?: string;
     role?: string;
     bps?: number;
@@ -161,7 +179,7 @@ export interface PetalSnapshotCommonTableV1 {
     id: string;
     version: string;
     /**
-     * set when built from a stored file, e.g. research/data/near/producers.json
+     * set when built from a stored file, e.g. a stored producers.json
      */
     imported_from?: string;
   };

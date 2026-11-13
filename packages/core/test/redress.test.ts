@@ -1,4 +1,4 @@
-// Elco, 12 Nov, wave 4: after a change in Tools the map redraws without the second's wait. The browser dresses a
+// After a change in Tools the map redraws without the second's wait. The browser dresses a
 // reading again through the new view (redress), from the petals' own data and the pieces given with them, and it
 // must draw exactly what the server's reading in that view will: the same petals, in the same order, the same
 // widths, heights, colours, names and outlines.
@@ -37,7 +37,7 @@ const given = [
   ),
   piece('voted', 'category', (_, i) => (i % 3 === 0 ? 'never voted' : 'voted')),
 ];
-// the server gives the values of the drawn petals only (SYSTEMS's 'given')
+// the server gives the values of the drawn petals only ('given')
 const drawn = new Set(ids);
 const givenDrawn = given.map(
   (p) =>

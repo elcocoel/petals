@@ -184,7 +184,7 @@
       "properties": {
         "id": { "type": "string" },
         "version": { "type": "string" },
-        "imported_from": { "type": "string", "description": "set when built from a stored file, e.g. research/data/near/producers.json" }
+        "imported_from": { "type": "string", "description": "set when built from a stored file, e.g. a stored producers.json" }
       }
     }
   },

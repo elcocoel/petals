@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:petal:schema:proposals:v1",
   "title": "Petal proposals v1",
-  "description": "A DAO's proposals and how each account voted on each (board #93; Elco, 11 Nov: 'when a proposal is hovered little dots show up on the inside showing yes and no votes, absent votes show nothing'). One per map, named by the map's address, read from the DAO's own chain and read again to refresh. An account that didn't vote on a proposal isn't in its votes: absent, never a guess. Each vote keeps the DAO's own word for it.",
+  "description": "A DAO's proposals and how each account voted on each (on hover, a proposal's yes and no votes show as dots inside the flower; an absent vote shows nothing). One per map, named by the map's address, read from the DAO's own chain and read again to refresh. An account that didn't vote on a proposal isn't in its votes: absent, never a guess. Each vote keeps the DAO's own word for it.",
   "type": "object",
   "additionalProperties": false,
   "required": ["petal", "about", "source", "proposals", "read_at"],

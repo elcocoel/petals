@@ -32,7 +32,7 @@ export const PAINT = sha256Hex(STYLE).slice(0, 8);
  * The one name for a still picture (GET /api/v1/flowers/:id/svg, GET /api/v1/map/:sha/svg), as its address's
  * query. The browser and Vercel's edge keep each picture for a year, so it names the look, the view it's
  * drawn with and the paint: when any of them changes, every picture has a new address. The routes draw with
- * the view it names, by its whole hash (one-source.md, step 2); the look and the paint they ignore.
+ * the view it names, by its whole hash; the look and the paint they ignore.
  */
 export const pictureQuery = (view: View): string =>
   `look=${encodeURIComponent(RENDER_VERSION)}&view=${viewHash(view)}&paint=${PAINT}`;
