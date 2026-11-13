@@ -61,7 +61,7 @@ export const profileWords = {
   declared: 'Declared',
   /** Under a profile set on Petals, for a person with no NEAR account: where it is. */
   notePetals:
-    'Your profile on Petals. Add a NEAR wallet to have it on NEAR Social too. Links are what you declare; nobody checks them.',
+    'Your profile on Petals. Saved with a NEAR wallet, it goes onto NEAR Social too. Links are what you declare; nobody checks them.',
   /** Under the account's NEAR Social profile: it's the one profile, edited here or anywhere else. */
   noteSocial:
     'Your profile on NEAR Social, which anyone can see. Edit it here and it changes there. Links are what you declare; nobody checks them.',
