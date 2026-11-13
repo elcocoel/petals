@@ -3606,17 +3606,13 @@ export const registry: LabEntry[] = [
               ]}
               on={new Set(['a1', 'a2', 'a3'])}
               onToggle={() => undefined}
-              upTo={3}
-              onUpTo={() => undefined}
-              replaying={false}
-              onReplay={() => undefined}
               joined={new Set(['a3'])}
             />
           </div>
         ),
       },
       {
-        name: 'the map up to its first layer, the proposals switched off',
+        name: 'the proposals switched off',
         render: () => (
           <div className="w-tile-width">
             <MapStrata
@@ -3657,10 +3653,6 @@ export const registry: LabEntry[] = [
               ]}
               on={new Set(['a1', 'a3'])}
               onToggle={() => undefined}
-              upTo={1}
-              onUpTo={() => undefined}
-              replaying={false}
-              onReplay={() => undefined}
             />
           </div>
         ),

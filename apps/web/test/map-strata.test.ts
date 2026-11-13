@@ -7,7 +7,6 @@ import {
   authorsLine,
   type CardAuthor,
   type CardLayer,
-  layersUpTo,
   strataLine,
   strataOf,
 } from '../lib/map-strata.ts';
@@ -80,12 +79,5 @@ describe('a map’s layers as strata', () => {
     const sw = authorSwatches(strata, authors);
     expect(sw.get('near:mainnet:mapping.petals.near')).toBe('key-grey');
     expect(sw.get('near:mainnet:elco.near')).toBe('key-mint');
-  });
-  test('the map up to a layer, among those on', () => {
-    expect(layersUpTo(strata, 2, new Set(strata.map((l) => l.id)))).toEqual([
-      'a'.repeat(64),
-      'c'.repeat(64),
-    ]);
-    expect(layersUpTo(strata, 3, new Set(['a'.repeat(64)]))).toEqual(['a'.repeat(64)]);
   });
 });

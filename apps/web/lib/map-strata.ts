@@ -54,9 +54,6 @@ export const strataWords = {
   imported: 'imported, unsigned',
   read: (when: string) => `read ${when}`,
   builtOn: (n: number) => (n === 1 ? 'built on 1 layer' : `built on ${n} layers`),
-  upTo: (k: number, n: number) => `The map up to layer ${k} of ${n}`,
-  replay: 'Watch it grow',
-  stop: 'Stop',
   joined: 'Just added, in your name',
   on: (title: string) => `Show ${title} on the map`,
 } as const;
@@ -86,17 +83,6 @@ export function strataLine(l: StrataLayer): string {
     .filter(Boolean)
     .join(' · ');
 }
-
-/** The layers the map draws up to the k-th (oldest first), among those switched on. */
-export const layersUpTo = (
-  oldestFirst: readonly StrataLayer[],
-  k: number,
-  on: ReadonlySet<string>,
-): string[] =>
-  oldestFirst
-    .slice(0, k)
-    .filter((l) => on.has(l.id))
-    .map((l) => l.id);
 
 /** A map's layers as SYSTEMS's GET /api/v1/maps/:id gives them (composition.md §9). */
 export interface CardLayer {

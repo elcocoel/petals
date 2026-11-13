@@ -297,9 +297,6 @@ export interface CanvasChain {
  */
 const PANELS = ['tools', 'info'] as const;
 type Panel = (typeof PANELS)[number];
-/** Watch it grow: one more layer each step, long enough for the petals to glide and be seen (LOOK's 0.8 s). */
-const REPLAY_STEP = 1600;
-
 /** A panel row's height: Tools starts as tall as its rows mostly are. */
 const PANEL_ROW = 32;
 /** Tools' rows besides the chains: the search, the heads, the dimensions, the map's rows and the reset. */
@@ -556,18 +553,14 @@ export function LandscapeCanvas({
   // a publication joining the map reads its layers and its composed reading again (wave 8)
   const version = joined?.publication ?? '';
   // the map's layers you switch, kept for the visit (wave 8, Elco: "how different data layers from different people
-  // contribute to fuller and fuller maps"): the map you're in and its layers oldest first, the ones off, and how far
-  // up the strata the map is drawn; all on and all the way up, the map draws its own reading
+  // contribute to fuller and fuller maps"): the map you're in and its layers, and the ones off; all on, the map draws
+  // its own reading
   const [strata, setStrata] = useState<{ map: string; ids: readonly string[] } | null>(null);
   const [layersOff, setLayersOff] = useState<ReadonlySet<string>>(() => new Set());
-  const [upTo, setUpTo] = useState<number | null>(null);
-  const [replaying, setReplaying] = useState(false);
   const layersOn = useMemo(() => {
-    if (!strata) return null;
-    const k = upTo ?? strata.ids.length;
-    if (layersOff.size === 0 && k >= strata.ids.length) return null;
-    return strata.ids.slice(0, k).filter((id) => !layersOff.has(id));
-  }, [strata, layersOff, upTo]);
+    if (!strata || layersOff.size === 0) return null;
+    return strata.ids.filter((id) => !layersOff.has(id));
+  }, [strata, layersOff]);
   const composed = useComposed(strata?.map ?? null, layersOn, person.hash, version);
   // the composed reading lands on its flower as a reading just made does (LOOK draws it, petals gliding)
   const composedLanded = useMemo<MapLanded | null>(() => {
@@ -911,29 +904,11 @@ export function LandscapeCanvas({
       return { map: strataMap, ids };
     });
   }, [strataMap, strataLayers]);
-  // another map, all its layers on again, all the way up
+  // another map, all its layers on again
   // biome-ignore lint/correctness/useExhaustiveDependencies: a new map is what resets them
   useEffect(() => {
     setLayersOff(new Set());
-    setUpTo(null);
-    setReplaying(false);
   }, [strataMap]);
-  // Watch it grow: the map up to one more layer each step, from the first to all, as LOOK's petals glide
-  useEffect(() => {
-    if (!replaying || !strata) return;
-    const n = strata.ids.length;
-    const t = window.setInterval(() => {
-      setUpTo((k) => {
-        const next = (k ?? 1) + 1;
-        if (next >= n) {
-          setReplaying(false);
-          return n;
-        }
-        return next;
-      });
-    }, REPLAY_STEP);
-    return () => window.clearInterval(t);
-  }, [replaying, strata]);
   // a publication that joins the map you're in opens Information on it
   useEffect(() => {
     if (joined && joined.map === strataMap) setClaimsOpen(true);
@@ -1270,7 +1245,7 @@ export function LandscapeCanvas({
                   </div>
                 )}
                 {strataLayers && strataLayers.length > 0 ? (
-                  // the map's layers as strata, each switchable, the map up to any of them (wave 8)
+                  // the map's layers as strata, each switchable (wave 8)
                   <div className="flex flex-col px-space-8">
                     <SectionHead size="panel" title={strataWords.title} />
                     <div className="px-space-8 py-space-8">
@@ -1287,20 +1262,6 @@ export function LandscapeCanvas({
                             return next;
                           })
                         }
-                        upTo={upTo ?? strataLayers.length}
-                        onUpTo={(k) => {
-                          setReplaying(false);
-                          setUpTo(k);
-                        }}
-                        replaying={replaying}
-                        onReplay={() => {
-                          if (replaying) {
-                            setReplaying(false);
-                            return;
-                          }
-                          setUpTo(1);
-                          setReplaying(true);
-                        }}
                         joined={joinedHere}
                         swatches={swatches}
                       />
