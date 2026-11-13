@@ -13,6 +13,7 @@ import {
   type ProfileEditorView,
 } from '../../lib/lobby-view.ts';
 import { PROFILE_LIMITS, SERVICES, serviceName } from '../../lib/near-social.ts';
+import { Avatar } from '../ui/Avatar.tsx';
 import { Badge } from '../ui/Badge.tsx';
 import { Button } from '../ui/Button.tsx';
 import { Card } from '../ui/Card.tsx';
@@ -186,14 +187,5 @@ const servicesFor = (current: string) => [
 ];
 
 function Picture({ src, size }: { src: string | null; size: '48' | '72' }) {
-  const box = size === '72' ? 'size-drawing-72' : 'size-drawing-48';
-  return src ? (
-    // biome-ignore lint/performance/noImgElement: the person's own picture, from NEAR Social or just chosen
-    <img className={`block ${box} shrink-0 border border-hairline object-cover`} src={src} alt="" />
-  ) : (
-    <span
-      aria-hidden="true"
-      className={`block ${box} shrink-0 border border-dashed border-hairline`}
-    />
-  );
+  return <Avatar src={src} size={size === '72' ? 'medium' : 'small'} />;
 }

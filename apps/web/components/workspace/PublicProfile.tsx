@@ -16,6 +16,7 @@ import {
 } from '../../lib/lobby-view.ts';
 import { serviceName } from '../../lib/near-social.ts';
 import { walletChain } from '../../lib/profile-view.ts';
+import { Avatar } from '../ui/Avatar.tsx';
 import { Badge } from '../ui/Badge.tsx';
 import { Mono } from '../ui/Mono.tsx';
 import { SectionName } from '../ui/SectionName.tsx';
@@ -43,19 +44,7 @@ export function PublicProfile({
   return (
     <article className="flex max-w-content-width flex-col gap-space-32">
       <header className="flex items-center gap-block-gap">
-        {profile?.avatar ? (
-          // biome-ignore lint/performance/noImgElement: a picture the account chose, from its own storage
-          <img
-            className="block size-drawing-72 shrink-0 border border-hairline object-cover"
-            src={profile.avatar}
-            alt=""
-          />
-        ) : (
-          <span
-            aria-hidden="true"
-            className="block size-drawing-72 shrink-0 border border-dashed border-hairline"
-          />
-        )}
+        <Avatar src={profile?.avatar ?? null} size="large" />
         <div className="flex min-w-0 flex-1 flex-col gap-space-8">
           <Mono tone="primary">{eyebrow}</Mono>
           <h1 title={account} className="m-0 type-title wrap-anywhere md:type-display-compact">
