@@ -4498,4 +4498,6 @@ export const NOT_IN_LAB: Record<string, string> = {
   Dialog: "a modal over the page, so it is shown live, from a row's ⋯ menu at /lab/panel",
   WorkMenu:
     'the SideRail and the list, both here, fixed to the window: the layout of /lobby and /make holds it (/lab/panel shows it whole)',
+  CoverLink:
+    "an invisible link laid over a figure, with nothing of its own to see: it covers the landing's Power Map (GallerySection, here)",
 };
