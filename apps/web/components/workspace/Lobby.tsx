@@ -99,6 +99,7 @@ export function Lobby({
     held: string | null;
     phase: WithdrawPhase;
     withdrew: string | null;
+    failedWhy?: string | null;
     withdraw: () => void;
   };
   /** Add funds: whether the pay row is open under the balance, and the row itself. */
@@ -185,6 +186,7 @@ export function Lobby({
             held={funds.held}
             phase={funds.phase}
             withdrew={funds.withdrew}
+            failedWhy={funds.failedWhy ?? null}
             onWithdraw={funds.withdraw}
             adding={add.open}
             onAdd={add.toggle}
