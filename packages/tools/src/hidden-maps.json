@@ -1,6 +1,6 @@
 {
-  "note": "Maps hidden from the Power Map, never deleted: each stays in the store, its flower still opens, and taking its line out brings it back. Elco approved DAO SET's review on 11 Nov (board #96, research/dao-set-2026-11-11/REMOVALS.md): the 60 unverified factory groups, FLX and RGT (weak partial views), Nouns (until an NFT reader reads it), UXD (a stablecoin, out of the DAO showcase).",
-  "decided": "Elco, 11 Nov 2026, through PM's question tool (#96)",
+  "note": "Maps hidden from the Power Map, never deleted: each stays in the store, its flower still opens, and taking its line out brings it back. A curation review on 11 Nov hid the 60 unverified factory groups, FLX and RGT (weak partial views), Nouns (until an NFT reader reads it), UXD (a stablecoin, out of the DAO showcase).",
+  "decided": "Curation review of unverified and partial maps, 11 Nov 2026",
   "hidden": [
     {
       "about": "eip155:1:0x6243d8cea23066d098a15582d81a598b4e8391f4",
@@ -326,37 +326,37 @@
       "about": "none:historical-snapshot-ballot-addresses",
       "name": "ResearchHub and Extra Finance ballots",
       "why": "Retired: Snapshot ballots read off-chain, put on a card of their own because the reading named no DAO. The waves reissued them naming their DAO's token, so they're now on that DAO's own map. This card held two DAOs' ballots at once, since both used the same population.",
-      "decided": "META, 11 Nov 2026: retire the 'none' card, never delete; PM's waves moved its ballots onto their DAOs' own maps (ballots-reissue/CHANGES.json, data/gnosis/BALLOT-LINK-REPAIR.json)"
+      "decided": "Shared map curation, 11 Nov 2026: the 'none' card retired, never deleted; its ballots were reissued on their DAOs' own maps"
     },
     {
       "about": "none:gnosis.eth-2026-selected-ballots",
       "name": "GnosisDAO ballot participation",
       "why": "Retired: Snapshot ballots read off-chain, put on a card of their own because the reading named no DAO. The waves reissued them naming their DAO's token, so they're now on that DAO's own map.",
-      "decided": "META, 11 Nov 2026: retire the 'none' card, never delete; PM's waves moved its ballots onto their DAOs' own maps (ballots-reissue/CHANGES.json, data/gnosis/BALLOT-LINK-REPAIR.json)"
+      "decided": "Shared map curation, 11 Nov 2026: the 'none' card retired, never deleted; its ballots were reissued on their DAOs' own maps"
     },
     {
       "about": "none:gnosis.eth-gip-154-voters",
       "name": "GnosisDAO GIP-154 voting power",
       "why": "Retired: Snapshot ballots read off-chain, put on a card of their own because the reading named no DAO. The waves reissued them naming their DAO's token, so they're now on that DAO's own map.",
-      "decided": "META, 11 Nov 2026: retire the 'none' card, never delete; PM's waves moved its ballots onto their DAOs' own maps (ballots-reissue/CHANGES.json, data/gnosis/BALLOT-LINK-REPAIR.json)"
+      "decided": "Shared map curation, 11 Nov 2026: the 'none' card retired, never deleted; its ballots were reissued on their DAOs' own maps"
     },
     {
       "about": "none:giveth-basic-ballot-participation",
       "name": "Giveth ballot participation",
       "why": "Retired: Snapshot ballots read off-chain, put on a card of their own because the reading named no DAO. The waves reissued them naming their DAO's token, so they're now on that DAO's own map.",
-      "decided": "META, 11 Nov 2026: retire the 'none' card, never delete; PM's waves moved its ballots onto their DAOs' own maps (ballots-reissue/CHANGES.json, data/gnosis/BALLOT-LINK-REPAIR.json)"
+      "decided": "Shared map curation, 11 Nov 2026: the 'none' card retired, never deleted; its ballots were reissued on their DAOs' own maps"
     },
     {
       "about": "none:cow.eth-2026-selected-ballots",
       "name": "CoW DAO ballot participation",
       "why": "Retired: Snapshot ballots read off-chain, put on a card of their own because the reading named no DAO. The waves reissued them naming their DAO's token, so they're now on that DAO's own map.",
-      "decided": "META, 11 Nov 2026: retire the 'none' card, never delete; PM's waves moved its ballots onto their DAOs' own maps (ballots-reissue/CHANGES.json, data/gnosis/BALLOT-LINK-REPAIR.json)"
+      "decided": "Shared map curation, 11 Nov 2026: the 'none' card retired, never deleted; its ballots were reissued on their DAOs' own maps"
     },
     {
       "about": "none:cow.eth-cip-91-voters",
       "name": "CoW DAO CIP-91 voting power",
       "why": "Retired: Snapshot ballots read off-chain, put on a card of their own because the reading named no DAO. The waves reissued them naming their DAO's token, so they're now on that DAO's own map.",
-      "decided": "META, 11 Nov 2026: retire the 'none' card, never delete; PM's waves moved its ballots onto their DAOs' own maps (ballots-reissue/CHANGES.json, data/gnosis/BALLOT-LINK-REPAIR.json)"
+      "decided": "Shared map curation, 11 Nov 2026: the 'none' card retired, never deleted; its ballots were reissued on their DAOs' own maps"
     }
   ]
 }
