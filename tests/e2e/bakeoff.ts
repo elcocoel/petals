@@ -3,8 +3,8 @@
 // Cloud and spends real money, so it never runs in the tests. Nothing here signs or publishes; the
 // only testnet write is get_snapshot's normal fingerprint, when a writer key is set.
 //
-//   set -a; source ../.secrets/near-ai.env; set +a
-//   PETAL_WRITER_KEY_FILE=../.secrets/petal-writer.testnet.json \
+//   set -a; source /path/to/keys/near-ai.env; set +a
+//   PETAL_WRITER_KEY_FILE=/path/to/keys/petal-writer.testnet.json \
 //     node tests/e2e/bakeoff.ts --model z-ai/glm-5.3-flash --question validators \
 //       [--effort low|medium|high|model] [--out fixtures/transcripts/bakeoff]
 //       [--ledger /path/ledger.json] [--stop-at-usd 0.8] [--skeleton]

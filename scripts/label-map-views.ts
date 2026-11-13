@@ -1,8 +1,8 @@
-// Names the night's views on the map and says who made them (Elco, 10 Nov: the project's own mapping is
+// Names the night's views on the map and says who made them (the project's own mapping is
 // "by Petals' own mapping (mapping.petals.near)"). The names and hashes are the run's own, from the bench's
-// copy of its index (fixtures/landscape/night-2026-11-09.json.gz: the 203 views INDEX.md links). Only
+// copy of its index (fixtures/landscape/night-2026-11-09.json.gz: the 203 views of the run's index). Only
 // views this server holds change; running it again changes nothing. The run's own notes in a name, such as
-// "(token-only map)", are left out: a name is what people read on the map (Elco, 10 Nov).
+// "(token-only map)", are left out: a name is what people read on the map.
 //   node scripts/label-map-views.ts --by mapping.petals.near [--from <copy.json.gz>]
 // It writes to the server's own private store, so for a container run it from inside (mint-invite.ts says
 // why): container exec petals node /app/scripts/label-map-views.ts --by mapping.petals.near

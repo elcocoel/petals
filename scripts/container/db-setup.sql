@@ -1,6 +1,6 @@
 -- Petals' Postgres roles and a database, run once per database by the superuser, through psql:
 --   PETAL_OWNER_PASSWORD=… PETAL_APP_PASSWORD=… PETAL_DB_NAME=petals PETAL_DB_SERVED=1 psql -U postgres -f db-setup.sql
--- Two roles (specs/003-target/proposal-database.md, and research/postgres-capabilities-learning.md):
+-- Two roles (specs/003-target/proposal-database.md):
 --   petals_owner  owns the database and its schema, and migrates it, by hand (scripts/db-migrate.ts)
 --   petals_app    the running server: reads and writes rows, and nothing else. Not a superuser, no
 --                 BYPASSRLS, owns no table, can't create one. It may connect only to a served database.

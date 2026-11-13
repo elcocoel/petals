@@ -117,6 +117,10 @@ export const editorWords = {
   otherWallet: (wallet: string, account: string) =>
     `Your wallet is on ${wallet}. Switch it to ${account} to publish.`,
   tryAgain: 'Try again',
+  /** Signed in with an Ethereum or Solana wallet and no NEAR wallet added: what publishing needs. LOBBY's draft. */
+  needsNear:
+    'NEAR Social is on NEAR, so publishing needs a NEAR wallet. Add one in Wallets, then publish.',
+  goToWallets: 'Go to Wallets',
 } as const;
 
 /**
@@ -136,6 +140,19 @@ export type EditPhase =
   | 'checking'
   | 'failed';
 
+/**
+ * The NEAR account a profile is published as: the account signed in, when it's a NEAR one; otherwise the
+ * person's first NEAR wallet added in Wallets; or none.
+ */
+export function nearAccountOf(
+  signedIn: { network: string; account: string } | null,
+  wallets: readonly { network: string; account_id: string }[],
+): string | null {
+  if (signedIn && (signedIn.network === 'mainnet' || signedIn.network === 'testnet'))
+    return signedIn.account;
+  return wallets.find((w) => w.network === 'mainnet')?.account_id ?? null;
+}
+
 /** The phases in which the editor waits and nothing can be changed. */
 export const busyPhase = (p: EditPhase) => p !== 'editing' && p !== 'failed';
 
@@ -145,6 +162,11 @@ export interface ProfileEditorView {
   creating: boolean;
   /** The account it's kept for and would publish as, as shown, and in full. */
   account: { shown: string; full: string };
+  /**
+   * Publishing to NEAR Social needs a NEAR account (Front 1, 13 Nov): someone signed in with an Ethereum or
+   * Solana wallet and no NEAR wallet added yet; the editor says so and leads them to Wallets.
+   */
+  needsNearWallet: boolean;
   draft: ProfileDraft;
   /** The picture shown: the one chosen, or the one there now. */
   picture: string | null;

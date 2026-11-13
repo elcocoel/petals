@@ -691,6 +691,7 @@ const LAB_CREDIT: Credit = {
 const editorView = (over: Partial<ProfileEditorView>): ProfileEditorView => ({
   creating: false,
   account: { shown: 'a-name.near', full: 'a-name.near' },
+  needsNearWallet: false,
   draft: {
     name: 'A name on NEAR Social',
     about: 'A short bio, in the account’s own words.',
@@ -2539,6 +2540,20 @@ export const registry: LabEntry[] = [
         render: () => <ConnectWallet question="" busy={false} failed={null} onConnect={() => {}} />,
       },
       {
+        name: 'NEAR, Ethereum and Solana, as /make has it',
+        wide: true,
+        render: () => (
+          <ConnectWallet
+            question=""
+            busy={false}
+            failed={null}
+            onConnect={() => {}}
+            onConnectEvm={() => {}}
+            onConnectSolana={() => {}}
+          />
+        ),
+      },
+      {
         name: 'a question waiting, and the last try failed',
         wide: true,
         render: () => (
@@ -2684,6 +2699,17 @@ export const registry: LabEntry[] = [
       {
         name: 'saving',
         render: () => <ProfileEditor view={editorView({ phase: 'saving' })} />,
+      },
+      {
+        name: 'signed in with an Ethereum wallet, no NEAR wallet yet',
+        render: () => (
+          <ProfileEditor
+            view={editorView({
+              account: { shown: '0x3f…f0be', full: '0x3f5ce5fbfe3e9af3971dd833d26ba9b5c936f0be' },
+              needsNearWallet: true,
+            })}
+          />
+        ),
       },
       {
         name: "NEAR Social didn't take it",

@@ -1,10 +1,9 @@
-// The testnet rehearsal of the credit contract with usage records and carry forward (Elco's go, 10 Nov:
-// "testnet rehearsal with usage records first"). Real testnet calls: the person deposits, each chat is
-// charged by the server's charge-only key, what NEAR AI bills differently and a tip ride on the next charge,
-// and the person withdraws what's left. The model is a script and NEAR AI's billing a stand-in, so nothing is
+// The testnet rehearsal of the credit contract with usage records and carry forward. Real testnet calls: the
+// person deposits, each chat is charged by the server's charge-only key, what NEAR AI bills differently and a
+// tip ride on the next charge, and the person withdraws what's left. The model is a script and NEAR AI's billing a stand-in, so nothing is
 // spent but testnet NEAR. Run from build/:
-//   node scripts/rehearse-credit.ts --person-key ../.secrets/petals-paytest.testnet.json \
-//     --charger-key ../.secrets/petals-charger.testnet.charge-only.json [--contract petals-credit.testnet]
+//   node scripts/rehearse-credit.ts --person-key /path/to/keys/petals-paytest.testnet.json \
+//     --charger-key /path/to/keys/petals-charger.testnet.charge-only.json [--contract petals-credit.testnet]
 import { mkdtempSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
