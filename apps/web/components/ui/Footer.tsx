@@ -1,5 +1,5 @@
-// Figma's Footer (66:2360), a band on the FAQ's grey with a section's padding above its content: on the
-// left, the wordmark a third of the band's width (mark.fill) with the small print under it; bottom right, the site's
+// Figma's Footer (66:2360), a band on the FAQ's grey with two section paddings above its content: on the
+// left, the wordmark a third of the band's width (mark.fill) with the small print under it in the links' type; bottom right, the site's
 // pages and the outside links. The content sits one block gap from the window's own edges (left, right, bottom),
 // not on the page's inset column. Only links that go somewhere: an outside link shows once its address is set.
 import type { ReactNode } from 'react';
@@ -33,14 +33,14 @@ export function Footer() {
       data-surface="ground"
       data-tone="stone"
       data-b="surface"
-      className="@container relative overflow-hidden border-t border-hairline"
+      className="@container relative overflow-hidden border-t border-hairline pt-section-padding"
     >
       <div className="flex flex-col gap-column-gap px-block-gap pt-section-padding pb-block-gap antialiased md:flex-row md:items-end md:justify-between">
-        <div className="@container flex w-full flex-col gap-block-gap md:w-1/2">
+        <div className="@container flex w-full flex-col gap-column-gap md:w-1/2">
           <div className="@container w-full md:w-2/3">
             <Wordmark size="fill" />
           </div>
-          <p className="my-0 type-lead">
+          <p className="my-0 type-label text-primary">
             {copy.built.split(copy.by)[0]}
             <TextLink href={siteLinks.elementaryComplexity} variant="inline">
               {copy.by}
