@@ -31,7 +31,7 @@ import { mapClaims } from '../mapping-claims.ts';
 import { mcpHttpHandler } from '../mcp/server.ts';
 import { payoutsOf } from '../payouts.ts';
 import { cardProposals, proposalsOf } from '../proposals.ts';
-import { compositionOf, creditFor, mapRecord, readingCredit } from '../record.ts';
+import { authorOf, compositionOf, creditFor, mapRecord, readingCredit } from '../record.ts';
 import { findTool } from '../registry.ts';
 import { brainOf } from '../tools/brain.ts';
 import { base, findSnapshot } from '../tools/shared.ts';
@@ -634,7 +634,7 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
   });
   // An author's credit (credit/v1, wave 8): computed from the whole record, with its hash, so anyone can check it.
   app.get('/api/v1/credit/:account', async (c) =>
-    respond(c, await creditFor(ctx, c.req.param('account'))),
+    respond(c, await creditFor(ctx, authorOf(c.req.param('account')))),
   );
   // A view's still picture, as a flower's tile is drawn: with the view its address names. No per-address limit: a
   // gallery asks for every view's picture at once, and behind the site every visitor reaches this server

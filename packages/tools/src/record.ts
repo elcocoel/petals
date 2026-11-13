@@ -73,6 +73,19 @@ export async function compositionOf(ctx: ToolContext, about: string): Promise<Co
   return map;
 }
 
+/** A named NEAR account (petals.near, alice.testnet) or an implicit one (64 hex), as look_up reads one. */
+const NEAR_ACCOUNT =
+  /^(?:(?:[a-z0-9]+[-_])*[a-z0-9]+\.)+(?:near|tg|testnet|aurora|sweat)$|^[0-9a-f]{64}$/;
+
+/**
+ * An author as the record names them (CAIP-10), from what a page or a person gives: a bare NEAR account reads as
+ * near:mainnet:<it>, or near:testnet:<it> for a .testnet one, as the rest of the API reads it; anything else as given.
+ */
+export const authorOf = (given: string) =>
+  NEAR_ACCOUNT.test(given)
+    ? `near:${given.endsWith('.testnet') ? 'testnet' : 'mainnet'}:${given}`
+    : given;
+
 /** One author's credit (credit/v1), from the whole record, with its hash. */
 export async function creditFor(
   ctx: ToolContext,
