@@ -788,7 +788,7 @@
 /* Under the wordmark's three layers, one more in mint with its cells solid: the small name reads, and the
    layers over it still open as the pointer nears (mark.open). Hidden in version 1. */
 /* mark.base */
-:root[data-version="2"] [data-kind="wordmark"] > [data-layer="base"] {
+:root[data-version="2"] [data-b="mark"][data-kind="wordmark"] > [data-layer="base"] {
   display: block;
   grid-area: 1 / 1;
   text-box: inherit;
@@ -797,13 +797,13 @@
 }
 
 /* mark.fill */
-:root[data-version="2"] [data-kind="wordmark"][data-size="fill"] {
+:root[data-version="2"] [data-b="mark"][data-kind="wordmark"][data-size="fill"] {
   font-size: var(--joy-move-wordmark-fill);
 }
 
 /* One grey for the word, its widest layer a lighter edge around it, so it looks pressed into the band. */
 /* mark.mono */
-:root[data-version="2"] [data-kind="wordmark"][data-tone="mono"] {
+:root[data-version="2"] [data-b="mark"][data-kind="wordmark"][data-tone="mono"] {
   --figure-accent: var(--joy-paint-ground);
   --figure-petal: var(--hairline);
   --text-primary: var(--hairline);
