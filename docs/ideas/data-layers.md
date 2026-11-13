@@ -20,4 +20,4 @@ A flower is drawn from its data and a view: settings that assign pieces of data 
 
 Layers and annotations are private first, kept in your project. What you kept about a map’s accounts, your names and other claims, goes to the shared Power Map with one press on that map, signed by your own wallet and credited to you. A name goes only as the system’s own records declare it, such as a proposal or a transaction that quotes it; what stays private says why. Publishing a dataset version is not built yet.
 
-See [layer/v1](/docs/data-protocol/schemas/layer-v1) for the fields, [authorship](/docs/ideas/authorship) for how prior work is kept, and [collective mapping](/docs/collective-mapping) for how layers from many authors add up to one map.
+See [layer/v1](/docs/data-protocol/schemas/layer-v1) for the fields, [authorship](/docs/ideas/authorship) for how prior work is kept, and [collective mapping](/docs/ideas/collective-mapping) for how layers from many authors add up to one map.

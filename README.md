@@ -78,7 +78,7 @@ The API is a separate process. The Next.js site forwards API requests to `PETAL_
 
 ## Collective mapping
 
-Anyone can add to the Power Map. A map is everything its authors published about one address: each publication is a version signed by its author's wallet and kept in an append-only record, and the map is composed from that record, fact by fact, the same way every time. The same value at the same block is one fact, credited to everyone who stated it; a different value is marked for anyone to check, and both stand. Nobody's work replaces another's, and each author's credit record, including points for layers others build on, can be recomputed by anyone. See [collective mapping](https://petals.elementarycomplexity.com/docs/collective-mapping) and the [spec](specs/005-mapping-brain/composition.md).
+The Power Map is built together by its people, and three counts per person show who's helping: facts they added first, facts they confirmed, and accounts that built on their work. A map is everything its authors published about one address: each publication is a version signed by its author's wallet and kept in an append-only record, and the map is composed from that record, fact by fact, the same way every time. The same value at the same block is one fact, credited to everyone who stated it; a different value is marked for anyone to check, and both stand. Nobody's work replaces another's, and anyone can recompute each author's counts from the record. See [collective mapping](https://petals.elementarycomplexity.com/docs/ideas/collective-mapping) and the [spec](specs/005-mapping-brain/composition.md).
 
 ## NEAR integrations
 
