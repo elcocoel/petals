@@ -178,7 +178,7 @@ const written = {
     prompt: agentWords.setup,
   },
   gallery: {
-    title: 'Start with a network you know.',
+    title: 'Start with a network you know',
     open: 'Explore the Power Map',
   },
   questions: {
@@ -325,7 +325,7 @@ const written = {
     ],
   },
   builders: {
-    title: 'Petals is open source. Build it with us.',
+    title: 'Build Petals with us',
     /**
      * Three links under the system's graph: the docs, GitHub, and a star on GitHub.
      */
@@ -337,7 +337,7 @@ const written = {
   },
   footer: {
     /** Drafts (LANDING, 11 Nov, board card 104), for Elco: the two groups' names; the links are the site's own. */
-    groups: { petals: 'Petals', build: 'Build' },
+    groups: { petals: 'Petals', build: 'Build', elsewhere: 'Elsewhere' },
     links: {
       gallery: 'Power Map',
       howItWorks: 'How it works',
@@ -345,6 +345,8 @@ const written = {
       docs: 'Docs',
       agent: 'Connect your agent',
       contribute: 'Contribute',
+      github: 'GitHub',
+      elementaryComplexity: 'Elementary Complexity',
     },
     built: 'Built for the NEAR Hackathon, November 2026. By Elementary Complexity.',
     /** The words in `built` that link to Elementary Complexity's site (siteLinks.elementaryComplexity). */

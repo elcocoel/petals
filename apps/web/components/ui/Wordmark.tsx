@@ -10,20 +10,12 @@ const SIZES = {
   fill: 'wordmark-nav md:wordmark-footer',
 } as const;
 
-/** `mono`: in the band's greys, pressed into it (mark.mono). */
-export function Wordmark({
-  size = 'nav',
-  mono = false,
-}: {
-  size?: keyof typeof SIZES;
-  mono?: boolean;
-}) {
+export function Wordmark({ size = 'nav' }: { size?: keyof typeof SIZES }) {
   return (
     <span
       data-b="mark"
       data-kind="wordmark"
       data-size={size === 'fill' ? 'fill' : undefined}
-      data-tone={mono ? 'mono' : undefined}
       className={`wordmark ${SIZES[size]}`}
     >
       <span aria-hidden="true" className="wordmark-back select-none">

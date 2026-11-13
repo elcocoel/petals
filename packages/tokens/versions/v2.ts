@@ -470,7 +470,7 @@ const groups = {
     'answer-bold': '550',
     /** A section name's mint base: the pixel face's cells solid, so the small name reads. */
     'mark-base-axes': '"CRSV" 0, "ELSH" 0, "ELXP" 0, "slnt" -8, "wght" 358',
-    /** The footer's wordmark fills its column: the face's six letters run 3.6 times its size. */
+    /** The footer's wordmark fills its container, the window's width: the face's six letters run 3.6 times its size. */
     'wordmark-fill': 'calc(100cqi / 3.62)',
     'sign-turn': '90deg',
     'sign-rest': '0deg',

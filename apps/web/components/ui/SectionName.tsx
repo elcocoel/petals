@@ -41,7 +41,8 @@ export function SectionName({ name, look = 'logo' }: { name: string; look?: Sect
       </h2>
     );
   return (
-    <h2 className="my-0">
+    // a long name breaks into two balanced lines rather than running across the band
+    <h2 className="my-0 max-w-conversation-width text-balance">
       {look === 'logo' ? (
         <Layers name={name} size="wordmark-nav" middle />
       ) : (

@@ -251,15 +251,10 @@ export const behaviours = [
     via: 'both',
   },
   { name: 'mark.tight', purpose: 'The nav wordmark settles smaller with the nav', via: 'css' },
-  { name: 'mark.fill', purpose: "The footer's wordmark fills the width of its column", via: 'css' },
+  { name: 'mark.fill', purpose: "The footer's wordmark runs the width of the window", via: 'css' },
   {
     name: 'mark.base',
     purpose: "A section name in the wordmark's face sits on a solid mint layer, so it reads small",
-    via: 'css',
-  },
-  {
-    name: 'mark.mono',
-    purpose: "A wordmark in its band's greys, pressed into it rather than printed on it",
     via: 'css',
   },
   // head
