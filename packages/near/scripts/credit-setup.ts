@@ -1,4 +1,4 @@
-// Sets up Petals' credit contract (9 Nov; specs/003-target/proposal-payment.md, section 6), for Elco to run.
+// Sets up Petals' credit contract (specs/003-target/proposal-payment.md, section 6), for the operator to run.
 //
 //   node packages/near/scripts/credit-setup.ts [--network testnet]
 //       opens a page on http://127.0.0.1:3189 where the owner's own wallet approves one plain transfer,
@@ -8,12 +8,12 @@
 //       a rehearsal, with that account's key file making the transfer instead of a wallet
 //
 // The wallet is asked for one thing only: a plain NEAR transfer to a new account this script made on this
-// machine. Wallets refuse to give a site a full-access key (Meteor, 9 Nov), and nobody has checked whether
+// machine. Wallets refuse to give a site a full-access key (Meteor does), and nobody has checked whether
 // they sign a contract deploy for one, so the deploy happens here. From that account the script:
 //   1. makes the contract's account and the charger's, through NEAR's own name registrar;
 //   2. deploys the contract (packages/near/contract), sets it up (owner, charger), and deletes its last
 //      key: nobody can change it after, and people can always withdraw;
-//   3. gives the charger one key that can call `charge` and nothing else (written to ../.secrets, never
+//   3. gives the charger one key that can call `charge` and nothing else (written to the .secrets folder, never
 //      printed), and the owner's own wallet key, then deletes its own;
 //   4. deletes the account it was paid into, so what's left goes back to the owner.
 import { createHash } from 'node:crypto';
@@ -105,7 +105,7 @@ const sha = createHash('sha256').update(wasm).digest('hex');
 if (sha !== WASM_SHA256)
   fail(`the build's sha256 is ${sha}, not the one walked on testnet (${WASM_SHA256}).`);
 /**
- * The keys this run makes, kept in ../.secrets until it ends, so a run that stops halfway (a network
+ * The keys this run makes, kept in the .secrets folder until it ends, so a run that stops halfway (a network
  * failure, a closed terminal) picks up where it stopped instead of stranding the NEAR it was sent. Deleted
  * once everything is done.
  */
@@ -174,7 +174,7 @@ async function send(
   );
   const ok = out.status && typeof out.status === 'object' && 'SuccessValue' in out.status;
   // Deleting an account: NEAR then sends its gas refund to the account that's just gone, and that receipt
-  // fails with AccountDoesNotExist. That's how a delete ends, not a failure: gone is done (Elco's testnet run).
+  // fails with AccountDoesNotExist. That's how a delete ends, not a failure: gone is done (seen on a testnet run).
   if (o.gone && (await balanceOf(o.gone)) === null) return out.transaction.hash;
   if (!ok || failed) {
     fail(

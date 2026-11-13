@@ -2,7 +2,7 @@
 // `__fastdata_kv` function call per write: 1 Ggas, deposit 0, to a receiver that has no contract,
 // signed with a function-call key limited to that receiver and that method.
 //
-// The traps (research/build-primer.md, section 1):
+// The traps:
 // - The receipt fails with CodeDoesNotExist because there is no contract. That is the expected
 //   outcome: FastData indexes the call anyway. So throwOnFailure is false and the failure is
 //   classified; it is never retried.
