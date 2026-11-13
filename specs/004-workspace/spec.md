@@ -118,7 +118,7 @@ Elco moves testing to this machine, so LOOK can read the conversations and let w
 
 ## Ideas, not decided
 
-- **Points for mapping** (Elco, 8 Nov): "I had a vision of incentivizing mapping via 'points' that could one day move us towards a TGE -> users pay for extra features, part of revenue goes to a DAO, part of revenue rewards work, part of revenue goes to Devs." Payments are `003-target`'s Q8, later, in their own spec.
+- **Points for mapping** (Elco, 8 Nov): points for mapping work, counted from layers others build on.
 
 ## Questions to decide, one at a time
 
