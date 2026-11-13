@@ -10,6 +10,8 @@ export const lobbyWords = {
   map: 'On the map',
   /** The map with nothing on it yet: what goes there, and how. */
   mapEmpty: 'Nothing on the map yet. A network you map in a conversation shows here.',
+  /** Signing out, at the top of the lobby: the one way out of the account. */
+  disconnect: 'Disconnect',
 } as const;
 
 /**

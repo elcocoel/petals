@@ -2,8 +2,10 @@
 // balance, all read once in the layout (viewmodels/useWorkPanel.ts) so the side panel and the page say the
 // same; their conversations, the panel's own list; and, read here when the page opens, the wallets they proved
 // by signing in (GET /api/v1/me) and the claims they and their agents keep about accounts (GET
-// /api/v1/me/annotations), and every model call charged to them (usage/v1, GET /api/v1/me/usage). Add a wallet signs Petals' challenge with another wallet, as signing in does, and binds
-// it to this person (POST /api/v1/me/wallets); the session stays as it is. There is no timer.
+// /api/v1/me/annotations), every model call charged to them (usage/v1, GET /api/v1/me/usage), and their tip
+// (useTip). Disconnect signs out (the session's own). Add a wallet signs Petals' challenge with another
+// wallet, as signing in does, and binds it to this person (POST /api/v1/me/wallets); the session stays as it
+// is. There is no timer.
 
 import type { Credit } from '@petal/core';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -29,9 +31,11 @@ import {
   walletRows,
 } from '../lib/profile-view.ts';
 import { hasSolanaWallet, NO_SOLANA_WALLET } from '../lib/solana-wallet.ts';
+import { tipLine } from '../lib/tip.ts';
 import { connectWallet, SIGN_IN_NETWORK, signPrepared } from '../lib/wallet.ts';
 import { usePowerQuote } from './usePowerQuote.ts';
 import { evmProof, solanaProof } from './useSession.ts';
+import { useTip } from './useTip.ts';
 import { useWorkPanel } from './useWorkPanel.ts';
 
 const why = (e: unknown) =>
@@ -41,7 +45,10 @@ export function useLobby() {
   const bus = useWorkPanel();
   const person = bus.person;
   if (!person) throw new Error('the lobby is drawn inside the layout it shares with the workspace');
-  const { profile, editor, funds } = person;
+  const { profile, editor, funds, session } = person;
+  // the tip, an optional donation on the price's scale: what it adds to a typical turn reads as the balance
+  // does, at NEAR's price from the one balance
+  const tipped = useTip(Boolean(session.account));
   const [wallets, setWallets] = useState<WalletRow[] | 'reading' | 'unread'>('reading');
   const [claims, setClaims] = useState<ClaimsView | 'reading' | 'unread'>('reading');
   const [usage, setUsage] = useState<{ calls: UsageCall[]; spent: number } | 'reading' | 'unread'>(
@@ -158,5 +165,16 @@ export function useLobby() {
     conversations: bus.rows,
     contribution: typeof credit === 'string' ? credit : contributionView(credit),
     quotes,
+    tip: {
+      percent: tipped.percent,
+      scale: tipped.scale,
+      open: tipped.open,
+      onOpen: tipped.toggle,
+      onSlide: tipped.slide,
+      onSet: tipped.set,
+      line: tipLine(tipped.percent ?? 0, tipped.turn, funds.where?.near_usd ?? null),
+      failed: tipped.failed,
+    },
+    leave: session.disconnect,
   };
 }
