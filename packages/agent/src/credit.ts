@@ -13,7 +13,16 @@ import {
   yoctoToUsd,
 } from '@petal/near/pay';
 import type { Store } from '@petal/store';
-import { FUNDED, PAID, type PersonCredit, SYNCED, syncPersonCredit } from './invites.ts';
+import {
+  drawOffchain,
+  ensureOffchain,
+  FUNDED,
+  offchainOf,
+  PAID,
+  type PersonCredit,
+  SYNCED,
+  syncPersonCredit,
+} from './invites.ts';
 
 type Env = Record<string, string | undefined>;
 
@@ -95,9 +104,11 @@ async function carry(store: Store, person: string, at: Date): Promise<void> {
 }
 
 /**
- * Reads `account`'s balance and sets the person's credit to it in dollars at `nearUsd`, less what they owe,
- * and says how to charge. It carries forward: the contract can only charge, so what's
- * owed either way rides on the next charge: owed is charged with it, owed back takes from it.
+ * Reads `account`'s balance and sets the person's credit to it in dollars at `nearUsd`, plus what they hold
+ * off the contract (plain transfers, NEAR Intents, what the operator gave), less what they owe, and says how
+ * to charge. A chat spends what's off the contract first; only the rest is charged on chain. It carries
+ * forward: the contract can only charge, so what's owed either way rides on the next charge: owed is charged
+ * with it, owed back takes from it.
  */
 export async function chainChat(
   store: Store,
@@ -108,18 +119,21 @@ export async function chainChat(
   now: () => Date,
 ): Promise<ChainChat> {
   const yocto = await chain.balanceOf(account);
+  await ensureOffchain(store, person, now());
   await carry(store, person, now());
   const owed = await owedOf(store, person);
   const credit = await syncPersonCredit(
     store,
     person,
-    yoctoToUsd(yocto, nearUsd) - Math.max(0, owed),
+    (await offchainOf(store, person)) + yoctoToUsd(yocto, nearUsd) - Math.max(0, owed),
     now(),
   );
   return {
     credit,
     yocto,
-    async settle(spentUsd) {
+    async settle(spent) {
+      // what's off the contract pays first; the contract is charged only for the rest
+      const spentUsd = usd(Math.max(0, spent) - (await drawOffchain(store, person, spent, now())));
       const owedNow = await owedOf(store, person);
       const total = usd(Math.max(0, spentUsd) + owedNow);
       // all of it owed back, or more: nothing is charged, and what's left stays owed back

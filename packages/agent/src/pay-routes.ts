@@ -137,7 +137,6 @@ export function payRoutes(d: PayDeps): Hono {
       if (!me.accounts.includes(account_id)) {
         return fail(c, 'unauthorised', `${account_id} isn't one of your wallets here.`);
       }
-      if (d.credit) return contractPaid(c, d.credit, me, account_id, tx_hash);
       const receiver = PAY_RECEIVER[me.network];
       let t: Transfer;
       try {
@@ -153,6 +152,9 @@ export function payRoutes(d: PayDeps): Hono {
           "Couldn't read the transaction on NEAR, so nothing changed. Send it again.",
         );
       }
+      // with the contract, a deposit or a withdrawal in it; a plain transfer to Petals' account still counts
+      if (d.credit && t.receiver_id !== receiver)
+        return contractPaid(c, d.credit, me, account_id, t);
       if (
         t.signer_id !== account_id ||
         t.receiver_id !== receiver ||
@@ -209,7 +211,7 @@ export function payRoutes(d: PayDeps): Hono {
     chain: CreditChain,
     me: { person: string; network: Network; account: string | null },
     account: string,
-    txHash: string,
+    t: Transfer,
   ) {
     const { network, contract } = chain.contract;
     if (me.network !== network) {
@@ -221,20 +223,6 @@ export function payRoutes(d: PayDeps): Hono {
     }
     if (account !== me.account) {
       return fail(c, 'unauthorised', `${account} isn't the wallet you signed in with.`);
-    }
-    let t: Transfer;
-    try {
-      t = await read(network, txHash, account);
-    } catch (e) {
-      const code = (e as { code?: string }).code;
-      const message = (e as Error).message;
-      if (code === 'not_found') return fail(c, 'not_found', message);
-      if (code === 'bad_input') return fail(c, 'bad_input', message);
-      return fail(
-        c,
-        'source_failed',
-        "Couldn't read the transaction on NEAR, so nothing changed. Send it again.",
-      );
     }
     const deposit = t.methods.includes('deposit');
     if (
