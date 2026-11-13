@@ -4,9 +4,13 @@ import { existsSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { canonicalJson, sha256Hex } from '@petal/core';
 import type { Snapshot } from '@petal/core/types';
-import { beforeAll, describe, expect, test } from 'vitest';
+import { beforeAll, describe, expect, test, vi } from 'vitest';
 import { callTool, describeTool, registry } from '../src/registry.ts';
 import { rig, type TestRig } from './helpers.ts';
+
+// Under load (a shared Mac at a load of 170-190, 13 Nov) this file's tests pass alone and time out together:
+// a longer limit here only; what they check is unchanged.
+vi.setConfig({ testTimeout: 120_000, hookTimeout: 120_000 });
 
 // biome-ignore lint/suspicious/noExplicitAny: walking tool outputs
 type Json = Record<string, any>;

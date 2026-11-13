@@ -131,6 +131,31 @@ describe('the import: what was on the map before the record', () => {
     expect(again.publications).toEqual([]);
     expect(await recordOf(r.ctx)).toHaveLength(2);
   });
+
+  test('a press since the record began is its own publication: the import leaves it', async () => {
+    await privateStore(r.ctx.config).annotation.add([
+      {
+        owner: 'published',
+        id: 'c-named-2',
+        exploration: `published:${'e'.repeat(64)}`,
+        subject: member,
+        verb: 'named',
+        kind: 'sourced',
+        body: JSON.stringify({ id: 'c-named-2', by: 'near:mainnet:bob.near' }),
+        credential: JSON.stringify({
+          publication: 'e'.repeat(64),
+          proof: {
+            standard: 'nep413',
+            message: 'Petals: publish 1 layer about RaidGuild in your name.',
+          },
+        }),
+        created_at: AT,
+        place: 0,
+      },
+    ]);
+    const dry = await importRecord(r.ctx, { dry: true });
+    expect(dry.publications.map((p) => p.author)).toEqual(['mapping.petals.near', ELCO]);
+  });
 });
 
 describe("the map from the record: its layers, its authors' three counts, a reading's credit, credit/v1", () => {
