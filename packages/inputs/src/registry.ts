@@ -21,7 +21,7 @@ export const modules: Record<string, InputModule> = {
   beanstalk: beanstalk(),
   'erc20-votes': erc20Votes(),
   'erc20-holders': erc20Holders(),
-  // a Sputnik DAO's members and its proposals' votes (#93)
+  // a Sputnik DAO's members and its proposals' votes
   'sputnik-dao': sputnikDao(),
   // the brain's reading recipes (specs/005-mapping-brain): Moloch v3 first
   ...recipeModules(),

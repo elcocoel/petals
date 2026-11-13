@@ -78,8 +78,8 @@ export const aboutKey = (about: string) =>
 export const sameAbout = (a: string, b: string) => a === b || aboutKey(a) === aboutKey(b);
 
 /**
- * The map a reading belongs to (Elco, 10 Nov: "maps that map the same address need to come together as
- * versions of the same map"): its address, in one form. Every drawing of every reading of it is on that map.
+ * The map a reading belongs to, so maps of the same address come together as versions of one map: its
+ * address, in one form. Every drawing of every reading of it is on that map.
  */
 export const mapOf = (s: Snapshot): string => aboutKey(aboutOf(s));
 
@@ -94,7 +94,7 @@ function shareOf(part: number, total: number): string {
  * about the same address as the base; a name may come from one source only.
  */
 /**
- * The one name a petal shows when several are claimed (annotation-layer.md, with LOOK): the account's own
+ * The one name a petal shows when several are claimed: the account's own
  * word, then the person's, then a source's, then an inference; then the newest; then the lower id.
  */
 const NAME_RANK: readonly ClaimKind[] = ['declared', 'stated', 'sourced', 'inferred'];
@@ -110,7 +110,7 @@ const before = (a: Claim, b: Claim) =>
       : a.id < b.id;
 
 /**
- * Names from annotations (annotation-layer.md step 5): for each of the reading's participants a `named` claim
+ * Names from annotations: for each of the reading's participants a `named` claim
  * is about, one name and how it's known, as two categories, `name` and `name_kind`. What the policy hides
  * (retracted, replaced) doesn't count, in the person's own lens, which counts everyone in their own set. A
  * name is never verified: both are `lead`, the viewer's own, to check. The set is named by the hash of the
@@ -160,7 +160,7 @@ export function namePieces(s: Snapshot, claims: readonly Claim[]): SeamPiece[] {
 }
 
 /**
- * Types from annotations (#97; Elco, 11 Nov: types are data, several at once): for each of the reading's
+ * Types from annotations (types are data, several at once): for each of the reading's
  * participants an is_a claim is about, its words, each once, in the order they were found, as one category,
  * `type`. What the policy hides doesn't count. A type is never verified: `lead`, the viewer's own. None: none.
  */

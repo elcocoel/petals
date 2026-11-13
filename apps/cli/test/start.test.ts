@@ -1,4 +1,4 @@
-// The whole start in one call, and a note from a heredoc (Elco, 9 Nov: setup took three minutes).
+// The whole start in one call, and a note from a heredoc.
 // The browser opener is off in every test.
 import type { Tool, ToolContext } from '@petal/tools';
 import { describe, expect, test } from 'vitest';

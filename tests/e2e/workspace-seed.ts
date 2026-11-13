@@ -1,5 +1,5 @@
-// A small workspace to come back to, for `journey-server.ts --seed`: what INTERACTION builds against
-// before a real person has used the thing. Folders too (004-workspace, W4): two, one inside the other,
+// A small workspace to come back to, for `journey-server.ts --seed`: what the interaction pages build
+// against before a real person has used the thing. Folders too (004-workspace, W4): two, one inside the other,
 // with conversations in each and the rest at the top. Real code all the way down: the chats go through the real app,
 // the real NEAR AI client, the stub model and the real tools, into the real SQLite, and the rest goes
 // through the real routes. Only what the stub can't say is written to the store directly, and by the same
@@ -132,7 +132,7 @@ export async function seedWorkspace(o: SeedOptions): Promise<SeedResult> {
     (await (await wanted(await call(`/api/v1/agent/runs/${id}`, 'GET'))).json()) as Run;
   /**
    * The flower a conversation drew: the run's, or its last flower event; if it drew none, a stop that
-   * says which conversation and the run's last error, not a TypeError further on (PANEL, 11 Nov).
+   * says which conversation and the run's last error, not a TypeError further on.
    */
   const drawnIn = async (id: string): Promise<FlowerResult> => {
     const run = await runOf(id);

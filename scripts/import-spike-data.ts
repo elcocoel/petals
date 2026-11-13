@@ -1,4 +1,4 @@
-// Import the spike data into fixtures (T017, T018). Offline; reads ../research/data/ only.
+// Import the spike data into fixtures (T017, T018). Offline; reads the spike's data folder only.
 //   pnpm import:spike [research-data-dir]
 // Writes:
 //   fixtures/snapshots/<sha256>.json.gz and fixtures/snapshots/index.json   (NEAR validators)

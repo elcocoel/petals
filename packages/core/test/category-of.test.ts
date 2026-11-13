@@ -1,6 +1,6 @@
 // What a dimension reads for a petal from a category piece of data (core's categoryOf): its value, and only that.
-// How a value looks is the look's, and nothing fixes one (Elco, 11 Nov: "dont give data hard coded use of visual
-// manifestations"). The names here are invented.
+// How a value looks is the look's, and nothing fixes one: data gets no hard-coded visual meaning. The names here
+// are invented.
 import { describe, expect, test } from 'vitest';
 import { makeClaim } from '../src/claims/index.ts';
 import { categoryOf } from '../src/reading/index.ts';

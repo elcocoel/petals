@@ -1,4 +1,4 @@
-// EVM and Solana wallets' proofs (12 Nov, wave 5): EIP-191 personal_sign recovered to its address, EIP-55
+// EVM and Solana wallets' proofs: EIP-191 personal_sign recovered to its address, EIP-55
 // checksums, Solana's ed25519 signMessage; on outside vectors where there are ones.
 import { describe, expect, test } from 'vitest';
 import { createNonceStore } from '../src/auth/nonce.ts';

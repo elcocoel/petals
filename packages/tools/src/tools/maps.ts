@@ -1,8 +1,8 @@
-// The Power Map's maps for agents (META, from Elco, 12 Nov: "the agent is kinda dumb - it's assuming it has to
-// count everything from scratch all the time instead of navigating and helping me interprate what's already
-// there"). look_up finds a map by any word with its link (mapIndex, mapRow); get_map hands one map's layers
-// over to be interpreted: its readings, proposals, value, payouts, Petals' mapping's Insights and the person's
-// own names on its accounts, each saying where and when. Nothing here reads anew: it's what the map holds.
+// The Power Map's maps for agents, so an agent navigates and interprets what's already there instead of counting
+// everything from scratch. look_up finds a map by any word with its link (mapIndex, mapRow); get_map hands one
+// map's layers over to be interpreted: its readings, proposals, value, payouts, Petals' mapping's Insights and
+// the person's own names on its accounts, each saying where and when. Nothing here reads anew: it's what the map
+// holds.
 import { payoutsIn, validateMark, validateProposals } from '@petal/core';
 import type { Claim, NextStep, NextSteps } from '@petal/core/types';
 import { EVM_CHAINS } from '@petal/inputs';
@@ -26,6 +26,7 @@ import { cardProposals } from '../proposals.ts';
 import { publishable } from '../publish-data.ts';
 import type { ToolContext } from '../types.ts';
 import { valuesOf } from '../value-store.ts';
+import { vestingNow } from '../vesting.ts';
 import { layerOwnerOf } from './datasets.ts';
 import { open, REF } from './explorations.ts';
 import { base, obj } from './shared.ts';
@@ -45,7 +46,7 @@ export function mapIdOf(given: string): string {
   }
 }
 
-/** Each map's mark (#85), by its address, as the site serves it. */
+/** Each map's mark, by its address, as the site serves it. */
 async function marksOf(ctx: ToolContext): Promise<Map<string, CardMark>> {
   const out = new Map<string, CardMark>();
   for (const r of await privateStore(ctx.config).mark.list()) {
@@ -55,7 +56,7 @@ async function marksOf(ctx: ToolContext): Promise<Map<string, CardMark>> {
   return out;
 }
 
-/** One map's proposals in short (#93), or null when none were read. */
+/** One map's proposals in short, or null when none were read. */
 async function proposalsFor(ctx: ToolContext, id: string) {
   const row = await privateStore(ctx.config).proposals.get(id);
   if (!row) return null;
@@ -76,7 +77,7 @@ export interface Indexed {
 
 /**
  * The maps on the Power Map, newest first, each with the words and addresses it's found by. With hidden, the
- * maps hidden from the Power Map (#96) too.
+ * maps hidden from the Power Map too.
  */
 export async function mapIndex(ctx: ToolContext, o: { hidden?: boolean } = {}): Promise<Indexed[]> {
   const views = await mapViews(ctx, undefined, o);
@@ -172,7 +173,8 @@ export const getMap = defineTool<{ map: string }, Record<string, unknown>>({
     "One map on the Power Map, by its address (look_up's maps give it) or its link: everything already there, " +
     'to interpret without reading anew. Its link; its readings, each with its date, size and who mapped it; its ' +
     'proposals and the period they cover; its value (price, supply, market cap, treasury), each with its source ' +
-    "and date; its payouts in short; Insights, the claims Petals' mapping made about its accounts and those people " +
+    "and date; its vesting now, where it was read (each allocation's unlocked, next unlock and later, and their " +
+    "totals, by its schedules); its payouts in short; Insights, the claims Petals' mapping made about its accounts and those people " +
     'published, each with who answers for it; and the ' +
     "signed-in person's own names for its accounts, which are theirs alone until they publish them. " +
     'describe_snapshot and compute_figures count a reading; find_voting_blocs and list_payouts go deeper.',
@@ -225,6 +227,11 @@ export const getMap = defineTool<{ map: string }, Record<string, unknown>>({
       },
       proposals: { type: ['object', 'null'] },
       value: { type: ['object', 'null'] },
+      vesting: {
+        type: ['object', 'null'],
+        description:
+          'the kept vesting at now, by its schedules: totals and each allocation, unlocked, next_unlock {at, amount}, later',
+      },
       payouts: { type: ['object', 'null'] },
       insights: {
         type: 'array',
@@ -256,13 +263,14 @@ export const getMap = defineTool<{ map: string }, Record<string, unknown>>({
       );
     const card = found.card;
     const accounts = await cardAccounts(ctx, card);
-    const [proposals, paid, claims, own] = await Promise.all([
+    const [proposals, paid, claims, own, vesting] = await Promise.all([
       proposalsFor(ctx, card.id),
       payoutsOf(ctx, card.id),
       claimsAbout(ctx, accounts),
       ctx.caller?.subject
         ? privateStore(ctx.config).annotation.list(ctx.caller.subject)
         : Promise.resolve([]),
+      vestingNow(ctx, card.id, ctx.now()),
     ]);
     const totals = paid ? payoutsIn(paid).totals : null;
     const dates = (paid?.payouts ?? [])
@@ -291,6 +299,7 @@ export const getMap = defineTool<{ map: string }, Record<string, unknown>>({
       })),
       proposals,
       value: card.value,
+      vesting,
       payouts:
         paid && totals
           ? {
@@ -318,10 +327,9 @@ export const getMap = defineTool<{ map: string }, Record<string, unknown>>({
 const addressKey = (a: string) => (/^0x[0-9a-fA-F]{40}$/.test(a) ? a.toLowerCase() : a);
 
 /**
- * Where a new read of this target would land, for the ceremony's card (Elco, 12 Nov: "are we adding to a map that
- * already exists? than we look at that - if it's completely new, than we have a 'place holder'"): the map already
- * at one of its addresses (or, for a whole network, the map its reader already drew), its name and chain, and
- * what will be read, in words. Nothing is read.
+ * Where a new read of this target would land, for the ceremony's card (a map that exists, or a placeholder for a
+ * new one): the map already at one of its addresses (or, for a whole network, the map its reader already drew),
+ * its name and chain, and what will be read, in words. Nothing is read.
  */
 export async function whereItLands(
   ctx: ToolContext,
@@ -369,9 +377,9 @@ const SERVICES: { label: string; needs?: 'proposals' | 'treasury' }[] = [
 ];
 
 /**
- * The next steps on a map just read (META, from Elco, 12 Nov: "three next-step buttons that drive the map ('show
- * the blocs', 'what it paid out', 'compare with…'), the brain's services as one-press options"), from what get_map
- * said it holds: each a message to send, or, finish false, words for the person to finish.
+ * The next steps on a map just read (the brain's services as one-press options: show the blocs, what it paid out,
+ * compare with…), from what get_map said it holds: each a message to send, or, finish false, words for the person
+ * to finish.
  */
 export function nextSteps(m: {
   id: string;
@@ -434,8 +442,8 @@ export const listPublishable = defineTool<
   description:
     'What the signed-in person kept about a map in their projects (their names and other claims about its ' +
     'accounts) and could publish to the shared Power Map with one press on that map, signed by their own wallet ' +
-    'and credited to them: each item one per row (its name, address, source and a confidence from the reranker on ' +
-    "Elco's Mac, how strongly its own evidence says it), which stay private and why (the people rule: a name goes only as the " +
+    'and credited to them: each item one per row (its name, address, source and a confidence from the search ' +
+    "model's reranker, how strongly its own evidence says it), which stay private and why (the people rule: a name goes only as the " +
     "DAO's own records declare it), and how many are published already. It publishes nothing; never sign for them. " +
     "A person's own agent names their project by its link (exploration); on the site it's the person signed in.",
   input: obj(
@@ -509,7 +517,7 @@ export const listPublishable = defineTool<
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   failure: 'not_found',
   async run({ map, exploration }, ctx) {
-    // through a project's link, its owner's (CONNECTORS, 12 Nov: a person's own agent has no session here)
+    // through a project's link, its owner's (a person's own agent has no session here)
     const owner = exploration
       ? layerOwnerOf((await open(ctx, exploration)).row)
       : ctx.caller?.subject;

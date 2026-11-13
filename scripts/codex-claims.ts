@@ -1,4 +1,4 @@
-// Codex's research into who is behind RaidGuild's addresses (Elco's test, 10 Nov), as claim/v3 annotations:
+// Codex's research into who is behind RaidGuild's addresses (a test run, 10 Nov), as claim/v3 annotations:
 // one `named` claim/v3 a row. A row whose proposal names the address is sourced, with its transaction, proposal
 // and quote; a row Codex worked out is inferred, from research. The CSV stays on the person's computer and
 // out of the repo: names are kept in a person's own project only (people.ts, decision 1 (a)). Run from build/:

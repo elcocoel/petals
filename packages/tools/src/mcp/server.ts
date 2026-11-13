@@ -78,7 +78,7 @@ export interface McpOptions {
   instructions?: string;
 }
 
-/** What the brain adds: where to learn how, and which version this is (step 4). Nothing without a brain/. */
+/** What the brain adds: where to learn how, and which version this is. Nothing without a brain/. */
 function brainLine(ctx: ToolContext): string {
   try {
     const { version } = brainOf(ctx);

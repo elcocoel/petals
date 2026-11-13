@@ -3,7 +3,7 @@
 // place by the hook), names and marks, and the arrows out of an organisation you've entered; the flower
 // you're pointing at, or have entered, goes above all of it so its notes are never under anything. Far
 // away each flower is its own silhouette at rest; its name sits under its petals, one size on screen.
-// Colours are token roles, as on the flower. With the lab's far wave (#84), a far flower is one soft ring in
+// Colours are token roles, as on the flower. With the lab's far wave, a far flower is one soft ring in
 // its main colour instead, its mark in the ring's hole and its name just under it.
 import { FAR_WAVE, farRuns } from '@petal/core/wedge/far';
 import { HIGHLIGHT } from '@petal/core/wedge/highlight';
@@ -25,11 +25,10 @@ const GROUND = 'var(--surface)';
 const PETAL = 'var(--figure-petal)';
 
 /**
- * A connection at full strength is this see-through, so it never reads heavier than a flower (Elco, 11 Nov walk:
- * the lines were "way too powerful"; quieter).
+ * A connection at full strength is this see-through, so it never reads heavier than a flower.
  */
 const ROAD_TONE = 0.15;
-/** The focused lines (#87): one flower's at a time, so a little firmer, still quiet. */
+/** The focused lines: one flower's at a time, so a little firmer, still quiet. */
 const LINE_TONE = 0.18;
 /** The arrows out of the organisation you're in: the same lines, as quiet. */
 const ARROW_TONE = 0.3;
@@ -45,10 +44,10 @@ export interface LandFlower {
   reach: number;
   /** its reading's snapshot, the relations index's name for its group */
   snapshot?: string | undefined;
-  /** the map it stands for, and how many proposals that map has (#93) */
+  /** the map it stands for, and how many proposals that map has */
   map?: string | null | undefined;
   proposals?: number | undefined;
-  /** its map's treasury and token price, in words, shown under its name at some magnification (Elco, 12 Nov walk 3) */
+  /** its map's treasury and token price, in words, shown under its name at some magnification */
   worth?: readonly string[] | undefined;
 }
 
@@ -82,46 +81,43 @@ export interface LandFrame {
   enter: number;
   /** The connection a click marked, or -1. */
   marked: number;
-  /** The flower under the pointer, or -1 (the lab's lines lean, #87). */
+  /** The flower under the pointer, or -1 (the lab's focused lines). */
   pointed?: number;
   /** Where the window's free space starts on the left, past what sits down its side. */
   left: number;
   /** The wallet level: the flowers that hold the chosen wallet, or null with none chosen. The rest recede. */
   holds?: ReadonlySet<number> | null;
   /**
-   * Two DAOs chosen (Elco, 12 Nov walk: "how could I select two dowels and see only those connections"): the one
-   * connection between them, shown alone with its number; -2 when they share none, so none shows; -1 for none chosen.
+   * Two DAOs chosen, to see only what joins them: the one connection between them, shown alone with its number;
+   * -2 when they share none, so none shows; -1 for none chosen.
    */
   only?: number;
   /**
-   * Inside a DAO, the way out the pointer is on, by the flower it goes to, or -1 (Elco, 12 Nov walk: "we don't need
-   * all of them to be showing up all the time. Maybe just having the neighbor Daos on the edges and then if I hover
-   * the space in between the Daos I would see the connection and see how many users are in between them"): only its
-   * line shows, with how many wallets the two share; the neighbours' names stay on the edges.
+   * Inside a DAO, the way out the pointer is on, by the flower it goes to, or -1, so not every line shows all the
+   * time: only its line shows, with how many wallets the two share; the neighbours' names stay on the edges.
    */
   way?: number;
   /**
-   * How much of every flower is its far wave, 1 to 0, the same for all at once (Elco, 12 Nov walk: "the transfer
-   * from the mini shape to the individual petals shape right now it's too soon ... the transition happens at
-   * different times depending on something related to the size of petals"): the map works it out from its zoom.
+   * How much of every flower is its far wave, 1 to 0, the same for all at once, so the change from the far shape
+   * to the petals comes at one time, not by each flower's size: the map works it out from its zoom.
    * Without it, each flower by its own size, as before.
    */
   waved?: number;
-  /** Treasury and token price under the names, at some magnification; the switch in the legend (OVERLAYS) */
+  /** Treasury and token price under the names, at some magnification; the switch in the legend */
   worth?: boolean;
   /**
-   * A new map on its way (Elco, 12 Nov on /make: "if it's completely new, than we have a 'place holder'"): where it
-   * will stand, in the map's own units, and its name. Drawn as a dashed round place, its name and 'new'.
+   * A new map on its way, its placeholder: where it will stand, in the map's own units, and its name. Drawn as a
+   * dashed round place, its name and 'new'.
    */
   pending?: { x: number; y: number; s: number; name: string } | null;
   /**
-   * Work running on a map (Elco, 12 Nov on /make: the map stays while it runs): a small strip under that flower, or
-   * under the placeholder, with the page's words and how far it is, when it's known.
+   * Work running on a map (the map stays while it runs): a small strip under that flower, or under the
+   * placeholder, with the page's words and how far it is, when it's known.
    */
   progress?: { at: number | 'pending' | 'map'; words: string; share: number | null } | null;
   /**
    * The boxes over the map (the chain list, the legend, a flower's panel), in its px: names keep clear of them, as
-   * of each other (META's QA, 12 Nov: "labels never sit on each other or run off the window").
+   * of each other: labels never sit on each other or run off the window.
    */
   over?: readonly Box[];
   /**
@@ -188,11 +184,11 @@ function entersBox(x: number, y: number, ux: number, uy: number, b: Box): number
 
 let clips = 0;
 
-/** How a far flower is drawn: its silhouette, or (the lab's, #84) the far wave. */
+/** How a far flower is drawn: its silhouette, or (the lab's) the far wave. */
 export type FarStyle = 'wave' | null;
 
 /**
- * When connections show (#87): as they always have, or the lab's lean, 'focus': none far away, and at the map's
+ * When connections show: as they always have, or the lab's variant, 'focus': none far away, and at the map's
  * zoom only the pointed flower's and a marked one, each a quiet ink line as wide as the accounts shared.
  */
 export type LineStyle = 'focus' | null;
@@ -294,9 +290,9 @@ export function createLandScene(
   const top = el('g', { class: MONO, 'pointer-events': 'none' }, svg);
   const names = el('g', {}, top);
   const arrows = el('g', {}, top);
-  // the arrows' names above every arrow's line, so one arrow never runs over another's name (OVERLAYS, 11 Nov)
+  // the arrows' names above every arrow's line, so one arrow never runs over another's name
   const arrowNames = el('g', {}, top);
-  // the placeholder for a new map, and the strip of work running (Elco, 12 Nov on /make)
+  // the placeholder for a new map, and the strip of work running (on /make)
   const pendingRing = slot(
     el(
       'circle',
@@ -388,8 +384,8 @@ export function createLandScene(
       ),
     );
     // its petals in its own colours, one path per colour, as the far wave before it and the live flower after it
-    // have them, so a flower keeps its colours as it comes closer (Elco, 11 Nov walk: the transition from the small
-    // petal to the one showing its wallets; it went grey in between)
+    // have them, so a flower keeps its colours as it comes closer (it never goes grey on the way from the small
+    // petal to the one showing its wallets)
     const fills = waveFills(f.model, keyed);
     const silhouette = slot(el('g', {}, g.node));
     const byFill = new Map<string, string>();
@@ -540,12 +536,10 @@ export function createLandScene(
         }
         let size = 0;
         if (l.centre) {
-          // the mark in the flower's middle at every zoom (Elco, 11 Nov: "I don't see why they have to go away at
-          // larger zooms, we just need a minimum and max size"). From far away it fills the flower's centre
-          // (Elco, 11 Nov, on live /map: "The logo should take the full fucking space available in the center from
-          // any far away vision and only when I get to the Dao itself it will become less important in the
-          // center"): the far wave's round hole, or the polygon's inscribed circle, a hair inside its line; in
-          // the organisation you've entered it steps back to a share of its hole, between the two
+          // the mark in the flower's middle at every zoom, between a least and a most size. From far away it
+          // fills the flower's centre, and only inside the DAO does it become less important there: the far
+          // wave's round hole, or the polygon's inscribed circle, a hair inside its line; in the organisation
+          // you've entered it steps back to a share of its hole, between the two
           const waved = l.centre && allWaved !== undefined ? allWaved : fade(DETAIL.farWave, r);
           const hole =
             r *
@@ -558,8 +552,8 @@ export function createLandScene(
           l.centre.set('transform', `translate(${n3(c.x)} ${n3(c.y)}) scale(${n3(size / MARK)})`);
           l.centre.set('opacity', o2(markShown));
         }
-        // with the far wave the name sits just under the centre mark (Elco, 11 Nov: "the logo in the center plus
-        // the name ... it's floating super far away"); without it, under the petals
+        // with the far wave the name sits just under the centre mark, so it never floats far from it; without
+        // it, under the petals
         const y = l.centre
           ? c.y + size / 2 + NAME_UNDER_MARK + LABEL_HEIGHT / 2
           : c.y + r * f.reach + 10 + MARK / 2;
@@ -572,7 +566,7 @@ export function createLandScene(
             [l.width, true],
             [l.short, false],
           ] as const) {
-            // inside the window: slid along its side, never cut at its top or foot (META's QA, 12 Nov)
+            // inside the window: slid along its side, never cut at its top or foot
             const x0 = Math.max(EDGE / 2, Math.min(view.width - EDGE / 2 - w, c.x - w / 2));
             const b = { x0, y0: y - MARK / 2, x1: x0 + w, y1: y + MARK / 2 };
             const inside = x0 >= EDGE / 2 && b.y0 >= 0 && b.y1 <= view.height;
@@ -594,8 +588,7 @@ export function createLandScene(
         l.group.show(true);
         l.group.set('transform', `translate(${n3(box.x0)} ${n3(y)})`);
         l.group.set('opacity', o2(Math.max(markShown, nameShown)));
-        // its treasury and token price just under its name, once it's big enough (Elco, 12 Nov walk 3 on Ref
-        // Finance: "at some magnification show treasury and token price"), where nothing else stands
+        // its treasury and token price just under its name, once it's big enough, where nothing else stands
         if (l.worth) {
           const shown = worthOn ? fade(WORTH_AT, r) * tone : 0;
           const wy = y + LABEL_HEIGHT / 2 + 2 + WORTH_HEIGHT / 2;
@@ -747,8 +740,8 @@ export function createLandScene(
           'opacity',
           o2(i === marked ? 0.9 : o * crowd * (lines === 'focus' ? LINE_TONE : ROAD_TONE)),
         );
-        // a connection's number only where it's asked for, on the one a click marks (Elco, 12 Nov walk: the numbers
-        // were "a little bit mysterious"; "only put them in certain situations")
+        // a connection's number only where it's asked for, on the one a click marks, so numbers never sit
+        // unexplained on every line
         const shown = i === marked ? 1 : 0;
         const [x1, y1, x2, y2] = s.ends;
         const mx = view.x + (view.k * (x1 + x2)) / 2;
@@ -803,7 +796,7 @@ export function createLandScene(
         }
         const label = a.label as Label;
         // The name sits against the edge the arrow meets, inside the window: with its types, else its name alone,
-        // else none, never off the window or on another name or box (META's QA, 12 Nov)
+        // else none, never off the window or on another name or box
         let box = { x0: 0, y0: 0, x1: 0, y1: 0 };
         let named = false;
         for (const [w, on] of [

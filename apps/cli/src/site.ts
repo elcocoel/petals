@@ -1,20 +1,19 @@
-// The site door, for petal as one file (T405). Elco, 8 Nov: "We're building a tool set, a skill,
-// something that their computer and their AI uses, not ours." So every read, search, count and
-// drawing runs here, on the person's machine, and the site only receives and shows: the
-// conversation and what it drew.
+// The site door, for petal as one file (T405). Petals is a tool set and a skill that the person's own
+// computer and AI use, not ours. So every read, search, count and drawing runs here, on the person's
+// machine, and the site only receives and shows: the conversation and what it drew.
 //
-// Only these reach the site, agreed with SYSTEMS (and search_petals with SEARCH): start_exploration, get_exploration,
+// Only these reach the site (and search_petals): start_exploration, get_exploration,
 // list_explorations, save_step and add_note (the exploration routes), GET of a snapshot, and PUT of
 // a snapshot under the exploration. Nothing else here makes a request to it.
 //
 // One process is one conversation (stdio MCP starts one per session), so the exploration it
 // started is the default for save_step, add_note and get_exploration. The CLI is one process per
 // command, so the last one started is also kept in a file. Passing `exploration` always wins.
-// A job's project comes with the person's view (Elco's glasses rule, 10 Nov), kept with it, so every
+// A job's project comes with the person's view, kept with it, so every
 // flower drawn for that job goes through it. `jobs wait` runs as a command of its own while an MCP
 // session may run on, so a file newer than what this process remembers wins.
 //
-// Several workers on one computer (swarm.md step 5) each keep the job they hold in a file of their own,
+// Several workers on one computer each keep the job they hold in a file of their own,
 // beside that one (current/<worker>.json), so separate jobs never cross: a call that names its project
 // goes there with that worker's view, name and id. A call that names none goes where it went before,
 // unless two or more workers here hold jobs: then it can't tell whose, and says to name the project.
@@ -43,7 +42,7 @@ interface Current {
 export const workerCurrentFile = (currentFile: string, worker: string) =>
   join(dirname(currentFile), 'current', `${worker}.json`);
 
-/** A job ended from the page (swarm.md step 3): stopped, or handed to another worker. */
+/** A job ended from the page: stopped, or handed to another worker. */
 const ENDED = new Set(['stopped', 'handed_over']);
 const isView = (v: unknown): v is Json => typeof v === 'object' && v !== null && !Array.isArray(v);
 /** A call that can't tell whose job it's for: two or more workers here hold one (step 5). */
@@ -89,17 +88,17 @@ export const SITE_TOOLS = [
   'keep_layer',
   'list_layers',
   'fork_dataset',
-  // annotations: what the agent finds about accounts, kept privately in the project (annotation-layer.md)
+  // annotations: what the agent finds about accounts, kept privately in the project
   'add_annotation',
   'list_annotations',
-  // the map's search (SEARCH, #105): this computer has neither the model nor the map, so the site searches
+  // the map's search: this computer has neither the model nor the map, so the site searches
   'search_petals',
-  // the open-calls feed (Elco, 12 Nov): the site keeps it, read from its sources
+  // the open-calls feed: the site keeps it, read from its sources
   'list_calls',
-  // proposals, marks, values and readings an agent found, kept privately in the project (#98, SYSTEMS's)
+  // proposals, marks, values and readings an agent found, kept privately in the project
   'keep_data',
   'list_data',
-  // what the person kept about a map and could publish with one press there (SYSTEMS's sys/publish, 12 Nov): the
+  // what the person kept about a map and could publish with one press there: the
   // site holds their claims; the press and the wallet's signature stay theirs, on the page
   'list_publishable',
 ] as const;
@@ -631,7 +630,7 @@ export function siteDoor(opts: SiteOptions) {
   }
 
   /**
-   * A snapshot an agent made itself (#98), kept on this computer, so render_flower can draw it, and in the
+   * A snapshot an agent made itself, kept on this computer, so render_flower can draw it, and in the
    * job's or this conversation's project on the site, by the route that takes a reading made here.
    */
   const keepSnapshot = {

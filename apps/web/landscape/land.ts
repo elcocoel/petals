@@ -1,9 +1,9 @@
-// Server only. The map's data (specs/006-the-map, plan, bench v2; coordinator/one-source.md, step 5): the one
-// shared map, read live from GET /api/v1/map in the person's view (Elco's go, 10 Nov: the lab and Petals'
-// agent see the same map), joined to the places in the address book, the connections between them, and each
-// flower's name and mark. The Power Map (/map) places one flower per map, an address with all its readings;
-// the lab's bench places every drawing. A view the address book doesn't have yet gets a place worked out
-// here, and nobody else moves. Only what a drawing needs goes to the browser.
+// Server only. The map's data (specs/006-the-map, plan, bench v2): the one shared map, read live from
+// GET /api/v1/map in the person's view (so the lab and Petals' agent see the same map), joined to the places
+// in the address book, the connections between them, and each flower's name and mark. The Power Map (/map)
+// places one flower per map, an address with all its readings; the lab's bench places every drawing. A view the
+// address book doesn't have yet gets a place worked out here, and nobody else moves. Only what a drawing needs
+// goes to the browser.
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { gunzipSync } from 'node:zlib';
@@ -32,7 +32,7 @@ import { type Road, roadsBetween } from './roads.ts';
 export interface Mark {
   logo: string | null;
   symbol: string;
-  /** what kind of thing it is, each word once (#97), from its map's card */
+  /** what kind of thing it is, each word once, from its map's card */
   types?: readonly string[];
 }
 
@@ -45,13 +45,13 @@ export interface BenchFlower {
   map: string | null;
   /** its reading's snapshot, the relations index's name for its group */
   snapshot?: string;
-  /** how many proposals its map has (#93): a flower with any draws its vote ring up close */
+  /** how many proposals its map has: a flower with any draws its vote ring up close */
   proposals?: number;
   /** its map's treasury and token price, in words (lib/value-view.ts worthWords), where its card has them */
   worth?: readonly string[];
   /** the pieces of data its reading has, by name, when the live map says: what Tools offers inside it */
   pieces?: readonly string[];
-  /** the pieces its reading got, for dressing it again in the browser (core redress; wave 4) */
+  /** the pieces its reading got, for dressing it again in the browser (core redress) */
   given?: SeamPiece[];
 }
 
@@ -95,7 +95,7 @@ function symbolOf(v: NightView, name: string): string {
   return (name[0] ?? '?').toUpperCase();
 }
 
-/** A view as GET /api/v1/map gives it (SYSTEMS, 10 Nov). */
+/** A view as GET /api/v1/map gives it. */
 interface LiveView {
   sha: string;
   name: string | null;
@@ -109,9 +109,9 @@ interface LiveView {
   /** the map it's on: its reading's address (core's mapOf), as GET /api/v1/maps groups them */
   map: string;
   reading: NightView['reading'];
-  /** the pieces of data its reading has (core's piecesOf, with the activity and dollars beside it; wave 3) */
+  /** the pieces of data its reading has (core's piecesOf, with the activity and dollars beside it) */
   pieces?: { name: string; kind: string }[];
-  /** the pieces its reading got, values for its drawn petals (SYSTEMS's 'given', wave 4) */
+  /** the pieces its reading got, values for its drawn petals ('given') */
   given?: SeamPiece[];
 }
 
@@ -183,7 +183,7 @@ export async function benchLandscape(view: string): Promise<BenchLandscape | { e
 }
 
 /**
- * The map's flowers named and marked by their maps' own marks (#85), with how many proposals each map has (#93),
+ * The map's flowers named and marked by their maps' own marks, with how many proposals each map has,
  * from the maps' cards; as they were without.
  */
 async function marked(
@@ -201,7 +201,7 @@ async function marked(
   );
 }
 
-/** Each flower with its map's treasury and token price in words (Elco, 12 Nov walk 3), where its card has any. */
+/** Each flower with its map's treasury and token price in words, where its card has any. */
 export function withWorth(
   land: BenchLandscape,
   words: ReadonlyMap<string, readonly string[]>,
@@ -215,7 +215,7 @@ export function withWorth(
   };
 }
 
-/** Each flower with how many proposals its map's card counts (#93), where it counts any. */
+/** Each flower with how many proposals its map's card counts, where it counts any. */
 export function withProposals(
   land: BenchLandscape,
   counts: ReadonlyMap<string, number>,
@@ -231,16 +231,15 @@ export function withProposals(
 
 /** The Power Map: one flower per map, in the view whose hash is given (the person's: lib/viewer-view.ts). */
 export async function powerMapLandscape(view: string): Promise<BenchLandscape | { error: string }> {
-  // the map and its cards asked for at once (SYSTEMS, 11 Nov: one after the other cost 0.4 s)
+  // the map and its cards asked for at once (one after the other cost 0.4 s)
   const cards = mapList(view);
   const night = await liveNight(view, 'map');
   return 'error' in night ? night : marked(landscapeOf(night), cards);
 }
 
 /**
- * The Power Map opened at one map (coordinator/one-source.md, step 6), by its address or by a reading of it
- * (a snapshot, as a flower's spec names it): the map, and which of its flowers is that map, or -1 when it
- * isn't on the map.
+ * The Power Map opened at one map, by its address or by a reading of it (a snapshot, as a flower's spec
+ * names it): the map, and which of its flowers is that map, or -1 when it isn't on the map.
  */
 export async function powerMapAt(
   view: string,
@@ -256,9 +255,9 @@ export async function powerMapAt(
 }
 
 /**
- * The map's flowers named and marked by their maps' own marks (#85, SYSTEMS's; for the far wave, #84: Elco, 11 Nov,
- * "a clear way for showing the logo and the name"): the organisation's name, its token's symbol and its logo,
- * where its card has them; what the flower had where it doesn't.
+ * The map's flowers named and marked by their maps' own marks, so even the far wave shows the logo and the name:
+ * the organisation's name, its token's symbol and its logo, where its card has them; what the flower had where
+ * it doesn't.
  */
 export function withMarks(
   land: BenchLandscape,

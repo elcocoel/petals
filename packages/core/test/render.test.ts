@@ -96,7 +96,7 @@ describe('renderFlower on the NEAR validators fixture (segments: backers)', () =
     expect(r.svg).toContain('>everyone else (311) 13.8%</text>');
   });
 
-  // Straight sides; since 11 Nov a petal's top follows the circle's arc (Elco), on every flower since 12 Nov (one
+  // Straight sides; since 11 Nov a petal's top follows the circle's arc, on every flower since 12 Nov (one
   // look): M, L and that one arc, closed by Z; nothing else curves.
   test('straight sides and a round top only: paths use M, L and A, closed by Z, no other curve', () => {
     for (const [, d] of r.svg.matchAll(/ d="([^"]+)"/g)) expect(d).toMatch(/^(M[-0-9. LA]+Z?)+$/);

@@ -279,7 +279,7 @@ export interface OnTheMap {
 
 /**
  * One chat's gate. `conversation` is what was said before this chat's first model call. What the map
- * already holds is drawn without a yes (Elco, 10 Nov, run 9c599a61: "show me the graph here"): drawing it
+ * already holds is drawn without a yes (run 9c599a61: "show me the graph here"): drawing it
  * reads nothing new. A fresh read of the same target still waits, so its target isn't approved.
  */
 export function yesGate(

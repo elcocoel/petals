@@ -168,7 +168,7 @@ export const MIGRATIONS: readonly string[] = [
     PRIMARY KEY (day, what)
   );
   `,
-  // 5: the workspace (T310; design/workspace-data.md). A run is a conversation, so it gains what a
+  // 5: the workspace (T310). A run is a conversation, so it gains what a
   // person can change about one. A follow points at a wallet, address, DAO or network, and proves
   // nothing. A workspace_note is a person's own, and private: it stands apart from `note`, which link
   // holders read. search_doc and search are derived, and rebuild themselves if deleted. FTS5 is the one
@@ -252,7 +252,7 @@ export const MIGRATIONS: readonly string[] = [
   CREATE INDEX run_folder ON run(folder);
   CREATE INDEX exploration_folder ON exploration(folder);
   `,
-  // 8: jobs (Elco, 9 Nov, B with C). Petals' agent on the page hands a job out in a project (an
+  // 8: jobs. Petals' agent on the page hands a job out in a project (an
   // exploration); the person's own agent takes it, does it on their machine and reports back. seq
   // keeps them in the order they were handed out. inputs and result are JSON.
   `
@@ -273,7 +273,7 @@ export const MIGRATIONS: readonly string[] = [
   );
   CREATE UNIQUE INDEX job_order ON job(exploration, seq);
   `,
-  // 9: layers kept on the site (005, data.md, Elco 9 Nov: "anyone can add, fork and use the prior"; private
+  // 9: layers kept on the site (005, data.md: anyone can add, fork and use a prior layer; private
   // first). A layer is named by its hash and kept under its author, never changed. A dataset version is a
   // set of layer hashes about one address, and the version it came from (parent); seq orders an author's
   // versions of one address, so the last is their latest.
@@ -301,14 +301,14 @@ export const MIGRATIONS: readonly string[] = [
   );
   CREATE UNIQUE INDEX dataset_version_order ON dataset_version(owner, about, seq);
   `,
-  // 10: who made a layer, the git way, outside its hash (systems check, step 2): beside the author (owner),
+  // 10: who made a layer, the git way, outside its hash: beside the author (owner),
   // the credential and the time that 9 keeps, the brain version the agent was given and the recipe it read
   // with. Empty for the layers kept before.
   `
   ALTER TABLE layer ADD COLUMN brain TEXT;
   ALTER TABLE layer ADD COLUMN recipe TEXT;
   `,
-  // 11: agents across a person's projects (Elco, 9 Nov, agent-house-test.md). An agent link is a person's,
+  // 11: agents across a person's projects. An agent link is a person's,
   // only its hash kept; it can only wait for jobs. An agent is a name a person's link was used with (`as`),
   // seen last at some time. A job can be sent to one agent by name, and says who took it.
   `
@@ -330,26 +330,26 @@ export const MIGRATIONS: readonly string[] = [
   ALTER TABLE job ADD COLUMN assignee TEXT;
   ALTER TABLE job ADD COLUMN taken_by TEXT;
   `,
-  // 12: the person disconnects one of their agents (Elco, 10 Nov: "i dont see a way to disconnect my agents").
+  // 12: the person disconnects one of their agents.
   // From then, no key made before it lets that name in; a key made after connects it again.
   `
   ALTER TABLE agent ADD COLUMN disconnected_at TEXT;
   `,
-  // 13: one map (Elco, 10 Nov): a stored view gets a name and who made it, beside its hash and outside it, so
+  // 13: one map: a stored view gets a name and who made it, beside its hash and outside it, so
   // the map can be searched by name and says by whom. Empty for views nobody named.
   `
   ALTER TABLE draft ADD COLUMN name TEXT;
   ALTER TABLE draft ADD COLUMN made_by TEXT;
   `,
-  // 14: conversations are named (Elco, 10 Nov): Petals' agent names its own after its first answer and
+  // 14: conversations are named: Petals' agent names its own after its first answer and
   // renames it when the subject changes; the person's own agents send a title with a note. A run says when
   // its title became a name, so until then it's still the first question. Empty for what nobody named.
   `
   ALTER TABLE run ADD COLUMN named_at TEXT;
   ALTER TABLE exploration ADD COLUMN title TEXT;
   `,
-  // 15: a person's own (Elco, 10 Nov). Their view, the glasses every petal they see is drawn through
-  // (one-source.md, step 1): views by their hash, and each person's current one. Their profile, in NEAR
+  // 15: a person's own. Their view, the glasses every petal they see is drawn through:
+  // views by their hash, and each person's current one. Their profile, in NEAR
   // Social's own shape (api2.near.social/standard.md, social-kv/1), so publishing later is a straight copy.
   // And the pictures in it, by their sha256, served from here so they show without anything on chain.
   // Each is the person's, not a wallet's; who saved it (the credential) and when are kept beside it.
@@ -379,12 +379,12 @@ export const MIGRATIONS: readonly string[] = [
     created_at TEXT NOT NULL
   );
   `,
-  // 16: a conversation from another door can be archived too (Elco, 10 Nov: Archive and Delete in the
+  // 16: a conversation from another door can be archived too (Archive and Delete in the
   // panel), as a run is with hidden_at. Empty for what nobody archived.
   `
   ALTER TABLE exploration ADD COLUMN hidden_at TEXT;
   `,
-  // 17: a usage record for every model call (Elco, 10 Nov: "count usage like pros"; pricing-protocol.md):
+  // 17: a usage record for every model call:
   // usage/v1 as body, keyed by NEAR AI's inference id, with whose account paid, and NEAR AI's own bill once
   // it's known. Nothing rewrites a record but its bill and when it was reconciled.
   `
@@ -399,12 +399,12 @@ export const MIGRATIONS: readonly string[] = [
   );
   CREATE INDEX usage_account ON usage(account_key, at);
   `,
-  // 18: a person's tip (Elco, 10 Nov: price/v1's fees "multiplied by a user defined 'tip' rate"): theirs to
+  // 18: a person's tip (price/v1's fees are multiplied by a person's tip rate): theirs to
   // set, the price's default while it's empty.
   `
   ALTER TABLE person ADD COLUMN tip REAL;
   `,
-  // 19: top-ups through NEAR Intents (Elco, 10 Nov: "let users pay with anything from anywhere"): each quote's
+  // 19: top-ups through NEAR Intents (pay with anything from any chain): each quote's
   // deposit address, whose it is, what was asked and quoted, where its swap stands, and what it became on
   // their credit once it landed.
   `
@@ -420,7 +420,7 @@ export const MIGRATIONS: readonly string[] = [
   );
   CREATE INDEX top_up_person ON top_up(person, created_at);
   `,
-  // 20: several workers per agent (Elco, 10 Nov, swarm.md step 1): each window or sub-agent that joins as
+  // 20: several workers per agent: each window or sub-agent that joins as
   // "Codex" waits as its own worker, so the page lists "Codex" and "Codex 2", each holding its own job.
   `
   CREATE TABLE agent_worker (
@@ -433,8 +433,7 @@ export const MIGRATIONS: readonly string[] = [
   );
   ALTER TABLE job ADD COLUMN taken_worker TEXT;
   `,
-  // 21: annotations, what a person or an agent adds about an account (Elco, 10 Nov: "the agent and the
-  // person can go CRAZY adding annotation"; coordinator/annotation-layer.md step 2). Each is a claim/v2,
+  // 21: annotations, what a person or an agent adds about an account, as many as they like. Each is a claim/v2,
   // kept privately under the project's owner, with the project it was added in. Names are allowed here.
   `
   CREATE TABLE annotation (
@@ -453,12 +452,12 @@ export const MIGRATIONS: readonly string[] = [
   CREATE INDEX annotation_exploration ON annotation(owner, exploration, created_at);
   CREATE INDEX annotation_subject ON annotation(owner, subject, created_at);
   `,
-  // 22: a conversation per job (Elco, 10 Nov, swarm.md step 2): the job's work goes in its own exploration,
+  // 22: a conversation per job: the job's work goes in its own exploration,
   // in the same folder, so the conversation that handed it out stays small however much the job reads.
   `
   ALTER TABLE job ADD COLUMN conversation TEXT;
   `,
-  // 23: supervising a job without timers (Elco, 10 Nov, swarm.md step 3): the continue link its worker got, so
+  // 23: supervising a job without timers: the continue link its worker got, so
   // that worker's calls mark it alive (last_seen), and once it's stopped or handed on, are told so. Each link
   // a job was ever handed out on stays known, so an old worker is told, not just refused.
   `
@@ -469,12 +468,12 @@ export const MIGRATIONS: readonly string[] = [
     job TEXT NOT NULL
   );
   `,
-  // 24: a job in parts (Elco, 10 Nov, swarm.md step 4): each part is a job of its own, for any worker, and
+  // 24: a job in parts: each part is a job of its own, for any worker, and
   // all share one group, so when the last one reports they're taken up together, as one.
   `
   ALTER TABLE job ADD COLUMN part_of TEXT;
   `,
-  // 25: what tells one organisation on the map from another (board #85, Elco's pick, 11 Nov: the chain first,
+  // 25: what tells one organisation on the map from another (the chain first,
   // then curated lists): one mark/v1 per map, named by the map's address, its name, symbol and logo each
   // saying where it came from. Its logo is a picture in media. Read again, a map's mark is replaced.
   `
@@ -484,14 +483,14 @@ export const MIGRATIONS: readonly string[] = [
     read_at TEXT NOT NULL
   );
   `,
-  // 26: what an agent says it can do, in its own words (Elco's swarm lean 2, 11 Nov), for Petals' agent to read
+  // 26: what an agent says it can do, in its own words, for Petals' agent to read
   // when it hands out jobs: each worker's, from its waits, and the agent's own, from a connector's take_job.
   `
   ALTER TABLE agent ADD COLUMN can TEXT;
   ALTER TABLE agent_worker ADD COLUMN can TEXT;
   `,
-  // 27: what a map's token is worth (board #91; Elco, 11 Nov: "monetary estimates of the value of these petals
-  // and the stakes and the supply"): one value/v1 per map, by its address, its price from 1Click, its supply
+  // 27: what a map's token is worth (monetary estimates of its petals, stakes and supply): one value/v1 per
+  // map, by its address, its price from 1Click, its supply
   // from its chain and its reading's totals at that price. Read again, a map's value is replaced.
   `
   CREATE TABLE value (
@@ -500,7 +499,7 @@ export const MIGRATIONS: readonly string[] = [
     read_at TEXT NOT NULL
   );
   `,
-  // 28: a DAO's proposals and how each account voted on each (board #93; Elco, 11 Nov: proposals on the
+  // 28: a DAO's proposals and how each account voted on each (proposals on the
   // flower's ring, each wallet's yes and no on hover): one proposals/v1 per map, by its address, read from the
   // DAO's own chain. Read again, a map's proposals are replaced.
   `
@@ -510,8 +509,8 @@ export const MIGRATIONS: readonly string[] = [
     read_at TEXT NOT NULL
   );
   `,
-  // 29: search's vectors (board #105; Elco, 11 Nov: search "with the embedding model on the server being super
-  // smart"): each text's embedding, by the model that made it and the text's sha256, so a text is embedded
+  // 29: search's vectors (search by meaning, with an embedding model on the server): each text's embedding,
+  // by the model that made it and the text's sha256, so a text is embedded
   // once, whoever kept it, and a restart embeds nothing again. The vector is its float32s, base64.
   `
   CREATE TABLE search_vector (
@@ -521,7 +520,7 @@ export const MIGRATIONS: readonly string[] = [
     PRIMARY KEY (model, sha256)
   );
   `,
-  // 30: what an agent keeps in a person's project (#98; CONNECTORS, 11 Nov: keep_data): a mark, a value or a
+  // 30: what an agent keeps in a person's project (keep_data): a mark, a value or a
   // proposals it found, private to the project, named by its canonical sha256, until a review takes it to the
   // shared map. Claims go to annotation and readings to the store, as before.
   `
@@ -536,8 +535,7 @@ export const MIGRATIONS: readonly string[] = [
     PRIMARY KEY (owner, exploration, sha256)
   );
   `,
-  // 31: the brain's receipts (research/brain-departments-2026-11-11.md, step 5; Elco, 11 Nov: "keep it exactly
-  // like harness does"): one brain-receipt/v1 each time a door serves the brain's text, as the Harness's
+  // 31: the brain's receipts: one brain-receipt/v1 each time a door serves the brain's text, as the Harness's
   // brain_access_log keeps them. Added, never rewritten or deleted; every count is worked out from them.
   `
   CREATE TABLE brain_receipt (
@@ -549,7 +547,7 @@ export const MIGRATIONS: readonly string[] = [
   );
   CREATE INDEX brain_receipt_at ON brain_receipt(at);
   `,
-  // 32: open calls (Elco, 12 Nov: "open calls is the most useful"): one calls/v1 per open call, by its id, as
+  // 32: open calls: one calls/v1 per open call, by its id, as
   // its source's reader last found them. Read again, a source's calls are replaced, so one no longer open leaves.
   `
   CREATE TABLE open_call (
@@ -561,7 +559,7 @@ export const MIGRATIONS: readonly string[] = [
   );
   CREATE INDEX open_call_source ON open_call(source);
   `,
-  // 33: what a DAO paid out (12 Nov; Elco: "an unopinionated 'payouts from this treasury over period x'"): one
+  // 33: what a DAO paid out (unopinionated: the payouts from a treasury over a period): one
   // payouts/v1 per map, by its address, read from the DAO's own chain, each payout dated by the DAO's own
   // transfer and priced on that day. Read again, a map's payouts are replaced.
   `
@@ -571,7 +569,7 @@ export const MIGRATIONS: readonly string[] = [
     read_at TEXT NOT NULL
   );
   `,
-  // 34: a token's vesting schedules (12 Nov, wave 7; Elco: "it's vesting reader for anything"): one vesting/v1 per
+  // 34: a token's vesting schedules (a vesting reader for any token): one vesting/v1 per
   // map, by its address, one allocation each with how it's known. Read again, a map's vesting is replaced.
   `
   CREATE TABLE vesting (
@@ -580,8 +578,8 @@ export const MIGRATIONS: readonly string[] = [
     read_at TEXT NOT NULL
   );
   `,
-  // 35: the publication record (13 Nov, wave 8; specs/005-mapping-brain/composition.md; Elco: "it's the heart of the
-  // promise of the protocol"): append-only. Each publication/v1 an author signed, with the server's own order (seq)
+  // 35: the publication record (specs/005-mapping-brain/composition.md):
+  // append-only. Each publication/v1 an author signed, with the server's own order (seq)
   // and time beside it, and the qualifier's outcomes it recorded; each published layer kept once, by its hash (a
   // reading's body stays in the snapshot store, by the same hash). Rows are added, never updated or deleted.
   `

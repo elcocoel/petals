@@ -77,7 +77,7 @@ export interface RunInput {
   flowers?: EarlierFlower[];
   /** additive (9 Nov): the jobs this run handed to the person's own agent, as they stand now */
   jobs?: JobRow[];
-  /** additive (9 Nov, agent-house): the person's agents, by name, and what each holds */
+  /** additive (9 Nov): the person's agents, by name, and what each holds */
   agents?: { name: string; last_seen: string; workers: number; jobs: string[] }[];
   /** additive (10 Nov): the conversation's name so far, which the model gives with name_conversation */
   name?: RunName;
@@ -411,7 +411,8 @@ async function loop(
     const held = gate?.check(call.name, args, messages.slice(1));
     return !!held && refusedCalls.has(refusedCall(call.name, held.target_key, args));
   };
-  // A model that answered a refusal with nothing but more of the same gets one call with no tools.
+  // A model that answered a refusal with nothing but more of the same, or nothing at all after its tools, gets
+  // one call with no tools.
   let mustSpeak = false;
 
   // A store that fails here must not stop the chat: only a crash would then lose this much.
@@ -429,7 +430,7 @@ async function loop(
   }
 
   /**
-   * The ceremony's facts for a new map waiting for its yes (Elco, 12 Nov): where it lands, what will be read, its
+   * The ceremony's facts for a new map waiting for its yes: where it lands, what will be read, its
    * rough cost, whose name it goes out in, and who else could do it. A store that can't say leaves them out.
    */
   async function ceremony(held: Held): Promise<Partial<Ceremony>> {
@@ -539,7 +540,7 @@ async function loop(
       out = approvalRequired(held, gate?.why(held, messages.slice(1)));
     } else {
       const ctx = withProgress(stored ?? deps.tools, (e) => emit({ event: 'progress', data: e }));
-      // what its brain reads happen in, for their receipts (12 Nov, step 10)
+      // what its brain reads happen in, for their receipts
       ctx.consumer = { ...ctx.consumer, run: runId };
       try {
         // inside this, its fetches find the run's signal through runSignal()
@@ -759,6 +760,12 @@ async function loop(
         : { role: 'assistant', content: c.message.content };
       const text = answer.content?.trim();
       if (refused.size && !text && !kept.length && !mustSpeak) {
+        mustSpeak = true;
+        continue;
+      }
+      // A model that goes quiet after its tools ran (a flower drawn, then no words, would show an error
+      // under the flower) gets the same one call with no tools.
+      if (rounds > 0 && !text && !kept.length && !mustSpeak) {
         mustSpeak = true;
         continue;
       }

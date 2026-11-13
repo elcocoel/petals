@@ -33,8 +33,8 @@ export interface Home {
 export const FLOWER_HOME: Home = { cx: SHAPE.cx, cy: SHAPE.cy, r: SHAPE.R };
 
 /**
- * What covers the canvas's sides, in px: on /make, the conversation down its left (#78, 11 Nov: the flower sat
- * under the chat). Its home fits in what's left, so it isn't drawn under them.
+ * What covers the canvas's sides, in px: on /make, the conversation down its left. Its
+ * home fits in what's left, so it isn't drawn under them.
  */
 export interface Clear {
   left: number;

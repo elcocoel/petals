@@ -238,7 +238,7 @@ class Cli {
 
   /**
    * `petal start --client <app> [--question <q>] [--note <text>] [--no-open]`: the whole start of a
-   * conversation in one call (Elco, 9 Nov: setup took three minutes). It starts this conversation's
+   * conversation in one call, instead of minutes of setup. It starts this conversation's
    * page, opens it in the browser, and posts an opening note if one is given.
    */
   async start(argv: string[]): Promise<number> {
@@ -292,7 +292,7 @@ class Cli {
 
   /**
    * `petal note [text] [--title <the subject>]`: a note on this conversation's page, from the words
-   * given, or from stdin. `--title` names the conversation in the person's list (Elco, 10 Nov): 3 to 6
+   * given, or from stdin. `--title` names the conversation in the person's list: 3 to 6
    * plain words, the subject, not the request; sent with the first reply and when the subject changes.
    */
   async note(argv: string[]): Promise<number> {

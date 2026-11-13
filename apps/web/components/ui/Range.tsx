@@ -1,8 +1,8 @@
 'use client';
 // A value set along a scale by hand: the browser's own slider, in the accent, a row high, with what it's
-// at beside it in mono (the tip, design/side-panel.md, lines 36 and 38). It says when the value is set, on
-// the browser's own change, which comes when the hand lets go wherever the pointer is, and at each step of
-// a key, so a setting is kept once and not at every step of a drag. Props only.
+// at beside it in mono (as the tip has it). It says when the value is set, on the browser's own change,
+// which comes when the hand lets go wherever the pointer is, and at each step of a key, so a setting is
+// kept once and not at every step of a drag. Props only.
 import { useEffect, useRef } from 'react';
 import { Mono } from './Mono.tsx';
 

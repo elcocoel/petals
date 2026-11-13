@@ -1,4 +1,4 @@
-// The mapping waves' loader (board #96): each of Petals' formats checked and refused with its reasons, a good
+// The mapping runs' loader: each of Petals' formats checked and refused with its reasons, a good
 // reading kept and drawn as Petals' own mapping, a kept mark left unless --replace, raw receipts left as evidence.
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -57,7 +57,7 @@ function folder() {
   return root;
 }
 
-describe('loading a mapping wave', () => {
+describe('loading a mapping run', () => {
   test('--dry checks and keeps nothing; a load draws the reading, credited, and keeps its mark', async () => {
     const root = folder();
     const dry = await loadMapping(r.ctx, root, { by: 'mapping.petals.near', dry: true });
@@ -79,7 +79,7 @@ describe('loading a mapping wave', () => {
     ).toBe('Moloch DAO');
   });
 
-  test('a mark already kept stays, unless --replace puts the wave’s in its place', async () => {
+  test('a mark already kept stays, unless --replace puts the run’s in its place', async () => {
     const root = folder();
     await privateStore(r.ctx.config).mark.put({
       about: DAO,
@@ -93,7 +93,7 @@ describe('loading a mapping wave', () => {
     expect((await privateStore(r.ctx.config).mark.get(DAO))?.body).toContain('Moloch DAO');
   });
 
-  test("a wave's manifest says which files load, in each of the waves' shapes; an unlisted one is held", async () => {
+  test("a mapping run's manifest says which files load, in each of the runs' shapes; an unlisted one is held", async () => {
     const root = folder();
     const dir = join(root, 'ethereum', 'moloch');
     const mark = JSON.parse(readFileSync(join(dir, 'mark.json'), 'utf8'));

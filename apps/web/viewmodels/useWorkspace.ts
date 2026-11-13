@@ -279,7 +279,7 @@ export function useWorkspace(props: {
   const paid = useCallback(() => reread?.(), [reread]);
   const pay = usePay(funds?.where ?? null, asking, paid);
   // or any other token, from any chain, through NEAR Intents (Elco, 10 Nov), beside it in the same row
-  const topUp = useTopUp(asking, paid);
+  const topUp = useTopUp(asking, paid, pay);
 
   // Only the conversation's own flower stands on the canvas: before it draws one, it's empty ground.
   const onCanvas = canvas;

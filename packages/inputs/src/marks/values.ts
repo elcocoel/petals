@@ -1,6 +1,6 @@
-// A map's token in dollars and its supply (board #91; Elco, 11 Nov): the price from NEAR Intents' 1Click list,
+// A map's token in dollars and its supply: the price from NEAR Intents' 1Click list,
 // the same 229 tokens a person tops up from, read once a run, then DefiLlama's open prices for what 1Click
-// doesn't list (Elco's pick, 11 Nov: "1Click, then DefiLlama"); the supply from the token's own chain. A token
+// doesn't list; the supply from the token's own chain. A token
 // neither prices has no price: never a guess. NEAR itself (validators' and House of Stake's stake) is priced
 // as wNEAR, one to one, and says so.
 import type { ValuePrice, ValueSupply } from '@petal/core';
@@ -148,7 +148,7 @@ export function llamaPrices(fetchImpl: Fetch = globalThis.fetch) {
   return { priceOf, failed };
 }
 
-/** 1Click first, then DefiLlama for what 1Click doesn't list (Elco, 11 Nov); neither: no price. */
+/** 1Click first, then DefiLlama for what 1Click doesn't list; neither: no price. */
 export function tokenPrices(fetchImpl: Fetch = globalThis.fetch) {
   const oneClick = oneClickPrices(fetchImpl);
   const llama = llamaPrices(fetchImpl);

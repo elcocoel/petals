@@ -55,11 +55,11 @@ export const schemas: {
   entryV2: object;
   correction: object;
   claim: object;
-  /** a claim, and what a person or an agent adds about an account: names, notes, links (annotation-layer.md) */
+  /** a claim, and what a person or an agent adds about an account: names, notes, links */
   claimV2: object;
   /** a claim whose every piece of evidence says what it is, who found it and when (11 Nov) */
   claimV3: object;
-  /** claim/v3 with one more verb, is_a: an account's type, in any word (#97, 11 Nov) */
+  /** claim/v3 with one more verb, is_a: an account's type, in any word (11 Nov) */
   claimV4: object;
   /** the data protocol's layer (005, data.md); stored and hashed, so it refuses fields it doesn't know */
   layer: object;
@@ -71,7 +71,7 @@ export const schemas: {
   viewV3: object;
   /** what crosses from data to the look (005, seam.md): every piece of data with its kind and standing */
   seam: object;
-  /** one model call, counted and charged, and NEAR AI's own bill for it (pricing-protocol.md) */
+  /** one model call, counted and charged, and NEAR AI's own bill for it */
   usage: object;
   /** one serving of the brain's text by a door, the Harness's access log field for field (12 Nov) */
   brainReceipt: object;
@@ -79,17 +79,17 @@ export const schemas: {
   price: object;
   /** what a person pays: NEAR AI's bill, plus a base fee, plus their own tip (price/v2, which replaces v1) */
   priceV2: object;
-  /** what tells one organisation on the map from another: its name, symbol and logo, each with where it came from (#85) */
+  /** what tells one organisation on the map from another: its name, symbol and logo, each with where it came from */
   mark: object;
-  /** the same, with its types as is_a claims (#97) */
+  /** the same, with its types as is_a claims */
   markV2: object;
-  /** a map's token in dollars, its supply, and its reading's totals at that price (#91) */
+  /** a map's token in dollars, its supply, and its reading's totals at that price */
   value: object;
   valueV2: object;
   /** the same with the token's circulating supply, its max and its market cap, each naming its source (12 Nov) */
   valueV3: object;
   calls: object;
-  /** a DAO's proposals and each account's vote on each (#93) */
+  /** a DAO's proposals and each account's vote on each */
   proposals: object;
   /** the same with closed, recipients, options, and a ballot's choices and weights (11 Nov) */
   proposalsV2: object;
@@ -97,11 +97,11 @@ export const schemas: {
   proposalsV3: object;
   /** what a DAO paid out, each payout dated by its own transfer and priced on that day (12 Nov) */
   payouts: object;
-  /** a token's vesting schedules, one allocation each, each saying how it's known (12 Nov, wave 7) */
+  /** a token's vesting schedules, one allocation each, each saying how it's known (12 Nov) */
   vesting: object;
-  /** an author signing one version of their dataset for a map: the record's entry (13 Nov, wave 8) */
+  /** an author signing one version of their dataset for a map: the record's entry (13 Nov) */
   publication: object;
-  /** one author's credit and points, computed from the record alone (13 Nov, wave 8) */
+  /** one author's credit and points, computed from the record alone (13 Nov) */
   credit: object;
 } = {
   snapshot: snapshotSchema,

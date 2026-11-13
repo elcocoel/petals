@@ -37,8 +37,8 @@ export function roadsBetween(flowers: readonly Place[], links: readonly Link[]):
 }
 
 /**
- * A road's width far away, in px on screen: thin for a few accounts, never past one and a half (Elco, 11 Nov walk:
- * the lines were "way too powerful"; 12 Nov: "they can be even softer").
+ * A road's width far away, in px on screen: thin for a few accounts, never past one and a half, so the lines stay
+ * soft under the flowers.
  */
 export function roadWidth(shared: number): number {
   return Math.max(0.5, Math.min(1.5, 0.5 + 0.35 * Math.log10(Math.max(1, shared))));

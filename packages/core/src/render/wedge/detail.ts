@@ -74,7 +74,7 @@ export const DETAIL = {
   // The map (specs/006-the-map). A flower on the map uses every row above, by its own size on screen; its
   // name under it is `titleOutside`'s, at one size on screen.
   /**
-   * The far wave (#84, /lab/map?far=wave only until Elco has seen it): one soft ring in place of the silhouette,
+   * The far wave (/lab/map?far=wave only, for now): one soft ring in place of the silhouette,
    * handing over to the silhouette's petals as the flower grows, before the live flower takes over.
    */
   farWave: { driver: 'flowerRadius', fadeIn: [0, 0], fadeOut: [30, 50] },
@@ -83,7 +83,7 @@ export const DETAIL = {
   /** A connection: one line between two flowers, its width the accounts they share. It stays as you zoom. */
   road: { driver: 'pairRadius', fadeIn: [0, 0] },
   /**
-   * The lab's lines lean (#87): the pointed flower's connections, once it's big enough to be told apart; none far
+   * The lab's lines: the pointed flower's connections, once it's big enough to be told apart; none far
    * away.
    */
   lineFocus: { driver: 'pairRadius', fadeIn: [12, 24] },

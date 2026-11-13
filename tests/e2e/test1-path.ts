@@ -302,7 +302,7 @@ async function bothLines() {
   check('and nothing was asked', (await stubCalls()).calls === n2);
   script('fund-person.ts', ['--state', stateDir, '--person', person, '--total', '5']);
   const back = await bob.say('and now?', { run_id: q.run });
-  check('Elco raises it, and it works again', back.status === 200 && !back.error, back.error);
+  check('raised, it works again', back.status === 200 && !back.error, back.error);
 }
 
 const expected = values['expect-conversations'];

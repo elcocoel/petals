@@ -1,7 +1,7 @@
-// The viewer's view (one-source.md, step 2; Elco, 10 Nov: "I'm basically choosing the glasses through which I
-// see the entire universe"): every drawing on this server is drawn through a view, never through a flower's
-// own choices, which are only the record of what its agent proposed. A person keeps theirs (me-routes.ts in
-// @petal/agent); a picture's address names the view it's drawn with by its whole hash.
+// The viewer's view, the glasses through which a person sees every map: every drawing on this server is
+// drawn through a view, never through a flower's own choices, which are only the record of what its agent
+// proposed. A person keeps theirs (me-routes.ts in @petal/agent); a picture's address names the view it's
+// drawn with by its whole hash.
 import { DEFAULT_VIEW, DEFAULT_VIEW_V1, FORMER_DEFAULTS, viewHash } from '@petal/core';
 import type { View } from '@petal/core/types';
 import { privateStore } from './drafts.ts';

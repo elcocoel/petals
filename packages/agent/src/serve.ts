@@ -1,5 +1,5 @@
-// The server, alone (002-system research, C3; Elco, 8 Nov: "Server should be concerned with serving
-// and execution"). It answers every path the website forwards: /api/*, /mcp, /skill.md, /petal.mjs,
+// The server, alone (002-system research, C3): it is concerned with serving and execution only.
+// It answers every path the website forwards: /api/*, /mcp, /skill.md, /petal.mjs,
 // /d/* and /s/*. It has no pages: the website shows those, and forwards the rest here.
 //
 //   node packages/agent/src/serve.ts         (pnpm server; PORT, default 8787; PETAL_HOST, default 127.0.0.1)
@@ -109,7 +109,7 @@ export function serverApp(cfg: Config, o: ServerOptions = {}): Hono {
   app.get('/skill.md', async (c) => {
     const skill = await readFile(join(root, 'skill/petal/SKILL.md'), 'utf8');
     const site = siteOf(c.req.raw);
-    // The file's sha256, so an agent can check it rather than read 6 MB (Elco, 9 Nov).
+    // The file's sha256, so an agent can check it rather than read 6 MB.
     const sha = (await served(site))?.sha;
     // Plain text, because some agents' web tools refuse text/markdown (Hermes did).
     return c.body(hostedSkill(skill, site, sha, brainVersion() ?? undefined), 200, {
@@ -117,7 +117,7 @@ export function serverApp(cfg: Config, o: ServerOptions = {}): Hono {
     });
   });
 
-  // Petals' formats, for any agent that writes them without Petals' agent (#98, Elco, 11 Nov): each JSON
+  // Petals' formats, for any agent that writes them without Petals' agent: each JSON
   // Schema at /schema/<format>/<version>.json, the words a document's `petal` field says (claim/v4 at
   // /schema/claim/v4.json), and every one of them listed at /schema.
   app.get('/schema', (c) => {
@@ -139,7 +139,7 @@ export function serverApp(cfg: Config, o: ServerOptions = {}): Hono {
     return c.json(schema);
   });
 
-  // The setup skill (Elco, 11 Nov): the brain's setup chapter, for a chatbot the person pasted the setup
+  // The setup skill: the brain's setup chapter, for a chatbot the person pasted the setup
   // prompt into, which may open this link. Plain text a fetcher reads without JavaScript, with this site's
   // address written in, and without the chapter's header and notes.
   app.get('/setup', async (c) => {

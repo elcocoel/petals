@@ -1,6 +1,5 @@
-// payouts/v1 (12 Nov; Elco: "how much money DAOs have and even more interestingly how much they spend, which
-// DAOs are actually spending"; "an unopinionated 'payouts from this treasury over period x'"): what a DAO paid
-// out, one payout each, read from its own chain, kept by the map's address. A payout is money that left the
+// payouts/v1 (12 Nov): an unopinionated "payouts from this treasury over a period": what a DAO paid out, one
+// payout each, read from its own chain, kept by the map's address. A payout is money that left the
 // DAO for someone, by a proposal that passed and ran: from, to, what, how much, when it was paid, the proposal
 // and its kind, and its dollars on the day it was paid, named as its source's. A move between the DAO's own
 // accounts isn't one; neither is a proposal's bond coming back. What isn't known is null, never a guess.

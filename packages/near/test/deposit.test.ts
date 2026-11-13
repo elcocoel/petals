@@ -1,4 +1,4 @@
-// A real 1Click quote (pricing-protocol.md, section 4): Petals' partner key goes as X-API-Key when it's set,
+// A real 1Click quote: Petals' partner key goes as X-API-Key when it's set,
 // and nothing is sent when it isn't. A fake 1Click: no money moves.
 import { describe, expect, test } from 'vitest';
 import { depositQuote } from '../src/pay/deposit.ts';

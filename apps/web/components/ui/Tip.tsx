@@ -1,6 +1,6 @@
-// A few words beside a control, the one tooltip look (design/side-panel.md, lines 6 and 45): an icon's name
-// while the pointer or the keyboard is on it (inside an element with `group/tip`), or a word said for a
-// moment after a press, as Copied is. Beside the control, so it never takes the place of anything.
+// A few words beside a control, the one tooltip look: an icon's name while the pointer or the keyboard
+// is on it (inside an element with `group/tip`), or a word said for a moment after a press, as Copied
+// is. Beside the control, so it never takes the place of anything.
 const LOOK =
   'pointer-events-none absolute top-1/2 z-20 -translate-y-1/2 whitespace-nowrap bg-action px-space-8 py-space-4 type-ui text-on-action';
 const ON_HOVER = 'invisible group-hover/tip:visible group-focus-visible/tip:visible';

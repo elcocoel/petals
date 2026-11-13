@@ -838,11 +838,12 @@ export async function readSignedIn(): Promise<{ network: string; account: string
 }
 
 /** The visitor's credit for Petals' agent (B), or null: not signed in, or no top-up yet. */
-export async function readCredit(): Promise<Credit | null> {
+export async function readCredit(): Promise<{ credit: Credit | null; inviteLeftUsd: number }> {
   const res = await fetch('/api/v1/me');
-  if (!res.ok) return null;
-  const json = (await res.json()) as { credit?: Credit | null };
-  return json.credit ?? null;
+  if (!res.ok) return { credit: null, inviteLeftUsd: 0 };
+  const json = (await res.json()) as { credit?: Credit | null; invite_left_usd?: number };
+  // what's left on their invites, which a chat falls back on (13 Nov: judges chat on invites)
+  return { credit: json.credit ?? null, inviteLeftUsd: json.invite_left_usd ?? 0 };
 }
 
 /** The person's credit record (SYSTEMS's credit/v1, wave 8); null for nobody or no answer. */

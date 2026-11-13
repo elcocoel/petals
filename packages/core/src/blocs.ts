@@ -1,6 +1,6 @@
-// Voting blocs over a period (board #94; Elco, 11 Nov: "a super important feature"): from a DAO's proposals,
+// Voting blocs over a period: from a DAO's proposals,
 // each pair of accounts that voted on enough of the same proposals, voted alike on enough of them, and agreed
-// beyond what each proposal's own split explains (kappa; META, 11 Nov: a majority agreeing with itself is no bloc),
+// beyond what each proposal's own split explains (kappa: a majority agreeing with itself is no bloc),
 // and the blocs such pairs link. Agreement, never proof of coordination: each pair is an inferred claim (moves_with,
 // grounds synchronised_behaviour) with its proposals as evidence and its method and thresholds in its words.
 // A vote of null (a ballot of choices) isn't for or against, so it isn't counted.
@@ -10,7 +10,7 @@ import type { Proposals } from './proposals.ts';
 import type { Claim, ClaimDraft } from './types/index.ts';
 
 export const BLOCS_METHOD = 'blocs/agreement@2';
-/** The method's defaults (META, 11 Nov: stated in every claim, settable per call, Elco can change them). */
+/** The method's defaults: stated in every claim and settable per call. */
 export const BLOCS_DEFAULTS = { min_shared: 5, min_agreement: 0.8, min_kappa: 0.5 } as const;
 
 export interface BlocsAsk {

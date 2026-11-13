@@ -28,8 +28,8 @@ import { encodingsOf, labelsOf, piecesOf, RATIOS } from './view.ts';
 type Values = Map<string, Map<string, string>>;
 
 /**
- * A petal's bands from a piece of parts given with the reading (Elco, 12 Nov, wave 7: "a vesting reader for anything
- * ... a strategy to deal with the petal segmentation"): its parts in the order given, bottom to top, each its share
+ * A petal's bands from a piece of parts given with the reading (such as vesting, cut into a petal's segments): its
+ * parts in the order given, bottom to top, each its share
  * of the petal's whole; none where the piece has none for it.
  */
 function partSegments(piece: SeamPiece | undefined, id: string): Segment[] {
@@ -98,8 +98,8 @@ export const GRADE_STEPS = 5;
 /**
  * Each petal's colour key where Colour shows a piece of data or a number: a category's own values (voted); a count,
  * a date, a share or an amount as its grade, 'grade:0' (the fewest, oldest) to 'grade:4' (the most, newest), by
- * rank between the two ends, equal values on one step (Elco, 12 Nov, wave 4: "color graded by a number or a
- * date", last active as a fade). null where Colour shows the reading's own kind or who it is, or nothing.
+ * rank between the two ends, equal values on one step (last active as a fade). null where Colour shows the
+ * reading's own kind or who it is, or nothing.
  */
 function coloursOf(
   by: string | null,
@@ -143,8 +143,8 @@ function coloursOf(
 export const NO_VALUE = 'no value';
 
 /**
- * The petals in the order a piece of data gives them (Elco, 12 Nov: "make sure ... we add the capacity to show last
- * active and other ways to on how we organize how the petals go around the circle"): a date newest first, a count or
+ * The petals in the order a piece of data gives them (last active, or any other way round the circle): a date
+ * newest first, a count or
  * an amount most first, a category its commonest value first; between equals, as before (biggest first); a petal
  * with no value after those with one; the tail last.
  */
@@ -186,8 +186,8 @@ function colourKey(colour: Encoding, r: PetalRow): string {
 
 /**
  * A petal's outline, where the spec's own outline (identity) is drawn. Outline can take any category, such as
- * name_kind, but how a category is drawn on any dimension stays undecided until the look designs it (Elco,
- * 11 Nov: "dont give data hard coded use of visual manifestations"), so nothing else gives it one.
+ * name_kind, but how a category is drawn on any dimension stays undecided until the look designs it (data has no
+ * hard-coded visual form), so nothing else gives it one.
  */
 function outlineKey(spec: Spec, r: PetalRow): ReadingPetal['outline'] {
   if (!spec.encodings.outline || r.tail || !r.identity) return null;
@@ -212,7 +212,7 @@ function nameOf(r: PetalRow, by: string | null, values: Values): string {
  * What a dimension other than labels reads for a petal from a category piece of data: identity's value is how
  * the identity is known (verified, self-declared, inferred), the kind of account's is its kind, and any other
  * piece's is its value for that account among the pieces given (a person's name_kind, say). None, and the
- * tail: null. It says the value only; how a value looks is the look's, and nothing fixes one (Elco, 11 Nov).
+ * tail: null. It says the value only; how a value looks is the look's, and nothing fixes one.
  */
 export function categoryOf(
   by: string,
@@ -229,8 +229,8 @@ export function categoryOf(
 
 export interface ReadOptions {
   /**
-   * The least height a bar is given: none on the straight scale (Elco's art direction, 11 Nov: "no artificial
-   * minimum"; #76), so a petal is exactly as tall as its share, and HEIGHT_FLOOR on the others, unless said.
+   * The least height a bar is given: none on the straight scale (the art direction's: no artificial minimum),
+   * so a petal is exactly as tall as its share, and HEIGHT_FLOOR on the others, unless said.
    */
   floor?: number;
 }
@@ -254,11 +254,11 @@ export function readFlower(
   const values = valuesOf(pieces);
   const labels = view ? labelsOf(view, s, pieces) : 'identity';
   // what the view gives Order and Colour, where it's a piece of data given with the reading (last_active,
-  // votes_cast, voted: SYSTEMS's activity); the reading's own pieces (share, kind, identity) draw as they did
+  // votes_cast, voted: the activity pieces); the reading's own pieces (share, kind, identity) draw as they did
   const used = view ? inUse(view, piecesOf(s, pieces)) : null;
   const kinds = new Map(pieces.map((p) => [p.name, p.kind]));
   // Order by a piece given with the reading, or by the reading's own kind, who it is, or the name each petal shows
-  // (a person's, else its own label): every choice Tools offers turns the petals (VISUAL QA, 12 Nov)
+  // (a person's, else its own label): every choice Tools offers turns the petals
   const orderData = view ? (latestView(view).dimensions.order?.data ?? null) : null;
   const ownOrder = (rs: readonly PetalRow[]): Map<string, string> | null => {
     if (orderData === 'kind') return new Map(rs.map((r) => [r.id, r.kind]));
@@ -275,9 +275,9 @@ export function readFlower(
   };
   const widthBy = sizeBy('width');
   const heightBy = sizeBy('height');
-  // Colour by a piece or a number: a category's values (voted), or a number's or a date's grade (Elco, wave 4)
+  // Colour by a piece or a number: a category's values (voted), or a number's or a date's grade
   // petals clockwise from twelve o'clock: by size (selectPetals gives them so, tail last), or by the piece Order
-  // shows (Elco, 12 Nov: "last active, most active")
+  // shows (last active, most active)
   const selected = selectPetals(s, spec.selection);
   const own = orderBy ? null : ownOrder(selected);
   const rows = orderBy
@@ -328,8 +328,8 @@ export function readFlower(
 }
 
 /**
- * The tail's members as stripes (Elco, 11 Nov: "everyone else should be 1 petal, the correct size for the
- * percentage it represents - the stripey pattern would work better inverted (smaller closer to the center)"): each
+ * The tail's members as stripes ("everyone else" is one petal, sized by the share it represents, its stripes
+ * inverted, the smaller closer to the centre): each
  * member's share of all the tail holds, the smallest first (reading/fold.ts), as render/wedge/fold.ts draws them.
  */
 function tailFold(
@@ -353,8 +353,8 @@ export function readingHash(reading: Reading): string {
 }
 
 /**
- * A reading's petals dressed again through another view, in the browser, at once (Elco, 12 Nov, wave 4: after a
- * change in Tools the map redraws without the second's wait): their own data (share, amount, kind, who it is,
+ * A reading's petals dressed again through another view, in the browser, at once (after a change in Tools the
+ * map redraws without the second's wait): their own data (share, amount, kind, who it is,
  * their label) and the pieces given with the reading (`given`: a person's names, the dollars, the activity) turn,
  * size, colour and name them as readFlower would. What only the snapshot knows stays as it was until the server's
  * reading comes: heights by another measure (a metric), and the bands inside a petal.

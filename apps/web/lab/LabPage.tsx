@@ -2,8 +2,8 @@
 import { type FixtureFiles, provideFixtures } from './fixtures.ts';
 // The lab's page (T176): every registered component and every token, biggest first, from saved fixtures.
 // It renders on the client, so every state's controls can hold a hand, as on the real pages: from a
-// server page, a function can't reach a button (Next refused it, 10 Nov, LOBBY's find). The files it
-// draws from come from the server, in `files`.
+// server page, a function can't reach a button (Next refused it). The files it draws from come from
+// the server, in `files`.
 import { LAB_COLUMN, LabEntryView, LabSectionView } from './LabEntryView.tsx';
 import { type ClosedGroup, type LabEntry, registry } from './registry.tsx';
 import { QuarantineView, TokensView } from './TokensView.tsx';

@@ -1,7 +1,7 @@
-// Petals' formats on the person's computer (#98; Elco, 11 Nov: "the petals agent shouldn't be strictly
-// necessary to write in the correct data format"). validate_data checks a document against the format its
-// `petal` field names, with core's own checks, the same ones Petals runs when it's kept, so an agent hears
-// what's wrong before it sends anything. It writes nothing. The schemas are at <site>/schema/<format>/<version>.json.
+// Petals' formats on the person's computer: any agent can write the data format, not only Petals' agent.
+// validate_data checks a document against the format its `petal` field names, with core's own checks, the
+// same ones Petals runs when it's kept, so an agent hears what's wrong before it sends anything. It writes
+// nothing. The schemas are at <site>/schema/<format>/<version>.json.
 import {
   canonicalJson,
   checkLayer,
@@ -52,7 +52,7 @@ const nameOf = (doc: Json): string | null => {
 
 /**
  * What `validate_data` answers for one document: as the person's own project checks it, or with `public`,
- * word for word what the shared map's loader says of it (SYSTEMS's mappingProblems).
+ * word for word what the shared map's loader says of it (mappingProblems).
  */
 export function validateData(doc: unknown, o: { public?: boolean } = {}): Json {
   if (!doc || typeof doc !== 'object' || Array.isArray(doc)) {
