@@ -1,5 +1,5 @@
-// credit/v1 and points/v1 (specs/005-mapping-brain/composition.md, section 7; Elco, 8 Nov: "incentivizing mapping
-// via 'points' that could one day move us towards a TGE"; data.md: "Credit or points for layers others build on"):
+// credit/v1 and points/v1 (specs/005-mapping-brain/composition.md, section 7b; data.md: "Credit or points for layers
+// others build on"):
 // for one author, from the record alone, every layer they published, the facts they stated first and those they
 // matched, and who else used each layer. A layer earns one point for each distinct other account that built on it
 // (through `from`, the whole chain back) or reused it (published a version that includes it), and that use's point

@@ -11,7 +11,7 @@ Wave 8, 13 Nov: `publication/v1`, `compose/v1` and `credit/v1`. This extends `da
 - each author has their own latest version;
 - private first, published under the author's signature.
 
-Elco, 13 Nov: "who 'wins' is the wrong question unless they are mapping exactly the same data for exactly the same block ... results should be deterministic, right? so the question is 'how do different data layers from different people contribute to fuller and fuller maps' - that was the whole idea, all along". And: "this needs to be taken with absolute seriousness - it's the heart of the promise of the protocol (collective mapping) and it's also how we will distribute any eventual rewards in a future vision of governance ... there's ownership over valuable mapping that might become IP and passive income for the creators in the future."
+Elco, 13 Nov: "who 'wins' is the wrong question unless they are mapping exactly the same data for exactly the same block ... results should be deterministic, right? so the question is 'how do different data layers from different people contribute to fuller and fuller maps' - that was the whole idea, all along". And: "this needs to be taken with absolute seriousness - it's the heart of the promise of the protocol (collective mapping)".
 
 So the shared map composes what everyone published. No author's work replaces another's. Credit is kept for every author, forever, and anyone can check it without asking Petals.
 
@@ -105,16 +105,13 @@ The map's composition is a pure function of the record. Given the same publicati
 
 The answer names the publications it was composed from (their hashes) and its rule (`compose/v1`). The same inputs give the same answer.
 
-## 7. A contribution to the public good
+## 7. No licence field
 
-Elco, 13 Nov: "it's all part of our protocol and people have contributed it to the 'public good' - what im saying is like - let's imagine an airdrop, or a governance token even without economic value - this contribution would be one of the major 'points' counter that people could have as proof of work for the common good in the case of this protocol".
-
-- **Publishing is a contribution to the public good, under the protocol.** There is no licence field.
-- **Points are proof of work for the common good.** A future airdrop or governance token, even one with no economic value, could read them.
+A publication carries no licence field.
 
 ## 7b. The credit record (`credit/v1`)
 
-A deterministic summary per author, built from the record alone, shaped so a future reward could be split from it. It is **not money now**. What credit is worth (points, rewards, income) is Elco's to design later.
+A deterministic summary per author, built from the record alone. It is **not money now**. What credit is worth is Elco's to design later.
 
 | Field | What it holds |
 |---|---|
@@ -127,14 +124,14 @@ A deterministic summary per author, built from the record alone, shaped so a fut
 
 - **Counted once each:** another account counts once per layer, however many times it used it. An author's own use never counts.
 
-**Points (Elco's idea, 8 Nov, `004-workspace`: "incentivizing mapping via 'points' that could one day move us towards a TGE -> users pay for extra features, part of revenue goes to a DAO, part of revenue rewards work, part of revenue goes to Devs"; `data.md`: "Credit or points for layers others build on").** One rule, `points/v1`:
+**Points (`data.md`: "Credit or points for layers others build on").** One rule, `points/v1`:
 
 - **A layer earns one point for each distinct other account that built on it or reused it.** Building on follows `from` the whole chain back: a layer built on a layer that was built on yours counts for yours too, once.
 - Only published layers count, and only other authors' published versions count as use.
 - **A use gives its point only to the authors who had published that layer before the use was appended** (by `seq`). Publishing an already-used layer again by its hash earns "matched" credit, an independent confirmation, never points from earlier uses. Copying earns nothing (PM).
 - An author's points are the sum over their layers.
 - Matching or stating facts first is credit, not points.
-- The record keeps who used what, so a later split of revenue (a DAO, the work, the devs) can read it. There is no token and no money now.
+- The record keeps who used what. There is no token and no money now.
 - **Anyone can recompute it** from Petals' record and compare. Posting it to NEAR Social under the author's account waits, as does anchoring (Elco, 13 Nov: "let's not make this more complicated than it has to be").
 - **The caveats, named.** ATTRIBUTION, section 5 says:
   - No count here proves usefulness.
