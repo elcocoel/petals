@@ -38,6 +38,7 @@ import { PayRow } from '../chat/PayRow.tsx';
 import { MapList } from '../MapList.tsx';
 import { Badge } from '../ui/Badge.tsx';
 import { Card } from '../ui/Card.tsx';
+import { Quote } from '../ui/Quote.tsx';
 import { Section } from '../ui/Section.tsx';
 import { SectionName } from '../ui/SectionName.tsx';
 import { AccountMenu } from './AccountMenu.tsx';
@@ -49,7 +50,6 @@ import { Profile } from './Profile.tsx';
 import { ProfileEditor } from './ProfileEditor.tsx';
 import { ProfileHead } from './ProfileHead.tsx';
 import { Published } from './Published.tsx';
-import { QuoteBand } from './QuoteBand.tsx';
 import type { TipView } from './TipControl.tsx';
 import { Usage } from './Usage.tsx';
 import { Wallets } from './Wallets.tsx';
@@ -196,7 +196,12 @@ export function Lobby({
           <Usage usage={usage} />
         </Section>
 
-        {quote && <QuoteBand quote={quote} />}
+        {/* the visit's one quote, in a band of its own, the art given room */}
+        {quote && (
+          <Section tone="mist" rule="top">
+            <Quote quote={quote} />
+          </Section>
+        )}
 
         <Section rule="top" id="work" head={<SectionName name={lobbyWords.work} />}>
           <div className="flex flex-col gap-column-gap">
