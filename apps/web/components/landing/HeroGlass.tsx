@@ -1,5 +1,5 @@
-// The hero's glass (Elco, 11 Nov: "making it feel like Minority Report ... simulating a 3D dimensionality
-// material"): the material behind its two bubbles, drawn rather than styled, like the flower, so it can be as
+// The hero's glass, a material that simulates a pane of three-dimensional glass floating over the stage: the
+// material behind its two bubbles, drawn rather than styled, like the flower, so it can be as
 // free as the story needs. A soft shadow under it; a body of glass, light for the person's question, smoked
 // ink for Petals' answer; a rim of light round its edge, brightest on the side the light comes from (the upper
 // left for the question, the flower's side for the answer, in the flower's own mint); faint scan lines in the dark
@@ -16,6 +16,7 @@ export function Glass({
   facing = 'left',
   glint = 1,
   glow = 1,
+  solid = false,
 }: {
   tone: GlassTone;
   /** The side its light comes from: the upper left, or the flower's side. */
@@ -24,6 +25,8 @@ export function Glass({
   glint?: number;
   /** How bright its rim and inner light are, 0 to 1. */
   glow?: number;
+  /** Nothing shows through it: for a card that must be read over whatever is under it (the copy toast). */
+  solid?: boolean;
 }) {
   const id = useId().replace(/[^\w-]/g, '');
   const dark = tone === 'dark';
@@ -38,8 +41,8 @@ export function Glass({
     >
       <defs>
         <linearGradient id={`${id}-body`} x1={from} y1="0" x2={to} y2="1">
-          <stop offset="0" stopColor={body} stopOpacity={dark ? 0.94 : 0.92} />
-          <stop offset="1" stopColor={body} stopOpacity={dark ? 0.82 : 0.62} />
+          <stop offset="0" stopColor={body} stopOpacity={solid ? 1 : dark ? 0.94 : 0.92} />
+          <stop offset="1" stopColor={body} stopOpacity={solid ? 1 : dark ? 0.82 : 0.62} />
         </linearGradient>
         <linearGradient id={`${id}-rim`} x1={from} y1="0" x2={to} y2="1">
           <stop offset="0" stopColor={rim} stopOpacity={0.95 * glow} />

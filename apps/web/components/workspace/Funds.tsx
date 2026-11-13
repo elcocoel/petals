@@ -20,6 +20,7 @@ export function Funds({
   held,
   phase,
   withdrew,
+  failedWhy = null,
   onWithdraw,
   usage,
   quote,
@@ -32,6 +33,8 @@ export function Funds({
   phase: WithdrawPhase;
   /** What the last withdrawal took out, in NEAR, once it has. */
   withdrew: string | null;
+  /** Why the last withdrawal didn't go through, as the wallet or Petals said it. */
+  failedWhy?: string | null;
   onWithdraw: () => void;
   /**
    * Every call charged to the person, newest first (usage/v1), as a professional usage widget; absent where
@@ -72,7 +75,7 @@ export function Funds({
       {phase === 'withdrew' && withdrew !== null && (
         <p className="my-0 type-caption text-muted">{fundsWords.withdrew(withdrew)}</p>
       )}
-      {phase === 'failed' && <p className="my-0 type-caption text-muted">{fundsWords.failed}</p>}
+      {phase === 'failed' && <p className="my-0 type-caption">{failedWhy ?? fundsWords.failed}</p>}
       {tip && tip.percent !== null && tip.scale && (
         <div className="border-t border-hairline pt-text-gap">
           <TipControl {...tip} />

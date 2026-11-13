@@ -78,6 +78,7 @@ import { Callout } from '../components/ui/Callout.tsx';
 import { Card } from '../components/ui/Card.tsx';
 import { ChooseFile } from '../components/ui/ChooseFile.tsx';
 import { ColourPick } from '../components/ui/ColourPick.tsx';
+import { ConnectButton, ConnectButtonView } from '../components/ui/ConnectButton.tsx';
 import { Drawing } from '../components/ui/Drawing.tsx';
 import { EmptySlot } from '../components/ui/EmptySlot.tsx';
 import { FaqItem } from '../components/ui/FaqItem.tsx';
@@ -789,8 +790,8 @@ export const registry: LabEntry[] = [
     figmaName: null,
     figmaNode: null,
     source: 'apps/web/components/landing/HeroStory.tsx',
-    // HERO ART's V2, approved by Elco (11 Nov); with its lab controls at /lab/landing-hero
-    states: [{ name: 'as approved', wide: true, render: () => <HeroStory /> }],
+    // the landing's hero as the page draws it; its lab controls are at /lab/landing-hero
+    states: [{ name: 'on the landing', wide: true, render: () => <HeroStory /> }],
   },
   {
     id: 'StoryFlower',
@@ -1465,6 +1466,34 @@ export const registry: LabEntry[] = [
     ],
   },
   {
+    id: 'ConnectButtonView',
+    group: 'Controls',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/ui/ConnectButton.tsx',
+    states: [
+      { name: 'visitor', render: () => <ConnectButtonView label="Connect" account={null} /> },
+      {
+        name: 'connected, named account',
+        render: () => <ConnectButtonView label="Connect" account="alice.near" />,
+      },
+      {
+        name: 'connected, long address',
+        render: () => (
+          <ConnectButtonView label="Connect" account="0x8ba1f109551bD432803012645Ac136ddd64DBA72" />
+        ),
+      },
+    ],
+  },
+  {
+    id: 'ConnectButton',
+    group: 'Controls',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/ui/ConnectButton.tsx',
+    states: [{ name: 'as the page reads it', render: () => <ConnectButton label="Connect" /> }],
+  },
+  {
     id: 'Button',
     group: 'Controls',
     figmaName: 'Petals / Button',
@@ -1507,6 +1536,17 @@ export const registry: LabEntry[] = [
             Support Petals
           </Button>
         ),
+      },
+      {
+        name: 'done',
+        closedIn: 'Actions',
+        render: () => <Button variant="done">Copied</Button>,
+      },
+      {
+        name: 'done, edged',
+        closedIn: 'Actions',
+        ...SECONDARY,
+        render: () => <Button variant="doneEdged">Copied</Button>,
       },
       {
         name: 'square, link',

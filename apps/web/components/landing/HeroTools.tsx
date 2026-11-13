@@ -1,10 +1,9 @@
-// The hero's Tools box (Elco, 12 Nov: "either we find a visual shorthand or we use the real thing but we make sure
-// it's connected to the components for real so they change with whatever I change there"): the real one, the map's
-// own Tools rows (ViewLegend), read only, in the map's own box (BarBox, the floating boxes' glass, solid so the
-// petals under it don't show through), handed the view the flower is drawn in at each moment: Height to None while
-// the community is even, back to Share of the whole as the heights part; Order to Last active as the petals travel
-// round; Colour to Voted or never for the vote, with what each colour means; Highlight to one voting bloc and then
-// the other. Whatever changes in ViewLegend or the box shows here too.
+// The hero's Tools box, the real thing rather than a shorthand, wired to the real components so it changes
+// whenever they do: the map's own Tools rows (ViewLegend), read only, in the map's own box (BarBox, the floating
+// boxes' glass, solid so the petals under it don't show through), handed the view the flower is drawn in at each
+// moment: Height to None while the community is even, back to Share of the whole as the heights part; Order to
+// Last active as the petals travel round; Colour to Voted or never for the vote, with what each colour means;
+// Highlight to one voting bloc and then the other. Whatever changes in ViewLegend or the box shows here too.
 'use client';
 import type { View } from '@petal/core/types';
 import { ACTIVITY, EVERY_FLOWER, inUse } from '@petal/core/view';
