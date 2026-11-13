@@ -27,7 +27,7 @@ for (const p of r.publications) {
   );
 }
 for (const l of r.left) console.log(`left ${l.about}: ${l.why}`);
-console.log(r.text);
+console.log(r.text ?? 'nothing to press');
 console.log(
   `${r.publications.length} versions in one press (${signsAsIs} with parent and previous the same entry), ${r.left.length} maps left; prepared in ${ms} ms (--dry: nothing kept)`,
 );

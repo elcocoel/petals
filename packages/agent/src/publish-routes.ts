@@ -97,19 +97,15 @@ export function publishRoutes(d: PublishDeps): Hono {
           author,
           d.site.hostname,
           { dry: true },
-        ).catch((e: unknown) => {
-          // nothing to publish anywhere is an answer here, not a failure
-          if (fromThrown(e).error.code === 'not_found') return null;
-          throw e;
-        });
+        );
         return ok(c, {
-          author: dry?.manifest.author ?? author,
-          maps: (dry?.publications ?? []).map((p) => ({
+          author: dry.manifest?.author ?? author,
+          maps: dry.publications.map((p) => ({
             about: p.about,
             name: p.name,
             layers: p.publication.layers.length,
           })),
-          left: dry?.left ?? [],
+          left: dry.left,
         });
       } catch (e) {
         return failed(c, e);

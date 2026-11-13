@@ -652,7 +652,9 @@ export async function publishable(
   const found = (await once(shared, 'index', () => mapIndex(ctx, { hidden: true }))).find(
     (m) => m.card.id === about,
   );
-  if (!found)
+  // a press over many maps also publishes what an author holds about an address with no map on the Power Map yet
+  // (its own rows, its layers): a dataset is any address, and a map can be drawn there later
+  if (!found && !shared)
     throw new ToolFailure(
       'not_found',
       `No map on the Power Map has the address ${about}.`,
@@ -663,7 +665,7 @@ export async function publishable(
   // the map's accounts, read only when the person has claims to sort onto it; a press over many maps reads them
   // only for claims not published yet (it doesn't count the published ones)
   const sorting = o.cases === false ? mine.some((r) => !out.has(r.id)) : mine.length > 0;
-  const accounts = sorting ? await cardAccounts(ctx, found.card) : new Set<string>();
+  const accounts = sorting && found ? await cardAccounts(ctx, found.card) : new Set<string>();
   const claims: Claim[] = [];
   const kept: { claim: Claim; why: string }[] = [];
   let published = 0;
@@ -679,7 +681,7 @@ export async function publishable(
     else kept.push({ claim, why: v.errors.map((e) => e.message).join('; ') });
   }
   const scored = await confidences(ctx, [...claims, ...kept.map((k) => k.claim)]);
-  const c = found.card;
+  const c = found?.card ?? null;
   const drawn = await drawnReadings(ctx, owner, about, by, shared);
   published += drawn.theirs;
   const press = await pressOf(ctx, {
@@ -726,7 +728,7 @@ export async function publishable(
   }));
   return {
     about,
-    name: c.name ?? c.mark?.name?.value ?? c.title,
+    name: c ? (c.name ?? c.mark?.name?.value ?? c.title) : await nameAt(ctx, about, shared),
     claims,
     readings: drawn.readings,
     rows: claims.map((x, i) => rowOf(x, scored.scores[i] ?? null)),
@@ -919,10 +921,13 @@ async function mapsWith(
 ): Promise<string[]> {
   const index = await once(shared, 'index', () => mapIndex(ctx, { hidden: true }));
   const byKey = new Map(index.map((m) => [aboutKey(m.card.id), m.card.id]));
-  const ids = new Set<string>();
+  // by address: a map's card id where it has one, else the address as kept (nothing is dropped here: a press that
+  // can't publish one says so under left)
+  const found = new Map<string, string>();
   const add = (about: string | null | undefined) => {
-    const id = about ? byKey.get(aboutKey(about)) : undefined;
-    if (id) ids.add(id);
+    if (!about) return;
+    const key = aboutKey(about);
+    if (!found.has(key)) found.set(key, byKey.get(key) ?? about);
   };
   if (author === PETALS_AUTHOR)
     for (const about of (await once(shared, 'holdings', () => petalsHoldings(ctx))).keys())
@@ -939,11 +944,23 @@ async function mapsWith(
   );
   if (waiting.length)
     for (const m of index) {
-      if (ids.has(m.card.id)) continue;
+      if (found.has(aboutKey(m.card.id))) continue;
       const accounts = await cardAccounts(ctx, m.card);
-      if (waiting.some((r) => aboutOneOf(accounts, r.subject))) ids.add(m.card.id);
+      if (waiting.some((r) => aboutOneOf(accounts, r.subject))) add(m.card.id);
     }
-  return [...ids].sort();
+  return [...found.values()].sort();
+}
+
+/** An address with no map card, in words: the name its own mark gives it, where Petals holds one; else the address. */
+async function nameAt(ctx: ToolContext, about: string, shared?: Shared): Promise<string> {
+  const held = (await once(shared, 'holdings', () => petalsHoldings(ctx))).get(aboutKey(about));
+  for (const l of held?.layers ?? []) {
+    if (!l.petal.startsWith('mark/')) continue;
+    const name = (held?.docs.get(l.sha256) as { name?: { value?: unknown } } | undefined)?.name
+      ?.value;
+    if (typeof name === 'string' && name) return name;
+  }
+  return about;
 }
 
 /** One map's version as prepare answers it: its map, its name, its unsigned hash and the publication. */
@@ -987,6 +1004,9 @@ export async function preparePress(
       left.push({ about, why: e.message });
     }
   }
+  // a dry run with nothing to press says so, with everything it left and why
+  if (!versions.length && o.dry)
+    return { manifest: null, sha256: null, text: null, publications: [], left };
   if (!versions.length)
     throw new ToolFailure(
       'not_found',

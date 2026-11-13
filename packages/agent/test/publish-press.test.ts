@@ -223,6 +223,11 @@ describe('one press over many maps (manifest/v1)', () => {
       [m1, 1],
       [m2, 2],
     ]);
+    // after it, nothing is left to press, and 'all' says why for each map rather than dropping it
+    const after = (await w.request('/api/v1/publish/data?maps=all')).body;
+    expect(after.maps).toEqual([]);
+    expect(after.left.map((l: Out) => l.about).sort()).toEqual([m1, m2].sort());
+    for (const l of after.left) expect(l.why).toMatch(/isn.t on the shared map already/);
     // once published, the same press can't go again
     const again = await w.request('/api/v1/publish/data', 'POST', {
       sha256: prep.sha256,
@@ -300,7 +305,8 @@ describe("Petals' base data: petals.near signs over the import, through the same
     );
     expect(dry.publications.map((p) => p.about).sort()).toEqual([...w.maps].sort());
     expect('nonce' in dry).toBe(false);
-    expect(await w.store.publishDraft.get(dry.sha256)).toBeFalsy();
+    expect(dry.sha256).not.toBeNull();
+    expect(await w.store.publishDraft.get(dry.sha256 as string)).toBeFalsy();
 
     await w.signIn(petals);
     const prep = (
@@ -407,5 +413,54 @@ describe("Petals' base data: petals.near signs over the import, through the same
       p.publication.layers.map((l: Out) => l.sha256).sort(),
     );
     expect((await creditFor(w.ctx, PETALS_AUTHOR)).totals.confirmed).toBe(0);
+  });
+
+  test('an address Petals holds rows for, with no map drawn there, gets its signed version too', async () => {
+    const w = await setup();
+    const bare = 'eip155:8453:0x00000000000000000000000000000000000000b1';
+    const at = '2026-11-12T22:07:10.243Z';
+    const mark = {
+      petal: 'mark/v1',
+      about: bare,
+      name: { value: 'A token', status: 'self-declared', source: 'chain', ref: 'name()', at },
+      symbol: null,
+      logo: null,
+      read_at: at,
+    };
+    await w.store.mark.put({ about: bare, body: JSON.stringify(mark), read_at: at });
+    await importRecord(w.ctx);
+    const imported = (await recordOf(w.ctx)).find((e) => e.publication.about === bare);
+    expect(imported?.publication.author).toBe(IMPORTED_AUTHOR);
+    // no map card at that address
+    expect((await w.request(`/api/v1/maps/${encodeURIComponent(bare)}`)).status).toBe(404);
+
+    await w.signIn(petals);
+    const ahead = (
+      await w.request(`/api/v1/publish/data?maps=all&author=${encodeURIComponent(PETALS_AUTHOR)}`)
+    ).body;
+    expect(ahead.maps.map((m: Out) => m.about).sort()).toEqual([...w.maps, bare].sort());
+    expect(ahead.maps.find((m: Out) => m.about === bare)?.name).toBe('A token');
+    expect(ahead.left).toEqual([]);
+    const prep = (
+      await w.request('/api/v1/publish/data/prepare', 'POST', {
+        maps: 'all',
+        author: PETALS_AUTHOR,
+      })
+    ).body;
+    expect(prep.text).toBe(`Petals: publish 3 versions in your name.\nManifest ${prep.sha256}`);
+    const v = prep.publications.find((p: Out) => p.about === bare)?.publication;
+    expect(v).toMatchObject({
+      parent: imported?.hash,
+      previous: imported?.hash,
+      layers: imported?.publication.layers,
+    });
+    const out = await w.request('/api/v1/publish/data', 'POST', {
+      sha256: prep.sha256,
+      proof: signed(petals, prep),
+    });
+    expect(out.status, JSON.stringify(out.body)).toBe(200);
+    const record = await recordOf(w.ctx);
+    const map = compose(bare, record, await layersOf(w.ctx, record));
+    expect(map.authors.map((a) => [a.author, a.imported])).toEqual([[PETALS_AUTHOR, false]]);
   });
 });
