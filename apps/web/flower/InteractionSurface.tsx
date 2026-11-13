@@ -7,12 +7,14 @@
 // Power Map stands beside the conversation, the same live map as /map, with no flower of the conversation's
 // hard-coded in.
 import { accountRef } from '@petal/core';
-import type { SurfaceName } from '@petal/tokens';
+import { floatBox, type SurfaceName } from '@petal/tokens';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Composer } from '../components/chat/Composer.tsx';
 import { ConnectWallet } from '../components/chat/ConnectWallet.tsx';
 import { ConversationThread } from '../components/chat/ConversationThread.tsx';
+import { CreditPointer } from '../components/chat/CreditPointer.tsx';
 import { ModelOptions } from '../components/chat/ModelOptions.tsx';
+import { NewConversation } from '../components/chat/NewConversation.tsx';
 import { useFollowScroll } from '../components/chat/useFollowScroll.ts';
 import { PetalClaims } from '../components/PetalClaims.tsx';
 import { PowerQuote } from '../components/PowerQuote.tsx';
@@ -21,7 +23,7 @@ import { FloatBox } from '../components/ui/FloatBox.tsx';
 import { Icon } from '../components/ui/Icon.tsx';
 import { MappingBox } from '../components/workspace/MappingBox.tsx';
 import { WalletAsk } from '../components/workspace/WalletAsk.tsx';
-import { LandscapeCanvas } from '../landscape/LandscapeCanvas.tsx';
+import { LandscapeCanvas, PANEL_W } from '../landscape/LandscapeCanvas.tsx';
 import { ceremonyWords } from '../lib/ceremony.ts';
 import type { Catalogue } from '../lib/composer-options.ts';
 import {
@@ -37,6 +39,7 @@ import { networkLabel, populationWords, shortId } from '../lib/flower-view.ts';
 import { mappingView, modeWords } from '../lib/mapping.ts';
 import type { MapCard } from '../lib/maps.ts';
 import { groundWords } from '../lib/opening.ts';
+import type { PowerQuoteItem } from '../lib/power-quotes.ts';
 import type { Opened } from '../lib/thread.ts';
 import { useFloatBoxes } from '../viewmodels/useFloatBoxes.ts';
 import { useGroundMap } from '../viewmodels/useGroundMap.ts';
@@ -53,6 +56,7 @@ export function InteractionSurface({
   scatter,
   probe,
   surface,
+  starts,
   ...workspace
 }: {
   scatter: boolean;
@@ -64,7 +68,8 @@ export function InteractionSurface({
   catalogue?: Catalogue | null;
   initialQuestion: string | null;
   recorded: boolean;
-  opening: string;
+  /** where an empty conversation offers to start: the page's own suggestions, not the agent's words */
+  starts: { label: string; href: string }[];
   shelf: MapCard[];
   initialOpen: Opened;
   initialPetal: string | null;
@@ -214,9 +219,10 @@ export function InteractionSurface({
   const [inMap, setInMap] = useState<string | null>(null);
   const publishMap = inMap ?? flowerMap ?? state.mapAt?.map ?? madeMap;
   const publishing = usePublishPress(publishMap);
-  // a power quote wherever /make has nothing to show yet: the map on its way, an empty Mapping
+  // a power quote wherever /make has nothing to show yet, on the background: the map on its way, or a canvas
+  // with nothing drawn on it
   const openingQuote = usePowerQuote(0);
-  const mappingQuote = usePowerQuote(1);
+  const emptyQuote = usePowerQuote(1);
   // the wallet chosen on the map (the wallet level): in Mapping, a note or a name about it, or having it mapped
   const chosen = state.mapWallet;
   const chosenAccount = chosen
@@ -258,45 +264,53 @@ export function InteractionSurface({
                 </p>
               </div>
             ) : (
-              <LandscapeCanvas
-                key={ground.map ?? (atFlower ? `flower:${focus}` : 'whole')}
-                data={land}
-                fill="area"
-                title="Power Map"
-                focus={focus}
-                show={show}
-                placeholder={placeholder}
-                progress={progress}
-                landed={landed}
-                // a publication that just joined the map, in the person's name: read again, lit in Information
-                joined={publishing.joined}
-                // a wallet chosen on it is what the next question is about
-                onWallet={actions.chooseMapWallet}
-                // the map in front, for the mapping state: the flower the person is inside
-                onEnter={setInMap}
-                // the room beside the conversation is narrow: the map keeps clear of its own chains
-                clearOfChains
-                // the same map as /map's, from the same code, so there's one thing to edit: its
-                // legend, Tools with the search at every zoom, and Cmd+K
-                legend="edit"
-                search
-                // the map's boxes keep the side panel's room rule, as the conversation's do
-                panelEdge={edge}
-              />
+              <>
+                {land.flowers.length === 0 && !landed && !placeholder && emptyQuote && (
+                  <EmptyGround quote={emptyQuote} besideColumn />
+                )}
+                <LandscapeCanvas
+                  key={ground.map ?? (atFlower ? `flower:${focus}` : 'whole')}
+                  data={land}
+                  fill="area"
+                  title="Power Map"
+                  focus={focus}
+                  show={show}
+                  placeholder={placeholder}
+                  progress={progress}
+                  landed={landed}
+                  // a publication that just joined the map, in the person's name: read again, lit in Information
+                  joined={publishing.joined}
+                  // a wallet chosen on it is what the next question is about
+                  onWallet={actions.chooseMapWallet}
+                  // the map in front, for the mapping state: the flower the person is inside
+                  onEnter={setInMap}
+                  // the room beside the conversation is narrow: the map keeps clear of its own chains
+                  clearOfChains
+                  // the same map as /map's, from the same code, so there's one thing to edit: its
+                  // legend, Tools with the search at every zoom, and Cmd+K
+                  legend="edit"
+                  search
+                  // the map's boxes keep the side panel's room rule, as the conversation's do
+                  panelEdge={edge}
+                />
+              </>
             )}
           </div>
         ) : (
-          <FlowerCanvas
-            key={onCanvas?.key ?? 'ground'}
-            fill="area"
-            reading={onCanvas?.reading ?? null}
-            votes={state.votes}
-            scatter={scatter}
-            probe={probe}
-            selected={state.selected}
-            onPick={actions.pick}
-            clear={clear}
-          />
+          <>
+            {!onCanvas?.reading && emptyQuote && <EmptyGround quote={emptyQuote} clear={clear} />}
+            <FlowerCanvas
+              key={onCanvas?.key ?? 'ground'}
+              fill="area"
+              reading={onCanvas?.reading ?? null}
+              votes={state.votes}
+              scatter={scatter}
+              probe={probe}
+              selected={state.selected}
+              onPick={actions.pick}
+              clear={clear}
+            />
+          </>
         )}
       </div>
       <FloatBox
@@ -347,7 +361,15 @@ export function InteractionSurface({
                           </Button>
                         )}
                         {state.balance && (
-                          <span className="type-mono text-muted">{state.balance}</span>
+                          <span className="type-mono text-muted">
+                            {state.balance}
+                            {state.noCredit && (
+                              <>
+                                {' · '}
+                                <CreditPointer />
+                              </>
+                            )}
+                          </span>
                         )}
                       </span>
                     )
@@ -361,7 +383,7 @@ export function InteractionSurface({
           )
         }
       >
-        {/* Petals' greeting and the thread. */}
+        {/* The thread; empty, where to start. */}
         <ConversationThread
           recorded={state.recorded}
           rows={state.rows}
@@ -373,7 +395,11 @@ export function InteractionSurface({
           onOpenStored={actions.openStored}
           onRefollow={actions.refollow}
           onLink={actions.followLink}
-          pay={{ ...state.pay, onPay: actions.pay }}
+          empty={
+            state.recorded ? undefined : (
+              <NewConversation starts={starts} onOpen={(href) => actions.followLink(href)} />
+            )
+          }
           jobs={state.jobs}
           jobControls={state.jobControls}
           onMapIt={actions.mapIt}
@@ -398,7 +424,6 @@ export function InteractionSurface({
             view={mapping}
             press={publishing.view}
             onPublish={() => void publishing.publish()}
-            quote={mappingQuote && <PowerQuote quote={mappingQuote} />}
             wallet={
               chosen && chosenAccount
                 ? {
@@ -471,5 +496,37 @@ export function InteractionSurface({
         )}
       </FloatBox>
     </>
+  );
+}
+
+/**
+ * A power quote on the empty background, behind the boxes: the canvas has nothing drawn on it yet. `clear` keeps it
+ * in the room beside the conversation.
+ */
+function EmptyGround({
+  quote,
+  clear,
+  besideColumn = false,
+}: {
+  quote: PowerQuoteItem;
+  clear?: Clear | undefined;
+  /** on the map, whose Tools and Information stand in a column at its left: the quote keeps beside it */
+  besideColumn?: boolean;
+}) {
+  // measured, so it's painted as the boxes are, as the map's own room is
+  const el = useRef<HTMLDivElement>(null);
+  const left = clear?.left ?? null;
+  const bottom = clear?.bottom ?? null;
+  useLayoutEffect(() => {
+    const s = el.current?.style;
+    if (!s) return;
+    s.left = left === null ? '' : `${left}px`;
+    s.bottom = bottom === null ? '' : `${bottom}px`;
+    s.paddingLeft = besideColumn ? `${PANEL_W + 2 * floatBox.inset}px` : '';
+  }, [left, bottom, besideColumn]);
+  return (
+    <div ref={el} className="pointer-events-none absolute inset-0 flex items-center justify-center">
+      <PowerQuote quote={quote} />
+    </div>
   );
 }

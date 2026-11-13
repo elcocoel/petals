@@ -301,7 +301,7 @@ const PANEL_ROW = 32;
 /** Tools' rows besides the chains: the search, the heads, the dimensions, the map's rows and the reset. */
 const TOOLS_ROWS = 17;
 /** Tools' width, as the column's (w-tile-width). */
-const PANEL_W = 280;
+export const PANEL_W = 280;
 /** A floating box folded to its bar: the bar's own height and the box's edge (FloatBox's bar is a control high, padded). */
 const BAR_FOLDED = 66;
 

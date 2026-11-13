@@ -3,6 +3,8 @@
 // /api/v1/pay). Out of credit, the chat shows one way to add some, where the person meets it: the wallet
 // sends NEAR to Petals' account, and the server checks that transfer on chain (POST /api/v1/pay). Pure.
 
+import { siteLinks } from './site-links.ts';
+
 /** The visitor's credit, as the server keeps it. Null until their first top-up. */
 export interface Credit {
   funded_usd: number;
@@ -115,6 +117,9 @@ export function sentBy(outcome: unknown): { hash: string; account: string } | nu
 /** Where the one payment is: offered, waiting for the wallet, added, or it didn't go through. */
 export type PayPhase = 'ready' | 'paying' | 'added' | 'failed';
 
+/** Where credit is added: the lobby's Balance, opened at Add. */
+export const ADD_CREDIT_HREF = `${siteLinks.lobby}#add`;
+
 /** The chat's refusal when the visitor has no credit left. */
 export const PAYMENT_REQUIRED = 'payment_required';
 
@@ -134,5 +139,9 @@ export const payWords = {
   pending: 'Your transfer went out and isn’t confirmed yet. Confirm it: nothing is sent twice.',
   paying: 'Waiting for your wallet…',
   added: (near: string) => `Added ${near} NEAR. Send your question again.`,
+  /** in the conversation, when Petals' agent refused for want of credit */
+  outOf: "You're out of credit for Petals' agent.",
+  /** the link to the lobby's Balance, where credit is added */
+  addCredit: 'Add credit',
   failed: "That payment didn't go through. Try again.",
 } as const;

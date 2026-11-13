@@ -4,7 +4,7 @@
 // open, keeps the address in step and hears Escape.
 import { accountRef } from '@petal/core';
 import type { Spec } from '@petal/core/types';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { MapWallet } from '../landscape/LandscapeCanvas.tsx';
 import { readDrawingSpec, readMapDrawing, saveSettings } from '../lib/agent-client.ts';
 import { aboutLine } from '../lib/ask-about.ts';
@@ -46,7 +46,6 @@ import {
   composerView,
   type FlowerRow,
   openFlowerIndex,
-  type Row,
 } from '../lib/thread-view.ts';
 import { petalWorth } from '../lib/value-view.ts';
 import { conversationAt, workspaceUrl } from '../lib/workspace-url.ts';
@@ -58,12 +57,10 @@ import { useJobs } from './useJobs.ts';
 import { useMakeChat } from './useMakeChat.ts';
 import { useMapValue } from './useMapValue.ts';
 import { useMapVotes } from './useMapVotes.ts';
-import { usePay } from './usePay.ts';
 import { usePersonView } from './usePersonView.ts';
 import { useSession } from './useSession.ts';
 import { useSnapshotFacts } from './useSnapshotFacts.ts';
 import { useStoredFlower } from './useStoredFlower.ts';
-import { useTopUp } from './useTopUp.ts';
 import { useWorkPanel } from './useWorkPanel.ts';
 
 export function useWorkspace(props: {
@@ -72,7 +69,6 @@ export function useWorkspace(props: {
   initialElsewhere?: string | undefined;
   initialQuestion?: string | null;
   recorded?: boolean;
-  opening?: string;
   shelf: MapCard[];
   initialOpen?: Opened;
   initialPetal?: string | null;
@@ -257,29 +253,9 @@ export function useWorkspace(props: {
   useEffect(() => name(named), [name, named]);
   // the one balance (useFunds, in the layout): read again after each turn, and after a payment lands
   const funds = panelBus.person?.funds;
-  // Someone with no credit yet meets the way to add some under Petals' greeting, before the first question
-  // (not only after asking). Once offered it stays until they ask, so what a payment
-  // added is said there.
-  const asks = shownRows.some((r) => r.kind === 'user');
-  const [offered, setOffered] = useState(false);
-  if (!offered && !asks && !recorded && !initialElsewhere && funds?.balance?.usd === '0.00') {
-    setOffered(true);
-  }
-  const threadRows = useMemo<Row[]>(
-    () =>
-      offered && !asks ? [...shownRows, { kind: 'pay', key: 'pay-first', first: true }] : shownRows,
-    [offered, asks, shownRows],
-  );
-  // Paying for Petals' agent: the newest pay row is the live one.
-  const asking = useMemo(
-    () => threadRows.findLast((r) => r.kind === 'pay')?.key ?? null,
-    [threadRows],
-  );
-  const reread = funds?.reread;
-  const paid = useCallback(() => reread?.(), [reread]);
-  const pay = usePay(funds?.where ?? null, asking, paid);
-  // or any other token, from any chain, through NEAR Intents, beside it in the same row
-  const topUp = useTopUp(asking, paid, pay);
+  // Credit is added in the lobby's Balance, not in the conversation: with none left, the composer points there.
+  const threadRows = shownRows;
+  const noCredit = !recorded && !initialElsewhere && funds?.balance?.usd === '0.00';
 
   // Only the conversation's own flower stands on the canvas: before it draws one, it's empty ground.
   const onCanvas = canvas;
@@ -462,19 +438,11 @@ export function useWorkspace(props: {
       menuShown: panelBus.shown,
       /** Where the side panel ends now, in pixels. */
       panelEdge: panelBus.edge,
-      pay: {
-        asking: pay.asking,
-        phase: pay.phase,
-        added: pay.added,
-        topUp,
-        label: pay.label,
-        amount: pay.amount,
-        failedWords: pay.failedWords,
-        canPay: pay.canPay,
-      },
       jobs,
       jobControls,
       balance: funds?.balance ? payWords.balance(funds.balance) : null,
+      /** none left to spend: the composer links to the lobby's Balance, where credit is added */
+      noCredit,
       session,
       needsWallet,
       composerShown,
@@ -587,7 +555,6 @@ export function useWorkspace(props: {
       },
       /** the map on the canvas says which wallet is chosen on it, or none */
       chooseMapWallet: setMapWallet,
-      pay: pay.pay,
       closeDetail: () => dispatch({ type: 'select', petal: null }),
       setSection: (next: PanelSection) => dispatch({ type: 'section', section: next }),
       startFrom: (text: string) => {

@@ -82,9 +82,9 @@ describe('the canvas before the conversation draws', () => {
     const home = await (await fresh())({}, VIEW);
     expect(answers.posts).toEqual([]);
     expect(home).not.toHaveProperty('standIn');
-    // one map: the shelf offers what the first message offers, the largest first
+    // one map: the shelf offers what an empty conversation offers, the largest first
     expect(home.shelf.map((m) => m.id)).toEqual(['second', 'first']);
-    expect(home.opening).toContain('[Flower second](/m/second), [Flower first](/m/first)');
+    expect(home.starts.map((s) => s.href)).toEqual(['/m/second', '/m/first', '/map']);
   });
 
   test('never opens: the address decides that, and it asked for nothing', async () => {
