@@ -5,7 +5,7 @@
 // invite can go to one judge or a pool of them, and a lost cookie costs nothing but a second redeem.
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { join } from 'node:path';
-import { openStore, type Store } from '@petal/store';
+import { type CreditEntryRow, openStore, type Store } from '@petal/store';
 import type { BudgetLedger, SpendHold } from './llm.ts';
 
 /** What to do instead, in plain words. Own agents need no invite and no sign-in. */
@@ -251,6 +251,59 @@ export function inviteLedger(
 // and any browser reach it, and it needs no invite. scripts/fund-person.ts sets it, and since 9 Nov the
 // person adds to it themselves by paying in NEAR (payPerson).
 const personAccount = (person: string) => `person:${person}`;
+
+/**
+ * The credit a person holds off the contract: what they paid by a plain transfer or through NEAR Intents, and
+ * what the operator gave. It exists once a chat or a read has met the contract (credit.ts), seeded from what
+ * they held then; from then on a payment lands in it too, a chat spends it before the contract is charged,
+ * and the person's credit is it plus what the contract holds.
+ */
+export const offchainAccount = (person: string) => `offchain:${person}`;
+
+/** What's left off the contract: 0 before the contract met them. */
+export async function offchainOf(store: Store, person: string): Promise<number> {
+  return (await store.credit.get(offchainAccount(person)))?.balance_usd ?? 0;
+}
+
+/** The first time the contract meets a person: what they hold now is all off the contract. */
+export async function ensureOffchain(store: Store, person: string, now: Date): Promise<void> {
+  if (await store.credit.get(offchainAccount(person))) return;
+  const held = (await store.credit.get(personAccount(person)))?.balance_usd ?? 0;
+  await store.credit.apply({
+    id: `offchain-seed:${person}`,
+    account_key: offchainAccount(person),
+    delta_usd: Math.max(0, held),
+    reason: 'held before the contract',
+    at: now.toISOString(),
+  });
+}
+
+/** Spends up to `usd` of what's off the contract, and says how much it took. Nothing before the contract met them. */
+export async function drawOffchain(
+  store: Store,
+  person: string,
+  usd: number,
+  now: Date,
+): Promise<number> {
+  const row = await store.credit.get(offchainAccount(person));
+  if (!row || !(usd > 0)) return 0;
+  const take = Math.round(Math.min(Math.max(0, row.balance_usd), usd) * 1e9) / 1e9;
+  if (take > 0)
+    await store.credit.apply({
+      id: `offchain-spent:${randomUUID()}`,
+      account_key: offchainAccount(person),
+      delta_usd: -take,
+      reason: 'spent',
+      at: now.toISOString(),
+    });
+  return take;
+}
+
+/** A payment or a gift once the contract has met the person lands off the contract too (same id: once). */
+async function mirrorOffchain(store: Store, person: string, e: CreditEntryRow): Promise<void> {
+  if (!(await store.credit.get(offchainAccount(person)))) return;
+  await store.credit.apply({ ...e, id: `offchain:${e.id}`, account_key: offchainAccount(person) });
+}
 export const FUNDED = 'funded';
 export const PAID = 'paid';
 /** The credit contract's balance, read from the chain (credit.ts): what puts it in, in dollars. */
@@ -333,13 +386,15 @@ export async function fundPerson(
     // only what was given: what the person paid stays theirs, whatever this is set to
     const change = totalUsd - (await fundedOf(store, account, [FUNDED]));
     if (Math.abs(change) >= DUST_USD) {
-      await store.credit.apply({
+      const entry = {
         id: `fund:${randomUUID()}`,
         account_key: account,
         delta_usd: change,
         reason: FUNDED,
         at: now.toISOString(),
-      });
+      };
+      await store.credit.apply(entry);
+      await mirrorOffchain(store, person, entry);
     }
     return (await personCredit(store, person)) as PersonCredit;
   });
@@ -355,13 +410,15 @@ export async function payPerson(
   o: { id: string; usd: number; now?: Date },
 ): Promise<{ added_usd: number; credit: PersonCredit }> {
   if (!Number.isFinite(o.usd) || o.usd < 0) throw new Error('a payment is a number of dollars');
-  const fresh = await store.credit.apply({
+  const entry = {
     id: o.id,
     account_key: personAccount(person),
     delta_usd: o.usd,
     reason: PAID,
     at: (o.now ?? new Date()).toISOString(),
-  });
+  };
+  const fresh = await store.credit.apply(entry);
+  if (fresh) await mirrorOffchain(store, person, entry);
   return {
     added_usd: fresh ? o.usd : 0,
     credit: (await personCredit(store, person)) as PersonCredit,

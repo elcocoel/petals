@@ -1,9 +1,9 @@
 // The landing page's words, in one file, so a copy pass touches one file. The source is the "Landing copy
-// (v7)" tab of the "Petals — Copy" doc. Elco's approved words and v6's drafts stay word for word. Everything
-// that was an empty slot is a v1 draft by LANDING (Elco, 9 Nov: "lets try to get everything to be 'v1' with no
-// placeholders as much as possible than we critique by looking at the page"). Only the line breaks are ours.
+// (v7)" tab of the "Petals — Copy" doc. Approved words and v6's drafts stay word for word. Everything that was an
+// empty slot is a v1 draft, so the page has no placeholders and is critiqued by looking at it. Only the line
+// breaks are ours.
 // The arrows aren't here: Geist Mono and our Mona Sans subset have neither U+2192 nor U+2190, so the
-// components draw them (components/ui/Arrow.tsx). The words Elco types on the page itself (?edit=1 on a
+// components draw them (components/ui/Arrow.tsx). The words typed on the page itself (?edit=1 on a
 // local server, app/edit/CopyEditor.tsx) are kept in landing-copy.edits.json and win over these.
 import { agentWords } from './agents.ts';
 import { withEdits } from './copy-edits.ts';
@@ -15,7 +15,7 @@ const written = {
     gallery: 'Power Map',
     docs: 'Docs',
     ask: 'Connect',
-    /** Draft (LANDING, 11 Nov), for Elco: the phone's button that unfolds the links, read aloud. */
+    /** The phone's button that unfolds the links, read aloud. */
     menu: 'Menu',
   },
   hero: {
@@ -103,10 +103,10 @@ const written = {
   howItWorks: {
     title: 'How it works',
     /**
-     * Elco's seven scenes, word for word from Figma's "Section 3 · V1 original · working baseline"
-     * (181:2343), each with its illustration (public/landing/how-it-works/). Three fixes on Elco's OK
-     * (10 Nov): "aks" to "ask", "get's" to "gets", "Near.Social" to "NEAR Social". Case as Figma draws it.
-     * `tick` is the word under each scene's tick in the pager (Elco, 10 Nov, by voice; two corrected on 11 Nov).
+     * The seven scenes, word for word from Figma's "Section 3 · V1 original · working baseline"
+     * (181:2343), each with its illustration (public/landing/how-it-works/), with three spelling fixes:
+     * "aks" to "ask", "get's" to "gets", "Near.Social" to "NEAR Social". Case as Figma draws it.
+     * `tick` is the word under each scene's tick in the pager.
      */
     scenes: [
       {
@@ -159,7 +159,7 @@ const written = {
         body: 'Browsing the Power Map is free. Top up your Petals account to use its agent and mapping tools, paying as you go. Connected agents use their own resources for the work they take on.',
       },
     ],
-    /** Drafts (LANDING, 10 Nov), for Elco: the arrows' names, read aloud only. */
+    /** The arrows' names, read aloud only. */
     back: 'Back',
     next: 'Next',
   },
@@ -180,58 +180,60 @@ const written = {
     prompt: agentWords.setup,
   },
   gallery: {
-    title: 'Start with a network you know.',
+    title: 'Start with a network you know',
     open: 'Explore the Power Map',
   },
   questions: {
-    /** The Copy doc's v6 title for the FAQ (Elco's), back since Elco's walk (12 Nov: "the FAQ section will need more styling"). */
-    title: 'Questions Petals answers.',
+    title: 'FAQ',
     sign: '−',
-    /** The FAQ tab's thirteen, word for word, in its order (Elco, 10 Nov). */
+    /**
+     * The FAQ tab's thirteen, word for word, in its order. Words between ** are bold: each answer's key concepts,
+     * so an answer can be read at a glance.
+     */
     items: [
       {
         index: '01',
         question: 'Is Using Petals free?',
         answer: [
-          'Browsing the Power Map is free. It opens without an account, a key or a wallet.',
-          'To contribute to the Power Map or ask Petals AI questions, you will need to top up your Petals account or bring your own tokens by connecting another AI you control.',
-          "Talking to Petals' agent on NEAR AI is very cost effective, paid as you go from your wallet. Mapping can be done in the same way or you can allow Petals to collaborate with your other agents, just copy and paste the prompt and Petals will off load the heavier, costlier work to your preferred agents.",
+          '**Browsing the Power Map is free.** It opens without an account, a key or a wallet.',
+          'To contribute to the Power Map or ask Petals AI questions, you will need to **top up your Petals account** or **bring your own tokens** by connecting another AI you control.',
+          "Talking to Petals' agent on NEAR AI is **very cost effective, paid as you go** from your wallet. Mapping can be done in the same way or you can allow Petals to collaborate with your other agents, just copy and paste the prompt and Petals will off load the heavier, costlier work to your preferred agents.",
         ],
       },
       {
         index: '02',
         question: 'Which networks can it read?',
         answer: [
-          'Petals treats a group of wallets connected through ownership, participation or control as a network. In principle, any such network can be mapped, provided there’s accessible data and a clear definition of what power means within it. Petals’ Brain is a shared library of strategies for understanding that power: who holds it, who votes, who can move the money, and who can change the rules. It guides an agent through finding the data, checking what it means, and turning it into a map.',
-          'Today’s readers cover specific systems on NEAR, Ethereum, Base, Arbitrum, Gnosis and Solana. New systems may need new recipes or additional tools, and every reading will make its limits clear.',
+          'Petals treats **a group of wallets connected through ownership, participation or control** as a network. In principle, any such network can be mapped, provided there’s accessible data and a clear definition of what power means within it. **Petals’ Brain** is a shared library of strategies for understanding that power: who holds it, who votes, who can move the money, and who can change the rules. It guides an agent through finding the data, checking what it means, and turning it into a map.',
+          'Today’s readers cover specific systems on **NEAR, Ethereum, Base, Arbitrum, Gnosis and Solana**. New systems may need new recipes or additional tools, and every reading will make its limits clear.',
         ],
       },
       {
         index: '03',
         question: 'What can Petals tell me?',
         answer: [
-          'The shape of a “flower” gives you a first look at power: whether it’s spread across a community or concentrated in a few accounts, and how those accounts connect. What counts as power depends on what you’re exploring. Petals’ Brain guides the agent in helping you interpret the data.',
-          'Each petal represents an account. A large one might represent many others through a staking pool, an exchange or a shared treasury. One person can also control several accounts. Petals can help you find clues.',
-          'Ask Petals to investigate an account or network using the records it can find. What has that account proposed, and who voted for or against it? What discussions led to those decisions? Has it been publicly linked to a forum profile or social account?',
+          'The shape of a “flower” gives you **a first look at power**: whether it’s spread across a community or concentrated in a few accounts, and how those accounts connect. What counts as power depends on what you’re exploring. Petals’ Brain guides the agent in helping you interpret the data.',
+          '**Each petal represents an account.** A large one might represent many others through a staking pool, an exchange or a shared treasury. One person can also control several accounts. Petals can help you find clues.',
+          '**Ask Petals to investigate** an account or network using the records it can find. What has that account proposed, and who voted for or against it? What discussions led to those decisions? Has it been publicly linked to a forum profile or social account?',
           'An agent can follow proposals into forum discussions, trace votes and actions, and build successive views of the network’s history. Petals’ Brain holds the strategies for that exploration, and grows as new methods are tested and shared.',
-          'You don’t have to know the whole investigation before you begin. Ask the next question, and keep mapping.',
+          'You don’t have to know the whole investigation before you begin. Ask the next question, and **keep mapping**.',
         ],
       },
       {
         index: '04',
         question: "How do I know it's right?",
         answer: [
-          'Readings from a chain are backed by evidence. Deterministic tools read the data and do the counting; agents help you interpret the results. Each reading records its sources, the time or block it describes, and what it covers. Anyone using the same data and method would get the same results.',
-          'Data and insights are labelled separately, so you can distinguish what was read directly from the chain, what the agent inferred, and what is a lead to investigate. A recorded vote tells you how an account voted, but not why. A connection between accounts doesn’t prove they share an owner. An interpretation can be useful without being certain.',
-          'Ask it: “Show me the source.” “How did you reach that conclusion?” “What’s missing?” Each reading gives you evidence to examine, and each interpretation gives you something to question and explore further.',
+          'Readings from a chain are **backed by evidence**. Deterministic tools read the data and do the counting; agents help you interpret the results. Each reading records its sources, the time or block it describes, and what it covers. Anyone using the same data and method would get the same results.',
+          '**Data and insights are labelled separately**, so you can distinguish what was read directly from the chain, what the agent inferred, and what is a lead to investigate. A recorded vote tells you how an account voted, but not why. A connection between accounts doesn’t prove they share an owner. An interpretation can be useful without being certain.',
+          'Ask it: **“Show me the source.”** “How did you reach that conclusion?” “What’s missing?” Each reading gives you evidence to examine, and each interpretation gives you something to question and explore further.',
         ],
       },
       {
         index: '05',
         question: "Can it tell me who's behind a wallet?",
         answer: [
-          'It can help you follow the public trail. An account may have declared a name, linked a forum profile, submitted proposals or signed transactions for a known organisation. Petals can help gather those records and distinguish what the account declared about itself from what someone else attributed to it.',
-          'Often, you’ll learn more about what an account does than who owns it: which networks it participates in, what it proposes, how it votes and where its influence comes from. Those connections can suggest where to look next. A shared name, similar voting pattern or transfer between wallets is a clue to investigate; it doesn’t establish that the same person controls them.',
+          'It can help you **follow the public trail**. An account may have declared a name, linked a forum profile, submitted proposals or signed transactions for a known organisation. Petals can help gather those records and distinguish what the account declared about itself from what someone else attributed to it.',
+          'Often, you’ll learn more about **what an account does** than who owns it: which networks it participates in, what it proposes, how it votes and where its influence comes from. Those connections can suggest where to look next. A shared name, similar voting pattern or transfer between wallets is **a clue to investigate**; it doesn’t establish that the same person controls them.',
           'You can keep your own notes and interpretations as you explore. Petals helps you build an understanding from the evidence available, with room for what remains unknown.',
         ],
       },
@@ -239,151 +241,118 @@ const written = {
         index: '06',
         question: 'When do I need a wallet?',
         answer: [
-          'You don’t need one to browse the public Power Map. To use Petals’ agent, save your work and pay for its services, you’ll need to connect a NEAR wallet. It’s how you sign in and return to your conversations, notes and maps.',
-          'Signing in moves no funds and costs nothing. Payments are separate, and Petals never asks for your private key or seed phrase.',
+          '**You don’t need one to browse the public Power Map.** To use Petals’ agent, save your work and pay for its services, you’ll need to **connect a NEAR wallet**. It’s how you sign in and return to your conversations, notes and maps.',
+          '**Signing in moves no funds and costs nothing.** Payments are separate, and Petals never asks for your private key or seed phrase.',
         ],
       },
       {
         index: '07',
         question: 'Can I use it in ChatGPT or Claude?',
         answer: [
-          'Yes. Claude Code, Codex, Hermes and other agents that can run commands can help you map. Copy the connection prompt into your agent to bring it into your Petals project.',
-          'Petals’ agent works with you on the page and can hand mapping jobs to your connected agents. They use their own tools and resources, and bring the results back into the same project. Several agents can work on different parts of a network, guided by the shared Brain.',
-          'ChatGPT and the Claude chat app can also connect through Petals’ connector. Your app may ask you to approve the connection or particular actions.',
+          'Yes. **Claude Code, Codex, Hermes** and other agents that can run commands can help you map. Copy the connection prompt into your agent to bring it into your Petals project.',
+          'Petals’ agent works with you on the page and can **hand mapping jobs to your connected agents**. They use their own tools and resources, and bring the results back into the same project. Several agents can work on different parts of a network, guided by the shared Brain.',
+          '**ChatGPT and the Claude chat app** can also connect through Petals’ connector. Your app may ask you to approve the connection or particular actions.',
         ],
       },
       {
         index: '08',
         question: 'Who sees my questions?',
         answer: [
-          'Your conversations and notes are private to your account. Other Petals users can’t browse them, and your workspace search stays within your own work. You choose what you share on the public Power Map and which agents you connect to your projects.',
-          'When you use Petals’ own agent, your messages and the context needed to answer them pass through Petals’ server and NEAR AI. If you connect another agent, the information shared with it is also handled by its provider. Your work is private from other users; the services running your agents still process what you share with them.',
+          'Your conversations and notes are **private to your account**. Other Petals users can’t browse them, and your workspace search stays within your own work. You choose what you share on the public Power Map and which agents you connect to your projects.',
+          'When you use Petals’ own agent, your messages and the context needed to answer them pass through **Petals’ server and NEAR AI**. If you connect another agent, the information shared with it is also handled by its provider. Your work is private from other users; the services running your agents still process what you share with them.',
         ],
       },
       {
         index: '09',
         question: 'Where should I start?',
         answer: [
-          'Start with a wallet you control and talk to the agent about the networks you’re part of. Where do you hold tokens, vote or delegate? What would you like to understand about your place in those communities? Follow what turns up. You can also begin with a network on the public Power Map.',
+          '**Start with a wallet you control** and talk to the agent about the networks you’re part of. Where do you hold tokens, vote or delegate? What would you like to understand about your place in those communities? Follow what turns up. You can also begin with a network on the public Power Map.',
         ],
       },
       {
         index: '10',
         question: 'How fresh is a map?',
         answer: [
-          'Each reading captures a moment, identified by its date or block. Ask for a fresh reading, or use time to frame your investigation: “Show this network before and after that proposal,” or “How did voting power change each month?”',
-          'Where historical data is available, the agent can build a sequence of snapshots and compare who gained power, who lost it and how connections changed. Each snapshot preserves the data for its moment. Your current visual settings determine how every snapshot is drawn; changing them changes the view across the comparison.',
+          '**Each reading captures a moment**, identified by its date or block. Ask for a fresh reading, or use time to frame your investigation: “Show this network before and after that proposal,” or “How did voting power change each month?”',
+          'Where historical data is available, the agent can build **a sequence of snapshots** and compare who gained power, who lost it and how connections changed. Each snapshot preserves the data for its moment. Your current visual settings determine how every snapshot is drawn; changing them changes the view across the comparison.',
         ],
       },
       {
         index: '11',
         question: 'Can I choose what the flower shows?',
         answer: [
-          'A flower is drawn from its data and a view: settings that assign pieces of data to visual dimensions such as height, width, colour and segments. Height might show a share of voting power; bands inside a petal might show the backers behind a staking pool. Changing the view changes how you read the data, not the underlying records.',
-          'The renderer always applies your current visual settings to every flower you explore, including maps made by others. You can change which data each supported dimension shows, and those choices carry across your views. The legend explains the dimensions according to your settings.',
+          'A flower is drawn from **its data and a view**: settings that assign pieces of data to visual dimensions such as height, width, colour and segments. Height might show a share of voting power; bands inside a petal might show the backers behind a staking pool. Changing the view changes how you read the data, not the underlying records.',
+          'The renderer always applies **your current visual settings** to every flower you explore, including maps made by others. You can change which data each supported dimension shows, and those choices carry across your views. The legend explains the dimensions according to your settings.',
         ],
       },
       {
         index: '12',
         question: 'What can I do with what I find?',
         answer: [
-          'Keep notes alongside the evidence, return to an investigation, and compare networks or different moments in their history. Use what you learn to prepare a proposal, understand who might support it, choose a delegate or question a decision. You can also ask the agent to help turn an investigation into a clear explanation for your community.',
-          'A useful finding can be a concentration of power, a connection worth investigating or something the available records cannot explain. When you share it, include the sources, date and open questions so others can check it and continue the work.',
+          '**Keep notes alongside the evidence**, return to an investigation, and compare networks or different moments in their history. Use what you learn to prepare a proposal, understand who might support it, choose a delegate or question a decision. You can also ask the agent to help turn an investigation into a clear explanation for your community.',
+          'A useful finding can be a concentration of power, a connection worth investigating or something the available records cannot explain. When you share it, include **the sources, date and open questions** so others can check it and continue the work.',
         ],
       },
       {
         index: '13',
         question: 'Can I help Petals learn something new?',
         answer: [
-          'Yes. Contribute through GitHub:',
+          'Yes. **Contribute through GitHub:**',
           {
             list: [
-              'Open an issue to point out missing data, challenge an interpretation or suggest a system Petals should learn to map. Include the relevant sources and an example others can examine.',
-              'Submit a pull request to improve a Brain chapter, add a reading recipe or extend a tool. Explain what changed and how you tested it; your agent can help prepare the contribution.',
+              '**Open an issue** to point out missing data, challenge an interpretation or suggest a system Petals should learn to map. Include the relevant sources and an example others can examine.',
+              '**Submit a pull request** to improve a Brain chapter, add a reading recipe or extend a tool. Explain what changed and how you tested it; your agent can help prepare the contribution.',
             ],
           },
-          'Changes are reviewed before becoming part of the shared Brain. Our Telegram chat is a place to compare methods, ask for help and find collaborators. Issues and pull requests on GitHub keep track of the work.',
+          'Changes are reviewed before becoming part of the shared Brain. **Our Telegram chat** is a place to compare methods, ask for help and find collaborators. Issues and pull requests on GitHub keep track of the work.',
         ],
       },
     ],
   },
   backIt: {
-    /** Elco, 11 Nov: "Make Petals stronger", punctuated like the other headlines. */
-    title: 'Make Petals stronger.',
+    title: 'Petal Mania',
+    /** A leaderboard only hinted: no money, tokens or rewards. */
+    hint: 'Right now there is no leaderboard. But if there was, these are the things that would take you to the top.',
     /**
-     * Each way is a tile you press (Elco, 12 Nov: "whatever we foresee that would lead people to action",
-     * "the sensation of a real project that people can join"). `href` is where it goes; an empty one is a slot
-     * waiting for Elco's address, and its tile shows without a link. `action` and the last two ways are
-     * LANDING's drafts, for Elco, from Elco's words: "a small merch pre-sale", "a community front such as a
-     * Telegram chat".
+     * Four cards in one line, the cards the links, ordered from the lightest way in to the most involved. `link` is
+     * where a card goes: `lobby` is Connect (mapping,
+     * the agent and publishing are one card), `github` the repo; an empty one is a slot waiting for its address
+     * (the community's links, the merch), so its card shows without a link.
      */
     ways: [
-      {
-        title: 'Map a network you care about.',
-        body: 'Every layer your agent adds makes the map better for the next person.',
-        action: 'Connect',
-        href: '/lobby',
-      },
-      {
-        title: 'Teach Petals a new system.',
-        body: "Write a recipe for a kind of DAO Petals can't read yet, and share it with a pull request.",
-        action: 'In the docs',
-        href: '/docs/build-it-with-us/contributing',
-      },
-      {
-        title: "Talk to Petals' agent.",
-        body: 'What you pay in NEAR keeps it reading.',
-        action: 'Connect',
-        href: '/lobby',
-      },
-      {
-        title: 'Join the community.',
-        body: '',
-        action: 'Telegram',
-        /** Elco's address, when there is one. */
-        href: '',
-      },
-      {
-        title: 'Merch pre-sale.',
-        body: '',
-        action: 'Pre-order',
-        /** Elco's address, when there is one. */
-        href: '',
-      },
+      { title: 'Join the community', link: 'telegram' },
+      { title: 'The merch', link: '' },
+      { title: 'Map a network', link: 'lobby' },
+      { title: 'Develop with us', link: 'github' },
     ],
   },
   builders: {
-    title: 'Petals is open source. Build it with us.',
-    body: "Built in the open, under the MIT licence: the brain that teaches agents to map, the recipes that read each kind of system, the protocol that turns a network's data into a shape, and Petals' agent on NEAR AI. Teach it a new system, sharpen a reading, or bring Petals into your own agent.",
+    title: 'Build Petals with us',
     /**
-     * The doors into the system Elco named (11 Nov, board card 103: "the brain the data protocol The rendering
-     * protocol And whatever Other parts"), each to its page in /docs (DOCS's catalog). Drafts by LANDING, for Elco.
-     * Each is only its name since Elco's walk (12 Nov: "the six things are boring ... a bunch of text").
+     * Three links under the system's graph: the docs, GitHub, and a star on GitHub.
      */
     doors: [
-      { title: 'The brain', slug: 'brain' },
-      { title: 'The data protocol', slug: 'data-protocol' },
-      { title: 'The rendering protocol', slug: 'rendering-protocol' },
-      { title: 'Connect your agent', slug: 'connect-your-agent' },
-      { title: 'The API', slug: 'api' },
-      { title: 'Contribute', slug: 'build-it-with-us/contributing' },
+      { title: 'Docs', link: 'docs', icon: 'arrow' },
+      { title: 'GitHub', link: 'github', icon: 'arrow' },
+      { title: 'Give us a star', link: 'github', icon: 'star' },
     ],
-    actions: {
-      docs: 'Read the docs',
-    },
   },
   footer: {
-    /** Drafts (LANDING, 11 Nov, board card 104), for Elco: the two groups' names; the links are the site's own. */
-    groups: { petals: 'Petals', build: 'Build' },
+    /** The footer's three groups; the socials take their names from hero.socials. */
+    groups: { petals: 'Petals', build: 'Build', community: 'Community' },
     links: {
-      gallery: 'Power Map',
-      howItWorks: 'How it works',
-      connect: 'Connect',
+      map: 'Power Map',
+      gallery: 'Gallery',
+      leaderboard: 'Leaderboard',
       docs: 'Docs',
-      agent: 'Connect your agent',
-      contribute: 'Contribute',
+      github: 'GitHub',
+      api: 'API',
+      brandKit: 'Brand kit',
+      merch: 'Merch',
     },
     built: 'Built for the NEAR Hackathon, November 2026. By Elementary Complexity.',
+    /** The words in `built` that link to Elementary Complexity's site (siteLinks.elementaryComplexity). */
+    by: 'Elementary Complexity',
   },
 } as const;
 

@@ -2,8 +2,10 @@
 // balance, all read once in the layout (viewmodels/useWorkPanel.ts) so the side panel and the page say the
 // same; their conversations, the panel's own list; and, read here when the page opens, the wallets they proved
 // by signing in (GET /api/v1/me) and the claims they and their agents keep about accounts (GET
-// /api/v1/me/annotations), and every model call charged to them (usage/v1, GET /api/v1/me/usage). Add a wallet signs Petals' challenge with another wallet, as signing in does, and binds
-// it to this person (POST /api/v1/me/wallets); the session stays as it is. There is no timer.
+// /api/v1/me/annotations), every model call charged to them (usage/v1, GET /api/v1/me/usage), and their tip
+// (useTip). Disconnect signs out (the session's own). Add a wallet signs Petals' challenge with another
+// wallet, as signing in does, and binds it to this person (POST /api/v1/me/wallets); the session stays as it
+// is. There is no timer.
 
 import type { Credit } from '@petal/core';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -16,7 +18,7 @@ import {
   sessionClient,
 } from '../lib/agent-client.ts';
 import { contributionView } from '../lib/contribution-view.ts';
-import { hasEvmWallet, NO_EVM_WALLET } from '../lib/evm-wallet.ts';
+import { evmWallets, NO_EVM_WALLET } from '../lib/evm-wallet.ts';
 import {
   type AddWalletPhase,
   type ClaimsView,
@@ -26,12 +28,15 @@ import {
   usageView,
   type WalletKind,
   type WalletRow,
+  walletRefusal,
   walletRows,
 } from '../lib/profile-view.ts';
-import { hasSolanaWallet, NO_SOLANA_WALLET } from '../lib/solana-wallet.ts';
+import { NO_SOLANA_WALLET, solanaWallets } from '../lib/solana-wallet.ts';
+import { tipLine } from '../lib/tip.ts';
 import { connectWallet, SIGN_IN_NETWORK, signPrepared } from '../lib/wallet.ts';
 import { usePowerQuote } from './usePowerQuote.ts';
 import { evmProof, solanaProof } from './useSession.ts';
+import { useTip } from './useTip.ts';
 import { useWorkPanel } from './useWorkPanel.ts';
 
 const why = (e: unknown) =>
@@ -41,7 +46,10 @@ export function useLobby() {
   const bus = useWorkPanel();
   const person = bus.person;
   if (!person) throw new Error('the lobby is drawn inside the layout it shares with the workspace');
-  const { profile, editor, funds } = person;
+  const { profile, editor, funds, session } = person;
+  // the tip, an optional donation on the price's scale: what it adds to a typical turn reads as the balance
+  // does, at NEAR's price from the one balance
+  const tipped = useTip(Boolean(session.account));
   const [wallets, setWallets] = useState<WalletRow[] | 'reading' | 'unread'>('reading');
   const [claims, setClaims] = useState<ClaimsView | 'reading' | 'unread'>('reading');
   const [usage, setUsage] = useState<{ calls: UsageCall[]; spent: number } | 'reading' | 'unread'>(
@@ -87,27 +95,39 @@ export function useLobby() {
     [usage, nearUsd],
   );
 
-  /** Adds a wallet: a NEAR one signs Petals' challenge as signing in does, an EVM one its Sign-In text. */
+  /**
+   * Adds a wallet: a NEAR one signs Petals' challenge as signing in does, an EVM or a Solana one its Sign-In
+   * text. With several wallets of one kind in this browser, the person picks one by name first. The wallet
+   * asked is named while it's asked, and whatever it answers, a no included, is said plainly: never silence.
+   */
   const addWallet = useCallback(
-    async (kind: WalletKind) => {
-      if (kind === 'evm' && !hasEvmWallet()) {
-        setAdding({ kind: 'failed', why: NO_EVM_WALLET });
-        return;
+    async (kind: WalletKind, pick?: string) => {
+      let wallet: string = profilePageWords.nearWallet;
+      if (kind !== 'near') {
+        const list = kind === 'evm' ? evmWallets() : solanaWallets();
+        if (list.length === 0) {
+          setAdding({ kind: 'failed', why: kind === 'evm' ? NO_EVM_WALLET : NO_SOLANA_WALLET });
+          return;
+        }
+        if (!pick && list.length > 1) {
+          setAdding({ kind: 'choose', chain: kind, wallets: list });
+          return;
+        }
+        const chosen = list.find((w) => w.id === pick) ?? list[0];
+        if (!chosen) return;
+        pick = chosen.id;
+        wallet = chosen.name;
       }
-      if (kind === 'solana' && !hasSolanaWallet()) {
-        setAdding({ kind: 'failed', why: NO_SOLANA_WALLET });
-        return;
-      }
-      setAdding({ kind: 'adding' });
+      setAdding({ kind: 'adding', wallet });
       let network: string;
       let proof: Parameters<typeof addMyWallet>[1];
       try {
         if (kind === 'evm') {
           network = 'eip155';
-          proof = await evmProof();
+          proof = await evmProof(pick);
         } else if (kind === 'solana') {
           network = 'solana';
-          proof = await solanaProof();
+          proof = await solanaProof(pick);
         } else {
           const challenge = await sessionClient.challenge();
           const signed = await signPrepared({ ...challenge, entry_sha256: '' }, SIGN_IN_NETWORK);
@@ -122,9 +142,8 @@ export function useLobby() {
             recipient: challenge.recipient,
           };
         }
-      } catch {
-        // closing the picker, or saying no in the wallet, adds nothing and isn't an error
-        setAdding({ kind: 'ready' });
+      } catch (e) {
+        setAdding({ kind: 'failed', why: walletRefusal(wallet, e) });
         return;
       }
       try {
@@ -139,10 +158,16 @@ export function useLobby() {
     },
     [editor],
   );
+  /** Stops waiting for a wallet that doesn't answer, or puts the pick away. */
+  const stopAdding = useCallback(() => setAdding({ kind: 'ready' }), []);
 
   return {
     profile: {
       account: profile.account,
+      // the chain the account signed in on, as its own wallet row names it
+      chain: Array.isArray(wallets)
+        ? (wallets.find((w) => w.full === profile.account)?.chain ?? null)
+        : null,
       social: profile.social,
       edit: editor.open,
       saved: editor.saved,
@@ -153,10 +178,22 @@ export function useLobby() {
     usage: usageShown,
     wallets,
     adding,
-    addWallet: (kind: WalletKind) => void addWallet(kind),
+    addWallet: (kind: WalletKind, pick?: string) => void addWallet(kind, pick),
+    stopAdding,
     claims,
     conversations: bus.rows,
     contribution: typeof credit === 'string' ? credit : contributionView(credit),
     quotes,
+    tip: {
+      percent: tipped.percent,
+      scale: tipped.scale,
+      open: tipped.open,
+      onOpen: tipped.toggle,
+      onSlide: tipped.slide,
+      onSet: tipped.set,
+      line: tipLine(tipped.percent ?? 0, tipped.turn, funds.where?.near_usd ?? null),
+      failed: tipped.failed,
+    },
+    leave: session.disconnect,
   };
 }

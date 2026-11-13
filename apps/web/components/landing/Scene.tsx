@@ -2,11 +2,10 @@
 // on a wide window the illustration beside the story, as Figma draws it (the scene's name, a headline in
 // Title, a paragraph in Lead); on a narrow one, the story under it. Under the story, the line that keeps
 // its time while it's in focus (box.focus and box.cycle, app/versions/v2.css; version 1 shows the focus as
-// a darker edge, and no line). The illustrations are Elco's, from Figma, in public/landing/how-it-works/
+// a darker edge, and no line). The illustrations come from Figma, in public/landing/how-it-works/
 // under the scene's id. They say nothing a screen reader needs: the words beside them do. Its numeral, in
-// the pixel face as the old steps had it, sits at its top right (Elco, 10 Nov: "some signifier at the top
-// right for me to know how far down I am"), in a row of its own above the drawing and the story, so it never
-// touches the words however tall they run (Elco, 12 Nov: card 02's numeral sat on its eyebrow). A press on its
+// the pixel face as the old steps had it, sits at its top right so a reader knows how far along they are, in a
+// row of its own above the drawing and the story, so it never touches the words however tall they run. A press on its
 // right half goes on, on its left half goes back;
 // the ticks and arrows do the same for the keyboard. It grows no wider than the page, so a big screen still
 // reads its paragraph in three lines or more.

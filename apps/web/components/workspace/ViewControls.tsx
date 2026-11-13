@@ -1,10 +1,5 @@
-// The person's view, as the Settings section sets it: the glasses through which they see every map. One row per
-// dimension it's handed (Settings: the four behaviours and Labels, lib/person-view.ts), saying the data it shows; pressing one opens its choices under it, as a project
-// opens its conversations: only the data that fits it, or none, with the default marked, and, while it
-// shows a number on a dimension that has one, its scale. A dimension no data takes yet, showing none, can't
-// open: it has no chevron, and says so on hover. No row hides or locks because of what it shows.
-// Choosing saves at once; the last row puts the default back, when there's a change to undo. Nothing is
-// written here but what it's handed: any mapping core's table allows. Props only.
+// One dimension's choices in the person's view, the glasses through which they see every map: what Tools
+// (ViewLegend) opens under a dimension's row. Props only; nothing is written here but what it's handed.
 import type { View } from '@petal/core/types';
 import type { Dimension, Piece } from '@petal/core/view';
 import { panelWords } from '../../lib/panel-words.ts';
@@ -13,117 +8,9 @@ import { NavItem } from '../ui/NavItem.tsx';
 
 const words = panelWords.settings;
 
-export function ViewControls({
-  dimensions,
-  view,
-  defaults,
-  choices,
-  pieces,
-  open,
-  onOpen,
-  onPick,
-  onScale,
-  onReset,
-  failed,
-}: {
-  /** The rows, in order: dimensions, and Highlight, which says only that it's to come. */
-  dimensions: readonly (Dimension | 'highlight')[];
-  view: View;
-  /** The default view, to mark its choices. */
-  defaults: View;
-  /** For each dimension, the data that fits it. */
-  choices: Record<Dimension, readonly Piece[]>;
-  /** Every piece of data a flower has, with its kind: what a scale applies to. */
-  pieces: readonly Piece[];
-  /** The dimension whose choices are open. */
-  open: Dimension | null;
-  onOpen: (d: Dimension) => void;
-  onPick: (d: Dimension, data: string | null) => void;
-  onScale: (d: Dimension, scale: Scale) => void;
-  /** Puts the default back; absent while the view is the default. */
-  onReset?: (() => void) | undefined;
-  /** Why the last change wasn't saved. */
-  failed: string | null;
-}) {
-  return (
-    <ul className="m-0 flex list-none flex-col p-0">
-      {dimensions.map((d) => {
-        if (d === 'highlight') {
-          return (
-            <li key={d}>
-              {/* no data takes it yet: no chevron, and it says so on hover */}
-              <NavItem
-                label={words.dimensions.highlight}
-                trail={words.none}
-                title={`${words.dimensions.highlight}\n${words.highlightSoon}`}
-                muted
-                depth={1}
-              />
-            </li>
-          );
-        }
-        const shown = dataOf(view, d);
-        const fit = choices[d];
-        const trail = shown ? words.piece(shown) : words.none;
-        // Only a row with nothing to choose and nothing shown stays shut: a row showing data always opens, so
-        // None is there to switch it back, and a person can't break their view
-        if (fit.length === 0 && shown === null) {
-          return (
-            <li key={d}>
-              {/* it can't open, so no chevron; its name still starts where the others' do */}
-              <NavItem
-                label={words.dimensions[d]}
-                trail={trail}
-                title={`${words.dimensions[d]}\n${words.nothingFits}`}
-                muted
-                depth={1}
-              />
-            </li>
-          );
-        }
-        const isOpen = open === d;
-        return (
-          <li key={d}>
-            <NavItem
-              onClick={() => onOpen(d)}
-              expanded={isOpen}
-              icon="chevron"
-              label={words.dimensions[d]}
-              trail={trail}
-            />
-            {isOpen && (
-              <DimensionChoices
-                dimension={d}
-                view={view}
-                defaults={defaults}
-                fit={fit}
-                pieces={pieces}
-                onPick={onPick}
-                onScale={onScale}
-              />
-            )}
-          </li>
-        );
-      })}
-      {failed && (
-        <li>
-          <NavItem label={words.failed(failed)} title={words.failed(failed)} muted />
-        </li>
-      )}
-      {/* the section's one action is its last row, and only when there's a change to undo */}
-      {onReset && (
-        <li>
-          <NavItem onClick={onReset} icon="undo" label={words.reset} muted />
-        </li>
-      )}
-    </ul>
-  );
-}
-
 /**
  * One dimension's choices, as its row opens them: only the data that fits it, then None, the default marked,
- * and, while it shows a number on a dimension that has one, its scale. Settings and the legend (ViewLegend)
- * open the same ones.
+ * and, while it shows a number on a dimension that has one, its scale.
  */
 export function DimensionChoices({
   dimension: d,

@@ -28,7 +28,6 @@ const SECTIONS: RailSection[] = [
     [
       ['projects', 'project', 'Projects'],
       ['agents', 'agent', 'Your agents'],
-      ['lobby', 'home', 'Lobby'],
     ] as const
   ).map(([key, icon, label]) => ({
     key,
@@ -36,20 +35,6 @@ const SECTIONS: RailSection[] = [
     label,
     content: <SectionHead size="panel" title={label} />,
   })),
-  {
-    key: 'profile',
-    icon: 'profile',
-    label: 'Profile',
-    foot: true,
-    content: <SectionHead size="panel" title="Profile" />,
-  },
-  {
-    key: 'settings',
-    icon: 'settings',
-    label: 'Settings',
-    foot: true,
-    content: <SectionHead size="panel" title="Settings" />,
-  },
 ];
 
 /** The panel, open or collapsed to the bar, its width sized at its edge (all of it: /lab/panel). */
@@ -70,6 +55,7 @@ export function LabRail({ open: initial }: { open: boolean }) {
       }}
       jump={jump}
       width={width.hand}
+      account={{ href: '/lobby', label: 'Lobby', current: false }}
     />
   );
 }

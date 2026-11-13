@@ -166,7 +166,7 @@ export function useProfileEditor(
 
   /**
    * Reads which NEAR account it publishes as: when the editor opens, and again whenever a wallet is added
-   * while it's open (the verifier's walk, 13 Nov: a NEAR wallet added in Wallets didn't reach the open editor).
+   * while it's open, so a NEAR wallet added in Wallets reaches the open editor.
    */
   const readNear = useCallback(() => {
     void Promise.all([readSignedIn(), readWallets()]).then(

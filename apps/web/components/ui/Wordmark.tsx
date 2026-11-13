@@ -6,11 +6,18 @@ const SIZES = {
   panel: 'wordmark-panel',
   // 560 wide: on a phone it takes the nav's size rather than scroll the page.
   footer: 'wordmark-nav md:wordmark-footer',
+  // As wide as its column, a container's (mark.fill); the footer's size where that doesn't run.
+  fill: 'wordmark-nav md:wordmark-footer',
 } as const;
 
 export function Wordmark({ size = 'nav' }: { size?: keyof typeof SIZES }) {
   return (
-    <span data-b="mark" data-kind="wordmark" className={`wordmark ${SIZES[size]}`}>
+    <span
+      data-b="mark"
+      data-kind="wordmark"
+      data-size={size === 'fill' ? 'fill' : undefined}
+      className={`wordmark ${SIZES[size]}`}
+    >
       <span aria-hidden="true" className="wordmark-back select-none">
         Petals
       </span>

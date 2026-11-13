@@ -9,7 +9,6 @@ import {
   type ListedConversation,
   type ListedProject,
 } from '../lib/conversation-list.ts';
-import type { SocialState } from '../lib/lobby-view.ts';
 import type { SectionKey } from '../lib/panel-words.ts';
 
 export const PANEL_NOW = new Date('2026-11-10T16:00:00.000Z');
@@ -108,21 +107,7 @@ export interface PanelFixture {
   agents: ReturnType<typeof agentRows>;
   /** The section the panel opens scrolled to, or null for the panel collapsed to the bar. */
   section: SectionKey | null;
-  you: { account: string | null; social: SocialState };
 }
-
-const NEW_PERSON = {
-  account: '446815176e3ea9c5e07d2d1fbf2e5843288b060eca0a3d31a54b39e98c9d1ef5',
-  social: { kind: 'none' } as SocialState,
-};
-const ELCO_LIKE = {
-  account: 'researcher.near',
-  social: {
-    kind: 'profile',
-    profile: { name: 'A researcher', about: null, avatar: null, links: [] },
-    source: 'petals',
-  } as SocialState,
-};
 
 const forty = {
   rows: conversationRows(listed(FORTY), { runId: 'r3' }, PANEL_NOW),
@@ -139,7 +124,6 @@ export const PANEL_STATES = {
     opened: [],
     agents: [],
     section: 'conversations',
-    you: NEW_PERSON,
   },
   five: {
     name: 'A first afternoon',
@@ -152,12 +136,9 @@ export const PANEL_STATES = {
     opened: [],
     agents: agentRows([{ name: 'claude-code', waiting: true, job: null }]),
     section: 'conversations',
-    you: NEW_PERSON,
   },
-  forty: { name: 'Forty, in six projects', ...forty, section: 'projects', you: ELCO_LIKE },
-  profile: { name: 'Profile', ...forty, section: 'profile', you: ELCO_LIKE },
-  settings: { name: 'Settings', ...forty, section: 'settings', you: ELCO_LIKE },
-  folded: { name: 'Collapsed to the bar', ...forty, section: null, you: ELCO_LIKE },
+  forty: { name: 'Forty, in six projects', ...forty, section: 'projects' },
+  folded: { name: 'Collapsed to the bar', ...forty, section: null },
 } satisfies Record<string, PanelFixture>;
 
 export type PanelState = keyof typeof PANEL_STATES;

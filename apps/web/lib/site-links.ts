@@ -10,7 +10,7 @@ const LIVE_SHAPE = '9ac16c8917aa5ca579c8421a';
 
 /**
  * The address other people's AI reaches Petals at, on every page, so what the landing hands out works
- * from anyone's machine: the site's own address since 11 Nov (T191; petal-flowers.vercel.app redirects here).
+ * from anyone's machine: the site's own address (petal-flowers.vercel.app redirects here).
  */
 export const publicOrigin = 'https://petals.elementarycomplexity.com';
 
@@ -19,17 +19,27 @@ export const siteLinks = {
   make: '/make',
   /** A person's own place (specs/004-workspace, W3): where connecting a wallet lands. */
   lobby: '/lobby',
-  /** A person's own profile page (#79): who they are and what backs them. */
+  /** A person's own profile page: who they are and what backs them. */
   profile: '/profile',
   /** The grid of every map's tile (one name per thing: the Gallery). */
   gallery: '/gallery',
-  /** The Power Map: the continuous map (coordinator/one-source.md, step 5). */
+  /** The Power Map: the continuous map of every reading. */
   map: '/map',
-  /** The docs: the brain, the data and rendering protocols, connecting an agent, the API (DOCS, 11 Nov). */
+  /** The docs: the brain, the data and rendering protocols, connecting an agent, the API. */
   docs: '/docs',
   howItWorks: '/#how-it-works',
   /** Petals' code on GitHub: the hero's star gives it one (it works once the repo is public). */
   github: 'https://github.com/elcocoel/petals',
+  /** Elementary Complexity's site: the footer's name links here. */
+  elementaryComplexity: 'https://elementarycomplexity.com',
+  /** The API's docs page. */
+  api: '/docs/api',
+  /** The brand kit: logos and media for anyone writing about Petals. */
+  brandKit: '/docs/brand-kit',
+  /** The points leaderboard; an empty address is one still to come. */
+  leaderboard: '',
+  /** The merch drop; an empty address is one still to come. */
+  merch: '',
   /** The socials under the hero's buttons; an empty address is one still to come. */
   socials: { github: '', telegram: '', twitter: '', youtube: '' },
   liveShape: `/f/${LIVE_SHAPE}`,

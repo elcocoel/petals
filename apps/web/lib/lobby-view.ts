@@ -10,6 +10,8 @@ export const lobbyWords = {
   map: 'On the map',
   /** The map with nothing on it yet: what goes there, and how. */
   mapEmpty: 'Nothing on the map yet. A network you map in a conversation shows here.',
+  /** Signing out, at the top of the lobby: the one way out of the account. */
+  disconnect: 'Disconnect',
 } as const;
 
 /**
@@ -38,8 +40,7 @@ export const fundsWords = {
  * Its links are the account's own declaration, so their badge says only that.
  */
 export const profileWords = {
-  /** The badges beside the account: the chain it's on, and where its profile is. */
-  chain: 'NEAR',
+  /** The badges beside the account where its profile is (the chain's badge is its name, lib/profile-view.ts). */
   social: 'NEAR Social',
   inPetals: 'In Petals',
   noProfile: 'No profile',

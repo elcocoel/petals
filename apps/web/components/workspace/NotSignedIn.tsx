@@ -1,6 +1,7 @@
 // /make for someone not logged in: a signed-out workspace has nothing to show, so it says so with the bouncer
 // illustration (components/Oops.tsx), then offers Connect and the same setup prompt the landing's setup band
 // copies, for a person's own agent to walk them in. Props only; the words live in lib/door-words.ts.
+import type { ReactNode } from 'react';
 import { doorWords, notSignedInWords } from '../../lib/door-words.ts';
 import { landingCopy } from '../../lib/landing-copy.ts';
 import { publicOrigin } from '../../lib/site-links.ts';
@@ -17,6 +18,7 @@ export function NotSignedIn({
   onConnect,
   onConnectEvm,
   onConnectSolana,
+  ask,
 }: {
   /** a question that came with the link: it waits in the conversation once they're in */
   question: string;
@@ -28,6 +30,8 @@ export function NotSignedIn({
   onConnectEvm?: (() => void) | undefined;
   /** a Solana wallet's way in, where the page has one */
   onConnectSolana?: (() => void) | undefined;
+  /** which wallet, or the one being asked (WalletAsk) */
+  ask?: ReactNode;
 }) {
   return (
     <Oops
@@ -72,7 +76,12 @@ export function NotSignedIn({
           />
         </span>
       }
-      after={failed && <p className="error my-0">{failed}</p>}
+      after={
+        <>
+          {ask}
+          {failed && <p className="error my-0">{failed}</p>}
+        </>
+      }
     />
   );
 }

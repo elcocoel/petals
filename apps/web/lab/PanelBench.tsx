@@ -1,6 +1,4 @@
 'use client';
-import type { View } from '@petal/core/types';
-import { DEFAULT_VIEW, type Dimension } from '@petal/core/view';
 // The side panel at its real size, on a page of its own (/lab/panel), in each of its states. Its hands
 // work here as on the pages: fold it, open a project, make one, copy the prompt. Nothing leaves the page.
 import { useState } from 'react';
@@ -10,9 +8,6 @@ import { WorkMenu, type WorkMenuView } from '../components/workspace/WorkMenu.ts
 import type { CopiedAt } from '../lib/agents.ts';
 import type { ListedProject, RowRef } from '../lib/conversation-list.ts';
 import { panelWords, type SectionKey } from '../lib/panel-words.ts';
-import { CHOOSABLE, viewChoices } from '../lib/person-view.ts';
-import { tipLine } from '../lib/tip.ts';
-import { isDefault, withData, withScale } from '../lib/view-edit.ts';
 import { usePanelWidth } from '../viewmodels/usePanelWidth.ts';
 import { PANEL_STATES, type PanelState } from './panel-fixtures.ts';
 
@@ -37,12 +32,7 @@ export function PanelBench({ state }: { state: PanelState }) {
   const [dropOn, setDropOn] = useState<string | null>(null);
   const [justMoved, setJustMoved] = useState<string | null>(null);
   const [said, setSaid] = useState('');
-  // Settings, saved nowhere: the bench keeps the view it's shown
-  const [view, setView] = useState<View>(DEFAULT_VIEW);
-  const [openDimension, setOpenDimension] = useState<Dimension | null>('colour');
-  const [tip, setTip] = useState(5);
   const [folded, setFolded] = useState<SectionKey[]>([]);
-  const [tipOpen, setTipOpen] = useState(true);
   const menu: WorkMenuView = {
     open,
     toggleOpen: () => setOpen((now) => !now),
@@ -119,34 +109,7 @@ export function PanelBench({ state }: { state: PanelState }) {
   };
   return (
     <main data-workspace="" data-surface="ground" className="flex h-dvh bg-surface">
-      <WorkMenu
-        conversations={fixture.rows}
-        menu={menu}
-        you={{ ...fixture.you, leave: () => {} }}
-        width={width.hand}
-        settings={{
-          view,
-          defaults: DEFAULT_VIEW,
-          choices: viewChoices(),
-          pieces: CHOOSABLE,
-          open: openDimension,
-          onOpen: (d) => setOpenDimension((now) => (now === d ? null : d)),
-          onPick: (d, data) => setView(withData(view, d, data, CHOOSABLE, DEFAULT_VIEW)),
-          onScale: (d, scale) => setView(withScale(view, d, scale)),
-          onReset: isDefault(view, DEFAULT_VIEW) ? undefined : () => setView(DEFAULT_VIEW),
-          failed: null,
-        }}
-        tip={{
-          percent: tip,
-          scale: { min: 0, max: 50, step: 1 },
-          open: tipOpen,
-          onOpen: () => setTipOpen((now) => !now),
-          onSlide: setTip,
-          onSet: () => {},
-          line: tipLine(tip, { model: 'DeepSeek V4.1 Flash', usd: 0.008 }, 3.56),
-          failed: null,
-        }}
-      />
+      <WorkMenu conversations={fixture.rows} menu={menu} width={width.hand} />
       <div className="flex min-w-0 flex-1 flex-col gap-text-gap p-column-gap">
         <Mono tone="muted">The side panel, in the lab</Mono>
         <ul className="m-0 flex w-sidebar-width list-none flex-col p-0">
