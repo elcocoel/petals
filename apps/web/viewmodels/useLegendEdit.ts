@@ -12,13 +12,19 @@ export function useLegendEdit(): LegendEdit {
   const [open, setOpen] = useState<Dimension | null>(null);
   // the row last changed, said while the map is drawn again in it
   const [changed, setChanged] = useState<Dimension | null>(null);
+  // why the last change wasn't saved: a refused save leaves the view as it was, and Tools says why
+  const [failed, setFailed] = useState<string | null>(null);
   const defaults = DEFAULT_PERSON_VIEW.view;
-  // a refused save leaves the view as it was (the legend has no line to say why; Settings does)
+  const refused = useCallback(
+    (e: unknown) => setFailed(e instanceof Error ? e.message : String(e)),
+    [],
+  );
   const keep = useCallback(
     (next: Parameters<typeof person.save>[0]) => {
-      person.save(next).catch(() => undefined);
+      setFailed(null);
+      person.save(next).catch(refused);
     },
-    [person],
+    [person, refused],
   );
   return {
     defaults,
@@ -47,7 +53,9 @@ export function useLegendEdit(): LegendEdit {
     onReset: isDefault(person.view, defaults)
       ? undefined
       : () => {
-          person.reset().catch(() => undefined);
+          setFailed(null);
+          person.reset().catch(refused);
         },
+    failed,
   };
 }

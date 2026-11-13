@@ -482,6 +482,7 @@ export function ViewLegend({
           </div>
         </>
       )}
+      {edit?.failed && <Note>{words.failed(edit.failed)}</Note>}
       {/* the default back at a press, while anything in Tools isn't it: the view, and the map's own controls
           for the visit */}
       {(edit?.onReset || resetMap) && (
