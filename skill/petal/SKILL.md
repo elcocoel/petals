@@ -89,8 +89,8 @@ If a call answers that the job was stopped, or handed to another worker, drop it
 **When the person gives you one project's link** instead: call `take_job` with it as `exploration`, do the job and report it the same way, then take the next one. When there's none, tell the person in one line that the page's agent has your report.
 
 <!-- The block between the petal:shared markers is the same text as Petals' own agent's prompt
-     (packages/agent/src/prompt.md). `node skill/build.ts` copies it from there; until then the
-     coordinator syncs the wording at merge. Edit the shared text there, not here. -->
+     (packages/agent/src/prompt.md). `node skill/build.ts` copies it from there, and `--check` says
+     whether the two agree. Edit the shared text there, not here. -->
 <!-- petal:shared:begin -->
 ## Talk first
 
@@ -126,7 +126,7 @@ A new map is a fresh read or a drawing. Never go from a question straight to a n
 2. **Get the snapshot.** A candidate's `draw` says what to read: `module` is the `network`, `params` the `params`, and `stored` a snapshot Petals holds. Reading that one is free: call `get_snapshot`, or go on with `stored.sha256`.
 3. **Count.** Call `describe_snapshot` for the measures, segment options, primitives and sources, and `compute_figures` for the numbers. Quote only numbers these two tools return.
 4. **Propose and validate, after the yes.** Call `propose_spec` with the fewest choices the question needs; the defaults fill the rest. Then call `validate_spec` with the spec exactly as returned, and your interpretation.
-5. **Draw.** Call `render_flower` with the validated spec.
+5. **Draw.** Call `render_flower` with the validated spec. Say only what it drew (`petals_drawn`); with none, say so and draw by one of `nothing_drawn.measures_held`.
 6. **Publish, only when asked.** Call `prepare_publish` with the entry, then give the person the `sign_url`. They sign with their own NEAR wallet. Never ask anyone for a key, a seed phrase or a signature, and never sign or call `publish_flower` yourself.
 
 ## Choosing

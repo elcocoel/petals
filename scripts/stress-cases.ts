@@ -1,5 +1,5 @@
-// The stress set: what a person really says to Petal. `required` cases are Elco's own words, from the
-// stored runs of Elco's app and lanes (6 Nov). `want` is what a good answer does; a person judges it.
+// The stress set: what a person really says to Petal. `required` cases are real words, from the
+// stored runs of the operator's app and worktrees (6 Nov). `want` is what a good answer does; a person judges it.
 export interface Case {
   id: string;
   group: 'elco' | 'stale' | 'cant-read' | 'wallet' | 'follow-up' | 'vague' | 'hostile';

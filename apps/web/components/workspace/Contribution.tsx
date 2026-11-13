@@ -1,9 +1,8 @@
-// The Contribution widget (wave 8; Elco, 13 Nov: "we wanna know who's helping a lot or a little and provide an
-// useful measure of 'what doing good' looks like"): three plain counts, readable at a glance, each a number in
-// the heading's size with what it counts under it: facts added to the map first, facts confirmed, accounts that
-// built on the person's work; then the layers they published, what each is about and when, in a set height
-// that scrolls. With nothing yet, what goes there and a quote. Props only: viewmodels/useLobby.ts
-// reads the record (SYSTEMS's credit/v1). Words from lib/contribution-view.ts, drafts.
+// The Contribution widget, how much a person helps the map: three plain counts, readable at a glance, each a
+// number in the heading's size with what it counts under it: facts added to the map first, facts confirmed,
+// accounts that built on the person's work; then the layers they published, what each is about and when, in a set
+// height that scrolls. With nothing yet, what goes there and a quote. Props only: viewmodels/useLobby.ts reads the
+// record (credit/v1). Words from lib/contribution-view.ts.
 import { type ContributionView, contributionWords } from '../../lib/contribution-view.ts';
 import type { PowerQuoteItem } from '../../lib/power-quotes.ts';
 import { PowerQuote } from '../PowerQuote.tsx';
@@ -16,7 +15,7 @@ export function Contribution({
   quote,
 }: {
   contribution: ContributionView | 'reading' | 'unread';
-  /** An illustrated power quote for when there's nothing yet (#89). */
+  /** An illustrated power quote for when there's nothing yet. */
   quote?: PowerQuoteItem | null;
 }) {
   const view = typeof contribution === 'string' ? null : contribution;

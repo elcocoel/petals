@@ -1,5 +1,5 @@
 // What can be picked instead of the model in the composer's pill. It sits in a FloatBox, and the choices
-// come from modelOptions in lib/composer-options.ts. On the app scale, as the conversation is (design/conversation.md).
+// come from modelOptions in lib/composer-options.ts. On the app scale, as the conversation is.
 import type { ModelOption } from '../../lib/composer-options.ts';
 import { Button } from '../ui/Button.tsx';
 import { Mono } from '../ui/Mono.tsx';

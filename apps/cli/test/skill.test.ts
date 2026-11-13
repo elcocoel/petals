@@ -93,7 +93,7 @@ describe('SKILL.md: the Agent Skills format', () => {
     expect(SKILL.split(BEGIN)).toHaveLength(2);
     expect(SKILL.split(END)).toHaveLength(2);
     expect(SKILL.indexOf(BEGIN)).toBeLessThan(SKILL.indexOf(END));
-    expect(SKILL).toMatch(/coordinator syncs the wording at merge/);
+    expect(SKILL).toMatch(/`node skill\/build\.ts` copies it from there/);
   });
 
   test('says how to get the flower when no Petals site is running', () => {

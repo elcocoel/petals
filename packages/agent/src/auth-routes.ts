@@ -37,6 +37,7 @@ import { type ChainChat, type CreditChain, chainChat } from './credit.ts';
 import {
   CONNECT_HINT,
   CREDIT_SPENT,
+  drawOffchain,
   hashToken,
   INVITE_SPENT,
   inviteLedger,
@@ -56,7 +57,7 @@ import type { WalletCipher } from './wallet-cipher.ts';
 export type AgentAccess = 'gated' | 'open' | 'none';
 export type Network = 'testnet' | 'mainnet';
 /**
- * Where a wallet is (12 Nov, wave 5: "multi chain wallet connection"): NEAR on its network, one EVM wallet for every
+ * Where a wallet is (multi-chain wallet connection): NEAR on its network, one EVM wallet for every
  * EVM chain, or a Solana wallet.
  */
 export type WalletNetwork = Network | 'eip155' | 'solana';
@@ -159,8 +160,8 @@ export interface ChatAdmission {
 export interface RouteAuth {
   admitChat(c: Context, llm: LlmClient, budget: Budget): Promise<ChatAdmission>;
   /**
-   * A turn nobody's browser asked for (a job's report taken up at once, 9 Nov): on a person's own credit,
-   * or else on an invite one of their sessions holds (10 Nov). Null when neither pays, or it's a recorded run.
+   * A turn nobody's browser asked for (a job's report taken up at once): on a person's own credit,
+   * or else on an invite one of their sessions holds. Null when neither pays, or it's a recorded run.
    */
   admitOwner?(subject: string, llm: LlmClient, budget: Budget): Promise<ChatAdmission | null>;
   subjectOf(c: Context): Promise<string | null>;
@@ -183,7 +184,7 @@ export interface RouteAuth {
     account: string | null;
   } | null>;
   /**
-   * A person's account, as a claim names who answers for what they keep (annotation-layer.md): their first
+   * A person's account, as a claim names who answers for what they keep: their first
    * mainnet wallet, else their first; null for one with none. For a turn no request started.
    */
   accountOf?(person: string): Promise<string | null>;
@@ -267,7 +268,7 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
       try {
         const caip10 = d.cipher().open(w.caip10_encrypted);
         const account_id = caip10.split(':').slice(2).join(':');
-        // author: the account a publication names when this wallet signs it (wave 8)
+        // author: the account a publication names when this wallet signs it
         return [{ caip10, author: caip10, network: w.network, account_id, proved_at: w.proved_at }];
       } catch {
         // sealed under another key: a throwaway from before a restart, on a development server
@@ -360,7 +361,7 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
 
   app.post('/api/v1/auth/challenge', async (c) => {
     const { nonce, expires_at } = await d.nonces.issue();
-    // an EVM or a Solana wallet signs a text naming this site, its address and this nonce (wave 5); NEAR's below
+    // an EVM or a Solana wallet signs a text naming this site, its address and this nonce; NEAR's below
     const asked = (await c.req.json().catch(() => null)) as {
       chain?: unknown;
       address?: unknown;
@@ -406,7 +407,7 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
       proof?: Nep413Proof;
     } | null;
     const network = body?.network;
-    // an EVM or a Solana wallet's signed text (wave 5): checked here, no chain asked
+    // an EVM or a Solana wallet's signed text: checked here, no chain asked
     if (network === 'eip155' || network === 'solana') {
       const checked = await verifyWalletProof(
         body?.proof as unknown as Eip191Proof | SolanaProof,
@@ -510,18 +511,27 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
       return fail(c, 'unauthorised', 'Not signed in.');
     }
     const credit = await personCredit(store, session.subject);
+    // what's left on the invites a chat of theirs falls back on (admitOwner), so a person on an invite reads
+    // what they can spend, not zero (13 Nov: judges chat on invites and never pay)
+    let inviteLeft = 0;
+    for (const id of await store.session.invitesOf(session.subject, iso())) {
+      const state = await inviteBody(id);
+      if (!inviteRefusal(state)) inviteLeft += state?.left_usd ?? 0;
+    }
     return ok(c, {
       person_id: session.subject,
       network: session.network,
-      // additive (9 Nov, LOBBY): the wallet this session signed in with, by account id; null for none
+      // additive (9 Nov): the wallet this session signed in with, by account id; null for none
       account: await sessionAccount(session),
       wallets: await walletsOf(session.subject),
       // null: no credit of their own, so a chat needs an invite like anyone else's
       credit: credit && { ...credit, usd_per_chat: usdPerOwnChat },
+      // additive (13 Nov): dollars left on their usable invites; 0 for none
+      invite_left_usd: Math.round(inviteLeft * 1e6) / 1e6,
     });
   });
 
-  // Another wallet for the person signed in (Elco, 12 Nov, on /profile: "allow me to add more wallets"; LOBBY):
+  // Another wallet for the person signed in, added from /profile:
   // the same NEP-413 proof as signing in, after a challenge, bound to this person. The session stays as it is.
   app.options('/api/v1/me/wallets', (c) => c.body(null, 204));
   app.post('/api/v1/me/wallets', smallBody, async (c) => {
@@ -602,15 +612,17 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
       let chain: ChainChat | null = null;
       if (d.credit) {
         const network = d.credit.contract.network;
-        const account = (await walletsOf(subject)).find((w) => w.network === network)?.account_id;
-        const price = account ? await (d.nearUsd ?? (async () => null))() : null;
-        if (account && price !== null) {
-          chain = await chainChat(store, d.credit, subject, account, price, now).catch(() => null);
+        const accounts = (await walletsOf(subject))
+          .filter((w) => w.network === network)
+          .map((w) => w.account_id);
+        const price = accounts.length ? await (d.nearUsd ?? (async () => null))() : null;
+        if (accounts.length && price !== null) {
+          chain = await chainChat(store, d.credit, subject, accounts, price, now).catch(() => null);
         }
       }
       const own = await personCredit(store, subject);
       if (!own || own.left_usd <= 0) {
-        // the invite their browser chats on, charged as a chat there is, with the day's cap (10 Nov)
+        // the invite their browser chats on, charged as a chat there is, with the day's cap
         for (const id of await store.session.invitesOf(subject, iso())) {
           if (inviteRefusal(await inviteBody(id))) continue;
           return { subject, budget: { ...budget, ledger: inviteLedger(store, id, day, now) } };
@@ -618,11 +630,9 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
         return null;
       }
       let spent = 0;
-      const counted = chain
-        ? async (usd: number) => {
-            spent += usd;
-          }
-        : undefined;
+      const counted = async (usd: number) => {
+        spent += usd;
+      };
       return {
         subject,
         ownCredit: true,
@@ -631,7 +641,11 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
           usdPerChat: usdPerOwnChat,
           ledger: personLedger(store, subject, day, now, counted),
         },
-        ...(chain ? { onEnd: () => (chain as ChainChat).settle(spent) } : {}),
+        // on the contract, charged at the end; without it, spent from what's off the contract
+        onEnd: () =>
+          chain
+            ? (chain as ChainChat).settle(spent)
+            : drawOffchain(store, subject, spent, now()).then(() => {}),
       };
     },
 
@@ -646,9 +660,12 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
       // read now, before anything is spent.
       let chain: ChainChat | null = null;
       if (d.credit && session && isPerson(session.subject)) {
-        const account =
-          session.network === d.credit.contract.network ? await sessionAccount(session) : null;
-        if (account) {
+        // every NEAR wallet they hold on its network, whichever wallet this session signed in with
+        const network = d.credit.contract.network;
+        const accounts = (await walletsOf(session.subject))
+          .filter((w) => w.network === network)
+          .map((w) => w.account_id);
+        if (accounts.length) {
           const price = await (d.nearUsd ?? (async () => null))();
           if (price === null) {
             return {
@@ -660,7 +677,7 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
             };
           }
           try {
-            chain = await chainChat(store, d.credit, session.subject, account, price, now);
+            chain = await chainChat(store, d.credit, session.subject, accounts, price, now);
           } catch {
             return {
               refused: fail(
@@ -678,24 +695,27 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
         session && isPerson(session.subject) ? await personCredit(store, session.subject) : null;
       if (session && own && own.left_usd > 0) {
         let spent = 0;
-        const counted = chain
-          ? async (usd: number) => {
-              spent += usd;
-            }
-          : undefined;
+        const counted = async (usd: number) => {
+          spent += usd;
+        };
+        const person = session.subject;
         return {
-          subject: session.subject,
+          subject: person,
           ownCredit: true,
           budget: {
             ...budget,
             usdPerChat: usdPerOwnChat,
-            ledger: personLedger(store, session.subject, day, now, counted),
+            ledger: personLedger(store, person, day, now, counted),
           },
-          ...(chain ? { onEnd: () => (chain as ChainChat).settle(spent) } : {}),
+          // on the contract, charged at the end; without it, spent from what's off the contract
+          onEnd: () =>
+            chain
+              ? (chain as ChainChat).settle(spent)
+              : drawOffchain(store, person, spent, now()).then(() => {}),
         };
       }
       const id = session?.invite;
-      // Signed in, with no credit left and no invite: they pay for it themselves (9 Nov).
+      // Signed in, with no credit left and no invite: they pay for it themselves.
       if (session && isPerson(session.subject) && !id) {
         return {
           refused: fail(c, 'payment_required', own ? CREDIT_SPENT : PAYMENT_NEEDED, PAY_HINT),

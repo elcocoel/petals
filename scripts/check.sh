@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # The one local check (T006). No CI: run this before every commit you care about.
-# typecheck, lint, unit tests, secret scan, fixture size, publication boundary, design tokens and
-# the literal scan.
+# typecheck, lint, unit tests, secret scan, dated personal attributions, fixture size, publication boundary,
+# design tokens and the literal scan.
 # Never uses `timeout` (macOS has none).
 
 cd "$(dirname "$0")/.." || exit 1
@@ -19,6 +19,13 @@ case "$(node -v)" in
   *) echo "check: Node 24 is required, found $(node -v)" >&2; exit 1 ;;
 esac
 
+# Every temp folder the tests and the build make goes in one folder of this run's, removed when the check
+# ends, failed or not, so tests that don't clean up after themselves can't fill the disk. Some tests leave a
+# folder read-only, so write access comes back first; the check's own exit code is kept either way.
+check_tmp="$(mktemp -d "${TMPDIR:-/tmp}/petal-check.XXXXXX")"
+trap 'rc=$?; chmod -R u+w "$check_tmp" 2>/dev/null; rm -rf "$check_tmp" || true; exit $rc' EXIT
+export TMPDIR="$check_tmp"
+
 step() { printf '\n== %s\n' "$1"; }
 
 step "node $(node -v), pnpm $(pnpm -v)"
@@ -26,6 +33,7 @@ step typecheck;     pnpm -s typecheck
 step lint;          pnpm -s lint
 step test;          pnpm -s test
 step secrets;       bash scripts/check-secrets.sh
+step public-tree;   bash scripts/check-public-tree.sh
 step fixture-size;  node scripts/check-fixture-size.ts
 step boundary;      bash scripts/check-boundary.sh
 step protocols;     node scripts/check-protocols.ts

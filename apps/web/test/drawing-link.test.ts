@@ -1,4 +1,4 @@
-// Elco, 10 Nov: a flower a link in the conversation points at opens on /make's canvas, not on another
+// A flower a link in the conversation points at opens on /make's canvas, not on another
 // page. What counts as one of this site's flowers, and how the address keeps a drawing opened that way.
 import type { Spec } from '@petal/core/types';
 import { describe, expect, test } from 'vitest';
@@ -52,7 +52,7 @@ describe('a drawing opened here', () => {
   });
 });
 
-describe('a link to the Power Map or a map on it (#78, 11 Nov)', () => {
+describe('a link to the Power Map or a map on it', () => {
   test('the whole map, one map whole or as a path, and nothing else', () => {
     expect(mapLink('/map', SITE)).toEqual({ map: null });
     expect(mapLink(`${SITE}/m/eip155%3A1%3A0xabc`, SITE)).toEqual({ map: 'eip155:1:0xabc' });

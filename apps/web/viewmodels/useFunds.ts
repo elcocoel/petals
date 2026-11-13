@@ -1,6 +1,7 @@
-// The person's money, the one balance (Elco, 9 and 10 Nov; "the balance hasn't updated", 10 Nov): the credit
+// The person's money, the one balance, kept up to date: the credit
 // they hold (GET /api/v1/me's credit, which plain transfers to Petals and credit given by hand both go onto,
-// in NEAR at today's price; with the contract, what it holds, read from the chain). It's read once, in the
+// in NEAR at today's price; with the contract, what it holds, read from the chain), and what's left on the
+// invites a chat of theirs falls back on, so a person on an invite reads what they can spend (13 Nov). It's read once, in the
 // layout (viewmodels/useWorkPanel.ts), and again whenever `cue` changes: after each turn and on every move,
 // and after a payment (reread). /make's composer, the panel's Lobby section and the
 // lobby's Balance card all show this one value. And Withdraw, which takes everything out of the contract
@@ -17,6 +18,8 @@ export function useFunds(cue: string) {
   const [info, setInfo] = useState<PayInfo | null>(null);
   /** The person's credit, as /make reads it. */
   const [credit, setCredit] = useState<Credit | null>(null);
+  /** Dollars left on their usable invites (GET /api/v1/me's invite_left_usd). */
+  const [inviteLeft, setInviteLeft] = useState(0);
   /** What the contract holds for the person, in yoctoNEAR; null when there's no contract to hold it. */
   const [held, setHeld] = useState<string | null>(null);
   const [phase, setPhase] = useState<WithdrawPhase>('ready');
@@ -32,7 +35,8 @@ export function useFunds(cue: string) {
         if (gone) return;
         setInfo(p);
         // with the contract, what it holds now, read from the chain, is the truer balance (as usePay)
-        setCredit(p?.credit ?? c);
+        setCredit(p?.credit ?? c.credit);
+        setInviteLeft(c.inviteLeftUsd);
         setHeld((p?.credit as HeldCredit | null | undefined)?.balance_yocto ?? null);
       },
       // no answer shows no balance
@@ -74,10 +78,12 @@ export function useFunds(cue: string) {
     /** Where a payment goes and NEAR's price (GET /api/v1/pay), read with the credit: the pay step's too. */
     where: info,
     /**
-     * What's left, dollars first and NEAR beside at today's price (Elco, 10 Nov); nothing given yet is
-     * none. Null until Petals has said.
+     * What's left, dollars first and NEAR beside at today's price , their own and on their
+     * invites; nothing given yet is none. Null until Petals has said.
      */
-    balance: (info ? money(credit?.left_usd ?? 0, info.near_usd) : null) as Money | null,
+    balance: (info
+      ? money((credit?.left_usd ?? 0) + inviteLeft, info.near_usd)
+      : null) as Money | null,
     held,
     phase,
     withdrew,

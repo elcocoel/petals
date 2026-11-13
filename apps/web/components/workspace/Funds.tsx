@@ -1,8 +1,9 @@
-// The Balance card (Elco, 9 and 10 Nov; the redo's frame, "Build it"): the credit the person holds, dollars
-// first (in the heading's size since Elco, 11 Nov: "the balance card feels gross and huge and large"), NEAR beside at today's price (wrapping under it when narrow); and Withdraw, the card's one action, which takes
-// everything out of the credit contract through their own wallet while it holds something. Withdraw is
-// quiet, as Disconnect is. Props only: viewmodels/useFunds.ts reads the credit and holds the withdrawal.
-// Words from lib/lobby-view.ts, drafts.
+// The Balance card: the credit the person holds, dollars first (in the heading's size, so the card stays compact),
+// NEAR beside at today's price (wrapping under it when narrow); and Withdraw, the card's one action, which takes
+// everything out of the credit contract through their own wallet while it holds something. Withdraw is quiet, as
+// Disconnect is. Under the balance, the tip, an optional donation to Petals on the price's scale (TipControl),
+// once Petals has said what it is. Props only: viewmodels/useFunds.ts reads the credit and holds the
+// withdrawal; viewmodels/useTip.ts holds the tip. Words from lib/lobby-view.ts and lib/tip.ts.
 import { canWithdraw, fundsWords, type WithdrawPhase } from '../../lib/lobby-view.ts';
 import type { Money } from '../../lib/pay.ts';
 import type { PowerQuoteItem } from '../../lib/power-quotes.ts';
@@ -12,6 +13,7 @@ import { Badge } from '../ui/Badge.tsx';
 import { Button } from '../ui/Button.tsx';
 import { Card } from '../ui/Card.tsx';
 import { Mono } from '../ui/Mono.tsx';
+import { TipControl, type TipView } from './TipControl.tsx';
 
 export function Funds({
   balance,
@@ -21,6 +23,7 @@ export function Funds({
   onWithdraw,
   usage,
   quote,
+  tip,
 }: {
   /** What's left, dollars first and NEAR beside, as /make shows it; null until it can be read. */
   balance: Money | null;
@@ -31,12 +34,14 @@ export function Funds({
   withdrew: string | null;
   onWithdraw: () => void;
   /**
-   * Every call charged to the person, newest first (usage/v1; Elco, 11 Nov: "turn the balance widget into
-   * like a full-blown professional usages widget"); absent where only the balance shows.
+   * Every call charged to the person, newest first (usage/v1), as a professional usage widget; absent where
+   * only the balance shows.
    */
   usage?: UsageView | 'reading' | 'unread';
-  /** An illustrated power quote for when there's no usage yet (#89, wave 7). */
+  /** An illustrated power quote for when there's no usage yet. */
   quote?: PowerQuoteItem | null;
+  /** The person's tip; absent where only the balance shows. */
+  tip?: TipView;
 }) {
   const offer = held !== null && canWithdraw(held) && phase !== 'withdrew';
   return (
@@ -68,6 +73,11 @@ export function Funds({
         <p className="my-0 type-caption text-muted">{fundsWords.withdrew(withdrew)}</p>
       )}
       {phase === 'failed' && <p className="my-0 type-caption text-muted">{fundsWords.failed}</p>}
+      {tip && tip.percent !== null && tip.scale && (
+        <div className="border-t border-hairline pt-text-gap">
+          <TipControl {...tip} />
+        </div>
+      )}
       {usage !== undefined && (
         <div className="flex flex-col gap-space-8 border-t border-hairline pt-text-gap">
           <h3 className="m-0 type-label">{usageWords.title}</h3>

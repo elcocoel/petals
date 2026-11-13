@@ -81,8 +81,8 @@ const config: NextConfig = {
   typescript: { tsconfigPath: 'tsconfig.next.json' },
   // Next 16.4 writes an AGENTS.md into the app on dev; the repo keeps its own instructions.
   agentRules: false,
-  // The connect page is retired (Elco, walk 7, 12 Nov: "retire it and hunt any old links that lead into it"):
-  // the prompt in the panel connects an agent, and the docs say how each app connects.
+  // The connect page is retired, and its old links lead on: the prompt in the panel connects an agent, and the
+  // docs say how each app connects.
   redirects: async () => [
     { source: '/connect', destination: '/docs/connect-your-agent', permanent: true },
     {
@@ -90,7 +90,7 @@ const config: NextConfig = {
       destination: '/docs/ideas/read-a-flower',
       permanent: true,
     },
-    // the media kit is part of the brand kit (card 110, part 4)
+    // the media kit is part of the brand kit
     {
       source: '/docs/build-it-with-us/media-kit',
       destination: '/docs/brand-kit/media-kit',

@@ -1,4 +1,4 @@
-// Paying for Petals' own agent in NEAR (9 Nov, specs/003-target/proposal-payment.md), through petalApp. The
+// Paying for Petals' own agent in NEAR (specs/003-target/proposal-payment.md), through petalApp. The
 // chain and NEAR's price are stand-ins here; tests/e2e's journey server walks a real testnet transfer.
 import { join } from 'node:path';
 import { NearError } from '@petal/near';
@@ -48,6 +48,8 @@ function setup(
     public?: boolean;
     dailyUsd?: number;
     registry?: ReturnType<typeof fakeRegistry>['registry'];
+    /** payments made from NEAR Intents (near.com's wallet): by hash, who signed the withdraw and how much */
+    intents?: Record<string, { signer: string; yocto: string }>;
   } = {},
 ) {
   const root = tmpRoot();
@@ -70,6 +72,19 @@ function setup(
       registry: o.registry ?? fakeRegistry().registry,
       pay: {
         readTransfer: onChain.read,
+        readIntentsWithdraw: async (_n, hash, signer, receiver) => {
+          const w = o.intents?.[hash];
+          if (!w) throw new NearError('not_found', `no transaction ${hash}`);
+          const mine = w.signer === signer;
+          return {
+            tx_hash: hash,
+            signer_id: signer,
+            receiver_id: receiver,
+            yocto: mine ? w.yocto : '0',
+            succeeded: mine,
+            methods: [],
+          };
+        },
         nearUsd: async () => (o.price === undefined ? 3.5 : o.price),
       },
       env: { PETAL_AGENT_ACCESS: 'gated', PETAL_WALLET_KEY: 'ab'.repeat(32), NODE_ENV: 'test' },
@@ -229,6 +244,26 @@ describe('paying for Petals’ agent in NEAR', () => {
     ).toBeNull();
   });
 
+  test('paid from NEAR Intents (near.com’s wallet): a withdraw the wallet signed counts as its transfer, once, and only for it', async () => {
+    const W = 'Bw1JqXvqW8LhFQH4yW3mjvnwq8Vv5k8x3NRqv6e7yZ4C';
+    const w = setup({}, { intents: { [W]: { signer: 'alice.near', yocto: ONE_NEAR } } });
+    await w.signIn();
+    const first = (await (
+      await w.pay({ network: 'mainnet', account_id: 'alice.near', tx_hash: W })
+    ).json()) as { added_usd: number; credit: { left_usd: number } };
+    expect(first.added_usd).toBe(3.5);
+    expect(first.credit.left_usd).toBe(3.5);
+    const again = (await (
+      await w.pay({ network: 'mainnet', account_id: 'alice.near', tx_hash: W })
+    ).json()) as { added_usd: number };
+    expect(again.added_usd).toBe(0);
+    // bob signs in and names the same transaction: the withdraw isn't his
+    const b = setup({}, { intents: { [W]: { signer: 'alice.near', yocto: ONE_NEAR } } });
+    await b.signIn(bob);
+    const res = await b.pay({ network: 'mainnet', account_id: 'bob.near', tx_hash: W });
+    expect(res.status).toBe(400);
+  });
+
   test('another person can’t claim the same transaction', async () => {
     const w = setup({ [HASH]: { signer_id: 'alice.near' } });
     await w.signIn(bob);
@@ -236,7 +271,7 @@ describe('paying for Petals’ agent in NEAR', () => {
     expect(res.status).toBe(401);
   });
 
-  test('testnet pays on a lane, to petals.testnet; a public site counts mainnet NEAR only', async () => {
+  test('testnet pays on a development server, to petals.testnet; a public site counts mainnet NEAR only', async () => {
     const lane = setup({ [HASH]: { receiver_id: 'petals.testnet' } });
     await lane.signIn(alice, 'testnet');
     expect(
@@ -256,7 +291,7 @@ describe('paying for Petals’ agent in NEAR', () => {
     expect(live.onChain.reads).toEqual([]);
   });
 
-  test('paid turns don’t count against the daily cap (Elco, 9 Nov: unpaid spend only)', async () => {
+  test('paid turns don’t count against the daily cap (unpaid spend only)', async () => {
     const w = setup({ [HASH]: {} }, { dailyUsd: 0.015, costUsd: 0.01 });
     await w.signIn();
     await w.pay({ network: 'mainnet', account_id: 'alice.near', tx_hash: HASH });

@@ -6,14 +6,17 @@
 # the fakes, or send the model's calls and key to another address here: this is the public image, and
 # that's the one thing it's sure of.
 cap="${PETAL_LLM_DAILY_USD:-}"
-# PETAL_PUBLIC=1 comes from the run command (petals_run.sh, when Petals/public-url exists), never a file.
+# PETAL_PUBLIC=1 comes from the run command (when Petals/public-url exists), never a file.
 public="${PETAL_PUBLIC:-}"
 # Since 9 Nov a public site runs Petals' own agent for people who pay for it in NEAR (TGT-030, amended), so
 # it loads the model key too.
-# 12 Nov: the free data keys (KEYS chat), each optional: Ankr and Helius for holder lists, CoinGecko for
+# The free data keys, each optional: Ankr and Helius for holder lists, CoinGecko for
 # supply, Safe for treasuries and payouts. The readers work keyless without them.
+# The credit contract, once it's set up on mainnet (credit-setup.ts writes credit.mainnet.env beside the charger's
+# key): people's NEAR goes into it, and each chat is charged there. Without it, plain transfers.
 for env_file in /secrets/near-ai.env /secrets/petal-wallet.env /secrets/one-click.env \
-  /secrets/ankr.env /secrets/helius.env /secrets/coingecko.env /secrets/safe.env; do
+  /secrets/ankr.env /secrets/helius.env /secrets/coingecko.env /secrets/safe.env \
+  /secrets/credit.mainnet.env; do
   if [ -f "$env_file" ]; then
     set -a
     # shellcheck disable=SC1090

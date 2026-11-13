@@ -35,7 +35,7 @@ const card = (
 const map = card('near:validators', 'NEAR validators', [8487]);
 
 describe('openingMessage', () => {
-  test('two maps that read the same name are offered once, the larger (#78)', () => {
+  test('two maps that read the same name are offered once, the larger', () => {
     const text = openingMessage([
       card('sol:mnde-a', 'Marinade MNDE deposits and lock schedules', [40]),
       card('sol:mnde-b', 'Marinade MNDE deposits and lock schedules', [90]),

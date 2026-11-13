@@ -202,7 +202,7 @@ describe('verifyNep413', () => {
   });
 });
 
-// near-identity.md, item 2: a new person's implicit account doesn't exist until its first transfer,
+// A new person's implicit account doesn't exist until its first transfer,
 // so it has no keys to look up. NEAR Auth's rule: accept an account id equal to the hex of the public
 // key "only while the account doesn't exist".
 describe('verifyNep413, implicit accounts', () => {

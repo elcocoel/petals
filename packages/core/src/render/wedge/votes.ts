@@ -1,10 +1,10 @@
-// Proposals on the ring, and each wallet's vote (#93). Elco, 11 Nov: "They are dots or lines arcs on the outer ring
-// on top of the petal, when a proposal is hovered little dots show up on the inside showing yes and no votes,
-// absent votes show nothing." So: a thin ring just outside the petals is a stretch of time, clockwise from twelve,
+// Proposals on the ring, and each wallet's vote: arcs on the outer ring over the petals; a hovered proposal shows
+// small dots inside for yes and no votes, and absent votes show nothing. So: a thin ring just outside the
+// petals is a stretch of time, clockwise from twelve,
 // its start to its end; each proposal is an arc on it, from when it was put up to when it was decided (or when its
 // voting closed, where the DAO doesn't record a decision; to the ring's end while it's open); and a
 // proposal pointed at puts a dot just inside the polygon under each voter's petal, in the colour the reading gives
-// its vote. No vote, no dot. Takes SYSTEMS's proposals/v1 as it comes. For /lab first. Pure.
+// its vote. No vote, no dot. Takes proposals/v1 as it comes. For /lab first. Pure.
 import { n3, type Ring, SHAPE } from './ring.ts';
 
 const TAU = Math.PI * 2;
@@ -131,9 +131,9 @@ export interface Placed {
 }
 
 /**
- * Where each proposal in the stretch sits (Elco, 11 Nov: "proposals are related to specific wallets - SOMEONE made
- * that proposal"): above its proposer's petal, stacked outward oldest first; a proposal whose proposer isn't a
- * petal here goes in one stack of its own. `ids` are the flower's petals in order.
+ * Where each proposal in the stretch sits (a proposal belongs to the wallet that made it): above its proposer's
+ * petal, stacked outward oldest first; a proposal whose proposer isn't a petal here goes in one stack of its
+ * own. `ids` are the flower's petals in order.
  */
 export function placesOf(
   proposals: readonly Proposal[],
@@ -169,11 +169,9 @@ export const STACK_MOST = 8;
 const OTHERS_WIDTH = 0.05;
 
 /**
- * A placed proposal's arc (Elco, 11 Nov: "an arch ... on top of the segment of the actual petal"): over its
- * proposer's petal's own stretch of the circle, the fine gap kept at each end, right above the petal's own top and
- * out from it by its step (12 Nov walk 3: "the proposals shouldn't necessarily be on the outside of the circle. They
- * should actually be right above the wallets themselves"). A proposal of no petal sits in the others' stack just
- * before twelve on the ring, in columns of STACK_MOST.
+ * A placed proposal's arc, on top of its petal: over its proposer's petal's own stretch of the circle, the fine
+ * gap kept at each end, right above the petal's own top (not on the outside of the circle) and out from it by its
+ * step. A proposal of no petal sits in the others' stack just before twelve on the ring, in columns of STACK_MOST.
  */
 export function placeArc(ring: Ring, petal: number, step: number): string {
   if (petal >= 0) {

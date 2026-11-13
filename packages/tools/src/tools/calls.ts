@@ -1,5 +1,5 @@
-// list_calls (Elco, 12 Nov: "open calls is the most useful ... helping people make money from daos and helping
-// daos to source talent"): Petals' feed of open calls, as kept from their sources (calls.ts), each a calls/v1.
+// list_calls (people find work in DAOs, and DAOs find talent): Petals' feed of open calls, as kept from their
+// sources (calls.ts), each a calls/v1.
 import type { Call, CallKind } from '@petal/core';
 import { callsOf } from '../calls.ts';
 import { defineTool } from '../define.ts';
@@ -22,11 +22,15 @@ export interface ListCallsInput {
   closes_before?: string;
 }
 
-/** The calls a feed's filters keep: of one kind, with these words, closing before a time. */
-export function filterCalls(calls: readonly Call[], i: ListCallsInput): Call[] {
+/**
+ * The calls a feed's filters keep: still open at `now` (a call whose own deadline has passed has closed,
+ * whatever status its source last gave), of one kind, with these words, closing before a time.
+ */
+export function filterCalls(calls: readonly Call[], i: ListCallsInput, now: Date): Call[] {
   const words = (i.q ?? '').toLowerCase().split(/\s+/).filter(Boolean);
   const before = i.closes_before ? Date.parse(i.closes_before) : null;
   return calls.filter((c) => {
+    if (c.closes && Date.parse(c.closes) <= now.getTime()) return false;
     if (i.kind && c.kind !== i.kind) return false;
     if (before !== null && (!c.closes || Date.parse(c.closes) >= before)) return false;
     const said = `${c.title} ${c.summary ?? ''} ${c.offered_by.name}`.toLowerCase();
@@ -38,7 +42,7 @@ export const listCalls = defineTool<ListCallsInput, object>({
   name: 'list_calls',
   title: 'List open calls',
   description:
-    "Petals' feed of open calls: who is paying for work right now, or asking for a vote: RFPs, grants programs, bounties, hackathons, accelerators and funds, read without a key from Karma's program registry, NEAR's Infrastructure Committee, Snapshot for the DAOs Petals maps (their open votes, kind vote), and NEAR's and Arbitrum's forums, whose topics titled RFP, request for proposals or grants program are inferred calls, each with its topic as evidence. Each is a calls/v1, every field as its source says it: a status kept beside its deadline even when they disagree, a budget in the call's own words. Closing soonest first. Filter by kind, by words (in its title, summary or who offers it), or closing before a time.",
+    "Petals' feed of open calls: who is paying for work right now, or asking for a vote: RFPs, grants programs, bounties, hackathons, accelerators and funds, read without a key from Karma's program registry, NEAR's Infrastructure Committee, Snapshot for the DAOs Petals maps (their open votes, kind vote), and NEAR's and Arbitrum's forums, whose topics titled RFP, request for proposals or grants program are inferred calls, each with its topic as evidence. Each is a calls/v1, every field as its source says it: a budget in the call's own words. Only calls still open: one whose deadline has passed leaves the feed, whatever status its source last gave. Closing soonest first. Filter by kind, by words (in its title, summary or who offers it), or closing before a time.",
   input: obj(
     [],
     {
@@ -53,6 +57,6 @@ export const listCalls = defineTool<ListCallsInput, object>({
   }),
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   async run(input, ctx) {
-    return { calls: filterCalls(await callsOf(ctx), input) };
+    return { calls: filterCalls(await callsOf(ctx), input, ctx.now()) };
   },
 });

@@ -1,9 +1,8 @@
 'use client';
-// A small dialog over the page (design/side-panel.md, lines 26 and 29): the browser's own modal, so the
-// focus stays in it and the page under it waits. Its title names what it's about; its close button, Escape
-// and pressing outside it close it. When it opens, the first field in it, or else its first control, has
-// the focus. Its height is set, and what it holds scrolls. It holds no state: whether it's open is its
-// ViewModel's.
+// A small dialog over the page: the browser's own modal, so the focus stays in it and the page under it
+// waits. Its title names what it's about; its close button, Escape and pressing outside it close it. When
+// it opens, the first field in it, or else its first control, has the focus. Its height is set, and what
+// it holds scrolls. It holds no state: whether it's open is its ViewModel's.
 import { type ReactNode, useEffect, useRef } from 'react';
 import { IconButton } from './IconButton.tsx';
 

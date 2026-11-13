@@ -1,5 +1,5 @@
 // The words of the pages the bouncer heads (components/Oops.tsx), besides /make's own (lib/door-words.ts
-// notSignedInWords). Drafts for Elco (#78, 11 Nov), listed in design/journey-strings.md.
+// notSignedInWords).
 
 export const oopsWords = {
   notFound: {

@@ -1,4 +1,4 @@
-// Elco, 12 Nov: "I have a drop down to say what color means and then the legend tells me what each color is". On the
+// A drop-down says what colour means, and the legend says what each colour is. On the
 // map a value has one colour on every flower (core mapKeys), and the map's legend lists what each colour stands for.
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';

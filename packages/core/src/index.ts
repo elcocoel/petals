@@ -212,6 +212,7 @@ export {
 export * from './versions.ts';
 export {
   type Allocation,
+  type AllocationAt,
   type Known,
   LATER,
   type Lump,
@@ -221,7 +222,9 @@ export {
   UNLOCKED,
   VESTING_VERSION,
   type Vesting,
+  type VestingAt,
   validateVesting,
+  vestingAt,
   vestingPieces,
 } from './vesting.ts';
 export { isView, viewProblem } from './view/check.ts';

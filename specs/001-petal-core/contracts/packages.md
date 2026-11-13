@@ -72,7 +72,7 @@ export function getSnapshot(req: SnapshotRequest, deps: { store: SnapshotStore; 
 export function importSpike(path: string, rules: GroupingRules): Promise<Snapshot>;
 ```
 
-RPC pool: dRPC first, then FastNEAR, then Shitzu (with a User-Agent), paced to their measured limits (`research/data/near-dao/NOTES.md`). Reads use `finality: "final"` or a fixed `block_id`.
+RPC pool: dRPC first, then FastNEAR, then Shitzu (with a User-Agent), paced to their measured limits. Reads use `finality: "final"` or a fixed `block_id`.
 
 ## `@petal/near` (W3) — NEAR as a platform: the map (FastData), accounts (NEP-413, keys), payments (1Click)
 
@@ -93,7 +93,7 @@ export function issueNonce(): { nonce: string; expires_at: string };
 export function verifyNep413(proof: Nep413Proof, expect: { message: string; recipient: string }, rpc: Rpc, opts?: { nonces?: NonceStore; allowUnfunded?: boolean }): Promise<{ ok: boolean; reason?: string }>;  // allowUnfunded: sign-in only
 // checks the signature, then view_access_key: the key must be a full-access key of account_id
 
-export function quote1Click(req: QuoteRequest): Promise<QuoteResult>;  // dry only (FR-031); a real payment needs Elco's OK
+export function quote1Click(req: QuoteRequest): Promise<QuoteResult>;  // dry only (FR-031); a real payment needs explicit approval
 
 export const mapKeys: {                                 // builders for every key in shared-map.md
   spec(id: string): string; snapshot(sha256: string): string; index(caip2: string, population: string, block: number): string;
@@ -101,7 +101,7 @@ export const mapKeys: {                                 // builders for every ke
 };
 ```
 
-Modules: `@petal/near/map`, `@petal/near/auth`, `@petal/near/pay`. NEAR as a *data source* (RPC reads of validators, DAOs) stays in `@petal/inputs`. Writer keys are read from a file outside the repo (`PETAL_WRITER_KEY_FILE`, under `.secrets/`), never from the repo.
+Modules: `@petal/near/map`, `@petal/near/auth`, `@petal/near/pay`. NEAR as a *data source* (RPC reads of validators, DAOs) stays in `@petal/inputs`. Writer keys are read from a file outside the repo (`PETAL_WRITER_KEY_FILE`), never from the repo.
 
 `MapRow` = `{ key, value, writer, receiver, tx_hash, block_height, block_timestamp }`.
 

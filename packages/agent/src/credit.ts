@@ -1,4 +1,4 @@
-// Petals' credit contract, on the server (9 Nov; proposal-payment.md, section 6). With PETAL_CREDIT_CONTRACT
+// Petals' credit contract, on the server (proposal-payment.md, section 6). With PETAL_CREDIT_CONTRACT
 // and PETAL_CHARGER_KEY_FILE set, a person's own credit is what they hold in the contract: read from the
 // chain before each chat, in dollars at NEAR's price then, and charged on chain for what the chat cost when
 // it ends, in NEAR at that same price. Without them, a person pays by a plain transfer (pay-routes.ts).
@@ -13,7 +13,16 @@ import {
   yoctoToUsd,
 } from '@petal/near/pay';
 import type { Store } from '@petal/store';
-import { FUNDED, PAID, type PersonCredit, SYNCED, syncPersonCredit } from './invites.ts';
+import {
+  drawOffchain,
+  ensureOffchain,
+  FUNDED,
+  offchainOf,
+  PAID,
+  type PersonCredit,
+  SYNCED,
+  syncPersonCredit,
+} from './invites.ts';
 
 type Env = Record<string, string | undefined>;
 
@@ -56,7 +65,7 @@ export interface ChainChat {
   settle(spentUsd: number): Promise<void>;
 }
 
-/** What a person owes Petals on the contract (Elco, 10 Nov: carry forward): positive owed, negative owed back. */
+/** What a person owes Petals on the contract (carried forward): positive owed, negative owed back. */
 export const owedAccount = (person: string) => `owed:${person}`;
 
 const usd = (n: number) => Math.round(n * 1e9) / 1e9;
@@ -95,51 +104,67 @@ async function carry(store: Store, person: string, at: Date): Promise<void> {
 }
 
 /**
- * Reads `account`'s balance and sets the person's credit to it in dollars at `nearUsd`, less what they owe,
- * and says how to charge. Elco's choice, 10 Nov (a, carry forward): the contract can only charge, so what's
- * owed either way rides on the next charge: owed is charged with it, owed back takes from it.
+ * Reads `account`'s balance and sets the person's credit to it in dollars at `nearUsd`, plus what they hold
+ * off the contract (plain transfers, NEAR Intents, what the operator gave), less what they owe, and says how
+ * to charge. A chat spends what's off the contract first; only the rest is charged on chain. It carries
+ * forward: the contract can only charge, so what's owed either way rides on the next charge: owed is charged
+ * with it, owed back takes from it.
  */
 export async function chainChat(
   store: Store,
   chain: CreditChain,
   person: string,
-  account: string,
+  /** the person's NEAR wallets on the contract's network: their credit there is what all of them hold */
+  wallets: string | readonly string[],
   nearUsd: number,
   now: () => Date,
 ): Promise<ChainChat> {
-  const yocto = await chain.balanceOf(account);
+  const accounts = typeof wallets === 'string' ? [wallets] : [...new Set(wallets)];
+  const held = await Promise.all(accounts.map((a) => chain.balanceOf(a)));
+  const yocto = held.reduce((n, y) => n + y, 0n);
+  await ensureOffchain(store, person, now());
   await carry(store, person, now());
   const owed = await owedOf(store, person);
   const credit = await syncPersonCredit(
     store,
     person,
-    yoctoToUsd(yocto, nearUsd) - Math.max(0, owed),
+    (await offchainOf(store, person)) + yoctoToUsd(yocto, nearUsd) - Math.max(0, owed),
     now(),
   );
   return {
     credit,
     yocto,
-    async settle(spentUsd) {
+    async settle(spent) {
+      // what's off the contract pays first; the contract is charged only for the rest
+      const spentUsd = usd(Math.max(0, spent) - (await drawOffchain(store, person, spent, now())));
       const owedNow = await owedOf(store, person);
       const total = usd(Math.max(0, spentUsd) + owedNow);
       // all of it owed back, or more: nothing is charged, and what's left stays owed back
       if (total <= 0) return owe(store, person, spentUsd, now());
       const ask = usdToYocto(total, nearUsd);
-      try {
-        const { charged, tx_hash } = await chain.charge(account, ask);
-        if (charged < ask) {
+      // from each wallet in turn, what it held when the chat began, until it's covered
+      let charged = 0n;
+      for (const [i, a] of accounts.entries()) {
+        const want = ask - charged;
+        if (want <= 0n) break;
+        const from = held[i] ?? 0n;
+        const take = i === accounts.length - 1 ? want : want < from ? want : from;
+        if (take <= 0n) continue;
+        try {
+          const r = await chain.charge(a, take);
+          charged += r.charged;
+          if (r.charged < take)
+            console.warn(
+              `petal: charged ${r.charged} of ${take} yoctoNEAR to a balance in ${chain.contract.contract} (tx ${r.tx_hash}): it held less`,
+            );
+        } catch (e) {
           console.warn(
-            `petal: charged ${charged} of ${ask} yoctoNEAR to a balance in ${chain.contract.contract} (tx ${tx_hash}): it held less`,
+            `petal: couldn't charge ${take} yoctoNEAR in ${chain.contract.contract}: ${(e as Error).message}`,
           );
         }
-        // what the chain didn't take stays owed
-        await owe(store, person, total - yoctoToUsd(charged, nearUsd) - owedNow, now());
-      } catch (e) {
-        console.warn(
-          `petal: couldn't charge ${ask} yoctoNEAR in ${chain.contract.contract}: ${(e as Error).message}`,
-        );
-        await owe(store, person, spentUsd, now());
       }
+      // what the chain didn't take stays owed
+      await owe(store, person, total - yoctoToUsd(charged, nearUsd) - owedNow, now());
     },
   };
 }

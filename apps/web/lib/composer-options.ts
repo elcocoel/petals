@@ -16,7 +16,7 @@ export interface CatalogueModel {
   runs_at: string;
   default_effort: string | null;
   usd_per_flower: number;
-  /** What a turn costs here, measured: the median of its last turns, as NEAR AI bills them; null until one is (SYSTEMS, 10 Nov). */
+  /** What a turn costs here, measured: the median of its last turns, as NEAR AI bills them; null until one is. */
   usd_per_turn?: number | null;
 }
 
@@ -51,7 +51,7 @@ export interface ModelOption {
 
 /**
  * `near_usd` is NEAR's price, as the one balance read it (useFunds), so a turn's cost reads as the balance
- * does (Elco, 10 Nov: dollars first, NEAR beside). A model with no measured turn says nothing of cost.
+ * does (dollars first, NEAR beside). A model with no measured turn says nothing of cost.
  */
 export function modelOptions(c: Catalogue, s: Settings, near_usd: number | null): ModelOption[] {
   const provider = c.providers.find((p) => p.id === s.provider);
@@ -72,9 +72,8 @@ export function modelOptions(c: Catalogue, s: Settings, near_usd: number | null)
 }
 
 /**
- * A turn's cost: "$0.012 a turn · 0.003 NEAR". A draft (WORKSPACE, LOBBY, 10 Nov). Held together by
- * no-break spaces, so a narrow line breaks before the cost and never inside it (design/minimally-good.md,
- * rule 7).
+ * A turn's cost: "$0.012 a turn · 0.003 NEAR". Held together by no-break spaces, so a narrow line breaks
+ * before the cost and never inside it.
  */
 const turnCost = (m: Money) =>
   (m.near === null ? `$${m.usd} a turn` : `$${m.usd} a turn · ${m.near} NEAR`).replaceAll(

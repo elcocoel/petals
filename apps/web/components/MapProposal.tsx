@@ -1,7 +1,7 @@
-// A proposal pressed on the map, in the map's Information box (lib/proposal-view.ts; Elco, 12 Nov, walk 3: "when I
-// click the proposal there's no way for me to know what this proposal is about"): its title, then what kind it is,
-// how it ended and when, who proposed it, how its voters voted, quiet in mono; its own words, the first lines
-// until pressed; and its link, said for what it is, with the outside source's arrow. Props only.
+// A proposal pressed on the map, in the map's Information box (lib/proposal-view.ts), saying what it is about: its
+// title, then what kind it is, how it ended and when, who proposed it, how its voters voted, quiet in mono;
+// its own words, the first lines until pressed; and its link, said for what it is, with the outside source's
+// arrow. Props only.
 import { useState } from 'react';
 import type { ProposalView } from '../lib/proposal-view.ts';
 import { Icon } from './ui/Icon.tsx';

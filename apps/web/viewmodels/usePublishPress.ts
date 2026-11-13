@@ -1,7 +1,7 @@
-// The publish press's state for one map (lib/publish-press.ts, wave 8): what the person would publish there, and
+// The publish press's state for one map (lib/publish-press.ts): what the person would publish there, and
 // the one press. It prepares the publication in the name of their first wallet, has that wallet sign its two
-// lines, and sends the proof. When it lands, `joined` says which publication joined which map, so the map (LOOK)
-// and Information (OVERLAYS) read the map again and mark it.
+// lines, and sends the proof. When it lands, `joined` says which publication joined which map, so the map
+// and Information read the map again and mark it.
 import { useCallback, useEffect, useState } from 'react';
 import {
   type PublishableData,

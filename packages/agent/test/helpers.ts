@@ -1,12 +1,13 @@
 // Test doubles for W5: a fake tool registry (W4 builds the real one in parallel), a fake tool
 // context, scripted model clients, a fake NEAR AI Cloud over HTTP (never the real one), and an
 // SSE reader.
-import { mkdtempSync } from 'node:fs';
+import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { sha256Hex, specHash } from '@petal/core';
 import type { AgentEvent, ModelSignature, Spec } from '@petal/core/types';
 import type { ToolContext } from '@petal/tools';
+import { afterAll } from 'vitest';
 import type { LlmClient, LlmCompletion, LlmMessage, LlmRequest, LlmToolCall } from '../src/llm.ts';
 import { HAND_TRANSCRIPT, recordedClient } from '../src/recorded.ts';
 import type { AnyTool } from '../src/tool-defs.ts';
@@ -31,8 +32,16 @@ export const VIEW_URL = 'http://localhost:3000/f/draft';
 export const SIGNER = '0x1234567890abcdef1234567890abcdef12345678';
 const TV = { tools_version: 'tools/v2' };
 
+/** The temp folders this test file made, removed when it ends. */
+const made: string[] = [];
+afterAll(() => {
+  for (const d of made.splice(0)) rmSync(d, { recursive: true, force: true, maxRetries: 3 });
+});
+
 export function tmpRoot(): string {
-  return mkdtempSync(join(tmpdir(), 'petal-agent-'));
+  const d = mkdtempSync(join(tmpdir(), 'petal-agent-'));
+  made.push(d);
+  return d;
 }
 
 type Run = (args: Record<string, unknown>, ctx: ToolContext) => unknown;

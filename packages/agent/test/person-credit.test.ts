@@ -75,7 +75,8 @@ function setup(
     return me;
   };
   const store = () => openStore(join(stateDir, 'private.db'));
-  return { app, llm, post, signIn, store, build };
+  const get = (path: string) => app.request(path, { headers: { cookie: jar.cookie } });
+  return { app, llm, post, get, signIn, store, build };
 }
 
 const withStore = async <T>(s: Store, f: (s: Store) => T | Promise<T>): Promise<T> => {
@@ -91,7 +92,7 @@ describe('a person’s own credit', () => {
     const w = setup();
     const { person_id: person, credit } = await w.signIn();
     expect(credit).toBeNull();
-    // signed in, with nothing paid and no invite: they're asked to pay (9 Nov)
+    // signed in, with nothing paid and no invite: they're asked to pay
     expect((await w.post('/api/v1/agent/chat', QUESTION)).status).toBe(402);
 
     await withStore(w.store(), async (s) => fundPerson(s, person, 5));
@@ -136,6 +137,19 @@ describe('a person’s own credit', () => {
     await withStore(w.store(), async (s) => {
       expect((await s.invite.get(invite.id))?.spent_usd).toBeCloseTo(0.02, 9);
     });
+  });
+
+  test('/api/v1/me says what is left on their invites, so a person on an invite never reads zero (13 Nov)', async () => {
+    const w = setup({ costUsd: 0.02 });
+    await w.signIn();
+    const me = async () =>
+      (await (await w.get('/api/v1/me')).json()) as { invite_left_usd: number };
+    expect((await me()).invite_left_usd).toBe(0);
+    const invite = await withStore(w.store(), async (s) => mintInvite(s, { usd: 0.5, days: 1 }));
+    await w.post('/api/v1/auth/invite', { token: invite.token });
+    expect((await me()).invite_left_usd).toBeCloseTo(0.5, 9);
+    await (await w.post('/api/v1/agent/chat', QUESTION)).text();
+    expect((await me()).invite_left_usd).toBeCloseTo(0.48, 9);
   });
 
   describe('the limit on new chats', () => {

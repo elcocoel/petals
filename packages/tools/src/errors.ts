@@ -33,7 +33,7 @@ export const HTTP_STATUS: Record<
   payment_required: 402,
   not_on_this_site: 403,
   // 503, not 502: Cloudflare, in front of the live server, swaps an origin's 502 or 504 for its own page,
-  // and the person would read that instead of these words (onchain-walk, 11 Nov).
+  // and the person would read that instead of these words.
   source_failed: 503,
   internal: 500,
 };
@@ -95,7 +95,7 @@ export class ToolFailure extends Error {
   readonly code: ToolErrorCode;
   readonly hint?: string;
   readonly retry_after_s?: number;
-  /** a worker's job that ended for it (swarm.md step 3) */
+  /** a worker's job that ended for it */
   ended?: 'stopped' | 'handed_over';
   constructor(code: ToolErrorCode, message: string, hint?: string, retryAfterS?: number) {
     super(message);

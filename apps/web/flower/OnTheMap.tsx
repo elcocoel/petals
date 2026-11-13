@@ -1,8 +1,8 @@
 'use client';
-// A map's page and a flower's page are the Power Map zoomed in (coordinator/one-source.md, step 6; Elco,
-// 10 Nov: "It's always the same continuous map"). The map opens already inside that flower, under the site's
-// nav, with a box beside it: a map's readings, or the flower's own box as on /make. Zooming out, Escape or an
-// arrow goes on into the rest of the map. This only wires the ViewModels to the views.
+// A map's page and a flower's page are the Power Map zoomed in: always the same continuous map. The map opens
+// already inside that flower, under the site's nav, with a box beside it: a map's readings, or the flower's
+// own box as on /make. Zooming out, Escape or an arrow goes on into the rest of the map. This only wires the
+// ViewModels to the views.
 import type { ReactNode } from 'react';
 import { useCallback, useMemo, useRef } from 'react';
 import { Button } from '../components/ui/Button.tsx';
@@ -39,7 +39,7 @@ function useBox() {
 
 /**
  * A map's page: the map opened inside its flower, and what the page says about the map (what it maps, its
- * worth, its readings) first in the map's Information box (Elco's walk 3: two boxes, Tools and Information).
+ * worth, its readings) first in the map's Information box (of its two boxes, Tools and Information).
  */
 export function MapAt({
   land,

@@ -1,4 +1,4 @@
-// Sponsored invites (T196): the judge pool's size is Elco's to decide, so the amount is an argument.
+// Sponsored invites (T196): the pool's size is the operator's to decide, so the amount is an argument.
 //   node scripts/mint-invite.ts <usd> [days]      makes one, and prints its token once; days default to 14
 //   node scripts/mint-invite.ts --revoke <id>     the next model call on it is refused
 //   node scripts/mint-invite.ts --budget <id> <usd>  its budget in total becomes <usd>, the same token kept

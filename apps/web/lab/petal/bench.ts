@@ -1,8 +1,8 @@
-// Server only. The petal look's bench (#76; design/flower-art-direction/default-system-vnext.md, V1, Elco 11 Nov):
-// real flowers read through the art direction's view (height straight, no minimum; width carries nothing), keyed
-// by core's look (wedge/keys.ts) and highlighted by it (wedge/highlight.ts). Only what a drawing needs goes to the
-// browser. Real data only: every flower says its snapshot, what it draws and what it leaves out. "Everyone else" is
-// drawn, folded (wedge/fold.ts): Elco, 11 Nov, "it should be there, and it should somehow clearly be a group".
+// Server only. The petal look's bench (V1): real flowers read through the art direction's view (height straight,
+// no minimum; width carries nothing), keyed by core's look (wedge/keys.ts) and highlighted by it
+// (wedge/highlight.ts). Only what a drawing needs goes to the browser. Real data only: every flower says its
+// snapshot, what it draws and what it leaves out. "Everyone else" is drawn, folded (wedge/fold.ts): it's there,
+// and it reads clearly as a group.
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { gunzipSync } from 'node:zlib';
@@ -121,10 +121,10 @@ export function coverage(
 const PLAIN_VIEW: ViewV2 = { ...ART_VIEW, dimensions: { ...ART_VIEW.dimensions, segments: null } };
 
 /**
- * "Everyone else", one petal (Elco, 11 Nov: "the correct size for the percentage it represents"): as tall as the
- * share it holds, on one scale with every other petal, so the scale's top is the largest of them all, the tail
- * included; and made of its members as stripes, the smallest nearest the centre (core's foldOf). Read again with
- * a selection as large as the population, so every member has its share.
+ * "Everyone else", one petal: as tall as the share it holds, on one scale with every other petal, so the scale's
+ * top is the largest of them all, the tail included; and made of its members as stripes, the smallest nearest
+ * the centre (core's foldOf). Read again with a selection as large as the population, so every member has its
+ * share.
  */
 export function folded(
   core: Awaited<ReturnType<typeof loadCore>>,

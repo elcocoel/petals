@@ -1,4 +1,4 @@
-// The site's 404 (#78, 11 Nov): the bouncer (components/Oops.tsx), and the way back, home or the Power Map.
+// The site's 404: the bouncer (components/Oops.tsx), and the way back, home or the Power Map.
 import { Oops } from '../components/Oops.tsx';
 import { Button } from '../components/ui/Button.tsx';
 import { oopsWords } from '../lib/oops-words.ts';

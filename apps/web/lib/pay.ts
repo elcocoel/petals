@@ -1,8 +1,7 @@
-// Paying for Petals' agent in NEAR (B, Elco, 9 Nov: "build the payment step"). The visitor's credit is
+// Paying for Petals' agent in NEAR. The visitor's credit is
 // kept in dollars by the server (GET /api/v1/me, `credit`) and shown in dollars, NEAR beside at today's price (GET
 // /api/v1/pay). Out of credit, the chat shows one way to add some, where the person meets it: the wallet
 // sends NEAR to Petals' account, and the server checks that transfer on chain (POST /api/v1/pay). Pure.
-// The words are drafts, shipped on Elco's word (9 Nov: "Ship the drafts, I'll change them later").
 
 /** The visitor's credit, as the server keeps it. Null until their first top-up. */
 export interface Credit {
@@ -13,8 +12,8 @@ export interface Credit {
 }
 
 /**
- * Where a payment goes, and NEAR's price now (null if it can't be read). With the credit contract (Elco,
- * 9 Nov), `method` is 'deposit': the NEAR stays the person's, held under their account in the contract,
+ * Where a payment goes, and NEAR's price now (null if it can't be read). With the credit contract,
+ * `method` is 'deposit': the NEAR stays the person's, held under their account in the contract,
  * and `credit` is what it holds now, read from the chain. Without it, a plain transfer to Petals.
  */
 export interface PayInfo {
@@ -46,7 +45,7 @@ export function payAction(info: PayInfo, yocto: string): PayAction {
 /** What one press of the pay button sends, in NEAR, where there's no price to send dollars' worth. */
 export const PAY_NEAR = 1;
 
-/** What the pay row offers to add, in dollars, before the person changes it (Elco's mainnet test, #71: about $1). */
+/** What the pay row offers to add, in dollars, before the person changes it (about $1). */
 export const PAY_USD = 1;
 
 /** NEAR for `usd` dollars at today's price, in thousandths and never less than asked; null without a price. */
@@ -57,7 +56,7 @@ export function nearFor(usd: number, near_usd: number | null): number | null {
 
 /**
  * A transfer the wallet sent and the server hasn't confirmed yet: kept, in the browser too, so pressing again
- * confirms this one instead of sending a second (wave 5, Elco's mainnet test).
+ * confirms this one instead of sending a second.
  */
 export interface PendingPay {
   network: string;
@@ -75,7 +74,7 @@ export function yoctoOf(near: number): string {
 }
 
 /**
- * An amount as people read it (Elco, 10 Nov: dollars first, "since NEAR AI bills dollars", with NEAR beside
+ * An amount as people read it (dollars first, since NEAR AI bills dollars, with NEAR beside
  * it at today's price). A balance takes two places; a cost takes the places it needs (three under ten
  * cents, four under a tenth of a cent), so a small cost never reads as nothing. NEAR is null when there's
  * no price to show it in.
@@ -116,15 +115,14 @@ export function sentBy(outcome: unknown): { hash: string; account: string } | nu
 /** Where the one payment is: offered, waiting for the wallet, added, or it didn't go through. */
 export type PayPhase = 'ready' | 'paying' | 'added' | 'failed';
 
-/** The chat's refusal when the visitor has no credit left (SYSTEMS, B). */
+/** The chat's refusal when the visitor has no credit left. */
 export const PAYMENT_REQUIRED = 'payment_required';
 
-/** Drafts (Elco, 9 Nov: "Ship the drafts, I'll change them later"). */
 export const payWords = {
   balance: (m: Money) => `Balance: ${moneyWords(m)}`,
-  // credit is kept in dollars, and paid in NEAR or any other token (Elco, 10 Nov)
+  // credit is kept in dollars, and paid in NEAR or any other token
   out: "You're out of credit for Petals' agent. Add some to keep going.",
-  /** Before the first question, with no credit yet (#78, 11 Nov: credit came up only after asking). */
+  /** Before the first question, with no credit yet, so credit doesn't come up only after asking. */
   start: "Petals' agent runs on NEAR AI and is paid as you go. Add some credit to start.",
   addedFirst: (near: string) => `Added ${near} NEAR. Petals' agent is ready.`,
   button: (near: number) => `Add ${near} NEAR`,

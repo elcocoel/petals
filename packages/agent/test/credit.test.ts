@@ -1,4 +1,4 @@
-// The credit contract on the server (9 Nov; proposal-payment.md, section 6), through petalApp, with a stand-in
+// The credit contract on the server (proposal-payment.md, section 6), through petalApp, with a stand-in
 // chain. A person's own credit is what the wallet they signed in with holds in the contract: read before each
 // chat, and charged in NEAR when the chat ends. The real contract is walked on testnet by hand.
 import { join } from 'node:path';
@@ -17,6 +17,7 @@ const CONTRACT = 'credit.petals.near';
 const HASH = '6zgh2u9DqHHiXzdy9ouTP7oGky2T4nugqzqt9wJZwNFm';
 const NEAR = 10n ** 24n;
 const alice = testSigner('alice.near');
+const bob = testSigner('bob.near');
 
 /** A contract with these balances, that records its charges. */
 function stand(balances: Record<string, bigint>) {
@@ -59,7 +60,7 @@ function setup(balances: Record<string, bigint>, txs: Record<string, Partial<Tra
     { root, stateDir: join(root, 'state'), apiBase: SITE, llmDailyUsd: 5 },
     {
       llm,
-      rpcFor: () => fakeRpcFor([alice]),
+      rpcFor: () => fakeRpcFor([alice, bob]),
       pay: { credit: s.chain, nearUsd: async () => 3.5, readTransfer: read },
       env: { PETAL_AGENT_ACCESS: 'gated', PETAL_WALLET_KEY: 'ab'.repeat(32), NODE_ENV: 'test' },
     },
@@ -87,7 +88,16 @@ function setup(balances: Record<string, bigint>, txs: Record<string, Partial<Tra
     };
     await call('POST', '/api/v1/auth/verify', { network: 'mainnet', proof: alice.sign(c) });
   };
-  return { ...s, llm, call, signIn };
+  /** Another NEAR wallet for the person signed in. */
+  const addWallet = async (who: typeof alice) => {
+    const c = (await (await call('POST', '/api/v1/auth/challenge', {})).json()) as {
+      nonce: string;
+      message: string;
+      recipient: string;
+    };
+    return call('POST', '/api/v1/me/wallets', { network: 'mainnet', proof: who.sign(c) });
+  };
+  return { ...s, llm, call, signIn, addWallet };
 }
 
 /** Lets the chat's end (the charge) happen. */
@@ -165,11 +175,11 @@ describe('the credit contract', () => {
     });
   });
 
-  test('refuses a transaction that isn’t a deposit or withdrawal in the contract, or another wallet', async () => {
+  test('refuses a transaction that isn’t a deposit or withdrawal in the contract, or a plain transfer to Petals', async () => {
     const OTHER = '9zgh2u9DqHHiXzdy9ouTP7oGky2T4nugqzqt9wJZwNFm';
     const w = setup(
       { 'alice.near': NEAR },
-      { [HASH]: { receiver_id: 'petals.near' }, [OTHER]: { methods: ['charge'] } },
+      { [HASH]: { receiver_id: 'someone.near', methods: [] }, [OTHER]: { methods: ['charge'] } },
     );
     await w.signIn();
     for (const tx_hash of [HASH, OTHER]) {
@@ -180,5 +190,78 @@ describe('the credit contract', () => {
       });
       expect(res.status).toBe(400);
     }
+  });
+
+  test('a plain transfer to Petals still counts with the contract, and a chat spends it before the contract is charged', async () => {
+    const PLAIN = '7zgh2u9DqHHiXzdy9ouTP7oGky2T4nugqzqt9wJZwNFm';
+    const w = setup(
+      { 'alice.near': NEAR },
+      { [PLAIN]: { receiver_id: 'petals.near', methods: [], yocto: String(NEAR) } },
+    );
+    await w.signIn();
+    const paid = (await (
+      await w.call('POST', '/api/v1/pay', {
+        network: 'mainnet',
+        account_id: 'alice.near',
+        tx_hash: PLAIN,
+      })
+    ).json()) as { added_usd: number };
+    expect(paid.added_usd).toBe(3.5);
+    // what the contract holds and what's off it, together
+    const pay = (await (await w.call('GET', '/api/v1/pay')).json()) as {
+      credit: { left_usd: number };
+    };
+    expect(pay.credit.left_usd).toBeCloseTo(7, 9);
+    await (await w.call('POST', '/api/v1/agent/chat', QUESTION)).text();
+    await settled();
+    // the chat's $0.035 came off the plain transfer: the contract wasn't charged
+    expect(w.charges).toEqual([]);
+    const after = (await (await w.call('GET', '/api/v1/pay')).json()) as {
+      credit: { left_usd: number };
+    };
+    expect(after.credit.left_usd).toBeCloseTo(7 - 0.035, 9);
+  });
+
+  test('what is off the contract pays first, and the contract is charged only for the rest', async () => {
+    const PLAIN = '8zgh2u9DqHHiXzdy9ouTP7oGky2T4nugqzqt9wJZwNFm';
+    const w = setup(
+      { 'alice.near': NEAR },
+      // 0.002 NEAR off the contract: $0.007 at $3.50, less than one chat's $0.035
+      { [PLAIN]: { receiver_id: 'petals.near', methods: [], yocto: String((2n * NEAR) / 1000n) } },
+    );
+    await w.signIn();
+    await w.call('POST', '/api/v1/pay', {
+      network: 'mainnet',
+      account_id: 'alice.near',
+      tx_hash: PLAIN,
+    });
+    await (await w.call('POST', '/api/v1/agent/chat', QUESTION)).text();
+    await settled();
+    // $0.028 left after the $0.007, at $3.50 a NEAR: 0.008 NEAR
+    expect(w.charges).toEqual([['alice.near', (8n * NEAR) / 1000n]]);
+  });
+
+  test('every NEAR wallet the person holds counts: a deposit from the second, and a charge drawn from each in turn', async () => {
+    const w = setup({ 'alice.near': (4n * NEAR) / 1000n, 'bob.near': 0n }, { [HASH]: {} });
+    await w.signIn();
+    expect((await w.addWallet(bob)).status).toBe(200);
+    // a deposit from the second wallet lands on the same person
+    w.balances['bob.near'] = NEAR;
+    const paid = (await (
+      await w.call('POST', '/api/v1/pay', {
+        network: 'mainnet',
+        account_id: 'bob.near',
+        tx_hash: HASH,
+      })
+    ).json()) as { credit: { left_usd: number; balance_yocto: string } };
+    expect(paid.credit.balance_yocto).toBe(String(NEAR + (4n * NEAR) / 1000n));
+    expect(paid.credit.left_usd).toBeCloseTo(3.514, 9);
+    await (await w.call('POST', '/api/v1/agent/chat', QUESTION)).text();
+    await settled();
+    // the chat's 0.01 NEAR: the first wallet's 0.004, then 0.006 from the second
+    expect(w.charges).toEqual([
+      ['alice.near', (4n * NEAR) / 1000n],
+      ['bob.near', (6n * NEAR) / 1000n],
+    ]);
   });
 });

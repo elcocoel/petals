@@ -1,8 +1,8 @@
 'use client';
-// A row's menu (design/side-panel.md, line 25): what can be done with one thing, as a short list beside
-// it. It takes the focus when it opens; arrow keys move through it and Enter picks; Escape, or pressing
-// anywhere outside it and the button that opened it, closes it. Its items are NavItem rows. It holds no
-// state: whether it's open is its ViewModel's, and it only says when to close.
+// A row's menu: what can be done with one thing, as a short list beside it. It takes the focus when it
+// opens; arrow keys move through it and Enter picks; Escape, or pressing anywhere outside it and the
+// button that opened it, closes it. Its items are NavItem rows. It holds no state: whether it's open is
+// its ViewModel's, and it only says when to close.
 import { type KeyboardEvent, useEffect, useRef } from 'react';
 import type { IconName } from './Icon.tsx';
 import { NavItem } from './NavItem.tsx';

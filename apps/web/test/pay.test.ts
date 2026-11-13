@@ -1,10 +1,13 @@
-// B, the payment step: what a payment sends, what's left (dollars first, NEAR beside), and where the chat offers it.
+// The payment step: what a payment sends, what's left (dollars first, NEAR beside), and where the chat offers it.
 
 import { DEFAULT_VIEW } from '@petal/core/view';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, test } from 'vitest';
+import { ConnectWallet } from '../components/chat/ConnectWallet.tsx';
 import { PayRow } from '../components/chat/PayRow.tsx';
+import { notSignedInWords } from '../lib/door-words.ts';
+import { intentWords, type TopUpView, tokenChoices } from '../lib/intents.ts';
 import {
   money,
   moneyWords,
@@ -16,6 +19,7 @@ import {
   yoctoOf,
 } from '../lib/pay.ts';
 import { threadView } from '../lib/thread-view.ts';
+import { payFromMine } from '../viewmodels/usePay.ts';
 
 describe('paying for Petals’ agent', () => {
   test('a transfer is written in yoctoNEAR, exactly', () => {
@@ -23,7 +27,7 @@ describe('paying for Petals’ agent', () => {
     expect(yoctoOf(0.5)).toBe('500000000000000000000000');
   });
 
-  test('money reads dollars first, NEAR beside at today’s price (Elco, 10 Nov)', () => {
+  test('money reads dollars first, NEAR beside at today’s price', () => {
     expect(money(2, 4)).toEqual({ usd: '2.00', near: '0.50' });
     expect(moneyWords(money(2, 4))).toBe('$2.00 · 0.50 NEAR');
     expect(payWords.balance(money(1, 3.62))).toBe('Balance: $1.00 · 0.28 NEAR');
@@ -85,7 +89,7 @@ describe('paying for Petals’ agent', () => {
   });
 });
 
-describe('about $1, never twice (wave 5, Elco’s mainnet test)', () => {
+describe('about $1, never twice', () => {
   test('dollars become NEAR at today’s price, in thousandths, never less than asked', () => {
     expect(nearFor(1, 3.42)).toBe(0.293);
     expect(nearFor(1, null)).toBeNull();
@@ -113,5 +117,122 @@ describe('about $1, never twice (wave 5, Elco’s mainnet test)', () => {
     expect(waiting).toContain(payWords.confirm);
     expect(waiting).toContain(payWords.pending);
     expect(waiting).not.toContain(payWords.amount);
+  });
+});
+
+describe('the NEAR comes from one of their own wallets (flow 3, 13 Nov)', () => {
+  const deps = (o: {
+    mine?: string[];
+    connected?: string | null;
+    link?: string | null | Error;
+  }) => {
+    const calls: string[] = [];
+    return {
+      calls,
+      d: {
+        mine: async () => {
+          calls.push('mine');
+          return o.mine ?? [];
+        },
+        connected: async () => {
+          calls.push('connected');
+          return o.connected ?? null;
+        },
+        link: async () => {
+          calls.push('link');
+          if (o.link instanceof Error) throw o.link;
+          return o.link === undefined ? 'linked.near' : o.link;
+        },
+      },
+    };
+  };
+
+  test('a connected wallet that is theirs sends at once, with nothing more to sign', async () => {
+    const { d, calls } = deps({ mine: ['a.near'], connected: 'a.near' });
+    expect(await payFromMine(d)).toBe(true);
+    expect(calls).not.toContain('link');
+  });
+
+  test('signed in with Ethereum or Solana, the NEAR wallet is bound first, before any NEAR leaves', async () => {
+    const none = deps({ mine: [], connected: null });
+    expect(await payFromMine(none.d)).toBe(true);
+    expect(none.calls).toContain('link');
+    const other = deps({ mine: ['a.near'], connected: 'b.near' });
+    expect(await payFromMine(other.d)).toBe(true);
+    expect(other.calls).toContain('link');
+  });
+
+  test('closing the wallet stops it; the server’s refusal comes back as its words, and nothing is sent', async () => {
+    expect(await payFromMine(deps({ link: null }).d)).toBe(false);
+    await expect(
+      payFromMine(deps({ link: new Error('That wallet already belongs to another account.') }).d),
+    ).rejects.toThrow('That wallet already belongs to another account.');
+  });
+
+  test('a transfer already out from a wallet that isn’t theirs is bound first, then confirmed', async () => {
+    const out = deps({ mine: ['a.near'], connected: 'a.near' });
+    expect(await payFromMine(out.d, 'b.near')).toBe(true);
+    expect(out.calls).toEqual(['mine', 'link']);
+    const theirs = deps({ mine: ['b.near'] });
+    expect(await payFromMine(theirs.d, 'b.near')).toBe(true);
+    expect(theirs.calls).toEqual(['mine']);
+  });
+});
+
+describe('the conversation’s Connect offers NEAR, Ethereum and Solana (flow 1, 13 Nov)', () => {
+  test('three ways in, as the signed-out page has them', () => {
+    const html = renderToStaticMarkup(
+      createElement(ConnectWallet, {
+        question: '',
+        busy: false,
+        failed: null,
+        onConnect: () => {},
+        onConnectEvm: () => {},
+        onConnectSolana: () => {},
+      }),
+    );
+    expect(html).toContain(notSignedInWords.near);
+    expect(html).toContain(notSignedInWords.evm);
+    expect(html).toContain(notSignedInWords.solana);
+  });
+});
+
+describe('one amount for both ways of paying', () => {
+  const topUp: TopUpView = {
+    open: true,
+    groups: tokenChoices([
+      { asset: 'nep141:base-usdc', chain: 'base', symbol: 'USDC', decimals: 6, usd: 1 },
+    ]),
+    asset: 'nep141:base-usdc',
+    usd: '1',
+    refund: '',
+    refundLabel: intentWords.refund('Base'),
+    getting: false,
+    error: null,
+    sent: null,
+    copied: null,
+    actions: {
+      open: () => {},
+      setAsset: () => {},
+      setUsd: () => {},
+      setRefund: () => {},
+      get: () => {},
+      copy: () => {},
+      again: () => {},
+    },
+  };
+  const row = (amount: { usd: string; label: string; onUsd: () => void } | null) =>
+    renderToStaticMarkup(
+      createElement(PayRow, { phase: 'ready', added: null, onPay: () => {}, topUp, amount }),
+    );
+
+  test('with the row’s amount shown, paying with another token asks for no second one', () => {
+    const html = row({ usd: '1', label: payWords.amount, onUsd: () => {} });
+    expect(html).toContain('id="pay-usd"');
+    expect(html).not.toContain('id="topup-usd"');
+  });
+
+  test('where the row shows none, the form asks for it itself', () => {
+    expect(row(null)).toContain('id="topup-usd"');
   });
 });

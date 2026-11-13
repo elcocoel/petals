@@ -309,7 +309,7 @@ describe('pullSplHolders, offline on a small real mint', () => {
   });
 });
 
-describe("Helius's token accounts (12 Nov, Elco's free key)", () => {
+describe("Helius's token accounts (with a free key)", () => {
   test('a base58 key reads back to its bytes', async () => {
     const { base58, fromBase58 } = await import('../src/solana/holders.ts');
     for (const k of [

@@ -1,6 +1,5 @@
-// A NEAR account's public profile on NEAR Social: reading it (Elco, 9 Nov, through META;
-// research/near-social-profile-fit.md): its name, picture, bio and the links it declares, from the current
-// social-kv/1 API (receiver `social` on mainnet, not the legacy social.near). Pure: the browser reads it
+// A NEAR account's public profile on NEAR Social, read: its name, picture, bio and the links it declares, from
+// the current social-kv/1 API (receiver `social` on mainnet, not the legacy social.near). Pure: the browser reads it
 // directly (lib/agent-client.ts, readSocialProfile), as the API answers the site's origin. Everything here is the account's own words, so it stays plain text,
 // and the links are what the account declares, never a proof that it controls them. It signs nobody in,
 // grants nothing, and is never merged with another account's.
@@ -52,8 +51,8 @@ export function socialProfile(json: unknown): SocialProfile | null {
   return empty ? null : profile;
 }
 
-// ---- Writing (Elco, 10 Nov: people create and edit their public profile inside Petals). The current
-// standard (research/spikes/near-social-2026-11-09/standard.md): every write is one FunctionCall to the
+// ---- Writing: people create and edit their public profile inside Petals. The current
+// standard: every write is one FunctionCall to the
 // account `social` on mainnet, which has no contract, so its receipt fails with CodeDoesNotExist, as
 // expected; the indexer reads the call anyway. Text goes to `__fastdata_kv` as JSON, one key per field;
 // a picture goes first to `__fastdata_fastfs` as borsh, then its fastfs:// address into profile/avatar.
@@ -117,7 +116,7 @@ export function base64Of(bytes: Uint8Array): string {
   return btoa(s);
 }
 
-// ---- The profile editor's data (Elco, 10 Nov: name, picture, bio and links, edited inside Petals).
+// ---- The profile editor's data: name, picture, bio and links, edited inside Petals.
 
 /** What the editor holds: the fields as typed, and the picture shown now. */
 export interface ProfileDraft {
@@ -137,7 +136,7 @@ export const PROFILE_LIMITS = { name: 256, about: 10_000, link: 2048 } as const;
 
 /**
  * The services a link is picked from, by name, each with the key NEAR Social's profiles keep it under, so
- * what the person picks is what shows (the walk, 11 Nov: a typed "X (Twitter)" was kept as "xtwitter").
+ * what the person picks is what shows (a typed "X (Twitter)" was once kept as "xtwitter").
  */
 export const SERVICES = [
   { key: 'twitter', name: 'X' },
@@ -214,12 +213,12 @@ export function txOutcome(json: unknown): TxOutcome {
   return why.length > 0 ? { kind: 'refused', why } : { kind: 'ok' };
 }
 
-// ---- Petals' own copy (Elco, 10 Nov: "hold the same data shape as near.social in our DB in case the user
-// doesn't want to put it on chain and have a publish button"). GET and PUT /api/v1/me/profile (SYSTEMS),
+// ---- Petals' own copy, in near.social's data shape, for a person who doesn't want it on chain yet, with a
+// publish button. GET and PUT /api/v1/me/profile,
 // NEAR Social's profile keys: the picture is held as a data: URI until it's published.
 
 /**
- * A profile as Petals keeps it (GET and PUT /api/v1/me/profile; SYSTEMS, 10 Nov, the standard's own fields,
+ * A profile as Petals keeps it (GET and PUT /api/v1/me/profile; the standard's own fields,
  * so publishing is a straight copy). A picture goes in as a data: URI; the server keeps the file and puts
  * its own address there (https://<site>/api/v1/media/<sha256>.webp), or keeps a fastfs:// one as it is.
  */
@@ -245,7 +244,7 @@ const shownAvatar = (a: string | null | undefined): string | null => {
   return a.startsWith('data:image/') || a.startsWith('https://') ? a : null;
 };
 
-/** Where Petals keeps a picture: GET /api/v1/media/<sha256>.<ext> (SYSTEMS, 10 Nov). */
+/** Where Petals keeps a picture: GET /api/v1/media/<sha256>.<ext>. */
 const MEDIA = /^https?:\/\/[^/]+\/api\/v1\/media\/[0-9a-f]{64}\.(?:webp|jpg|png)$/;
 
 /** A picture Petals keeps, at its own address: publishing has to store it on FastFS first. */

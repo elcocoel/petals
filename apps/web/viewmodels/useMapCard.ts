@@ -1,5 +1,5 @@
 // A map's card, for its layers in the map's Information box (lib/map-layers.ts): asked once a visit per map,
-// when someone is in it; the same for every viewer, and again after a publication (`version`: wave 8, a new layer
+// when someone is in it; the same for every viewer, and again after a publication (`version`: a new layer
 // joins the map). Null until it's here, or if it can't be read.
 import { useEffect, useState } from 'react';
 import { readMapCard } from '../lib/agent-client.ts';

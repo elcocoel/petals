@@ -1,10 +1,10 @@
 'use client';
-// The landing's copy editor (Elco, 12 Nov: "write straight on the page with json", after the elementarycomplexity
-// site's). Only on a local server, and only with ?edit=1 in the address. "Edit words" makes every piece of the
-// page whose words come from lib/landing-copy.ts editable where it stands, found by its words, so no component
-// has to know; "Save" sends what changed to app/edit/landing-copy/route.ts, which keeps it in
-// lib/landing-copy.edits.json, and the page reloads with it. Words that appear in more than one place (a
-// "Connect") change in each. A headline written on several lines is edited a line at a time.
+// The landing's copy editor: words written straight on the page, kept as JSON. Only on a local server, and only
+// with ?edit=1 in the address. "Edit words" makes every piece of the page whose words come from
+// lib/landing-copy.ts editable where it stands, found by its words, so no component has to know; "Save" sends what
+// changed to app/edit/landing-copy/route.ts, which keeps it in lib/landing-copy.edits.json, and the page reloads
+// with it. Words that appear in more than one place (a "Connect") change in each. A headline written on several
+// lines is edited a line at a time.
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '../../components/ui/Button.tsx';
 import { copyLeaves } from '../../lib/copy-edits.ts';

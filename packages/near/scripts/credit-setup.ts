@@ -1,19 +1,20 @@
-// Sets up Petals' credit contract (9 Nov; specs/003-target/proposal-payment.md, section 6), for Elco to run.
+// Sets up Petals' credit contract (specs/003-target/proposal-payment.md, section 6), for the operator to run.
 //
-//   node packages/near/scripts/credit-setup.ts [--network testnet]
+// PETAL_KEYS_DIR names the folder, outside the repo, where the keys it makes are written.
+//   PETAL_KEYS_DIR=<folder> node packages/near/scripts/credit-setup.ts [--network testnet]
 //       opens a page on http://127.0.0.1:3189 where the owner's own wallet approves one plain transfer,
 //       then does the rest by itself
-//   node packages/near/scripts/credit-setup.ts --network testnet --owner <account> --owner-key-file <file>
-//       --credit <name> --charger <name>
+//   PETAL_KEYS_DIR=<folder> node packages/near/scripts/credit-setup.ts --network testnet --owner <account>
+//       --owner-key-file <file> --credit <name> --charger <name>
 //       a rehearsal, with that account's key file making the transfer instead of a wallet
 //
 // The wallet is asked for one thing only: a plain NEAR transfer to a new account this script made on this
-// machine. Wallets refuse to give a site a full-access key (Meteor, 9 Nov), and nobody has checked whether
+// machine. Wallets refuse to give a site a full-access key (Meteor does), and nobody has checked whether
 // they sign a contract deploy for one, so the deploy happens here. From that account the script:
 //   1. makes the contract's account and the charger's, through NEAR's own name registrar;
 //   2. deploys the contract (packages/near/contract), sets it up (owner, charger), and deletes its last
 //      key: nobody can change it after, and people can always withdraw;
-//   3. gives the charger one key that can call `charge` and nothing else (written to ../.secrets, never
+//   3. gives the charger one key that can call `charge` and nothing else (written to PETAL_KEYS_DIR, never
 //      printed), and the owner's own wallet key, then deletes its own;
 //   4. deletes the account it was paid into, so what's left goes back to the owner.
 import { createHash } from 'node:crypto';
@@ -30,7 +31,7 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const WASM = join(HERE, '..', 'contract', 'target', 'near', 'petals_credit.wasm');
 /** The build that was walked on testnet (credit.petals-paytest.testnet). */
 const WASM_SHA256 = 'f60842cc58b91d011c104a1c655be5861de0966f3a0f4d0c506bbf640ada3eb2';
-const SECRETS = join(HERE, '..', '..', '..', '..', '.secrets');
+const SECRETS = process.env.PETAL_KEYS_DIR ?? '';
 const PORT = 3189;
 const NEAR = 10n ** 24n;
 /** The contract's account: about 1.211 NEAR of storage for its code and state, plus deploy and set-up gas. */
@@ -100,12 +101,14 @@ if (!existsSync(WASM)) {
     `no contract build at ${WASM}. Build it first: cd packages/near/contract && cargo near build non-reproducible-wasm --locked`,
   );
 }
+if (!SECRETS)
+  fail('set PETAL_KEYS_DIR to the folder, outside the repo, where this run keeps its keys.');
 const wasm = readFileSync(WASM);
 const sha = createHash('sha256').update(wasm).digest('hex');
 if (sha !== WASM_SHA256)
   fail(`the build's sha256 is ${sha}, not the one walked on testnet (${WASM_SHA256}).`);
 /**
- * The keys this run makes, kept in ../.secrets until it ends, so a run that stops halfway (a network
+ * The keys this run makes, kept in PETAL_KEYS_DIR until it ends, so a run that stops halfway (a network
  * failure, a closed terminal) picks up where it stopped instead of stranding the NEAR it was sent. Deleted
  * once everything is done.
  */
@@ -174,7 +177,7 @@ async function send(
   );
   const ok = out.status && typeof out.status === 'object' && 'SuccessValue' in out.status;
   // Deleting an account: NEAR then sends its gas refund to the account that's just gone, and that receipt
-  // fails with AccountDoesNotExist. That's how a delete ends, not a failure: gone is done (Elco's testnet run).
+  // fails with AccountDoesNotExist. That's how a delete ends, not a failure: gone is done (seen on a testnet run).
   if (o.gone && (await balanceOf(o.gone)) === null) return out.transaction.hash;
   if (!ok || failed) {
     fail(
@@ -259,6 +262,12 @@ async function finish(ownerKey: string): Promise<string> {
   }
 
   const config = await provider.callFunction({ contractId: CREDIT, method: 'config', args: {} });
+  // the server's two settings, as the container reads them from its secrets mount (scripts/container/entry.sh)
+  writeFileSync(
+    join(SECRETS, `credit.${network}.env`),
+    `PETAL_CREDIT_CONTRACT=${CREDIT}\nPETAL_CHARGER_KEY_FILE=/secrets/${CHARGER}.charge-only.json\n`,
+    { mode: 0o600 },
+  );
   const creditKeys = await keysOf(CREDIT);
   const chargerKeys = await keysOf(CHARGER);
   const chargeKey = chargerKeys.find((k) => k.public_key === chargeOnly.getPublicKey().toString());
@@ -270,7 +279,7 @@ async function finish(ownerKey: string): Promise<string> {
     `${CREDIT}: the contract (sha256 ${sha}), config ${JSON.stringify(config)}, keys: ${creditKeys.length === 0 ? 'none (locked)' : creditKeys.map((k) => k.public_key).join(', ')}`,
     `${CHARGER}: ${chargerKeys.length} keys: ${ownerHolds ? `${owner}'s wallet key` : `NOT ${owner}'s`}, and one that ${chargeKey ? `can only call ${JSON.stringify(chargeKey.access_key.permission)}` : 'IS MISSING'}`,
     `${FUNDER}: ${(await balanceOf(FUNDER)) === null ? `deleted, what was left back to ${owner}` : 'STILL THERE'}`,
-    `For the server: PETAL_CREDIT_CONTRACT=${CREDIT} PETAL_CHARGER_KEY_FILE=${keyOut}`,
+    `For the server: PETAL_CREDIT_CONTRACT=${CREDIT} PETAL_CHARGER_KEY_FILE=${keyOut} (the container's, in ${join(SECRETS, `credit.${network}.env`)})`,
   ].join('\n');
 }
 

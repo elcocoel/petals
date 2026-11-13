@@ -1,6 +1,6 @@
-// Petals' agent draws through the person's view (one-source.md, step 2; Elco, 10 Nov: "I'm basically choosing
-// the glasses through which I see the entire universe"): every tool its run calls has that view as the
-// viewer's, so render_flower draws, and the agent describes, what the person sees. Scripted model, no spend.
+// Petals' agent draws through the person's view, the glasses they see everything through: every tool its run
+// calls has that view as the viewer's, so render_flower draws, and the agent describes, what the person sees.
+// Scripted model, no spend.
 import { join } from 'node:path';
 import { DEFAULT_VIEW } from '@petal/core';
 import type { View } from '@petal/core/types';

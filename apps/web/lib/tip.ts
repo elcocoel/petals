@@ -1,7 +1,7 @@
-// The person's tip to Petals (price/v2, Elco, 10 Nov: NEAR AI's bill, a base fee, and "some form of a slider
-// or scale" for an optional tip): a percent of what the AI costs, a donation charged apart from it. What a
+// The person's tip to Petals (price/v2: NEAR AI's bill, a base fee, and a slider or scale for an optional
+// tip): a percent of what the AI costs, a donation charged apart from it. What a
 // tip adds to a typical turn reads as every amount does, dollars first and NEAR beside (lib/pay.ts). Pure,
-// so the panel only lays it out (design/side-panel.md, lines 34 to 38).
+// so the panel only lays it out.
 import type { Catalogue } from './composer-options.ts';
 import { money, moneyWords } from './pay.ts';
 
@@ -28,7 +28,6 @@ export function typicalTurn(c: Catalogue | null): TypicalTurn | null {
     : null;
 }
 
-/** Drafts, for Elco's list. */
 export const tipWords = {
   label: 'Tip',
   percent: (p: number) => `${p}%`,

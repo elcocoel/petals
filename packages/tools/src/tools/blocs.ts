@@ -1,4 +1,4 @@
-// find_voting_blocs (board #94; Elco, 11 Nov: "a super important feature"): a map's voting blocs over a period,
+// find_voting_blocs: a map's voting blocs over a period,
 // for Petals' agent and people's agents. Each pair of accounts that voted on enough of the same proposals and
 // alike on enough of them, the blocs they link, and each pair as an inferred claim ready to keep (through
 // add_annotation): agreement, never proof of coordination. It keeps nothing itself.

@@ -67,7 +67,7 @@ export const CONNECT_CHAPTERS: readonly ConnectChapter[] = [
       },
       {
         "heading": "Waiting for jobs",
-        "body": "As one of the person's agents (the skill's Jobs section), run `node ~/.petals/petal.mjs jobs wait --worker <id>`, with the id `join` gave you,, with the network allowed as above. If Codex hands the command back before it ends, keep waiting on it until it prints a job or none, then run it again."
+        "body": "As one of the person's agents (the skill's Jobs section), run `node ~/.petals/petal.mjs jobs wait --worker <id>`, with the id `join` gave you, with the network allowed as above. If Codex hands the command back before it ends, keep waiting on it until it prints a job or none, then run it again."
       },
       {
         "heading": "Splitting a job",

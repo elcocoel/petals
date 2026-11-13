@@ -1,4 +1,4 @@
-// Petals' own agent reads the brain as needed (research/brain-departments-2026-11-11.md, step 10): brain_context is
+// Petals' own agent reads the brain as needed: brain_context is
 // one of its tools, and each read it makes gets a receipt like everyone else's, with its run in consumer_context.
 import { join } from 'node:path';
 import { type BrainReceipt, registry } from '@petal/tools';

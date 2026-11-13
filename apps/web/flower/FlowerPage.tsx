@@ -1,7 +1,7 @@
 'use client';
-// A flower on its own page (coordinator/one-source.md, step 4): the live flower fills the area under the
-// site's nav, as /make's fills the window, with the flower's own box beside it, so a petal does the same
-// things here as there. No conversation. This only wires the ViewModel to the views.
+// A flower on its own page: the live flower fills the area under the site's nav, as /make's fills the
+// window, with the flower's own box beside it, so a petal does the same things here as there. No
+// conversation. This only wires the ViewModel to the views.
 import type { ReactNode } from 'react';
 import { useCallback, useRef } from 'react';
 import { Button } from '../components/ui/Button.tsx';

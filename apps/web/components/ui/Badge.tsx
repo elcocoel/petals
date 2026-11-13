@@ -1,7 +1,7 @@
-// A badge: information only (Elco, 10 Nov: "informational badges ... should be the same everywhere"; the
-// small set, Figma "Lobby / Badge"). Never clickable, so it has no hover, no shadow and no behaviour, and its
-// corners stay square in every version, so it never reads as a button. Mono, upper case. Neutral for a fact
-// (NEAR, DECLARED, 208); accent for a state that just went well (SAVED).
+// A badge: information only, the same everywhere (the small set, Figma "Lobby / Badge"). Never clickable,
+// so it has no hover, no shadow and no behaviour, and its corners stay square in every version, so it never
+// reads as a button. Mono, upper case. Neutral for a fact (NEAR, DECLARED, 208); accent for a state that
+// just went well (SAVED).
 import type { ReactNode } from 'react';
 
 const TONES = {

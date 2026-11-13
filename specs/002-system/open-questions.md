@@ -15,13 +15,13 @@ Everything we know we'll have to solve. Each has a working default, so nothing h
 | 7 | How should sponsored invites look to their holder: one per person, or one shared? | One per holder, revocable | Before submission |
 | 8 | Can a sponsored person publish, and as whom? A shared demo account, plainly labelled? | Yes, plainly labelled | Before submission |
 | 8c | A complimentary first dollar per account? Could be drained by many accounts | No | Later |
-| 8d | How does a person choose the model behind the agent? Fire's rule: offer, choice and receipt are three facts | The default model. `PETAL_MODEL` is server-wide | After the vertical line |
+| 8d | How does a person choose the model behind the agent? Offer, choice and receipt are three separate facts | The default model. `PETAL_MODEL` is server-wide | After the vertical line |
 
 ## Claims and policy
 
 | # | Question | Default | Bites |
 |---|---|---|---|
-| 9 | Chains can't forget. A wrong claim about a real person can be hidden, not erased. What may go on chain? Who may name a person? Constitution line 56 allows links "wherever public evidence allows" and promises removal, and both hold only off chain | Claims name accounts, contracts and groups. `validateClaim` refuses a natural person, and the rule is in plain words in `claims/people.ts`, for Elco to change | Before any open writing |
+| 9 | Chains can't forget. A wrong claim about a real person can be hidden, not erased. What may go on chain? Who may name a person? Constitution line 56 allows links "wherever public evidence allows" and promises removal, and both hold only off chain | Claims name accounts, contracts and groups. `validateClaim` refuses a natural person, and the rule is in plain words in `claims/people.ts` | Before any open writing |
 | 10 | Open writing invites junk. What keeps it down without a maintainer? | Readers' lenses, plus evidence that can be inspected | Before any open writing |
 | 11 | What's the default lens a new reader sees? | `DEFAULT_LENS`: observed plus declared, nobody trusted. Observed because a hash proves it, declared because it's the account's own word about itself. Sourced and inferred stay off, because each is someone's word about someone else. Inferred, if asked for, is always caveated, because it can be wrong about someone who never spoke. With nobody trusted, no outside writer can change what shows: the reader is told challenges exist and can choose to count them. The cost: a new reader never sees `contested` until they trust someone | When claims show up |
 | 12 | Confidence: a number or plain bands? Who's allowed to set one? | Bands, by a named person or a named model and version. `minConfidence` is a band too, not the sketch's number. The lowest counted rating stands until its rater replaces it | When a classifier arrives |
@@ -76,7 +76,7 @@ Everything we know we'll have to solve. Each has a working default, so nothing h
 | 27 | Is the same EVM address on Ethereum and Base one account? It often is, but that's still a claim | Separate refs, and separate account ids in the relations index, where a match is marked `inferred` with its method and paths don't walk it unless asked. `same_address` is an inferred claim that says nothing about control, and `declares_same_controller` is full only when both accounts say so. Nothing merges | With relations |
 | 28 | Super-node groups connect everything in traversal. How do paths stay meaningful? | Group sizes on every hop, and how many groups each shared account is in. No score yet | With relations |
 | 29 | Overlap between a full read and a window read is only a lower bound. How is that shown? | `at_least`, with the coverage facts of each side | With relations |
-| 30 | Is "network", "group" or something else the right word in code? And what replaces "atlas", if anything? | Keep `network` in code | When Elco decides |
+| 30 | Is "network", "group" or something else the right word in code? And what replaces "atlas", if anything? | Keep `network` in code | When the naming is decided |
 
 ## Runtime
 
@@ -87,13 +87,13 @@ Everything we know we'll have to solve. Each has a working default, so nothing h
 | 33 | When is the move to Postgres? The same SQL mostly carries over | Not before the freeze | Later |
 | 34 | Where do backups go, and encrypted how? | Nightly, encrypted, off the machine | With hosting |
 
-## The website and its server (8 Nov, for Elco to choose)
+## The website and its server
 
-Elco's architecture: the website on Vercel, and the server in a container built as for a VPS. Each row is a choice in `research.md`. The default is its lean, and nothing is built until Elco says go.
+The architecture: the website on Vercel, and the server in a container built as for a VPS. Each row is a choice in `research.md`. The default is its lean.
 
 | # | Question | Lean | Bites |
 |---|---|---|---|
-| 40 | One address or two (C1)? | One, `petals.elementarycomplexity.dev`. Vercel forwards the server's paths, so the cookie and sign-in stay as built | Before building the split |
+| 40 | One address or two (C1)? | One, the site's address. Vercel forwards the server's paths, so the cookie and sign-in stay as built | Before building the split |
 | 41 | How does Vercel forward (C2)? | A rewrite in `next.config`, so no function runs | Before building the split |
 | 42 | What does the container run (C3)? | Today's whole app first. The API alone later, as its own step | Before building the split |
 | 43 | How does the server know a visitor's address for limits (C4)? | A middleware adds it, with a site key. The server refuses calls without the key | Before building the split |
@@ -101,7 +101,7 @@ Elco's architecture: the website on Vercel, and the server in a container built 
 | 45 | Pages built on Vercel's side (C6)? | Fetch the server over HTTP with the key: one function, `lib/api.ts` | Before building the split |
 | 46 | Where do `skill.md` and `petal.mjs` come from (C7)? | The server, forwarded, so they match its API | Before building the split |
 | 47 | The store as if it were Postgres: async now or later (C8)? | Later, as its own step. New SQL stays portable now | After the split |
-| 48 | The server's own name, and the tunnel (C9)? | A separate name through the tunnel, behind the key, opened only after the firewall. `open_public.sh` would need that name, not the website's | With the firewall |
+| 48 | The server's own name, and the tunnel (C9)? | A separate name through the tunnel, behind the key, opened only after the firewall. The tunnel's opening script would need that name, not the website's | With the firewall |
 | 49 | When a person publishes from their own wallet, how does the server learn of it? | Not decided. Today's public site publishes nothing | With publishing |
 
 ## Beyond the build

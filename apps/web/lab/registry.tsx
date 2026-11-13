@@ -123,7 +123,7 @@ import { ProfileEditor } from '../components/workspace/ProfileEditor.tsx';
 import { ProfileHead } from '../components/workspace/ProfileHead.tsx';
 import { ReadingKey } from '../components/workspace/ReadingKey.tsx';
 import { TipControl } from '../components/workspace/TipControl.tsx';
-import { DimensionChoices, ViewControls } from '../components/workspace/ViewControls.tsx';
+import { DimensionChoices } from '../components/workspace/ViewControls.tsx';
 import { Wallets } from '../components/workspace/Wallets.tsx';
 import { FlowerPanel } from '../flower/FlowerPanel.tsx';
 import type { PublishableData } from '../lib/agent-client.ts';
@@ -692,6 +692,7 @@ const LAB_CREDIT: Credit = {
 const editorView = (over: Partial<ProfileEditorView>): ProfileEditorView => ({
   creating: false,
   account: { shown: 'a-name.near', full: 'a-name.near' },
+  needsNearWallet: false,
   draft: {
     name: 'A name on NEAR Social',
     about: 'A short bio, in the account’s own words.',
@@ -2004,50 +2005,6 @@ export const registry: LabEntry[] = [
     ],
   },
   {
-    id: 'ViewControls',
-    group: 'The workspace',
-    figmaName: null,
-    figmaNode: null,
-    source: 'apps/web/components/workspace/ViewControls.tsx',
-    states: [
-      {
-        name: 'the default, colour open (all of it, live: /lab/panel?state=settings)',
-        render: () => (
-          <ViewControls
-            dimensions={DIMENSIONS}
-            view={DEFAULT_VIEW}
-            defaults={DEFAULT_VIEW}
-            choices={viewChoices()}
-            pieces={EVERY_FLOWER}
-            open="colour"
-            onOpen={() => {}}
-            onPick={() => {}}
-            onScale={() => {}}
-            failed={null}
-          />
-        ),
-      },
-      {
-        name: 'height open on a number, with its scale, and the default to put back',
-        render: () => (
-          <ViewControls
-            dimensions={DIMENSIONS}
-            view={withScale(DEFAULT_VIEW, 'height', 'linear')}
-            defaults={DEFAULT_VIEW}
-            choices={viewChoices()}
-            pieces={EVERY_FLOWER}
-            open="height"
-            onOpen={() => {}}
-            onPick={() => {}}
-            onScale={() => {}}
-            onReset={() => {}}
-            failed={null}
-          />
-        ),
-      },
-    ],
-  },
-  {
     id: 'DimensionChoices',
     group: 'The workspace',
     figmaName: null,
@@ -2055,7 +2012,7 @@ export const registry: LabEntry[] = [
     source: 'apps/web/components/workspace/ViewControls.tsx',
     states: [
       {
-        name: 'height’s choices, with its scale (Settings and the legend open these)',
+        name: 'height’s choices, with its scale (the legend opens these)',
         render: () => (
           <DimensionChoices
             dimension="height"
@@ -2078,7 +2035,7 @@ export const registry: LabEntry[] = [
     source: 'apps/web/components/workspace/TipControl.tsx',
     states: [
       {
-        name: 'folded, at 5% (live with the panel: /lab/panel?state=settings)',
+        name: 'folded, at 5%',
         render: () => (
           <TipControl
             percent={5}
@@ -2568,6 +2525,20 @@ export const registry: LabEntry[] = [
         render: () => <ConnectWallet question="" busy={false} failed={null} onConnect={() => {}} />,
       },
       {
+        name: 'NEAR, Ethereum and Solana, as /make has it',
+        wide: true,
+        render: () => (
+          <ConnectWallet
+            question=""
+            busy={false}
+            failed={null}
+            onConnect={() => {}}
+            onConnectEvm={() => {}}
+            onConnectSolana={() => {}}
+          />
+        ),
+      },
+      {
         name: 'a question waiting, and the last try failed',
         wide: true,
         render: () => (
@@ -2672,6 +2643,7 @@ export const registry: LabEntry[] = [
         render: () => (
           <ProfileHead
             account="a-name.near"
+            chain="NEAR"
             social={{
               kind: 'profile',
               profile: { name: 'A name', about: null, avatar: null, links: [] },
@@ -2685,6 +2657,17 @@ export const registry: LabEntry[] = [
         render: () => (
           <ProfileHead
             account="02b85f8c8bbfbcc34f4d30b55724f36336768f05c27c2d7f97936e5d699018fc"
+            chain="NEAR"
+            social={{ kind: 'none' }}
+          />
+        ),
+      },
+      {
+        name: 'signed in with an Ethereum wallet',
+        render: () => (
+          <ProfileHead
+            account="0xd50ef448246cfaac93b37733b6fbe27aa1707b6b"
+            chain="Ethereum"
             social={{ kind: 'none' }}
           />
         ),
@@ -2713,6 +2696,17 @@ export const registry: LabEntry[] = [
       {
         name: 'saving',
         render: () => <ProfileEditor view={editorView({ phase: 'saving' })} />,
+      },
+      {
+        name: 'signed in with an Ethereum wallet, no NEAR wallet yet',
+        render: () => (
+          <ProfileEditor
+            view={editorView({
+              account: { shown: '0x3f…f0be', full: '0x3f5ce5fbfe3e9af3971dd833d26ba9b5c936f0be' },
+              needsNearWallet: true,
+            })}
+          />
+        ),
       },
       {
         name: "NEAR Social didn't take it",
