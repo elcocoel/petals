@@ -7,6 +7,7 @@ import { describe, expect, test } from 'vitest';
 import { ConnectWallet } from '../components/chat/ConnectWallet.tsx';
 import { PayRow } from '../components/chat/PayRow.tsx';
 import { notSignedInWords } from '../lib/door-words.ts';
+import { intentWords, type TopUpView, tokenChoices } from '../lib/intents.ts';
 import {
   money,
   moneyWords,
@@ -193,5 +194,45 @@ describe('the conversation’s Connect offers NEAR, Ethereum and Solana (flow 1,
     expect(html).toContain(notSignedInWords.near);
     expect(html).toContain(notSignedInWords.evm);
     expect(html).toContain(notSignedInWords.solana);
+  });
+});
+
+describe('one amount for both ways of paying', () => {
+  const topUp: TopUpView = {
+    open: true,
+    groups: tokenChoices([
+      { asset: 'nep141:base-usdc', chain: 'base', symbol: 'USDC', decimals: 6, usd: 1 },
+    ]),
+    asset: 'nep141:base-usdc',
+    usd: '1',
+    refund: '',
+    refundLabel: intentWords.refund('Base'),
+    getting: false,
+    error: null,
+    sent: null,
+    copied: null,
+    actions: {
+      open: () => {},
+      setAsset: () => {},
+      setUsd: () => {},
+      setRefund: () => {},
+      get: () => {},
+      copy: () => {},
+      again: () => {},
+    },
+  };
+  const row = (amount: { usd: string; label: string; onUsd: () => void } | null) =>
+    renderToStaticMarkup(
+      createElement(PayRow, { phase: 'ready', added: null, onPay: () => {}, topUp, amount }),
+    );
+
+  test('with the row’s amount shown, paying with another token asks for no second one', () => {
+    const html = row({ usd: '1', label: payWords.amount, onUsd: () => {} });
+    expect(html).toContain('id="pay-usd"');
+    expect(html).not.toContain('id="topup-usd"');
+  });
+
+  test('where the row shows none, the form asks for it itself', () => {
+    expect(row(null)).toContain('id="topup-usd"');
   });
 });
