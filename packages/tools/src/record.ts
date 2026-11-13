@@ -11,9 +11,13 @@ import {
   creditOf,
   type Entry,
   IMPORTED_AUTHOR,
+  type Manifest,
+  manifestHash,
   type Publication,
+  pressedWith,
   publicationHash,
   sha256Hex,
+  validateManifest,
   validatePublication,
 } from '@petal/core';
 import { privateStore } from './drafts.ts';
@@ -135,22 +139,32 @@ export async function appendPublication(
   bodies: ReadonlyMap<string, unknown>,
   scores?: Record<string, number>,
 ): Promise<Entry> {
+  const { row, layers } = rowsOf(ctx, p, bodies, scores);
+  return entryOf(await privateStore(ctx.config).publication.append(row, layers));
+}
+
+/** A publication as the record keeps it, checked: its row, and its layers each once (a reading's body elsewhere). */
+function rowsOf(
+  ctx: ToolContext,
+  p: Publication,
+  bodies: ReadonlyMap<string, unknown>,
+  scores?: Record<string, number>,
+) {
   const v = validatePublication(p);
   if (!v.ok)
     throw new Error(
       `not a publication/v1: ${v.errors.map((e) => `${e.path} ${e.message}`).join('; ')}`,
     );
-  const hash = publicationHash(p);
-  const row = await privateStore(ctx.config).publication.append(
-    {
-      hash,
+  return {
+    row: {
+      hash: publicationHash(p),
       about: aboutKey(p.about),
       author: p.author,
       appended_at: ctx.now().toISOString(),
       body: JSON.stringify(p),
       scores: scores && Object.keys(scores).length ? JSON.stringify(scores) : null,
     },
-    p.layers.map((l) => ({
+    layers: p.layers.map((l) => ({
       sha256: l.sha256,
       petal: l.petal,
       about: aboutKey(p.about),
@@ -159,8 +173,98 @@ export async function appendPublication(
           ? null
           : JSON.stringify(bodies.get(l.sha256)),
     })),
+  };
+}
+
+/**
+ * Append one press over many publications (composition.md, section 2b): the manifest, kept once by its hash, and
+ * every publication it lists, in its order, each checked against it; in one transaction, all or none. The server's
+ * own order and time are set here, never by the author.
+ */
+export async function appendPress(
+  ctx: ToolContext,
+  manifest: Manifest,
+  items: readonly {
+    publication: Publication;
+    bodies: ReadonlyMap<string, unknown>;
+    scores?: Record<string, number>;
+  }[],
+): Promise<Entry[]> {
+  const m = validateManifest(manifest);
+  if (!m.ok)
+    throw new Error(
+      `not a manifest/v1: ${m.errors.map((e) => `${e.path} ${e.message}`).join('; ')}`,
+    );
+  if (items.length !== manifest.publications.length)
+    throw new Error('the manifest lists another set of publications');
+  const rows = items.map((x, i) => {
+    const pressed = pressedWith(x.publication, manifest);
+    if (!pressed.ok) throw new Error(`publication ${i + 1}: ${pressed.reason}`);
+    return rowsOf(ctx, x.publication, x.bodies, x.scores);
+  });
+  const appended = await privateStore(ctx.config).publication.appendPress(
+    { sha256: manifestHash(manifest), author: manifest.author, body: JSON.stringify(manifest) },
+    rows,
   );
-  return entryOf(row);
+  return appended.map(entryOf);
+}
+
+/** A manifest the record keeps, by its hash, or null. */
+export async function manifestOf(ctx: ToolContext, sha256: string): Promise<Manifest | null> {
+  const row = await privateStore(ctx.config).publication.manifest(sha256);
+  return row ? (JSON.parse(row.body) as Manifest) : null;
+}
+
+/** The layers a document was built on (`from`), by hash; only layer/v1 names them today. */
+const fromOf = (doc: unknown): string[] =>
+  doc && typeof doc === 'object' && Array.isArray((doc as { from?: unknown }).from)
+    ? ((doc as { from: unknown[] }).from.filter((x) => typeof x === 'string') as string[])
+    : [];
+
+/**
+ * A map's record, as appended (GET /api/v1/maps/:id/record): each publication in the record's own order, its
+ * place and time, its author, its version (the layers, what it added and dropped against the author's previous
+ * one, its parent and previous) and its proof, with the manifest its proof names, so anyone can check each one.
+ */
+export async function mapHistory(ctx: ToolContext, about: string) {
+  const entries = await recordOf(ctx, about);
+  const byHash = new Map(entries.map((e) => [e.hash, e]));
+  const manifests = new Map<string, Manifest | null>();
+  for (const e of entries) {
+    const m = e.publication.proof?.manifest;
+    if (m && !manifests.has(m)) manifests.set(m, await manifestOf(ctx, m));
+  }
+  return {
+    about: aboutKey(about),
+    entries: entries.map((e) => {
+      const p = e.publication;
+      const before = new Set(
+        (p.previous ? byHash.get(p.previous)?.publication.layers : [])?.map((l) => l.sha256),
+      );
+      const now = new Set(p.layers.map((l) => l.sha256));
+      const previous = p.previous ? byHash.get(p.previous) : undefined;
+      const manifest = p.proof?.manifest ? manifests.get(p.proof.manifest) : undefined;
+      return {
+        seq: e.seq,
+        appended_at: e.appended_at,
+        hash: e.hash,
+        author: p.author,
+        name: authorName(p.author),
+        signed: p.proof !== null,
+        published_at: p.published_at,
+        via: p.via,
+        parent: p.parent,
+        previous: p.previous,
+        layers: p.layers,
+        added: p.layers.filter((l) => !before.has(l.sha256)).map((l) => l.sha256),
+        dropped: (previous?.publication.layers ?? [])
+          .filter((l) => !now.has(l.sha256))
+          .map((l) => l.sha256),
+        proof: p.proof,
+        ...(manifest ? { manifest } : {}),
+      };
+    }),
+  };
 }
 
 /** An author in words: an account's own name, and Petals' mapping as itself. */
@@ -174,6 +278,7 @@ export async function mapRecord(ctx: ToolContext, about: string) {
     return { layers: [], authors: [], differs: 0, composed_from: [], rule: 'compose/v1' as const };
   const counts = new Map((await authorsOn(ctx, about)).map((a) => [a.author, a]));
   const entries = await recordOf(ctx, about);
+  const docs = await layersOf(ctx, entries);
   const at = new Map(entries.map((e) => [e.hash, e.publication.published_at]));
   return {
     rule: map.rule,
@@ -184,6 +289,7 @@ export async function mapRecord(ctx: ToolContext, about: string) {
       title: l.title,
       whats: l.whats,
       states: l.states,
+      from: fromOf(docs.get(l.sha256)),
       by: l.by.map((b) => b.author),
       first: l.by[0]
         ? {

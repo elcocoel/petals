@@ -75,20 +75,26 @@ export {
   type PressLayer,
   type PressProof,
   type Publishable,
+  preparePress,
   preparePublication,
   publishable,
+  publishPrepared,
+  publishPress,
   publishPublication,
   type SignatureCheck,
 } from './publish-data.ts';
 export {
+  appendPress,
   appendPublication,
   authorsOn,
   compositionOf,
   creditFor,
   layersOf,
+  manifestOf,
+  mapHistory,
   recordOf,
 } from './record.ts';
-export { type ImportReport, importRecord } from './record-import.ts';
+export { type Holding, type ImportReport, importRecord, petalsHoldings } from './record-import.ts';
 export { callTool, describeTool, findTool, registry } from './registry.ts';
 export {
   type Findable,

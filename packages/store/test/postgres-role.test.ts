@@ -62,6 +62,8 @@ describe.skipIf(!server)('the runtime role on a real server', () => {
     'DELETE FROM publication WHERE false',
     'UPDATE published_layer SET body = body WHERE false',
     'DELETE FROM published_layer WHERE false',
+    'UPDATE manifest SET body = body WHERE false',
+    'DELETE FROM manifest WHERE false',
   ])('refused: %s', async (q) => {
     await expect(sql(q)).rejects.toThrow(/permission|must be owner|denied/i);
   });
