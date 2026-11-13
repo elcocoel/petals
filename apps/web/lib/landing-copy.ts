@@ -336,8 +336,18 @@ const written = {
     ],
   },
   footer: {
-    /** The links that leave the landing; the socials take their names from hero.socials. */
-    links: { docs: 'Docs', github: 'GitHub' },
+    /** The footer's three groups; the socials take their names from hero.socials. */
+    groups: { petals: 'Petals', build: 'Build', community: 'Community' },
+    links: {
+      map: 'Power Map',
+      gallery: 'Gallery',
+      leaderboard: 'Leaderboard',
+      docs: 'Docs',
+      github: 'GitHub',
+      api: 'API',
+      brandKit: 'Brand kit',
+      merch: 'Merch',
+    },
     built: 'Built for the NEAR Hackathon, November 2026. By Elementary Complexity.',
     /** The words in `built` that link to Elementary Complexity's site (siteLinks.elementaryComplexity). */
     by: 'Elementary Complexity',

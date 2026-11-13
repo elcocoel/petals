@@ -1,23 +1,68 @@
 // Figma's Footer (66:2360), a band on the FAQ's grey with two section paddings above its content. On the left, the
 // wordmark a third of the band's width (mark.fill) with the small print under it in the links' type; on the right,
-// the links that leave the landing, their last line level with the wordmark's foot. The site's own pages are in the
-// nav, so they aren't repeated here. A social shows once its address is set. The content sits one block gap from the
-// window's left and bottom edges and a column gap from its right.
+// three groups of links (Petals, Build, Community), their last lines level with the wordmark's foot. Every
+// destination is listed: one whose address is still empty shows as its name, in the links' type, until the
+// address is set in siteLinks. The content sits one block gap from the window's left and bottom edges and a column
+// gap from its right.
+import type { ReactNode } from 'react';
 import { landingCopy } from '../../lib/landing-copy.ts';
 import { siteLinks } from '../../lib/site-links.ts';
+import { Mono } from './Mono.tsx';
 import { TextLink } from './TextLink.tsx';
 import { Wordmark } from './Wordmark.tsx';
+
+type Destination = { name: string; href: string };
+
+function Group({ name, links }: { name: string; links: Destination[] }): ReactNode {
+  return (
+    <nav aria-label={name} className="flex flex-col items-start gap-text-gap">
+      <Mono>{name}</Mono>
+      {links.map((link) =>
+        link.href ? (
+          <TextLink key={link.name} href={link.href}>
+            {link.name}
+          </TextLink>
+        ) : (
+          <span key={link.name} className="type-label text-primary">
+            {link.name}
+          </span>
+        ),
+      )}
+    </nav>
+  );
+}
 
 export function Footer() {
   const copy = landingCopy.footer;
   const socials = landingCopy.hero.socials;
-  const links = [
-    { name: copy.links.docs, href: siteLinks.docs },
-    { name: copy.links.github, href: siteLinks.github },
-    { name: socials.telegram, href: siteLinks.socials.telegram },
-    { name: socials.twitter, href: siteLinks.socials.twitter },
-    { name: socials.youtube, href: siteLinks.socials.youtube },
-  ].filter((link) => link.href);
+  const groups: { name: string; links: Destination[] }[] = [
+    {
+      name: copy.groups.petals,
+      links: [
+        { name: copy.links.map, href: siteLinks.map },
+        { name: copy.links.gallery, href: siteLinks.gallery },
+        { name: copy.links.leaderboard, href: siteLinks.leaderboard },
+      ],
+    },
+    {
+      name: copy.groups.build,
+      links: [
+        { name: copy.links.docs, href: siteLinks.docs },
+        { name: copy.links.github, href: siteLinks.github },
+        { name: copy.links.api, href: siteLinks.api },
+        { name: copy.links.brandKit, href: siteLinks.brandKit },
+      ],
+    },
+    {
+      name: copy.groups.community,
+      links: [
+        { name: socials.telegram, href: siteLinks.socials.telegram },
+        { name: socials.twitter, href: siteLinks.socials.twitter },
+        { name: socials.youtube, href: siteLinks.socials.youtube },
+        { name: copy.links.merch, href: siteLinks.merch },
+      ],
+    },
+  ];
   return (
     <footer
       data-surface="ground"
@@ -38,13 +83,11 @@ export function Footer() {
           </TextLink>
           {copy.built.split(copy.by)[1]}
         </p>
-        <nav className="flex flex-col items-start gap-text-gap md:col-start-2 md:row-start-1 md:self-end md:justify-self-end">
-          {links.map((link) => (
-            <TextLink key={link.name} href={link.href}>
-              {link.name}
-            </TextLink>
+        <div className="flex flex-wrap gap-x-column-gap gap-y-column-gap md:col-start-2 md:row-start-1 md:self-end md:justify-self-end">
+          {groups.map((group) => (
+            <Group key={group.name} name={group.name} links={group.links} />
           ))}
-        </nav>
+        </div>
       </div>
     </footer>
   );
