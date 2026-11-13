@@ -180,6 +180,27 @@ export interface PayoutsRow {
   body: string;
   read_at: string;
 }
+/** One entry of the publication record (35): a signed publication/v1, the server's order and time beside it. */
+export interface PublicationRow {
+  seq: number;
+  /** the publication's name: the sha256 of its canonical JSON, proof included */
+  hash: string;
+  about: string;
+  author: string;
+  appended_at: string;
+  /** the publication/v1, JSON */
+  body: string;
+  /** the qualifier's outcome per layer, JSON, or null */
+  scores: string | null;
+}
+/** A published layer (35), kept once by its hash: its body, or null for a reading (in the snapshot store). */
+export interface PublishedLayerRow {
+  sha256: string;
+  petal: string;
+  about: string;
+  body: string | null;
+  first_seq: number;
+}
 /** A map's vesting/v1 (34): its token's vesting schedules, one allocation each. */
 export interface VestingRow {
   /** the map's address, as its card's id */
@@ -1274,6 +1295,75 @@ export function tables(db: Db) {
         db.all<{ about: string; read_at: string }>(
           'SELECT about, read_at FROM vesting ORDER BY about',
         ),
+    },
+
+    /**
+     * The publication record (35), append-only: append adds one entry at the next seq with its layers (each kept
+     * once), in one transaction; nothing here updates or deletes. An entry already appended (same hash) is not
+     * added again, and its row is returned.
+     */
+    publication: {
+      append: async (
+        r: Omit<PublicationRow, 'seq'>,
+        layers: readonly { sha256: string; petal: string; about: string; body: string | null }[],
+      ): Promise<PublicationRow> =>
+        db.tx(async () => {
+          const had = await db.get<PublicationRow>(
+            'SELECT * FROM publication WHERE hash = ?',
+            r.hash,
+          );
+          if (had) return { ...had, seq: Number(had.seq) };
+          const next = await db.get<{ next: number }>(
+            'SELECT COALESCE(MAX(seq), 0) + 1 AS next FROM publication',
+          );
+          const seq = Number(next?.next ?? 1);
+          await db.run(
+            `INSERT INTO publication (seq, hash, about, author, appended_at, body, scores) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            seq,
+            r.hash,
+            r.about,
+            r.author,
+            r.appended_at,
+            r.body,
+            r.scores,
+          );
+          for (const l of layers)
+            await db.run(
+              `INSERT INTO published_layer (sha256, petal, about, body, first_seq) VALUES (?, ?, ?, ?, ?)
+             ON CONFLICT (sha256) DO NOTHING`,
+              l.sha256,
+              l.petal,
+              l.about,
+              l.body,
+              seq,
+            );
+          return { ...r, seq };
+        }),
+      /** The record, in its own order: all of it, or about one map, or by one author. */
+      list: async (o: { about?: string; author?: string } = {}) =>
+        (o.about
+          ? await db.all<PublicationRow>(
+              'SELECT * FROM publication WHERE about = ? ORDER BY seq',
+              o.about,
+            )
+          : o.author
+            ? await db.all<PublicationRow>(
+                'SELECT * FROM publication WHERE author = ? ORDER BY seq',
+                o.author,
+              )
+            : await db.all<PublicationRow>('SELECT * FROM publication ORDER BY seq')
+        ).map((x) => ({ ...x, seq: Number(x.seq) })),
+      get: (hash: string) =>
+        db.get<PublicationRow>('SELECT * FROM publication WHERE hash = ?', hash),
+      layer: (sha256: string) =>
+        db.get<PublishedLayerRow>('SELECT * FROM published_layer WHERE sha256 = ?', sha256),
+      layers: async (about: string) =>
+        (
+          await db.all<PublishedLayerRow>(
+            'SELECT * FROM published_layer WHERE about = ? ORDER BY first_seq, sha256',
+            about,
+          )
+        ).map((x) => ({ ...x, first_seq: Number(x.first_seq) })),
     },
 
     /** Search's vectors (29), by model and the sha256 of the text embedded: put once, never changed. */

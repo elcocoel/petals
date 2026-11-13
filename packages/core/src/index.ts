@@ -49,6 +49,48 @@ export {
   validateClaim,
 } from './claims/index.ts';
 export {
+  type Cases,
+  type ComposedLayer,
+  type Composition,
+  type Credited,
+  casesOf,
+  compose,
+  type Entry,
+  entriesAbout,
+  IMPORTED_AUTHOR,
+  latestOf,
+  type Proof,
+  PUBLICATION_VERSION,
+  type Publication,
+  publicationHash,
+  type Slot,
+  signedText,
+  textNames,
+  unsignedHash,
+  validatePublication,
+} from './compose/compose.ts';
+export {
+  CREDIT_VERSION,
+  type Credit,
+  type CreditLayer,
+  creditOf,
+  POINTS_RULE,
+  validateCredit,
+} from './compose/credit.ts';
+export {
+  account,
+  COMPOSE_RULE,
+  decimal,
+  type Fact,
+  FORMATS_WITH_FACTS,
+  factsOf,
+  isManyValued,
+  layerTitle,
+  type State,
+  slotOf,
+  stateKey,
+} from './compose/facts.ts';
+export {
   buildSpec,
   choicesFromSpec,
   DEFAULT_CONVENTION,

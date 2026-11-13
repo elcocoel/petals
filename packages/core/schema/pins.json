@@ -126,5 +126,13 @@
   "vesting.v1.json": {
     "schema": "urn:petal:schema:vesting:v1",
     "sha256": "b3525e85ce690f58e8ec918703313b74feae3857a0f469dff676cbe645f9783a"
+  },
+  "publication.v1.json": {
+    "schema": "urn:petal:schema:publication:v1",
+    "sha256": "f7efc51dd4ff31990c0ac5f2d75832510956bf96c3d3e0497c50ea2238143bcc"
+  },
+  "credit.v1.json": {
+    "schema": "urn:petal:schema:credit:v1",
+    "sha256": "8bb8aa0a688bb0223b7b2228c24fed64d1fb80307e7cfe93913828dbd16c6890"
   }
 }
