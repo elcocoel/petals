@@ -73,3 +73,31 @@ test("a petal opening slides the flower's mark and name with its ring", () => {
   );
   expect(text('landscape/scene.ts')).toMatch(/const moved = slid\?\.get\(i\);/);
 });
+
+// Elco, 12 Nov: Arcadia's "long line running off" ran from the opened petal to its panel, which stood under Tools.
+test("an account's panel stands clear of the boxes over the map, in the first corner with room", () => {
+  const k = 12;
+  const tools = { x0: 0, y0: 0, x1: 300, y1: H };
+  const info = { x0: W - 440, y0: 0, x1: W, y1: H - 260 };
+  let seen = 0;
+  for (let i = 0; i < Math.min(m.n, 6); i++) {
+    const out = marks(m, at(k), { index: i, presence: 1, open: 1 }, m.ring, undefined, false, -1, [
+      tools,
+      info,
+    ]);
+    const p = out.panel;
+    if (!p) continue;
+    seen += 1;
+    for (const b of [tools, info]) {
+      const apart = p.x >= b.x1 || p.x + p.width <= b.x0 || p.y >= b.y1 || p.y + p.height <= b.y0;
+      expect(apart).toBe(true);
+    }
+  }
+  expect(seen).toBeGreaterThan(0);
+});
+
+test('a note that is drawn at all holds its place: a fainter one never sits on it', () => {
+  const marksTs = text('../../packages/core/src/render/wedge/marks.ts');
+  expect(marksTs).toMatch(/const SHOWS = 0\.01;/);
+  expect(marksTs).toMatch(/room \*= 1 - ramp\(0, SHOWS, o\.opacity\)/);
+});
