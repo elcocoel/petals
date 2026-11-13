@@ -121,7 +121,7 @@ import { Conversations } from '../components/workspace/Conversations.tsx';
 import { FlowerShelf } from '../components/workspace/FlowerShelf.tsx';
 import { Funds } from '../components/workspace/Funds.tsx';
 import { MappingBox } from '../components/workspace/MappingBox.tsx';
-import { NotSignedIn } from '../components/workspace/NotSignedIn.tsx';
+import { LinkedWays, NotSignedIn } from '../components/workspace/NotSignedIn.tsx';
 import { Profile } from '../components/workspace/Profile.tsx';
 import { ProfileEditor } from '../components/workspace/ProfileEditor.tsx';
 import { ProfileHead } from '../components/workspace/ProfileHead.tsx';
@@ -2611,6 +2611,21 @@ export const registry: LabEntry[] = [
     ],
   },
   {
+    id: 'LinkedWays',
+    group: 'The conversation',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/workspace/NotSignedIn.tsx',
+    states: [
+      {
+        name: 'a linked wallet signs in too',
+        render: () => (
+          <LinkedWays busy={false} onConnectEvm={() => {}} onConnectSolana={() => {}} />
+        ),
+      },
+    ],
+  },
+  {
     id: 'WalletAsk',
     group: 'The conversation',
     figmaName: null,
@@ -4087,6 +4102,42 @@ export const registry: LabEntry[] = [
                   '3c51f0e2a8b94d7c11e05a6f2d93b8e4c7a1f0d2e5b8c9a3f6e1d4b7a0c3e9f2',
                 ],
               }}
+              history={[
+                {
+                  hash: '3c51f0e2a8b94d7c11e05a6f2d93b8e4c7a1f0d2e5b8c9a3f6e1d4b7a0c3e9f2',
+                  seq: 2,
+                  by: 'elco.near',
+                  signed: true,
+                  day: '12 Nov 2026',
+                  added: [{ id: 'a3', title: 'Names for 14 members, from the DAO’s own records' }],
+                  dropped: [],
+                  after: {
+                    hash: '9ba270a1ef913d93479444c7c0654f5c0a9e19fc5dce39f4ffbc82881efa146a',
+                    seq: 1,
+                  },
+                  proof: {
+                    standard: 'nep413',
+                    message: 'petals publication 3c51f0e2…c3e9f2 for gnosis:raidguild',
+                    public_key: 'ed25519:7xCk2y…Qa9',
+                    signature: 'kQ3v…9w==',
+                    recipient: 'petals.near',
+                  },
+                },
+                {
+                  hash: '9ba270a1ef913d93479444c7c0654f5c0a9e19fc5dce39f4ffbc82881efa146a',
+                  seq: 1,
+                  by: "Petals' own mapping",
+                  signed: false,
+                  day: '11 Nov 2026',
+                  added: [
+                    { id: 'a1', title: 'RaidGuild members and their shares' },
+                    { id: 'a2', title: 'RaidGuild proposals and how each member voted' },
+                  ],
+                  dropped: [],
+                  after: null,
+                  proof: null,
+                },
+              ]}
             />
           </div>
         ),

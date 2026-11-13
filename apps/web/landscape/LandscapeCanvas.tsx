@@ -42,6 +42,7 @@ import { SHAPE } from '../flower/ring.ts';
 import { type BlocSpan, blocChoices, periodWords } from '../lib/bloc-words.ts';
 import type { Rect, Size } from '../lib/float-box.ts';
 import { mapClaimGroups, mapClaimWords } from '../lib/map-claims.ts';
+import { historyOf } from '../lib/map-history.ts';
 import { layerWords, mapLayers } from '../lib/map-layers.ts';
 import { MAP_SEARCH_ID, mapSearchWords, type SearchRow, searchRows } from '../lib/map-search.ts';
 import { authorSwatches, strataOf, strataWords } from '../lib/map-strata.ts';
@@ -57,6 +58,7 @@ import { useLegendEdit } from '../viewmodels/useLegendEdit.ts';
 import { useMapBlocs } from '../viewmodels/useMapBlocs.ts';
 import { useMapCard } from '../viewmodels/useMapCard.ts';
 import { useMapClaims } from '../viewmodels/useMapClaims.ts';
+import { useMapRecord } from '../viewmodels/useMapRecord.ts';
 import { useMapSearch } from '../viewmodels/useMapSearch.ts';
 import { usePersonView } from '../viewmodels/usePersonView.ts';
 import {
@@ -916,6 +918,15 @@ export function LandscapeCanvas({
     version,
   );
   const creditRead = card?.differs ? wholeRead : null;
+  // the map's versions, newest first, each layer named as its row is
+  const record = useMapRecord(strata ? strataMap : null, version);
+  const history = useMemo(
+    () =>
+      record && strataLayers
+        ? historyOf(record, new Map(strataLayers.map((l) => [l.id, l.title] as const)))
+        : undefined,
+    [record, strataLayers],
+  );
   const joinedHere = useMemo(
     () => new Set(joined && joined.map === strataMap ? joined.documents.map((d) => d.sha256) : []),
     [joined, strataMap],
@@ -1289,6 +1300,7 @@ export function LandscapeCanvas({
                             ? { rule: wholeRead.rule, from: wholeRead.composed_from }
                             : undefined
                         }
+                        history={history}
                       />
                       {card?.differs ? (
                         <p className="my-0 pt-space-8 type-ui text-muted">

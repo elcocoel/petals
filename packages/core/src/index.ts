@@ -49,6 +49,7 @@ export {
   validateClaim,
 } from './claims/index.ts';
 export {
+  asAuthored,
   type Cases,
   type ComposedLayer,
   type Composition,
@@ -59,14 +60,22 @@ export {
   entriesAbout,
   IMPORTED_AUTHOR,
   latestOf,
+  MANIFEST_VERSION,
+  type Manifest,
+  manifestHash,
+  manifestText,
+  PETALS_AUTHOR,
   type Proof,
   PUBLICATION_VERSION,
   type Publication,
+  pressedWith,
   publicationHash,
   type Slot,
   signedText,
   textNames,
+  textNamesManifest,
   unsignedHash,
+  validateManifest,
   validatePublication,
 } from './compose/compose.ts';
 export {

@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:petal:schema:manifest:v1",
+  "title": "Petal manifest v1",
+  "description": "manifest/v1 (specs/005-mapping-brain/composition.md, section 2b): one press, many publications. An author publishes several data units, one publication/v1 per map, with one signature: the wallet signs one readable text whose last line names this document's hash, and each publication's proof carries that signature plus `manifest`, this document's hash. Anyone checks one publication in three steps: this document hashes to its proof's `manifest`; its author is the publication's, and it lists the publication's unsigned hash; the signed text names it and the signature verifies over that text for the author. Kept once in the record by its hash. It adds no facts and earns no credit: each publication it lists is credited as if signed alone, by its own place in the record.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["petal", "author", "publications", "published_at"],
+  "properties": {
+    "petal": { "const": "manifest/v1" },
+    "author": { "description": "the signing account, CAIP-10: the author of every publication it lists", "type": "string", "minLength": 3 },
+    "publications": {
+      "description": "the unsigned hash of each publication it signs (the sha256 of its canonical JSON without proof), in the order they are appended",
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+    },
+    "published_at": { "description": "when the server prepared the press, never the author's clock", "type": "string", "format": "date-time" }
+  }
+}

@@ -1,10 +1,11 @@
 // What stands where the composer will be, until a wallet is connected. A question that came with the link
-// waits here, and is in the composer once they've connected. NEAR, Ethereum and Solana, as the signed-out
-// page offers them (components/workspace/NotSignedIn.tsx; flow 1, 13 Nov). Words from lib/door-words.ts.
+// waits here, and is in the composer once they've connected. NEAR's Connect, and after it a linked Ethereum or
+// Solana wallet's way in, as the signed-out page offers them (components/workspace/NotSignedIn.tsx). Words from
+// lib/door-words.ts.
 import type { ReactNode } from 'react';
 import { doorWords, notSignedInWords } from '../../lib/door-words.ts';
-import { ActionRow } from '../ui/ActionRow.tsx';
 import { Button } from '../ui/Button.tsx';
+import { LinkedWays } from '../workspace/NotSignedIn.tsx';
 
 export function ConnectWallet({
   question,
@@ -31,22 +32,13 @@ export function ConnectWallet({
   return (
     <div className="flex flex-col items-start gap-text-gap px-block-gap py-space-16">
       {question && <p className="my-0 type-ui wrap-anywhere text-muted">{question}</p>}
-      <ActionRow gap="tight">
-        {/* the one Connect, as the hero's box and the navbar have it: primary, with its arrow */}
-        <Button arrow disabled={busy} onClick={onConnect}>
-          {others ? notSignedInWords.near : doorWords.connect}
-        </Button>
-        {onConnectEvm && (
-          <Button variant="secondary" disabled={busy} onClick={onConnectEvm}>
-            {notSignedInWords.evm}
-          </Button>
-        )}
-        {onConnectSolana && (
-          <Button variant="secondary" disabled={busy} onClick={onConnectSolana}>
-            {notSignedInWords.solana}
-          </Button>
-        )}
-      </ActionRow>
+      {/* the one Connect, NEAR's, as the hero's box and the navbar have it: primary, with its arrow */}
+      <Button arrow disabled={busy} onClick={onConnect}>
+        {others ? notSignedInWords.near : doorWords.connect}
+      </Button>
+      {others && (
+        <LinkedWays busy={busy} onConnectEvm={onConnectEvm} onConnectSolana={onConnectSolana} />
+      )}
       {ask}
       {failed && <p className="error my-0">{failed}</p>}
     </div>

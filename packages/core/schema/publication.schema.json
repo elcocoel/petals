@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:petal:schema:publication:v1",
   "title": "Petal publication v1",
-  "description": "publication/v1 (13 Nov; specs/005-mapping-brain/composition.md, section 2): an author signing one version of their dataset for a map, so it goes to the shared map. The version is data.md's: its layers by hash and the publication it came from. One press is one publication, an entry in an append-only record; the server keeps its own order (seq) and time beside it, so no author can set or backdate 'first'. The author is the wallet that signed (CAIP-10); via is who did the work for them, recorded, never credited in their place. The wallet signs one readable text whose last line names the hash of this document without its proof. proof is null only for the import of what was loaded before the protocol, said as 'imported, unsigned'.",
+  "description": "publication/v1 (13 Nov; specs/005-mapping-brain/composition.md, section 2): an author signing one version of their dataset for a map, so it goes to the shared map. The version is data.md's: its layers by hash and the publication it came from. One press is one publication, an entry in an append-only record; the server keeps its own order (seq) and time beside it, so no author can set or backdate 'first'. The author is the wallet that signed (CAIP-10); via is who did the work for them, recorded, never credited in their place. The wallet signs one readable text whose last line names the hash of this document without its proof. proof is null only for the import of what was loaded before the protocol, said as 'imported, unsigned'. A proof with `manifest` is one press over several publications: its text names that manifest/v1, which lists this one.",
   "type": "object",
   "additionalProperties": false,
   "required": ["petal", "about", "author", "via", "layers", "parent", "previous", "published_at", "proof"],
@@ -55,7 +55,8 @@
             "message": { "description": "the text the wallet signed", "type": "string", "minLength": 1 },
             "public_key": { "type": "string", "minLength": 1 },
             "nonce": { "type": "string", "minLength": 1 },
-            "recipient": { "type": "string", "minLength": 1 }
+            "recipient": { "type": "string", "minLength": 1 },
+            "manifest": { "description": "where one signature covers several publications: the hash of the manifest/v1 the text names, which lists this publication (composition.md, section 2b)", "type": "string", "pattern": "^[0-9a-f]{64}$" }
           }
         },
         { "type": "null" }

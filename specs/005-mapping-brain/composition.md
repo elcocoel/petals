@@ -19,6 +19,36 @@ So the shared map composes what everyone published. No author's work replaces an
 
 In a version, a **layer** is any of Petals' documents about the address, by its hash: a `layer/v1`, a reading (`snapshot/v1`), a value, proposals, a mark, vesting, payouts or a set of claims. That is how values, proposals and logos go onto the map as layers, the same way readings do. Each document keeps its own format and version (`protocols.md`). A published document is kept once, by its hash, and never changed.
 
+### 1b. Three kinds of unit, always told apart
+
+Every unit a layer carries, down to each figure, is one of three kinds, and its own fields say which. Nothing is guessed: the same unit always reads as the same kind.
+
+| Kind | What it is | What it names, so anyone can check it |
+|---|---|---|
+| **On-chain data** | read from a chain: who holds what, who voted, what was paid | its chain and the block, transaction or call it was read at (or the instant, where the chain's answer names no block): anyone can read it again there |
+| **Deterministic result** | worked out from other units by a fixed method | the method and its version, `name@version` (for example `blocs/agreement@2`), and its inputs by hash: anyone can run that method on those inputs and get the same value |
+| **Claim** | what someone answers for: a name for an account, a project's own table, an outside source's price | who answers for it (a person, the project, the source: 1Click, DefiLlama, CoinGecko, Snapshot) and what it rests on |
+
+**The rule, in this order:**
+1. A unit that names a versioned method (`name@version`, as a claim's `method` is written) and its inputs by hash is a **deterministic result**.
+2. Else, a unit read from a chain, naming the chain and its block, transaction or call, is **on-chain data**.
+3. Anything else is a **claim**. That includes an inference with a method in words, or with no inputs by hash: nobody can recompute it, so its author answers for it.
+
+**Where each format says it:**
+
+| Format | Its kind, and the field that says it |
+|---|---|
+| `snapshot/v1` | on-chain data: its network's chain, `block_height` (or `as_of`), its `sources` |
+| proposals | on-chain data when read from the DAO's contract (`source.contract`, the calls in `source.ref`); a claim of Snapshot when `source.kind` is `snapshot` (off-chain votes, as its hub lists them) |
+| payouts | on-chain data: each payout's transaction (`evidence`) and block (`when`). Its `usd` is an outside price, a claim of `usd.source`, and is no part of the fact (section 8) |
+| `layer/v1` | a deterministic result when `how.method` is `name@version` and `from` names its inputs; on-chain data when `standing` is verified and `when.block_height` names its block; otherwise a claim (a method in words, an inference, a lead) |
+| `value` | per figure, by its `source`: `chain` is on-chain data (`ref` names the call, `at` when); any other word (`1click`, `defillama`, `coingecko`) is a claim of that source. Its `totals` and the treasury's `total` are deterministic results by the format's own rule, named by its version (`value/v3`), from its `snapshot` (by hash) and the figures beside them. A treasury item summed from the reading (`source.snapshot`) is a result the same way; one read by a call is on-chain data; one from an outside address is a claim of that source |
+| `vesting` | per allocation, by `known`: verified is on-chain data (its `evidence` of kind chain names the account or transaction); published is a claim of the project (its `evidence`: the project's page); inferred is a claim of its author, since `vesting/v1` names no versioned method for it. A vesting version that adds `method` and `from` to an allocation makes an inferred one a deterministic result |
+| mark | per field, by its `source`: read from the chain (`chain`, `ft_metadata`, `metaplex`, `poster`) is on-chain data; any other source (a curated list, an app's API such as `daohaus`, CoinGecko) is a claim of that source; `petals` (status inferred) is Petals' claim |
+| `claim/v*` | a claim, whatever its `kind` (an observed claim quotes the chain as its evidence). An inferred claim is a deterministic result only when it names a versioned `method` and its inputs by hash (`evidence[].snapshot_sha256`). Voting blocs name `blocs/agreement@2` with their thresholds' hash, and their proposals by id, so they read as claims until they also name the proposals document's hash |
+
+**What the kind changes, and what it doesn't.** The kind is read beside each fact, never part of its slot (section 8), so composing doesn't change: facts meet by slot as before. A claim's facts (`claim/<verb>`) stand side by side whatever their kind, since one account can hold many names or partners. Two values in one slot of on-chain data or of a deterministic result should be impossible, so it's flagged as a probable read or method error (section 6). Two authors who run the same method on the same inputs state the same facts (sections 3 and 5). Core reads the kind with one pure function beside `factsOf`, so a map's layers can say which kinds they hold, and any reader can show the three apart. Whoever writes a computed layer (`add_layer`, an agent following the brain) writes its method as `name@version` and its inputs in `from`.
+
 ## 2. Publishing: a signed version (`publication/v1`)
 
 Publishing is the step `data.md` left open: **an author signs one of their versions, and it goes to the shared map.** The version is the one `data.md` defines: the layers by hash, and the version it came from. One press is one publication, an entry in an append-only record.
@@ -50,8 +80,43 @@ NEAR signs it with NEP-413 (`recipient` this site, a fresh 32-byte `nonce`), as 
 - **Who the author is.** The author is the wallet that signed, never Petals' internal person id. A person with several bound wallets (`me/wallets`) chooses which one signs. Anyone can check the signature against the account.
 - **Petals' own mapping** publishes the same way: an author like any other.
 - **Presses signed before this protocol keep their signatures.** The first 35 RaidGuild names (12 Nov, 22:07 UTC) were signed with NEP-413 by their wallet. They enter the record as that author's publication, with that proof, whose message names the hash of what it signed. They are never folded into the import.
-- **What was loaded before this protocol** enters the record once per map, as an import. That covers the mapping runs' readings, values, proposals, marks, vesting and payouts under `mapping.petals.near`. The import's `author` is `mapping.petals.near` and its `proof` is null, said plainly as "imported, unsigned". It is never presented as signed. When a later read replaces one of those rows (a new value, new proposals, a reading retired), the import run after it appends Petals' next version of that map, its `parent` and `previous` the last: the composed map follows what Petals holds now, and the record keeps what it held before. A map whose rows haven't changed is left.
+- **What was loaded before this protocol** entered the record once per map, as an import (from now on bulk data goes through a press, section 2b). That covers the mapping runs' readings, values, proposals, marks, vesting and payouts under `mapping.petals.near`. The import's `author` is `mapping.petals.near` and its `proof` is null, said plainly as "imported, unsigned". It is never presented as signed. When a later read replaces one of those rows (a new value, new proposals, a reading retired), the import run after it appends Petals' next version of that map, its `parent` and `previous` the last: the composed map follows what Petals holds now, and the record keeps what it held before. A map whose rows haven't changed is left.
 - **Where it lives:** Petals' server keeps the record append-only. Entries are added, never updated or deleted. Anchoring each author's latest publication on NEAR (`data.md`, "Where layers live") is the next step, not built here.
+
+## 2b. One press, many publications (`manifest/v1`; change 2, additive to `publication/v1`)
+
+An author can publish several data units with **one press and one signature**: a press of their own across many maps, or a bulk import. A person who has their agents map many networks and then publishes the whole contribution signs **once**, however many maps and addresses it touches. What it adds to each address is its own layer (or layers), in that address's own publication, credited and composed like any other layer. Each unit stays an ordinary `publication/v1`, about one map, with its own layers, `parent`, `previous` and `published_at`. Only how it is signed is new: one signature covers a **manifest** that lists them, and each publication points at it. Nothing else changes: composing, facts and credit read each publication as they read one signed alone.
+
+**The manifest** is a document of its own, kept once in the record by its hash, like a layer:
+
+| Field | What it holds |
+|---|---|
+| `petal` | `manifest/v1` |
+| `author` | the signing account, CAIP-10, the same `author` as every publication it lists |
+| `publications` | the unsigned hash of each publication (its canonical JSON without `proof`, as section 2 names one), in the order they are appended |
+| `published_at` | when the server prepared the press |
+
+**What the wallet signs** is one readable text that names the manifest's hash:
+
+```
+Petals: publish 267 versions in your name.
+Manifest 7c1e…(64 hex)
+```
+
+It is signed as section 2 says: NEP-413 for NEAR, EIP-191 for EVM, ed25519 for Solana.
+
+**Each publication points at it.** Its `proof` is the press's one signature, as section 2 has it, plus `manifest`: the manifest's hash. So a publication signed this way reads `{ standard, public_key?, signature, message, nonce?, recipient?, manifest }`, and one signed alone has no `manifest` field, exactly as before.
+
+**How anyone checks one.** For a publication whose proof names a manifest:
+1. the manifest's canonical JSON hashes to `proof.manifest`;
+2. the manifest's `author` is the publication's `author`, and the publication's unsigned hash is in its `publications`;
+3. the text's last line names that manifest (`Manifest <hash>`), and the signature verifies over the text for that author, as for one publication.
+
+**How the server takes a press.** Prepare names the maps, `{ maps: [...], author }`, or `{ maps: 'all', author }` for every map where the author has something to publish, and answers the unsigned publications, the manifest, its hash, the text, and for NEAR the recipient and nonce. Publish sends `{ sha256: <the manifest's hash>, proof }`. The server checks the signature once, checks the manifest lists exactly the publications it prepared, then appends the manifest and every publication in one transaction: all of them, or none. Each gets its own `seq`, in the manifest's order. Section 2's rules hold for each one: only public layers and parents, `previous` the author's latest about that map, the record's order and time. A map with nothing to add is left out of the press, with why.
+
+**How credit counts.** As for any publication. Each is credited by its own `seq`, so firsts follow the manifest's order inside the press. A manifest is not a unit of data: it adds no facts and earns nothing. One press over many maps counts exactly as many presses would.
+
+**A bulk import is a press like any other.** Data loaded in bulk (a mapping run's readings, values, proposals, marks, vesting and payouts) enters the record through prepare and publish, under the author who signs it, with no special path. Petals' own base data is published this way by `near:mainnet:petals.near`, in one press. That press signs one version for each map: the next version after that map's imported entry, with `parent` set to it and `previous` to Petals' latest there (the same entry, unless petals.near had published on that map since, as with RaidGuild's 35 names, which the version carries too). The bare label `mapping.petals.near` on the imported entries and `near:mainnet:petals.near` are one author, Petals', on each map from that version on: the imported entries read as petals.near's earlier versions, so the signed one is Petals' latest there, its first facts keep the import's place in the record, and it never confirms or reuses its own import. Another account's version whose parent is an imported entry is a fork, as always. From then on, the latest version of every map is signed, what Petals holds goes to the record through a press (the import leaves those maps), and the imported entries stay in the record as they are.
 
 ## 3. What a layer says: facts
 
@@ -174,12 +239,13 @@ A format not in this table can be published as a layer, but it gives no facts un
   - `author` is one of the signed-in person's wallets, as `GET /api/v1/me`'s `wallets[].author` names it (CAIP-10). Any other is refused.
   - It answers `{ publication, sha256, text, recipient?, nonce? }`: the unsigned `publication/v1`, the hash of its canonical JSON without `proof`, and the text the wallet signs (section 2). For a NEAR author, `recipient` is this site's hostname and `nonce` a fresh 32-byte base64, for NEP-413.
   - The version's `layers` are the author's latest version's and what this press adds; its `parent` and `previous` are the author's latest publication about the map; `published_at` is the server's time.
+- **One press over many maps (section 2b): `POST /api/v1/publish/data/prepare { maps: [...] | 'all', author }`.** It answers `{ manifest, sha256, text, publications: [{ about, name, sha256, publication }], left: [{ about, why }], recipient?, nonce? }`: the manifest, its hash, the one text the wallet signs, each map's unsigned publication and its unsigned hash, and the maps left out. Publish takes `{ sha256: <the manifest's hash>, proof }` as below and answers `{ manifest, publications: [{ about, publication, layers }] }`.
 - **Publish: `POST /api/v1/publish/data { sha256, proof }`.**
   - `proof` is `{ standard: 'nep413' | 'eip191' | 'ed25519', signature, public_key?, nonce? }`: NEP-413 for NEAR (with `public_key` and the `nonce` given), EIP-191 for EVM, ed25519 for Solana (the signature in base64).
   - It answers `{ publication, layers: [{ sha256, petal }], totals }`, where `publication` is the signed record's hash and `layers` what this press added.
   - The claims show on the map at once, as before (Insights, each kept with the signature), and the readings the person drew are credited to the author.
 - **The map's layers: `GET /api/v1/maps/:id` adds three things:**
-  - `layers: [{ sha256, petal, title, whats, states, collected_at, source, by, first }]`, newest state first, where `by` is the authors, first to last, and `first` is `{ author, publication, published_at }`;
+  - `layers: [{ sha256, petal, title, whats, states, from, collected_at, source, by, first }]`, newest state first, where `from` is the hashes the layer was built on (its document's own `from`, empty where none), `by` is the authors, first to last, and `first` is `{ author, publication, published_at }`;
   - `authors: [{ author, name, imported, first, confirmed, built_on }]`, on this map;
   - `differs`: how many slots.
 - **A composed reading: `GET /api/v1/maps/:id/reading?layers=&at=&view=`.**
@@ -190,6 +256,7 @@ A format not in this table can be published as a layer, but it gives no facts un
     - `publications[hash]`: `{ author, published_at }`;
     - `authors[author]`: `{ name, imported }`.
   - It also gives `composed_from` and `rule`. The same query always gives the same answer.
+- **A map's record: `GET /api/v1/maps/:id/record`.** Every publication about the map, in the record's own order: `entries: [{ seq, appended_at, hash, author, name, signed, published_at, via, parent, previous, layers, added, dropped, proof, manifest? }]`, where `added` and `dropped` are its layers' hashes against the author's `previous`, and `manifest` is the manifest/v1 a press's proof names. With it, anyone checks each publication's signature and its manifest (section 2b) without asking Petals.
 - **Credit: `GET /api/v1/me/credit` and `GET /api/v1/credit/:account`.** The author's `credit/v1`, with its `hash`. NEAR Social's copy under the author's account (`petals/credit`) holds `{ hash, points, site }`, and anyone can recompute it here.
 
 ## What this changes, in order

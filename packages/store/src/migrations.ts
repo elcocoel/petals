@@ -603,6 +603,16 @@ export const MIGRATIONS: readonly string[] = [
   );
   CREATE INDEX published_layer_about ON published_layer(about);
   `,
+  // 36: one press over many publications (composition.md, section 2b): each manifest/v1 kept once by its hash,
+  // beside the publications it lists, appended in the same transaction as them. Append-only, as the record is.
+  `
+  CREATE TABLE manifest (
+    sha256 TEXT PRIMARY KEY,
+    author TEXT NOT NULL,
+    body TEXT NOT NULL,
+    first_seq INTEGER NOT NULL
+  );
+  `,
 ];
 
 /**

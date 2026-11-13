@@ -40,7 +40,7 @@ Anyone can add, fork and build on prior work.
 
 **Since 13 Nov, in `composition.md`:**
 - **Merging:** the shared map composes every author's published documents, fact by fact. Same data at the same block is one fact credited to every author who stated it; a different value there "differs", and both stand. Nothing overwrites; no one wins.
-- **Credit** for every author of every fact, in the order they published, in an append-only record each author signs (`publication/v1`).
+- **Credit** for every author of every fact, in the order they published, in an append-only record each author signs (`publication/v1`), one version or many with one signature (`manifest/v1`).
 - **Comparing:** what a publication adds to the map: new data, a new moment, new subjects, or the same slot (a match, or a difference).
 
 **Later, not now:**

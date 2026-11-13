@@ -28,6 +28,7 @@ import type { ElsewhereRead } from './elsewhere.ts';
 import type { PayToken, TopUp } from './intents.ts';
 import type { Job } from './jobs.ts';
 import type { MapClaims } from './map-claims.ts';
+import type { MapRecord } from './map-history.ts';
 import type { LayerCard } from './map-layers.ts';
 import type { SearchBody } from './map-search.ts';
 import {
@@ -723,6 +724,14 @@ export async function readComposed(
   if (!res?.ok) return null;
   const json = (await res.json().catch(() => null)) as ComposedReading | null;
   return json?.petals ? json : null;
+}
+
+/** A map's record of versions (GET /api/v1/maps/:id/record), for its history in Layers: null when it can't be read. */
+export async function readMapRecord(map: string): Promise<MapRecord | null> {
+  const res = await fetch(`/api/v1/maps/${encodeURIComponent(map)}/record`).catch(() => null);
+  if (!res?.ok) return null;
+  const json = (await res.json().catch(() => null)) as MapRecord | null;
+  return json && Array.isArray(json.entries) ? json : null;
 }
 
 /** A map's card (GET /api/v1/maps/:id), for its layers in the map's Information box: null when it can't be read. */

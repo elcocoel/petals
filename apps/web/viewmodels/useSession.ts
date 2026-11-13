@@ -132,8 +132,19 @@ export async function signInEvm(
     await verifyEvm(proof);
     arrived();
   } catch (e) {
-    failed(refusalCode(e) === 'source_failed' ? doorWords.nearDidntAnswer : doorWords.badSignature);
+    failed(refusedWords(e));
   }
+}
+
+/**
+ * What a refused sign-in says: NEAR not answering, the server's own words when it refused the wallet (one linked
+ * to no NEAR profile hears how to sign up), else that the signature didn't work.
+ */
+function refusedWords(e: unknown): string {
+  const code = refusalCode(e);
+  if (code === 'source_failed') return doorWords.nearDidntAnswer;
+  if (code === 'unauthorised' && e instanceof Error && e.message) return e.message;
+  return doorWords.badSignature;
 }
 
 /**
@@ -178,7 +189,7 @@ export async function signInSolana(
     await verifySolana(proof);
     arrived();
   } catch (e) {
-    failed(refusalCode(e) === 'source_failed' ? doorWords.nearDidntAnswer : doorWords.badSignature);
+    failed(refusedWords(e));
   }
 }
 

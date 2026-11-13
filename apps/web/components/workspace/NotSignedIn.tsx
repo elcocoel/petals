@@ -36,29 +36,16 @@ export function NotSignedIn({
   return (
     <Oops
       title={notSignedInWords.title}
-      body={
-        onConnectSolana
-          ? notSignedInWords.bodyAll
-          : onConnectEvm
-            ? notSignedInWords.bodyAny
-            : notSignedInWords.body
-      }
+      body={notSignedInWords.body}
       note={question && <p className="my-0 type-ui wrap-anywhere text-muted">{question}</p>}
       primary={
-        // the one Connect, as everywhere else: primary, with its arrow
-        <span className="flex flex-wrap items-center gap-text-gap">
+        // the one Connect, NEAR's: primary, with its arrow; a linked wallet's way in after it, quieter
+        <span className="flex flex-col items-start gap-text-gap">
           <Button arrow disabled={busy} onClick={onConnect}>
             {onConnectEvm || onConnectSolana ? notSignedInWords.near : doorWords.connect}
           </Button>
-          {onConnectEvm && (
-            <Button variant="secondary" disabled={busy} onClick={onConnectEvm}>
-              {notSignedInWords.evm}
-            </Button>
-          )}
-          {onConnectSolana && (
-            <Button variant="secondary" disabled={busy} onClick={onConnectSolana}>
-              {notSignedInWords.solana}
-            </Button>
+          {(onConnectEvm || onConnectSolana) && (
+            <LinkedWays busy={busy} onConnectEvm={onConnectEvm} onConnectSolana={onConnectSolana} />
           )}
         </span>
       }
@@ -83,5 +70,32 @@ export function NotSignedIn({
         </>
       }
     />
+  );
+}
+
+/** An Ethereum or Solana wallet the person linked to their NEAR profile signs in to it too. */
+export function LinkedWays({
+  busy,
+  onConnectEvm,
+  onConnectSolana,
+}: {
+  busy: boolean;
+  onConnectEvm?: (() => void) | undefined;
+  onConnectSolana?: (() => void) | undefined;
+}) {
+  return (
+    <span className="flex flex-wrap items-center gap-space-8 type-caption text-muted">
+      {notSignedInWords.linked}
+      {onConnectEvm && (
+        <Button variant="quiet" disabled={busy} onClick={onConnectEvm}>
+          {notSignedInWords.evm}
+        </Button>
+      )}
+      {onConnectSolana && (
+        <Button variant="quiet" disabled={busy} onClick={onConnectSolana}>
+          {notSignedInWords.solana}
+        </Button>
+      )}
+    </span>
   );
 }

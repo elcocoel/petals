@@ -193,6 +193,14 @@ export interface PublicationRow {
   /** the qualifier's outcome per layer, JSON, or null */
   scores: string | null;
 }
+/** A manifest (36): one press over many publications, kept once by its hash, with the seq of the first it lists. */
+export interface ManifestRow {
+  sha256: string;
+  author: string;
+  /** the manifest/v1, JSON */
+  body: string;
+  first_seq: number;
+}
 /** A published layer (35), kept once by its hash: its body, or null for a reading (in the snapshot store). */
 export interface PublishedLayerRow {
   sha256: string;
@@ -1339,6 +1347,66 @@ export function tables(db: Db) {
             );
           return { ...r, seq };
         }),
+      /**
+       * One press over many publications: the manifest and every publication it lists, appended in one transaction,
+       * in its order (each at the next seq); all of them, or none. The manifest's first_seq is its first
+       * publication's.
+       */
+      appendPress: async (
+        manifest: Omit<ManifestRow, 'first_seq'>,
+        entries: readonly {
+          row: Omit<PublicationRow, 'seq'>;
+          layers: readonly { sha256: string; petal: string; about: string; body: string | null }[];
+        }[],
+      ): Promise<PublicationRow[]> =>
+        db.tx(async () => {
+          const out: PublicationRow[] = [];
+          for (const e of entries) {
+            const had = await db.get<PublicationRow>(
+              'SELECT * FROM publication WHERE hash = ?',
+              e.row.hash,
+            );
+            if (had) throw new Error(`publication ${e.row.hash} is in the record already`);
+            const next = await db.get<{ next: number }>(
+              'SELECT COALESCE(MAX(seq), 0) + 1 AS next FROM publication',
+            );
+            const seq = Number(next?.next ?? 1);
+            await db.run(
+              `INSERT INTO publication (seq, hash, about, author, appended_at, body, scores) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+              seq,
+              e.row.hash,
+              e.row.about,
+              e.row.author,
+              e.row.appended_at,
+              e.row.body,
+              e.row.scores,
+            );
+            for (const l of e.layers)
+              await db.run(
+                `INSERT INTO published_layer (sha256, petal, about, body, first_seq) VALUES (?, ?, ?, ?, ?)
+               ON CONFLICT (sha256) DO NOTHING`,
+                l.sha256,
+                l.petal,
+                l.about,
+                l.body,
+                seq,
+              );
+            out.push({ ...e.row, seq });
+          }
+          await db.run(
+            'INSERT INTO manifest (sha256, author, body, first_seq) VALUES (?, ?, ?, ?)',
+            manifest.sha256,
+            manifest.author,
+            manifest.body,
+            out[0]?.seq ?? 0,
+          );
+          return out;
+        }),
+      /** A manifest by its hash: one press over many publications. */
+      manifest: async (sha256: string) => {
+        const row = await db.get<ManifestRow>('SELECT * FROM manifest WHERE sha256 = ?', sha256);
+        return row ? { ...row, first_seq: Number(row.first_seq) } : undefined;
+      },
       /** The record, in its own order: all of it, or about one map, or by one author. */
       list: async (o: { about?: string; author?: string } = {}) =>
         (o.about

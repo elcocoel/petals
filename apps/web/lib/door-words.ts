@@ -18,14 +18,12 @@ export const doorWords = {
 export const notSignedInWords = {
   title: 'Oops, you’re not logged in.',
   body: 'Connect a NEAR wallet to talk to Petals’ agent.',
-  /** with an Ethereum wallet too (multi-chain wallet connection, EVM first) */
-  bodyAny: 'Connect a NEAR or Ethereum wallet to talk to Petals’ agent.',
-  /** the two ways in, as the lobby's Wallets widget names them */
+  /** the way in: an account starts with a NEAR wallet */
   near: 'Connect a NEAR wallet',
-  evm: 'Connect an Ethereum wallet',
-  /** and Solana's (the lobby's connectSolana; the Wallets widget says the same) */
-  bodyAll: 'Connect a NEAR, Ethereum or Solana wallet to talk to Petals’ agent.',
-  solana: 'Connect a Solana wallet',
+  /** after it, quieter: an Ethereum or Solana wallet the person linked in their lobby signs in too */
+  linked: 'A wallet you’ve linked also signs you in:',
+  evm: 'Ethereum',
+  solana: 'Solana',
   /** before the quieter way in, the setup prompt for the person's own agent */
   noWallet: 'No wallet yet?',
 } as const;

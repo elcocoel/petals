@@ -134,5 +134,9 @@
   "credit.v1.json": {
     "schema": "urn:petal:schema:credit:v1",
     "sha256": "8bb8aa0a688bb0223b7b2228c24fed64d1fb80307e7cfe93913828dbd16c6890"
+  },
+  "manifest.v1.json": {
+    "schema": "urn:petal:schema:manifest:v1",
+    "sha256": "03411db81a2fe20048845d9197672236569bfa9bf6a24fd48cd5a23416a9961c"
   }
 }
