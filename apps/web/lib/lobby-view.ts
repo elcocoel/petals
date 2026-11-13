@@ -10,8 +10,15 @@ export const lobbyWords = {
   map: 'On the map',
   /** The map with nothing on it yet: what goes there, and how. */
   mapEmpty: 'Nothing on the map yet. A network you map in a conversation shows here.',
-  /** Signing out, at the top of the lobby: the one way out of the account. */
+  /** Signing out, in the account menu: the one way out of the account. */
   disconnect: 'Disconnect',
+  /** The account menu, top right: what a screen reader hears for its button and its list. */
+  account: 'Your account',
+  /** The account menu's way to the profile's editor. */
+  editProfile: 'Edit profile',
+  /** The page's bands, each named as the landing names its sections. */
+  balance: 'Balance',
+  work: 'Your work',
 } as const;
 
 /**
@@ -27,6 +34,10 @@ export const fundsWords = {
   /** The credit or NEAR's price couldn't be read. */
   unread: 'Your balance can’t be read right now.',
   withdraw: 'Withdraw',
+  /** Opens the pay row's own flow under the balance: NEAR from a wallet, or any token through NEAR Intents. */
+  add: 'Add funds',
+  /** Folds it away again. */
+  closeAdd: 'Close',
   waiting: payWords.paying,
   /** With the amount that came out. */
   withdrew: (near: string) => `Withdrew ${near} NEAR.`,

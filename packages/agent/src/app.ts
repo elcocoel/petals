@@ -43,7 +43,7 @@ export interface PetalAppOptions extends AgentRouteOptions {
   /** NEAR RPC per network, for sign-in; default the public RPC, or the context's in fake mode */
   rpcFor?: (network: Network) => Rpc;
   /** for tests: how a payment is read on chain, NEAR's price, and the credit contract */
-  pay?: Pick<PayDeps, 'readTransfer' | 'nearUsd' | 'credit' | 'oneClick'>;
+  pay?: Pick<PayDeps, 'readTransfer' | 'readIntentsWithdraw' | 'nearUsd' | 'credit' | 'oneClick'>;
   /** for tests: search's models; default the ones at PETAL_SEARCH_URL */
   searchModel?: SearchModel;
 }
@@ -194,9 +194,13 @@ export function buildPetalApp(cfg: Config, o: PetalAppOptions = {}): Hono {
       ...(o.clock ? { clock: o.clock } : {}),
       // fakes everywhere: no chain is read
       ...(config.fake
-        ? { readTransfer: () => Promise.reject(new Error('fake mode reads no chain')) }
+        ? {
+            readTransfer: () => Promise.reject(new Error('fake mode reads no chain')),
+            readIntentsWithdraw: () => Promise.reject(new Error('fake mode reads no chain')),
+          }
         : {}),
       ...(o.pay?.readTransfer ? { readTransfer: o.pay.readTransfer } : {}),
+      ...(o.pay?.readIntentsWithdraw ? { readIntentsWithdraw: o.pay.readIntentsWithdraw } : {}),
       // Petals' 1Click partner key, when it's set (never printed)
       oneClick: pay.oneClick,
     }),

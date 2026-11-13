@@ -12,8 +12,11 @@ public="${PETAL_PUBLIC:-}"
 # it loads the model key too.
 # The free data keys, each optional: Ankr and Helius for holder lists, CoinGecko for
 # supply, Safe for treasuries and payouts. The readers work keyless without them.
+# The credit contract, once it's set up on mainnet (credit-setup.ts writes credit.mainnet.env beside the charger's
+# key): people's NEAR goes into it, and each chat is charged there. Without it, plain transfers.
 for env_file in /secrets/near-ai.env /secrets/petal-wallet.env /secrets/one-click.env \
-  /secrets/ankr.env /secrets/helius.env /secrets/coingecko.env /secrets/safe.env; do
+  /secrets/ankr.env /secrets/helius.env /secrets/coingecko.env /secrets/safe.env \
+  /secrets/credit.mainnet.env; do
   if [ -f "$env_file" ]; then
     set -a
     # shellcheck disable=SC1090

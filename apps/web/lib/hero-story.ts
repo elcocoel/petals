@@ -1,21 +1,18 @@
-// The hero's story, as numbers (HERO ART's V2, approved by Elco 11 Nov: "BRO, 10 OUT OF 10 - LFG!!!! ... get
-// this in the hero please"; design/hero-illustration/foreground-script-v2.md), cut to a beat (Elco, 12 Nov: "boom,
-// action, reaction, beat, counterbeats, call, response, fast, something slow, fast, fast, fast, boom, boom, boom
-// ... we need pulse ... think musically, almost like to the beat of rap"). One tempo drives everything: each story
-// beat is a phrase of bars and every move lands on a count. On the one, the cut and the call: the camera whips to
-// its shot and the question slams in. A rest to read it. On the three, the reaction: the flower hits, and fast
-// accents follow it. On the next bar's one, the response: Petals' answer, in a box that came with the first one and
-// stays, the last answer giving way to this one word by word (Elco, 12 Nov: "no reason for them to go away before
-// the next question comes in"). The question leaves on the last and. The history beat is the slow one: its heights travel
-// a whole bar and land on a boom. Under it all the light thumps on every count, harder on one and three.
-// And it is organic, never dead still (Elco, 12 Nov: "ins and outs and elastic or sine wave ... not just bursts";
-// "completely stopped needs to be an exception"), and smooth (Elco, 12 Nov: no bumpiness, no jerking): each hit
-// eases in and lands with a little give, never a bounce; exits dip before they go; and between the hits the petals
-// ripple in a slow wave round the clock, the words float and the camera keeps drifting.
-// It is one loop (Elco, 12 Nov: "start in the beginning from a far away situation ... then we zoom in into my
-// community ... following to other communities and then it zooms out to the same frame it started"): it opens on
-// the far map, dives into my community as it bursts open, and the connections beat pulls back to its two
-// neighbours and then all the way out, to the very frame it opened on (world()).
+// The hero's story, as numbers (design/hero-illustration/foreground-script-v2.md), cut to a beat and paced
+// musically, like a rap beat: action and reaction, call and response, fast hits against a slow one, all on a
+// pulse. One tempo drives everything: each story beat is a phrase of bars and every move lands on a count. On the
+// one, the cut and the call: the camera whips to its shot and the question slams in. A rest to read it. On the
+// three, the reaction: the flower hits, and fast accents follow it. On the next bar's one, the response: Petals'
+// answer, in a box that came with the first one and stays, the last answer giving way to this one word by word,
+// since nothing calls for it to leave before the next question comes in. The question leaves on the last and. The
+// history beat is the slow one: its heights travel a whole bar and land on a boom. Under it all the light thumps
+// on every count, harder on one and three.
+// And it is organic, never dead still (eased, elastic, sine-wave motion rather than bare bursts; a full stop is
+// the exception), and smooth, with no bumps or jerks: each hit eases in and lands with a little give, never a
+// bounce; exits dip before they go; and between the hits the petals ripple in a slow wave round the clock, the
+// words float and the camera keeps drifting.
+// It is one loop: it opens on the far map, dives into my community as it bursts open, and the connections beat
+// follows on to its two neighbours and then pulls all the way out, to the very frame it opened on (world()).
 // Everything a frame draws is a pure function of the beat and the time into it, so choosing a beat settles it at
 // once, a test can read any moment, and a video can be rendered frame by frame from the same numbers. The flower
 // is a symbol, not a reading: no network, no counts. Heights stay linear and widths equal (the art direction's
@@ -37,8 +34,8 @@ const WIND_MS = SIXTEENTH;
 const ROLL = 12;
 
 /**
- * How many bars each story beat lasts: the community beat opens with a bar on the far map before the camera dives
- * (Elco, 12 Nov: the far scene "goes by waaay too fast and starts moving before the questions").
+ * How many bars each story beat lasts: the community beat opens with a bar on the far map before the camera dives,
+ * so the far scene has time to be seen and nothing moves before the question.
  */
 const BARS: readonly number[] = [3, 2, 2, 2, 2, 2];
 export const BEATS_MS: readonly number[] = BARS.map((bars) => bars * 4 * COUNT_MS);
@@ -73,11 +70,11 @@ export const driftAt = (beat: number) => (beat === 0 ? count(2) : 0);
 
 /** How many wallets my community has: enough for a long tail, as real flowers have. */
 export const PETALS = 36;
-/** Where the petals start: the centre's edge; a wide centre, as the real flower has (Elco, 12 Nov: closer to the real thing). */
+/** Where the petals start: the centre's edge; a wide centre, as the real flower has. */
 export const INNER = 56;
 /** Every petal's length when the community first opens, all equal. */
 const EVEN = 118;
-/** Half the line between two petals: the same width from foot to tip (Elco, 5 Nov: "a relatively stable line"). */
+/** Half the line between two petals: the same width from foot to tip, a stable line. */
 export const GUTTER = 1.5;
 
 /** The same made-up numbers every time: a small seeded generator. */
@@ -92,8 +89,8 @@ export function seeded(seed: number) {
 }
 
 /**
- * What each wallet holds, as real communities hold it (Elco, 12 Nov: "it looks completely unrealistic ... we need a
- * bit more variation"): a few large holders, unevenly far apart, and a long uneven tail; the largest first, as the
+ * What each wallet holds, as real communities hold it, with enough variation to look realistic: a few large
+ * holders, unevenly far apart, and a long uneven tail; the largest first, as the
  * real flower orders them by default. Made up.
  */
 const shares = (() => {
@@ -108,9 +105,9 @@ const shares = (() => {
 export const base = shares.map((s) => INNER + 6 + 109 * s);
 
 /**
- * Where each petal goes round the circle when the history beat orders them by when they last voted (Elco, 12 Nov:
- * "when he starts talking about time ... we should see who voted more recently ... not always ordered from bigger to
- * smaller"): its place, clockwise from twelve. Made up: some of the largest are long quiet.
+ * Where each petal goes round the circle when the history beat orders them by when they last voted, so the answer
+ * about time shows who voted most recently rather than the usual largest-first order: its place, clockwise from
+ * twelve. Made up: some of the largest are long quiet.
  */
 const RECENT: readonly number[] = (() => {
   const next = seeded(23);
@@ -293,7 +290,7 @@ export function petalLengths(beat: number, t: number): number[] {
 /**
  * Where each petal is round the circle, as a place clockwise from twelve (fractional while it travels): by share
  * until the history beat, which orders them by when they last voted, each petal a moment after the one before,
- * swiftly, with a little give (Elco, 12 Nov: "it could be like a swift little thing"); they keep that order to the
+ * swiftly, with a little give; they keep that order to the
  * end, and the next community starts by share again, from nothing.
  */
 export function placeOf(beat: number, t: number, i: number): number {
@@ -409,7 +406,7 @@ export function layerOpacity(own: number, beat: number, t: number): number {
 
 /**
  * A petal's paint: one of the real flower's five keys, most common first, or grey for context
- * (@petal/core/wedge/keys; Elco, 12 Nov: "closer to the real thing ... colors change").
+ * (@petal/core/wedge/keys), so the colours change as the real flower's do.
  */
 export type Fill = 'mint' | 'blue' | 'coral' | 'apricot' | 'pink' | 'grey';
 
@@ -520,9 +517,9 @@ export const voteOf = (i: number): 'for' | 'against' | 'abstain' | null =>
           : 'for';
 
 /**
- * The proposals on my community, as the real flower draws them (Elco, 11 and 12 Nov: "proposals are related to
- * specific wallets - SOMEONE made that proposal ... right above the wallets themselves"): stacked over the petal of
- * whoever put them up, oldest nearest; a stack of more than three folds into one mark with how many it holds.
+ * The proposals on my community, as the real flower draws them: each belongs to the wallet that made it, so it is
+ * stacked right over the petal of whoever put it up, oldest nearest; a stack of more than three folds into one
+ * mark with how many it holds.
  * Which petals and how many: made up. The one the vote beat presses is the second over the largest petal.
  */
 export const PROPOSALS: readonly { petal: number; count: number }[] = [
@@ -580,8 +577,8 @@ export function network(beat: number, t: number) {
 // ----- the tools -----
 
 /**
- * The rows of the real Tools box the hero shows (ViewLegend's dimensions; Elco, 12 Nov: "there is tooling and
- * things that change and colors change"), and what each is set to once a beat has settled: the tools are what the
+ * The rows of the real Tools box the hero shows (ViewLegend's dimensions), and what each is set to once a beat has
+ * settled: the tools are what the
  * flower does. Height goes from None to Share of the whole as the heights part; Highlight takes the voting blocs;
  * Order goes from Share of the whole to Last active as the petals travel round; Colour goes from Kind of account to
  * Voted or never for the vote.
@@ -670,8 +667,7 @@ const FLOAT_PX = 3;
 const SWAY = 1.5;
 /**
  * How far the call and the response are turned towards the flower once settled, in degrees, and how much wider they
- * swing in: barely, a hint of depth (Elco, 12 Nov: the messages' 3D "way less aggressive ... it's not adding anything
- * to the narrative to have it so tilted"); their sway as gentle.
+ * swing in: barely, a hint of depth, since a steeper tilt adds nothing to the story; their sway as gentle.
  */
 const TILT = 4;
 const TILT_IN = 6;
@@ -761,7 +757,7 @@ const p2 = ([x, y]: Point) => `${n2(x)} ${n2(y)}`;
 
 /**
  * A petal from `inner` to `outer`: two straight sides, each `gutter` in from its edge of the angle so the line
- * between neighbours keeps one width, its top and foot on the circle's arcs (Elco, 11 Nov). `round` softens its
+ * between neighbours keeps one width, its top and foot on the circle's arcs. `round` softens its
  * four corners, for the highlight, never by more than half the petal's height.
  */
 export function petalPath(

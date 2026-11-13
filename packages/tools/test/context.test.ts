@@ -139,7 +139,7 @@ describe('createContext', () => {
     });
   });
 
-  test('a configured testnet map gets a writer only with a key file; mainnet never writes', () => {
+  test('a configured map gets a writer only with a key file, on testnet or mainnet', () => {
     const base = { network: 'testnet' as const, receiver: 'petals.testnet', trustedWriters: [] };
     const withKey = createContext({
       root: REPO,
@@ -155,13 +155,14 @@ describe('createContext', () => {
       map: {
         network: 'mainnet',
         receiver: 'petals.near',
-        writer: 'writer.petals.near',
+        writer: 'petals-writer.near',
         keyFile: '/k',
-        trustedWriters: ['writer.petals.near'],
+        trustedWriters: ['petals-writer.near'],
       },
     });
-    expect(mainnet.map.writer).toBeNull();
+    expect(mainnet.map.writer).not.toBeNull();
     expect(mainnet.map.receiver).toBe('petals.near');
+    expect(mainnet.map.trustedWriters).toEqual(['petals-writer.near']);
   });
 
   test('deferred builds on first use and binds methods', () => {

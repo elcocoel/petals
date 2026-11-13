@@ -6,6 +6,7 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, test } from 'vitest';
 import { catalog } from '../components/docs/content.ts';
+import { HeroStory } from '../components/landing/HeroStory.tsx';
 import { Landing } from '../components/landing/Landing.tsx';
 import { AskBox } from '../components/ui/AskBox.tsx';
 import { landingCopy } from '../lib/landing-copy.ts';
@@ -39,25 +40,27 @@ describe('the landing page', () => {
     };
     for (const path of Object.values(routes)) expect(existsSync(join(app, path)), path).toBe(true);
     const anchors = [...html.matchAll(/\sid="([^"]+)"/g)].map((m) => m[1]);
-    // a page inside the docs is one of DOCS's catalog
+    // a page inside the docs is one of the docs' catalog
     const docs = catalog().map((p) => `${siteLinks.docs}/${p.slug}`);
     for (const href of new Set(hrefs)) {
       if (href.startsWith('/#')) expect(anchors, href).toContain(href.slice(2));
       else if (href.startsWith(`${siteLinks.docs}/`)) expect(docs, href).toContain(href);
-      // off the site, only Petals' own code on GitHub (the hero's star, Elco, 13 Nov)
-      else if (href.startsWith('https://')) expect(href).toBe(siteLinks.github);
+      // off the site, only Petals' own code on GitHub and the maker's site
+      else if (href.startsWith('https://'))
+        expect([siteLinks.github, siteLinks.elementaryComplexity]).toContain(href);
       else expect(routes[href.split(/[?#]/)[0] as string], href).toBeDefined();
     }
   });
 
-  test("its hero tells a story and takes no question: no box and no starters since HERO ART's (11 Nov)", () => {
+  test('its hero tells a story and takes no question: no box and no starters', () => {
     expect([...html.matchAll(/<form\b[^>]*>/g)]).toEqual([]);
     for (const question of landingCopy.hero.starters)
       expect(hrefs).not.toContain(askHref(question));
-    // the story plays on its stage; the chapters under it went (Elco, 12 Nov: "we don't need this chapter control
-    // in the bottom at all")
-    expect(html).toContain('data-kind="symbol"');
-    for (const beat of landingCopy.heroStory.beats) expect(html).not.toContain(`>${beat.name}<`);
+    // the story plays on its stage, with no chapter control under it (a beat's name may still be a word
+    // elsewhere on the page, so only the hero's own markup is read)
+    const hero = renderToStaticMarkup(createElement(HeroStory, {}));
+    expect(hero).toContain('data-kind="symbol"');
+    for (const beat of landingCopy.heroStory.beats) expect(hero).not.toContain(`>${beat.name}<`);
   });
 
   test("its figures are inline and carry no raw colour, but for the landing's illustrations", () => {
@@ -65,8 +68,8 @@ describe('the landing page', () => {
       m[1]?.replaceAll('&amp;', '&'),
     );
     const scenes = landingCopy.howItWorks.scenes.map((s) => `/landing/how-it-works/${s.id}.webp`);
-    // the published shape went with "A reading, summarised" (Elco, 11 Nov: "kill it")
-    const drawings = [...scenes, '/landing/give-to-agent/petals-leading-agents.webp'];
+    // the published shape went with the "A reading, summarised" section
+    const drawings = [...scenes, '/landing/give-to-agent/petals-leading-agents-clear.webp'];
     expect(images).toEqual(drawings);
     for (const drawing of drawings)
       expect(existsSync(join(app, '..', 'public', drawing)), drawing).toBe(true);

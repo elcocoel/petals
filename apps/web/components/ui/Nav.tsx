@@ -3,7 +3,7 @@
 // and the wordmark and Connect stay on the bar (unfolded, the links wrapped the bar onto three rows).
 import { landingCopy } from '../../lib/landing-copy.ts';
 import { siteLinks } from '../../lib/site-links.ts';
-import { Button } from './Button.tsx';
+import { ConnectButton } from './ConnectButton.tsx';
 import { Icon } from './Icon.tsx';
 import { Section } from './Section.tsx';
 import { TextLink } from './TextLink.tsx';
@@ -26,10 +26,8 @@ export function Nav() {
         </a>
         <div className="flex items-center gap-x-space-8 md:gap-x-space-32">
           <div className="hidden items-center gap-x-space-32 md:flex">{links}</div>
-          {/* The one Connect, as the hero's box has it: primary, with its arrow. */}
-          <Button href={siteLinks.lobby} arrow>
-            {copy.ask}
-          </Button>
+          {/* The one Connect, as the hero has it: the connected account in green once someone is connected. */}
+          <ConnectButton label={copy.ask} />
           <details className="md:hidden">
             <summary
               aria-label={copy.menu}

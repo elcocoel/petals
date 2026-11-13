@@ -1,45 +1,32 @@
-// Build it with us, on Figma's For builders (66:2316): the ink band, and the doors into the system Elco named
-// (11 Nov, board card 103): the brain, the data protocol, the rendering protocol, connecting an agent, the API,
-// contributing. Each opens its page in /docs, as a plate with only its name (Elco, 12 Nov: "the six things are
-// boring ... a bunch of text"). GitHub joins them once the repo is public; until then a link to it would go
-// nowhere (design/minimally-good.md, rule 10).
+// Build Petals with us, on Figma's For builders (66:2316): the ink band, its name in the logo's face (as every
+// section's), the system's graph (SystemGraph, between the name and the buttons), and three plain
+// buttons, centred under it in the band's primary look: the docs, Petals on GitHub, and a star for it there.
+// Buttons rather than boxes, so they don't read as parts of the graph.
 import { landingCopy } from '../../lib/landing-copy.ts';
 import { siteLinks } from '../../lib/site-links.ts';
 import { ActionRow } from '../ui/ActionRow.tsx';
 import { Button } from '../ui/Button.tsx';
 import { Icon } from '../ui/Icon.tsx';
-import { PlateLink } from '../ui/PlateLink.tsx';
 import { Section } from '../ui/Section.tsx';
-import { SectionHead } from '../ui/SectionHead.tsx';
+import { SectionName } from '../ui/SectionName.tsx';
+import { SystemGraph } from './SystemGraph.tsx';
 
 const copy = landingCopy.builders;
 
 export function BuildWithUs() {
   return (
-    <Section
-      kind="ink"
-      layout="columns"
-      head={
-        // balanced, so no word is left alone on the headline's last line (11 Nov, at 1280)
-        <div className="text-balance lg:w-2/3">
-          <SectionHead title={copy.title} body={copy.body} />
-        </div>
-      }
-      foot={
-        <ActionRow>
-          <Button href={siteLinks.docs}>{copy.actions.docs}</Button>
+    <Section kind="ink" head={<SectionName name={copy.title} />}>
+      <div className="flex flex-col gap-column-gap">
+        <SystemGraph />
+        <ActionRow gap="tight" align="center">
+          {copy.doors.map((door) => (
+            <Button key={door.title} href={siteLinks[door.link]} arrow={door.icon === 'arrow'}>
+              {door.icon === 'star' && <Icon name="star" />}
+              {door.title}
+            </Button>
+          ))}
         </ActionRow>
-      }
-    >
-      {copy.doors.map((door) => (
-        // A door is a tile with only its name and an arrow, on the ink band's own glass.
-        <PlateLink key={door.slug} href={`${siteLinks.docs}/${door.slug}`} glass>
-          <span className="flex min-h-drawing-72 items-end justify-between gap-block-gap">
-            <span className="type-title">{door.title}</span>
-            <Icon name="arrow" />
-          </span>
-        </PlateLink>
-      ))}
+      </div>
     </Section>
   );
 }

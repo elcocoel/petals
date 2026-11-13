@@ -1,7 +1,7 @@
-// The hero in the whole landing, with its review controls: HERO ART's V2 story (approved by Elco, 11 Nov), the
-// layers one at a time and each beat's note under it (lab/hero/HeroStoryLab.tsx). Make Petals stronger has its
-// three ways in columns, LANDING's lean for its empty half. (MapHero, the first take, stays in the registry.) In production it stays hidden unless
-// PETAL_LAB=1, like the lab, and nothing here reaches the landing until Elco has seen it.
+// The hero in the whole landing, with its review controls: the V2 story, the layers one at a time and each
+// beat's note under it (lab/hero/HeroStoryLab.tsx). Make Petals stronger has its three ways in columns, one
+// variant for its empty half. (MapHero, the first take, stays in the registry.) In production it stays hidden
+// unless PETAL_LAB=1, like the lab, and nothing here reaches the landing until it's reviewed.
 import { notFound } from 'next/navigation';
 import { BackIt } from '../../../components/landing/BackIt.tsx';
 import { BuildWithUs } from '../../../components/landing/BuildWithUs.tsx';
@@ -36,7 +36,7 @@ export default async function HeroLab() {
         <GiveToAgent />
         <GallerySection />
         <Questions />
-        <BackIt layout="columns" />
+        <BackIt />
         <BuildWithUs />
       </main>
       <Footer />
