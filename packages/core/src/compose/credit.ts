@@ -6,7 +6,7 @@
 // goes only to the authors who had published the layer before the use was appended: copying earns nothing. Pure.
 import { createAjv, schemaId } from '../schema/ajv.ts';
 import type { Result, ValidationIssue } from '../types/index.ts';
-import type { Entry } from './compose.ts';
+import { asAuthored, type Entry } from './compose.ts';
 import { COMPOSE_RULE, factsOf, layerTitle, slotOf } from './facts.ts';
 
 export const CREDIT_VERSION = 'credit/v1';
@@ -80,7 +80,7 @@ export function creditOf(
   record: readonly Entry[],
   docs: ReadonlyMap<string, unknown>,
 ): Credit {
-  const entries = [...record].sort((a, b) => a.seq - b.seq);
+  const entries = asAuthored(record).sort((a, b) => a.seq - b.seq);
   // every chain of `from` back from a layer: what it was built on, directly or not
   const ancestry = new Map<string, Set<string>>();
   const ancestorsOf = (sha: string, path = new Set<string>()): Set<string> => {

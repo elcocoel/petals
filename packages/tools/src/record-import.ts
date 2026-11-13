@@ -5,12 +5,14 @@
 // NEP-413 proof, whose message names the hash of what it signed. A map whose own rows changed since Petals' latest
 // version of it (a re-read replaced its value, its proposals, a reading) gets the next version, its parent and
 // previous that one, so the composed map follows what Petals holds now and the record keeps what it held before;
-// a map unchanged is left. scripts/publish-import.ts runs it, --dry first.
+// a map unchanged is left, and so is a map petals.near has signed over the import (from then on, a press).
+// scripts/publish-import.ts runs it, --dry first.
 import {
   aboutKey,
   canonicalJson,
   IMPORTED_AUTHOR,
   mapOf,
+  PETALS_AUTHOR,
   PUBLICATION_VERSION,
   type Publication,
   sha256Hex,
@@ -46,29 +48,27 @@ const counts = (layers: Publication['layers']) =>
     return n;
   }, {});
 
-export async function importRecord(
-  ctx: ToolContext,
-  o: { dry?: boolean } = {},
-): Promise<ImportReport> {
+/** What Petals holds for one map: each document once, by its hash, and the documents themselves. */
+export interface Holding {
+  layers: Publication['layers'];
+  /** every layer's document, by its hash, a reading's snapshot too */
+  docs: Map<string, unknown>;
+}
+
+/**
+ * What Petals holds now, by map: the readings its mapping drew (not retired), each once by its snapshot's hash, and
+ * the map's own rows (mark, value, proposals, payouts, vesting), each one document as it's kept. The import enters
+ * them unsigned; petals.near publishes them signed, through a press (composition.md, section 2b).
+ */
+export async function petalsHoldings(ctx: ToolContext): Promise<Map<string, Holding>> {
   const store = privateStore(ctx.config);
-  const at = ctx.now().toISOString();
-  const record = await recordOf(ctx);
-  const inRecord = new Set(
-    record.map((e) => `${aboutKey(e.publication.about)}\u0000${e.publication.author}`),
-  );
-  // Petals' own latest version of each map, in record order
-  const ownLatest = new Map(
-    record
-      .filter((e) => e.publication.author === IMPORTED_AUTHOR)
-      .map((e) => [aboutKey(e.publication.about), e] as const),
-  );
-  const byMap = new Map<string, { layers: Publication['layers']; bodies: Map<string, unknown> }>();
+  const byMap = new Map<string, Holding>();
   const add = (about: string, doc: unknown, petal: string, sha = hashOf(doc)) => {
     const key = aboutKey(about);
-    const m = byMap.get(key) ?? { layers: [], bodies: new Map<string, unknown>() };
+    const m = byMap.get(key) ?? { layers: [], docs: new Map<string, unknown>() };
     if (!m.layers.some((l) => l.sha256 === sha)) {
       m.layers.push({ sha256: sha, petal });
-      if (!petal.startsWith('snapshot/')) m.bodies.set(sha, doc);
+      m.docs.set(sha, doc);
     }
     byMap.set(key, m);
   };
@@ -87,10 +87,52 @@ export async function importRecord(
       const doc = JSON.parse(r.body) as { petal: string };
       add(r.about, doc, doc.petal);
     }
+  return byMap;
+}
+
+export async function importRecord(
+  ctx: ToolContext,
+  o: { dry?: boolean } = {},
+): Promise<ImportReport> {
+  const store = privateStore(ctx.config);
+  const at = ctx.now().toISOString();
+  const record = await recordOf(ctx);
+  const inRecord = new Set(
+    record.map((e) => `${aboutKey(e.publication.about)}\u0000${e.publication.author}`),
+  );
+  // Petals' own latest version of each map, in record order
+  const ownLatest = new Map(
+    record
+      .filter((e) => e.publication.author === IMPORTED_AUTHOR)
+      .map((e) => [aboutKey(e.publication.about), e] as const),
+  );
+  // the maps petals.near signed over the import: from then on what Petals holds goes through a press
+  const imported = new Set(
+    record.filter((e) => e.publication.author === IMPORTED_AUTHOR).map((e) => e.hash),
+  );
+  const signed = new Set(
+    record
+      .filter(
+        (e) =>
+          e.publication.author === PETALS_AUTHOR &&
+          e.publication.parent !== null &&
+          imported.has(e.publication.parent),
+      )
+      .map((e) => aboutKey(e.publication.about)),
+  );
+  const byMap = await petalsHoldings(ctx);
   const report: ImportReport = { maps: byMap.size, publications: [], left: [] };
-  for (const [about, m] of [...byMap].sort((a, b) => (a[0] < b[0] ? -1 : 1))) {
+  for (const [about, held] of [...byMap].sort((a, b) => (a[0] < b[0] ? -1 : 1))) {
+    const m = {
+      layers: held.layers,
+      bodies: new Map(
+        [...held.docs].filter(([sha]) =>
+          held.layers.some((l) => l.sha256 === sha && !l.petal.startsWith('snapshot/')),
+        ),
+      ),
+    };
     const last = ownLatest.get(about);
-    if (last && sameLayers(last.publication.layers, m.layers)) {
+    if (signed.has(about) || (last && sameLayers(last.publication.layers, m.layers))) {
       report.left.push(about);
       continue;
     }
