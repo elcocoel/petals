@@ -30,7 +30,9 @@ export function Footer() {
           <Wordmark size="fill" mono />
           <p className="my-0 type-lead">
             {copy.built.split(copy.by)[0]}
-            <TextLink href={siteLinks.elementaryComplexity}>{copy.by}</TextLink>
+            <TextLink href={siteLinks.elementaryComplexity} variant="inline">
+              {copy.by}
+            </TextLink>
             {copy.built.split(copy.by)[1]}
           </p>
         </div>
