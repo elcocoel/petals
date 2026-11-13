@@ -124,6 +124,7 @@ import { ProfileHead } from '../components/workspace/ProfileHead.tsx';
 import { ReadingKey } from '../components/workspace/ReadingKey.tsx';
 import { TipControl } from '../components/workspace/TipControl.tsx';
 import { DimensionChoices } from '../components/workspace/ViewControls.tsx';
+import { WalletAsk } from '../components/workspace/WalletAsk.tsx';
 import { Wallets } from '../components/workspace/Wallets.tsx';
 import { FlowerPanel } from '../flower/FlowerPanel.tsx';
 import type { PublishableData } from '../lib/agent-client.ts';
@@ -2508,6 +2509,37 @@ export const registry: LabEntry[] = [
             onConnectEvm={() => {}}
             onConnectSolana={() => {}}
           />
+        ),
+      },
+    ],
+  },
+  {
+    id: 'WalletAsk',
+    group: 'The conversation',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/workspace/WalletAsk.tsx',
+    states: [
+      {
+        name: 'which wallet',
+        wide: true,
+        render: () => (
+          <WalletAsk
+            pick={[
+              { id: 'a', name: 'MetaMask', icon: null },
+              { id: 'b', name: 'SafePal', icon: null },
+            ]}
+            waitingFor={null}
+            onChoose={() => {}}
+            onStop={() => {}}
+          />
+        ),
+      },
+      {
+        name: 'waiting for one',
+        wide: true,
+        render: () => (
+          <WalletAsk pick={null} waitingFor="SafePal" onChoose={() => {}} onStop={() => {}} />
         ),
       },
     ],

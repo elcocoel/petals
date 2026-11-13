@@ -2,6 +2,7 @@
 // should be a oops, your no logged in with some illustration of petals shrugging and a bouncer… + a button to
 // copy the setup prompt to the agent"). The bouncer (components/Oops.tsx), then Connect and the setup prompt
 // the landing's section 4 copies. Props only; the words are drafts (lib/door-words.ts).
+import type { ReactNode } from 'react';
 import { doorWords, notSignedInWords } from '../../lib/door-words.ts';
 import { landingCopy } from '../../lib/landing-copy.ts';
 import { publicOrigin } from '../../lib/site-links.ts';
@@ -18,6 +19,7 @@ export function NotSignedIn({
   onConnect,
   onConnectEvm,
   onConnectSolana,
+  ask,
 }: {
   /** a question that came with the link: it waits in the conversation once they're in */
   question: string;
@@ -29,6 +31,8 @@ export function NotSignedIn({
   onConnectEvm?: (() => void) | undefined;
   /** a Solana wallet's way in, where the page has one (wave 5) */
   onConnectSolana?: (() => void) | undefined;
+  /** which wallet, or the one being asked (WalletAsk) */
+  ask?: ReactNode;
 }) {
   return (
     <Oops
@@ -72,7 +76,12 @@ export function NotSignedIn({
           />
         </span>
       }
-      after={failed && <p className="error my-0">{failed}</p>}
+      after={
+        <>
+          {ask}
+          {failed && <p className="error my-0">{failed}</p>}
+        </>
+      }
     />
   );
 }

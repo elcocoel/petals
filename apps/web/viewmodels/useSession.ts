@@ -16,13 +16,20 @@ import {
   verifySolana,
 } from '../lib/agent-client.ts';
 import { doorWords } from '../lib/door-words.ts';
-import { evmAccount, evmSign, hasEvmWallet, NO_EVM_WALLET } from '../lib/evm-wallet.ts';
+import {
+  evmAccount,
+  evmSign,
+  evmWallets,
+  NO_EVM_WALLET,
+  type WalletChoice,
+} from '../lib/evm-wallet.ts';
+import { walletRefusal } from '../lib/profile-view.ts';
 import type { WalletSignature } from '../lib/publish.ts';
 import {
-  hasSolanaWallet,
   NO_SOLANA_WALLET,
   solanaAccount,
   solanaSign,
+  solanaWallets,
 } from '../lib/solana-wallet.ts';
 import { SIGN_IN_NETWORK, signPrepared } from '../lib/wallet.ts';
 
@@ -80,16 +87,25 @@ export async function evmProof(wallet?: string): Promise<EvmProof> {
   return { type: 'eip191', address, message, signature };
 }
 
-/** Signs in with an EVM wallet, as signIn does with a NEAR one; closing the wallet or saying no isn't an error. */
-export async function signInEvm(arrived: () => void, failed: (words: string) => void) {
-  if (!hasEvmWallet()) {
+/**
+ * Signs in with an EVM wallet, the one picked by its id (else the first), as signIn does with a NEAR one. What
+ * the wallet answers, a no included, is said in its name: a wallet that goes quiet never leaves a dead button.
+ */
+export async function signInEvm(
+  arrived: () => void,
+  failed: (words: string) => void,
+  picked?: WalletChoice,
+) {
+  const wallet = picked ?? evmWallets()[0];
+  if (!wallet) {
     failed(NO_EVM_WALLET);
     return;
   }
   let proof: EvmProof;
   try {
-    proof = await evmProof();
-  } catch {
+    proof = await evmProof(wallet.id);
+  } catch (e) {
+    failed(walletRefusal(wallet.name, e, doorWords.declined));
     return;
   }
   try {
@@ -111,16 +127,22 @@ export async function solanaProof(wallet?: string): Promise<SolanaProof> {
   return { type: 'ed25519', address, message, signature };
 }
 
-/** Signs in with a Solana wallet, as signInEvm does with an EVM one. */
-export async function signInSolana(arrived: () => void, failed: (words: string) => void) {
-  if (!hasSolanaWallet()) {
+/** Signs in with a Solana wallet, the one picked by its id (else the first), as signInEvm does with an EVM one. */
+export async function signInSolana(
+  arrived: () => void,
+  failed: (words: string) => void,
+  picked?: WalletChoice,
+) {
+  const wallet = picked ?? solanaWallets()[0];
+  if (!wallet) {
     failed(NO_SOLANA_WALLET);
     return;
   }
   let proof: SolanaProof;
   try {
-    proof = await solanaProof();
-  } catch {
+    proof = await solanaProof(wallet.id);
+  } catch (e) {
+    failed(walletRefusal(wallet.name, e, doorWords.declined));
     return;
   }
   try {
@@ -138,6 +160,12 @@ export function useSession(reading: boolean) {
   });
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState<string | null>(null);
+  /** Several wallets of one kind in this browser: the person picks one by name. */
+  const [pick, setPick] = useState<{ chain: 'evm' | 'solana'; wallets: WalletChoice[] } | null>(
+    null,
+  );
+  /** The wallet asked now, by name, so the person knows where to answer. */
+  const [waitingFor, setWaitingFor] = useState<string | null>(null);
   const deps = useMemo<SessionDeps>(
     () => ({
       client: sessionClient,
@@ -164,6 +192,30 @@ export function useSession(reading: boolean) {
     };
   }, [reading]);
 
+  /** An EVM or Solana wallet signs in: with several in this browser, the person picks one by name first. */
+  const connectWith = (chain: 'evm' | 'solana', id?: string) => {
+    if (busy) return;
+    setFailed(null);
+    const wallets = chain === 'evm' ? evmWallets() : solanaWallets();
+    if (wallets.length === 0) {
+      setFailed(chain === 'evm' ? NO_EVM_WALLET : NO_SOLANA_WALLET);
+      return;
+    }
+    if (!id && wallets.length > 1) {
+      setPick({ chain, wallets });
+      return;
+    }
+    const wallet = wallets.find((w) => w.id === id) ?? wallets[0];
+    setPick(null);
+    setBusy(true);
+    setWaitingFor(wallet?.name ?? null);
+    const signIn = chain === 'evm' ? signInEvm : signInSolana;
+    void signIn(deps.arrived, setFailed, wallet).finally(() => {
+      setBusy(false);
+      setWaitingFor(null);
+    });
+  };
+
   return {
     ...session,
     busy,
@@ -174,19 +226,21 @@ export function useSession(reading: boolean) {
       setFailed(null);
       void signIn(deps).finally(() => setBusy(false));
     },
+    pick,
+    waitingFor,
     /** The same with an EVM wallet: one signed message, then the page loads again. */
-    connectEvm: () => {
-      if (busy) return;
-      setBusy(true);
-      setFailed(null);
-      void signInEvm(deps.arrived, setFailed).finally(() => setBusy(false));
-    },
+    connectEvm: (id?: string) => connectWith('evm', id),
     /** The same with a Solana wallet. */
-    connectSolana: () => {
-      if (busy) return;
-      setBusy(true);
-      setFailed(null);
-      void signInSolana(deps.arrived, setFailed).finally(() => setBusy(false));
+    connectSolana: (id?: string) => connectWith('solana', id),
+    /** The wallet picked by name, of the kind being picked. */
+    choose: (id: string) => {
+      if (pick) connectWith(pick.chain, id);
+    },
+    /** Stops waiting for a wallet that doesn't answer, or puts the pick away; its request stays in the wallet. */
+    stop: () => {
+      setBusy(false);
+      setWaitingFor(null);
+      setPick(null);
     },
     disconnect: () => {
       // Leaving the account leaves the app, back to the front page.
