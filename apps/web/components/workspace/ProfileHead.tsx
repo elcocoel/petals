@@ -1,30 +1,33 @@
-// The top of the lobby: the person, their own name above and larger than anything else. Their picture from NEAR
-// Social, or the empty place for one; their name there, or the wallet they signed in with, in the page's title
-// size; the account under a name; and badges for what's true of it: the chain it's on, and where its profile is
-// (in Petals, on NEAR Social, or none). At its end, Disconnect, the one place to sign out, quiet, as
-// Withdraw is.
+// The top of the lobby's first band, as a section of the landing opens: an eyebrow in mono saying what's true
+// of the account (the chain it's on, and where its profile is: in Petals, on NEAR Social, or none), then the
+// person's own name in the title's size, larger than anything else on the page; a long key or address shows
+// its ends, whole in its title. Their picture from NEAR Social, or the empty place for one, beside it.
 // Props only: viewmodels/useProfile.ts reads it. Words from lib/lobby-view.ts.
-import { lobbyWords, profileWords, type SocialState, shownAccount } from '../../lib/lobby-view.ts';
-import { Badge } from '../ui/Badge.tsx';
-import { Button } from '../ui/Button.tsx';
+import { shortId } from '../../lib/flower-view.ts';
+import { profileWords, type SocialState } from '../../lib/lobby-view.ts';
 import { Mono } from '../ui/Mono.tsx';
 
 export function ProfileHead({
   account,
   social,
   chain,
-  onLeave,
 }: {
   /** The wallet this session signed in with; null until the server says. */
   account: string | null;
   social: SocialState;
   /** The chain that wallet is on, by name; null until the server says. */
   chain: string | null;
-  /** Signs out, back to the front page. */
-  onLeave?: () => void;
 }) {
-  const who = account ? shownAccount(account) : null;
   const profile = social.kind === 'profile' ? social.profile : null;
+  const where =
+    social.kind === 'profile'
+      ? social.source === 'petals'
+        ? profileWords.inPetals
+        : profileWords.social
+      : social.kind === 'none'
+        ? profileWords.noProfile
+        : null;
+  const eyebrow = [chain, where].filter(Boolean).join('  ·  ');
   return (
     <header className="flex items-center gap-block-gap">
       {profile?.avatar ? (
@@ -41,33 +44,20 @@ export function ProfileHead({
         />
       )}
       <div className="flex min-w-0 flex-1 flex-col gap-space-8">
-        {who && (
-          <h1 title={who.full} className="m-0 type-title wrap-anywhere">
-            {profile?.name ?? who.shown}
+        {eyebrow && <Mono tone="primary">{eyebrow.toUpperCase()}</Mono>}
+        {account && (
+          <h1 title={account} className="m-0 type-title wrap-anywhere md:type-display-compact">
+            {profile?.name ?? shortId(account)}
           </h1>
         )}
-        <div className="flex flex-wrap items-center gap-text-gap">
-          {profile?.name && who && (
-            <span title={who.full} className="min-w-0">
-              <Mono as="span" tone="muted">
-                {who.shown}
-              </Mono>
-            </span>
-          )}
-          {who && chain && <Badge>{chain}</Badge>}
-          {social.kind === 'profile' && (
-            <Badge>
-              {social.source === 'petals' ? profileWords.inPetals : profileWords.social}
-            </Badge>
-          )}
-          {social.kind === 'none' && <Badge>{profileWords.noProfile}</Badge>}
-        </div>
+        {profile?.name && account && (
+          <span title={account} className="min-w-0">
+            <Mono as="span" tone="muted">
+              {shortId(account)}
+            </Mono>
+          </span>
+        )}
       </div>
-      {onLeave && (
-        <Button variant="quiet" onClick={onLeave}>
-          {lobbyWords.disconnect}
-        </Button>
-      )}
     </header>
   );
 }

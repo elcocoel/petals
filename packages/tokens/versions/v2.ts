@@ -38,9 +38,9 @@ const grain = ([r, g, b]: [number, number, number], alpha: number) => {
 };
 const LIGHT_GRAIN: [number, number, number] = [1, 1, 1];
 
-// Elco's soft textures, drawn by code: Brand guide, "Image generations", 33:646, 33:647 and 33:648. Each
-// is a PNG of megabytes there; each tile here is under 2 KB and stays sharp at any density. Elco, on the
-// first pass: "Everything has a texture", so they're faint now, and only where a band needs one. What
+// The brand guide's soft textures, drawn by code: Brand guide, "Image generations", 33:646, 33:647 and
+// 33:648. Each is a PNG of megabytes there; each tile here is under 2 KB and stays sharp at any density.
+// They're faint, and only where a band needs one, so not everything has a texture. What
 // moves is in apps/web/app/versions/drift.ts, from `script.drift` below, or runs in the compositor.
 
 /** An SVG as a CSS image, escaping only what url("") really needs, so a small tile stays small. */
@@ -74,7 +74,7 @@ const felt = (alpha: number) => {
 
 /**
  * Static seen from far away, for the stone band: the felt's two-sided noise, but with no slant and no
- * length to it. Elco on the felt there: "It looks right now like brushed metal". Its tile stitches, so two
+ * length to it, so it doesn't read as brushed metal the way the felt does there. Its tile stitches, so two
  * of them can slide over each other in the compositor with no edge.
  */
 const speckle = (alpha: number) => {
@@ -100,8 +100,8 @@ const walk = (seed: number) => {
  * Texture 03, Offset screen: a stochastic dot screen, in Mint with Ink printed a little off register,
  * across the rows so it doesn't smear dots into dashes. The lattice is a square one turned 26.6 degrees,
  * basis (6,3) and (-3,6), which fits a 45px cell. Each dot is nudged on its own, and slow noise bends the
- * whole thing, so no row stays straight and the cell doesn't show. Elco's second ink is blue; ours aren't.
- * Elco: "Especially the green dotted one". It's barely there now, so content reads as on a clean page.
+ * whole thing, so no row stays straight and the cell doesn't show. The guide's second ink is blue; ours
+ * aren't. It's barely there, so content reads as on a clean page.
  */
 const SCREEN_DOT = 0.15;
 const SCREEN_OFFSET = 0.02;
@@ -129,9 +129,9 @@ const screen = () => {
 };
 
 /**
- * Texture 01, Countergrain: four-point stars, the shape the wordmark's cells open into. Far fewer than his,
- * and a mask keeps them to the corners (`star-fade`), so content stays clean: Elco, "there's not so many of
- * them, or at least some form of a gradient opacity". The script reads where they are, to connect them.
+ * Texture 01, Countergrain: four-point stars, the shape the wordmark's cells open into. Far fewer than the
+ * guide's, and a mask keeps them to the corners (`star-fade`), a gradient of opacity, so content stays
+ * clean. The script reads where they are, to connect them.
  */
 const STAR_ALPHA = 0.6;
 const STAR_TILE = 233;
@@ -183,7 +183,7 @@ const glow = (paint: Paint, at = '100% 0%', reach = '46%') =>
 const rules = (paint: Paint, step: number) =>
   `repeating-linear-gradient(90deg, ${c(paint)} 0 1px, transparent 1px ${step}px), repeating-linear-gradient(0deg, ${c(paint)} 0 1px, transparent 1px ${step}px)`;
 
-/** How much Ground an action's gloss starts from. Elco: "The shine is all too much". */
+/** How much Ground an action's gloss starts from: a little, so the shine stays quiet. */
 const GLOSS = { ground: 0.05, ink: 0.08, mint: 0.05 } as const;
 /** How much Gray a hairline between two stars comes to, at its fullest. */
 const CONNECT = 0.75;
@@ -194,7 +194,7 @@ const MUTED = { ground: ink(0.68), ink: ground(0.8), mint: ink(0.8) } as const;
 /**
  * The light grounds a band can take, `<Section tone>`, so a long page has a rhythm. Each is a role-compatible
  * ground: words and actions stay what they are on ground. No tone at all is the plain ground of v2, with
- * nothing behind it: Elco wants texture to "exist where they need to exist".
+ * nothing behind it: texture exists only where it's needed.
  */
 export const tones = ['paper', 'mist', 'stone'] as const;
 export type ToneName = (typeof tones)[number];

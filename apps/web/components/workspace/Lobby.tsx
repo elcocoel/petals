@@ -1,15 +1,23 @@
-// The lobby, one page with the profile (the investigator's card, with the lobby's map). /lobby and
-// /profile both show it. Beside the side panel, which is the layout's (app/(work)/WorkPanel.tsx), from the top,
-// the person (ProfileHead, with Disconnect at its end); then the widgets in rows of two, each pair the same height: their Profile card
-// beside the Wallets they've proven, their Contribution to the map (three counts) beside their Balance (with the tip), the
-// Claims they and their agents keep about accounts beside their Conversations, and the map across the page. Each
-// card has one title and one job (components/ui/Card.tsx); a list that grows keeps a set height and scrolls
-// inside, never endless. The editor opens over the whole row, the width of the page.
-// Props only: app/(work)/lobby/LobbySurface.tsx wires useLobby to it. Words from lib/lobby-view.ts and
-// lib/profile-view.ts.
-
+// The lobby, one page with the profile, zoned as the landing is: bands edge to edge (ui/Section), each named
+// in the wordmark's face (ui/SectionName), its parts in the landing's language. /lobby and /profile both show it,
+// beside the side panel's bar (app/(work)/WorkPanel.tsx). From the top:
+// - the bar: the page's name, and the account menu at the top right, where well-made apps keep it (the profile's
+//   editor, and Disconnect, the one way out of the account);
+// - the person: their picture, an eyebrow saying what's true of the account, their name in the title's size, the
+//   bio and declared links under it and its one action; beside it, the Wallets they've proven and the way to add
+//   another. The profile's editor opens over the band, the Wallets under it;
+// - Balance: the credit in the display's size, Add funds (the pay row's own flow, unfolding under it) and
+//   Withdraw, and the tip; beside it, the Usage card;
+// - one illustrated quote, in a band of its own, the art given room;
+// - Your work: the three counts of their Contribution, then their Conversations, Claims, what they Published,
+//   and the maps they're On the map with, as cards in pairs.
+// Every card has one title and one job (components/ui/Card.tsx); a list that grows keeps a set height and
+// scrolls inside. Props only: app/(work)/lobby/LobbySurface.tsx wires useLobby to it. Words from
+// lib/lobby-view.ts and lib/profile-view.ts.
+import type { ComponentProps } from 'react';
 import type { ContributionView } from '../../lib/contribution-view.ts';
 import type { ConversationRow } from '../../lib/conversation-list.ts';
+import { shortId } from '../../lib/flower-view.ts';
 import {
   lobbyWords,
   type MapTile,
@@ -26,9 +34,13 @@ import type {
   WalletKind,
   WalletRow,
 } from '../../lib/profile-view.ts';
+import { PayRow } from '../chat/PayRow.tsx';
 import { MapList } from '../MapList.tsx';
 import { Badge } from '../ui/Badge.tsx';
 import { Card } from '../ui/Card.tsx';
+import { Section } from '../ui/Section.tsx';
+import { SectionName } from '../ui/SectionName.tsx';
+import { AccountMenu } from './AccountMenu.tsx';
 import { Claims } from './Claims.tsx';
 import { Contribution } from './Contribution.tsx';
 import { Conversations } from './Conversations.tsx';
@@ -36,7 +48,10 @@ import { Funds } from './Funds.tsx';
 import { Profile } from './Profile.tsx';
 import { ProfileEditor } from './ProfileEditor.tsx';
 import { ProfileHead } from './ProfileHead.tsx';
+import { Published } from './Published.tsx';
+import { QuoteBand } from './QuoteBand.tsx';
 import type { TipView } from './TipControl.tsx';
+import { Usage } from './Usage.tsx';
 import { Wallets } from './Wallets.tsx';
 
 /** The one map, a row per address, as the Power Map lists it. No hard-coded colour key over it. */
@@ -46,8 +61,11 @@ export interface LobbyMap {
 
 export function Lobby({
   profile,
+  menu,
+  leave,
   editor,
   funds,
+  add,
   usage,
   wallets,
   adding,
@@ -57,9 +75,8 @@ export function Lobby({
   conversations,
   map,
   contribution,
-  quotes,
+  quote,
   tip,
-  leave,
 }: {
   /** The wallet this session signed in with, and the profile Petals keeps or NEAR Social's. */
   profile: {
@@ -71,7 +88,11 @@ export function Lobby({
     saved: boolean;
     published: boolean;
   };
-  /** The profile's editor, while it's open: it takes the Profile card's place. */
+  /** The account menu: whether it's open. */
+  menu: { open: boolean; toggle: () => void; close: () => void };
+  /** Signs out, from the account menu. */
+  leave: () => void;
+  /** The profile's editor, while it's open: it takes the profile's place in its band. */
   editor: ProfileEditorView | null;
   funds: {
     balance: Money | null;
@@ -81,7 +102,9 @@ export function Lobby({
     failedWhy?: string | null;
     withdraw: () => void;
   };
-  /** Every call charged to them (usage/v1), in the Balance widget. */
+  /** Add funds: whether the pay row is open under the balance, and the row itself. */
+  add: { open: boolean; toggle: () => void; row: Omit<ComponentProps<typeof PayRow>, 'first'> };
+  /** Every call charged to them (usage/v1), in the Usage card. */
   usage: UsageView | 'reading' | 'unread';
   wallets: WalletRow[] | 'reading' | 'unread';
   adding: AddWalletPhase;
@@ -92,46 +115,72 @@ export function Lobby({
   claims: ClaimsView | 'reading' | 'unread';
   conversations: ConversationRow[];
   map: LobbyMap;
-  /** The person's contribution to the map, three counts (credit/v1). */
+  /** The person's contribution to the map, three counts and what they published (credit/v1). */
   contribution: ContributionView | 'reading' | 'unread';
-  /** An illustrated power quote for each widget with nothing in it yet. */
-  quotes: Record<
-    'profile' | 'claims' | 'usage' | 'conversations' | 'contribution',
-    PowerQuoteItem | null
-  >;
-  /** The person's tip, in the Balance widget. */
+  /** The visit's one illustrated quote, in its own band; none until it's picked. */
+  quote: PowerQuoteItem | null;
+  /** The person's tip, in the Balance band. */
   tip: TipView;
-  /** Signs out, at the top of the page. */
-  leave: () => void;
 }) {
+  const named = profile.social.kind === 'profile' ? profile.social.profile : null;
+  const walletsCard = (
+    <Wallets wallets={wallets} adding={adding} onAdd={addWallet} onStop={stopAdding} />
+  );
   return (
     <main aria-label={lobbyWords.page} data-surface="ground" className="flex h-dvh bg-surface">
-      <div className="flex min-w-0 flex-1 flex-col gap-space-32 overflow-y-auto px-page-inset py-column-gap">
-        <ProfileHead
-          account={profile.account}
-          chain={profile.chain}
-          social={profile.social}
-          onLeave={leave}
-        />
-        {/* rows of two widgets, each pair the same height, titles on one line, so cards side by side align */}
-        <div className="grid grid-cols-1 gap-block-gap lg:grid-cols-3">
-          <div className={`grid min-w-0 ${editor ? 'lg:col-span-3' : 'lg:col-span-2'}`}>
-            {editor ? (
-              <ProfileEditor view={editor} />
-            ) : (
-              <Profile
-                social={profile.social}
-                onEdit={profile.edit}
-                saved={profile.saved}
-                published={profile.published}
-                quote={quotes.profile}
+      <div className="min-w-0 flex-1 overflow-y-auto">
+        <Section as="nav" padding="bar" rule="bottom">
+          <div className="flex items-center justify-between gap-block-gap">
+            <SectionName name={lobbyWords.page} />
+            {profile.account && (
+              <AccountMenu
+                name={shortId(profile.account)}
+                full={profile.account}
+                avatar={named?.avatar ?? null}
+                open={menu.open}
+                onToggle={menu.toggle}
+                onClose={menu.close}
+                {...(profile.edit ? { onEdit: profile.edit } : {})}
+                onLeave={leave}
               />
             )}
           </div>
-          <Wallets wallets={wallets} adding={adding} onAdd={addWallet} onStop={stopAdding} />
-          <div className="grid min-w-0 lg:col-span-2">
-            <Contribution contribution={contribution} quote={quotes.contribution} />
-          </div>
+        </Section>
+
+        <Section id="profile">
+          {editor ? (
+            <div className="flex flex-col gap-column-gap">
+              <ProfileEditor view={editor} />
+              {walletsCard}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 items-start gap-column-gap lg:grid-cols-split-flip">
+              <div className="flex min-w-0 flex-col gap-space-32">
+                <ProfileHead
+                  account={profile.account}
+                  chain={profile.chain}
+                  social={profile.social}
+                />
+                <Profile
+                  social={profile.social}
+                  onEdit={profile.edit}
+                  saved={profile.saved}
+                  published={profile.published}
+                />
+              </div>
+              {walletsCard}
+            </div>
+          )}
+        </Section>
+
+        <Section
+          tone="stone"
+          rule="top"
+          id="balance"
+          head={<SectionName name={lobbyWords.balance} />}
+          layout="split"
+          figure="start"
+        >
           <Funds
             balance={funds.balance}
             held={funds.held}
@@ -139,30 +188,39 @@ export function Lobby({
             withdrew={funds.withdrew}
             failedWhy={funds.failedWhy ?? null}
             onWithdraw={funds.withdraw}
-            usage={usage}
-            quote={quotes.usage}
+            adding={add.open}
+            onAdd={add.toggle}
+            add={<PayRow first {...add.row} />}
             tip={tip}
           />
-          <div className="grid min-w-0 lg:col-span-2">
-            <Claims claims={claims} quote={quotes.claims} />
+          <Usage usage={usage} />
+        </Section>
+
+        {quote && <QuoteBand quote={quote} />}
+
+        <Section rule="top" id="work" head={<SectionName name={lobbyWords.work} />}>
+          <div className="flex flex-col gap-column-gap">
+            <Contribution contribution={contribution} />
+            <div className="grid grid-cols-1 gap-block-gap lg:grid-cols-2">
+              <Conversations rows={conversations} />
+              <Claims claims={claims} />
+              <Published contribution={contribution} />
+              <Card
+                title={lobbyWords.map}
+                labelledBy="lobby-map"
+                badge={map.tiles.length > 0 ? <Badge>{map.tiles.length}</Badge> : undefined}
+              >
+                {map.tiles.length > 0 ? (
+                  <div className="max-h-figure-height overflow-y-auto overscroll-none">
+                    <MapList label={lobbyWords.map} rows={map.tiles} />
+                  </div>
+                ) : (
+                  <p className="my-0 type-body text-muted">{lobbyWords.mapEmpty}</p>
+                )}
+              </Card>
+            </div>
           </div>
-          <Conversations rows={conversations} quote={quotes.conversations} />
-          <div className="grid min-w-0 lg:col-span-3">
-            <Card
-              title={lobbyWords.map}
-              labelledBy="lobby-map"
-              badge={map.tiles.length > 0 ? <Badge>{map.tiles.length}</Badge> : undefined}
-            >
-              {map.tiles.length > 0 ? (
-                <div className="max-h-figure-height overflow-y-auto overscroll-none">
-                  <MapList label={lobbyWords.map} rows={map.tiles} />
-                </div>
-              ) : (
-                <p className="my-0 type-caption text-muted">{lobbyWords.mapEmpty}</p>
-              )}
-            </Card>
-          </div>
-        </div>
+        </Section>
       </div>
     </main>
   );
