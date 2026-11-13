@@ -65,7 +65,8 @@ const composed = new Map<string, Composition>();
 export async function compositionOf(ctx: ToolContext, about: string): Promise<Composition | null> {
   const entries = await recordOf(ctx, about);
   if (!entries.length) return null;
-  const key = `${aboutKey(about)}@${entries.at(-1)?.seq}`;
+  // the store's own record: two stores in one process (tests, a lane) keep two compositions
+  const key = `${ctx.config.databaseUrl ?? ctx.config.stateDir ?? ''}\u0000${aboutKey(about)}@${entries.at(-1)?.seq}`;
   const hit = composed.get(key);
   if (hit) return hit;
   const map = compose(about, entries, await layersOf(ctx, entries));

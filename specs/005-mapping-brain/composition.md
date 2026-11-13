@@ -116,7 +116,7 @@ A deterministic summary per author, built from the record alone.
 | Field | What it holds |
 |---|---|
 | `author` | the account |
-| `layers` | each layer they published: its hash, format and map; when they first published it; the facts they added **first**, the facts they **confirmed**; and who built on it |
+| `layers` | each layer they published: its hash, format and map; when they first published it; the facts they added **first**, the facts they **confirmed**; and who built on it. A fact counts once for its author, under the first of their layers that carried it: the same fact in two of their layers is one contribution |
 | `layers[].built_on_by` | other authors whose published layers name it in `from` |
 | `layers[].reused_by` | other authors whose published versions include it, or fork a version that includes it (`parent`) |
 | `totals` | Elco's three counts, "who's helping a lot or a little": `first` (facts they added to the map first: new data, new moments, new subjects), `confirmed` (facts they matched independently) and `built_on` (accounts that built on their work, once per layer: `points/v1`, below); and `layers` |
