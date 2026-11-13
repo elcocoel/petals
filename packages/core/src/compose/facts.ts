@@ -4,6 +4,7 @@
 // differs between their documents (when they collected it, their sources, their parameters). Absence is never a
 // fact: only what a layer states counts. Pure.
 import { canonicalJson, sha256Hex } from '../hash.ts';
+import { grouped, isoOf } from '../instant.ts';
 
 export const COMPOSE_RULE = 'compose/v1';
 
@@ -33,7 +34,8 @@ export function stateKey(s: State): string {
       : s.at !== undefined
         ? `@${iso(s.at)}`
         : '@';
-  return s.window ? `${at}[${s.window.from},${s.window.to})` : at;
+  const span = s.window;
+  return span ? `${at}[${span.from},${span.to})` : at;
 }
 
 /** A fact's slot: what it is about, what it says, and when. Two facts in one slot are the same question. */
@@ -42,7 +44,7 @@ export const slotOf = (f: Fact) => `${f.subject}\u0000${f.what}\u0000${stateKey(
 /** An instant in one form, so two spellings of one moment are one moment. */
 function iso(t: string): string {
   const ms = Date.parse(t);
-  return Number.isNaN(ms) ? t : new Date(ms).toISOString();
+  return Number.isNaN(ms) ? t : isoOf(ms);
 }
 
 /** A decimal in one form: no plus sign, no leading or trailing zeros ("100.0" and "0100" are "100"). */
@@ -85,8 +87,8 @@ function snapshotFacts(d: Doc): Fact[] {
   const chain = network.chain;
   const state: State =
     snap.block_height !== undefined ? { chain, block: snap.block_height } : { at: snap.as_of };
-  if (snap.window?.from && snap.window?.to)
-    state.window = { from: snap.window.from, to: snap.window.to };
+  const span = snap.window;
+  if (span?.from && span?.to) state.window = { from: span.from, to: span.to };
   const out: Fact[] = [];
   for (const h of (d.holdings ?? []) as {
     participant: string;
@@ -293,9 +295,7 @@ export function layerTitle(doc: unknown): string {
     const n = d.network as { title?: string; id: string };
     const s = d.snapshot as { block_height?: number; as_of: string };
     const at =
-      s.block_height !== undefined
-        ? `block ${s.block_height.toLocaleString('en-US')}`
-        : s.as_of.slice(0, 10);
+      s.block_height !== undefined ? `block ${grouped(s.block_height)}` : s.as_of.slice(0, 10);
     return `${n.title ?? n.id} at ${at}`;
   }
   const at =
