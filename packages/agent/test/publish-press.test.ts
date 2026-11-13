@@ -23,6 +23,7 @@ import {
   creditFor,
   importRecord,
   layersOf,
+  preparePress,
   privateStore,
   recordOf,
   type ToolContext,
@@ -275,6 +276,18 @@ describe("Petals' base data: petals.near signs over the import, through the same
     const report = await importRecord(w.ctx);
     expect(report.publications.map((p) => p.author)).toEqual([IMPORTED_AUTHOR, IMPORTED_AUTHOR]);
     const imported = await recordOf(w.ctx);
+    // the dry run (scripts/press-dry.ts) says what the press would be, before anyone signs, and keeps nothing
+    const dry = await preparePress(
+      w.ctx,
+      { owner: 'press-dry', authors: [PETALS_AUTHOR] },
+      'all',
+      PETALS_AUTHOR,
+      'dry',
+      { dry: true },
+    );
+    expect(dry.publications.map((p) => p.about).sort()).toEqual([...w.maps].sort());
+    expect('nonce' in dry).toBe(false);
+    expect(await w.store.publishDraft.get(dry.sha256)).toBeFalsy();
 
     await w.signIn(petals);
     const prep = (
@@ -285,6 +298,9 @@ describe("Petals' base data: petals.near signs over the import, through the same
     ).body;
     expect(prep.text, JSON.stringify(prep)).toBe(
       `Petals: publish 2 versions in your name.\nManifest ${prep.sha256}`,
+    );
+    expect(prep.publications.map((p: Out) => p.publication.layers)).toEqual(
+      dry.publications.map((p) => p.publication.layers),
     );
     // each version signs what the import holds, as it is: the next version after the map's imported entry
     for (const p of prep.publications) {

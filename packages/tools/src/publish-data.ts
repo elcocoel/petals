@@ -660,8 +660,10 @@ export async function publishable(
     );
   const out = await publishedIds(ctx, shared);
   const mine = await annotationsOf(ctx, owner, shared);
-  // the map's accounts, read only when the person has claims to sort onto it
-  const accounts = mine.length ? await cardAccounts(ctx, found.card) : new Set<string>();
+  // the map's accounts, read only when the person has claims to sort onto it; a press over many maps reads them
+  // only for claims not published yet (it doesn't count the published ones)
+  const sorting = o.cases === false ? mine.some((r) => !out.has(r.id)) : mine.length > 0;
+  const accounts = sorting ? await cardAccounts(ctx, found.card) : new Set<string>();
   const claims: Claim[] = [];
   const kept: { claim: Claim; why: string }[] = [];
   let published = 0;
@@ -944,6 +946,14 @@ async function mapsWith(
   return [...ids].sort();
 }
 
+/** One map's version as prepare answers it: its map, its name, its unsigned hash and the publication. */
+const answerOf = (v: Version) => ({
+  about: v.publication.about,
+  name: v.name,
+  sha256: unsignedHash(v.publication),
+  publication: v.publication,
+});
+
 /**
  * One press over many maps, first half (composition.md, section 2b): each map's next version in the author's name,
  * as one press of that map would make it, all at the server's one time; the manifest that lists their unsigned
@@ -956,6 +966,7 @@ export async function preparePress(
   maps: readonly string[] | 'all',
   author: string,
   recipient: string,
+  o: { dry?: boolean } = {},
 ) {
   const mine = walletOf(who, author);
   const shared: Shared = {};
@@ -992,6 +1003,8 @@ export async function preparePress(
   };
   const sha256 = manifestHash(manifest);
   const text = manifestText(manifest);
+  // a dry run says what the press would be, and keeps nothing: no nonce, no draft
+  if (o.dry) return { manifest, sha256, text, publications: versions.map(answerOf), left };
   const { nonce, expires_at } = await nonceStore(ctx.config).issue();
   const prepared: PreparedMany = {
     petal: MANY,
@@ -1013,12 +1026,7 @@ export async function preparePress(
     manifest,
     sha256,
     text,
-    publications: versions.map((v) => ({
-      about: v.publication.about,
-      name: v.name,
-      sha256: unsignedHash(v.publication),
-      publication: v.publication,
-    })),
+    publications: versions.map(answerOf),
     left,
     ...(standardOf(mine) === 'nep413' ? { recipient, nonce } : {}),
   };
