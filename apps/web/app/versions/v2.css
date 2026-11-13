@@ -515,7 +515,7 @@
   border-end-end-radius: inherit;
 }
 
-/* The conversation's base is its field (design/conversation.md, line 16): the cursor in it, its edge says so. */
+/* The conversation's base is its field: the cursor in it, its edge says so. */
 /* box.well */
 :root[data-version="2"] [data-b="box"][data-foot]:focus-within {
   border-color: var(--accent);
@@ -785,6 +785,32 @@
   opacity: 1;
 }
 
+/* Under the wordmark's three layers, one more in mint with its cells solid: the small name reads, and the
+   layers over it still open as the pointer nears (mark.open). Hidden in version 1. */
+/* mark.base */
+:root[data-version="2"] [data-b="mark"][data-kind="wordmark"] > [data-layer="base"] {
+  display: block;
+  grid-area: 1 / 1;
+  text-box: inherit;
+  color: var(--figure-accent);
+  font-variation-settings: var(--joy-move-mark-base-axes);
+}
+
+/* mark.fill */
+:root[data-version="2"] [data-b="mark"][data-kind="wordmark"][data-size="fill"] {
+  font-size: var(--joy-move-wordmark-fill);
+}
+
+/* row.answer */
+:root[data-version="2"] [data-b="row"] [data-answer] {
+  line-height: var(--joy-move-answer-leading);
+}
+
+/* row.answer */
+:root[data-version="2"] [data-b="row"] [data-answer] strong {
+  font-weight: var(--joy-move-answer-bold);
+}
+
 /* row.sign */
 :root[data-version="2"] [data-b="row"] [data-sign] {
   position: relative;
@@ -1006,7 +1032,7 @@
 }
 
 /* A section of the side panel folds under its head, and what's below settles against it softly, as a drawer
-   with a soft-close does (design/side-panel.md, line 43): its height runs out on a long slowing, with no
+   with a soft-close does: its height runs out on a long slowing, with no
    bounce. Open, what's in it may reach past it (a row's menu); folding, it's clipped at once, and opening,
    only once it's open. */
 /* head.settle */
@@ -1058,7 +1084,7 @@
   opacity: 1;
 }
 
-/* Your own words in a conversation keep the fill (design/conversation.md, line 23). */
+/* Your own words in a conversation keep the fill. */
 /* item.said */
 :root[data-version="2"] [data-b="item"][data-said]::before {
   opacity: 1;

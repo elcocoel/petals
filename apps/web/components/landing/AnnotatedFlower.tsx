@@ -2,7 +2,7 @@
 // where Figma has them, all in one coordinate system. HTML inside the SVG keeps the words wrapping and
 // the note box a real component. On a phone they'd shrink past reading, so they stack under the flower.
 // The drawings themselves say nothing to a screen reader; the notes do. It's off the landing, whose hero
-// figure isn't chosen (T108), so its words come from whoever draws it, which today is the lab.
+// figure is a different one, so its words come from whoever draws it, which today is the lab.
 import type { ReactNode } from 'react';
 import { Drawing } from '../ui/Drawing.tsx';
 import { Mono } from '../ui/Mono.tsx';

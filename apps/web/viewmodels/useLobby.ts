@@ -46,7 +46,7 @@ import { useWorkPanel } from './useWorkPanel.ts';
 /** The pay row's key while Add funds is open: the pay flow's one home is the Balance band. */
 const ADDING = 'lobby-add';
 /** The address that opens the lobby with Add funds unfolded: where /make sends a person who needs credit. */
-const ADD_HASH = '#add';
+const ADD_HASH = 'add';
 
 const why = (e: unknown) =>
   e instanceof Error && e.message ? e.message : profilePageWords.notAdded;
@@ -103,7 +103,7 @@ export function useLobby() {
   const [addOpen, setAddOpen] = useState(false);
   useEffect(() => {
     const arrive = () => {
-      if (window.location.hash !== ADD_HASH) return;
+      if (window.location.hash.slice(1) !== ADD_HASH) return;
       setAddOpen(true);
       requestAnimationFrame(() => document.getElementById('balance')?.scrollIntoView());
     };

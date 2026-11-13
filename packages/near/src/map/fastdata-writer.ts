@@ -40,7 +40,7 @@ export const FASTDATA_GAS = 1_000_000_000n;
 export interface WriterDeps {
   /** a near-api-js Provider; default a JsonRpcProvider on rpcUrl */
   provider?: Provider;
-  /** default RPC_URLS.testnet */
+  /** default RPC_URLS[network] */
   rpcUrl?: string;
   /** the KV API used to confirm writes */
   kv?: KvDeps;
@@ -134,15 +134,11 @@ function failureOf(outcome: TxOutcome): Failure | null {
 }
 
 export function fastDataWriter(
-  cfg: { network: 'testnet'; receiver: string; writer: string; keyFile: string },
+  cfg: { network: 'testnet' | 'mainnet'; receiver: string; writer: string; keyFile: string },
   deps: WriterDeps = {},
 ): MapWriter {
-  if (cfg.network !== 'testnet')
-    throw new NearError(
-      'internal',
-      'fastDataWriter: testnet only; mainnet writes need the operator’s OK',
-    );
-  const provider = deps.provider ?? new JsonRpcProvider({ url: deps.rpcUrl ?? RPC_URLS.testnet });
+  const provider =
+    deps.provider ?? new JsonRpcProvider({ url: deps.rpcUrl ?? RPC_URLS[cfg.network] });
   const kv = kvClient(cfg.network, deps.kv);
   const confirmTimeoutMs = deps.confirmTimeoutMs ?? 30_000;
   const pollMs = deps.pollMs ?? 1_000;

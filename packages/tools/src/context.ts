@@ -143,14 +143,14 @@ export function createContext(cfg: Config): ToolContext {
     const reader: MapReader = deferred(() =>
       fastDataReader({ network: m.network, receiver: m.receiver }),
     );
-    // Writes go to testnet only during the build (shared-map.md); mainnet is never written here.
+    // The writer writes where the map is, testnet or mainnet, with its key; a public site has none (above).
     const writer: MapWriter | null =
-      m.network === 'testnet' && m.writer && m.keyFile
+      m.writer && m.keyFile
         ? deferred(() =>
             mirror(
               join(stateDir, 'mirror'),
               fastDataWriter({
-                network: 'testnet',
+                network: m.network,
                 receiver: m.receiver,
                 writer: m.writer as string,
                 keyFile: resolve(root, m.keyFile as string),

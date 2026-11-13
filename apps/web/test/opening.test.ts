@@ -1,8 +1,7 @@
-// The agent speaks first: written text, from real maps of the one shared map, no model call.
+// An empty conversation offers where to start: the readiest maps of the one shared map, the page's own words.
 import { describe, expect, test } from 'vitest';
 import type { MapCard } from '../lib/maps.ts';
-import { parseMarkdown } from '../lib/markdown.ts';
-import { openingMessage } from '../lib/opening.ts';
+import { newConversationStarts, newConversationWords } from '../lib/opening.ts';
 import { threadFromRun } from '../lib/thread.ts';
 
 /** A map, one per address, as GET /api/v1/maps gives it; `counts` are its readings', newest first. */
@@ -34,53 +33,44 @@ const card = (
 });
 const map = card('near:validators', 'NEAR validators', [8487]);
 
-describe('openingMessage', () => {
+describe('where a new conversation starts', () => {
   test('two maps that read the same name are offered once, the larger', () => {
-    const text = openingMessage([
+    const starts = newConversationStarts([
       card('sol:mnde-a', 'Marinade MNDE deposits and lock schedules', [40]),
       card('sol:mnde-b', 'Marinade MNDE deposits and lock schedules', [90]),
       card('near:validators', 'NEAR validators', [60]),
     ]);
-    expect(text.match(/Marinade MNDE deposits and lock schedules/g)).toHaveLength(1);
-    expect(text).toContain('/m/sol%3Amnde-b');
-    expect(text).toContain('[NEAR validators]');
+    expect(starts.filter((s) => s.label === 'Marinade MNDE deposits and lock schedules')).toEqual([
+      { label: 'Marinade MNDE deposits and lock schedules', href: '/m/sol%3Amnde-b' },
+    ]);
   });
 
-  test('offers maps, one per address, each by its page', () => {
-    const text = openingMessage([map]);
-    expect(text).toContain('[NEAR validators](/m/near%3Avalidators)');
-    expect(text).toContain('[Power Map](/map)');
-  });
-
-  test("the largest three first, by a map's largest reading, and still talks with an empty or unreachable map", () => {
-    const text = openingMessage([
+  test('the largest three first, by a map’s largest reading, then the whole Power Map', () => {
+    const starts = newConversationStarts([
       card('s', 'Small', [3]),
       map,
       // holders and delegates of one address: one map, sized by its larger reading
       card('u', 'UNI delegates', [500, 21919], 'UNI'),
       card('e', 'ENS delegates', [8561], 'ENS (token-only map)'),
     ]);
-    expect(text).toContain(
-      "Or start from what's already mapped: [UNI](/m/u), [ENS](/m/e), [NEAR validators](/m/near%3Avalidators), or the whole [Power Map](/map).",
-    );
-    expect(text).not.toContain('Small');
-    const empty = openingMessage([]);
-    expect(empty).toContain('What are you curious about?');
-    expect(empty).not.toContain('Power Map');
+    expect(starts).toEqual([
+      { label: 'UNI', href: '/m/u' },
+      { label: 'ENS', href: '/m/e' },
+      { label: 'NEAR validators', href: '/m/near%3Avalidators' },
+      { label: newConversationWords.powerMap, href: '/map' },
+    ]);
   });
 
-  test('a title cannot break its link', () => {
-    expect(openingMessage([card('x', 'a [b] c', [1])])).toContain('[a b c](/m/x)');
+  test('with no maps to read, only the whole Power Map', () => {
+    expect(newConversationStarts([])).toEqual([
+      { label: newConversationWords.powerMap, href: '/map' },
+    ]);
   });
+});
 
-  test('renders as links on this site', () => {
-    const blocks = JSON.stringify(parseMarkdown(openingMessage([map]), new Set()));
-    expect(blocks).toContain('"href":"/m/near%3Avalidators"');
-    expect(blocks).toContain('"href":"/map"');
-  });
-
-  test('a reopened conversation still starts with what the agent said', () => {
-    const opening = openingMessage([map]);
+describe('a stored conversation', () => {
+  test('a conversation from before keeps the opening it was stored with', () => {
+    const opening = 'Hi. What are you curious about?';
     const items = threadFromRun({
       messages: [
         { role: 'assistant', content: opening },

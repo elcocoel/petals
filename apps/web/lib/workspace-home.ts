@@ -5,7 +5,7 @@ import { api } from './api.ts';
 import type { ApiHealth } from './api-label.ts';
 import type { Catalogue } from './composer-options.ts';
 import { mapList } from './maps.ts';
-import { firstCases, openingMessage } from './opening.ts';
+import { firstCases, newConversationStarts } from './opening.ts';
 import { openFromParams, questionFromParams } from './workspace-url.ts';
 
 /** `view` is the person's view's hash (lib/viewer-view.ts): the shelf's pictures come in it. */
@@ -30,7 +30,7 @@ export async function workspaceHome(
     catalogue: catalogue.ok ? catalogue.value : null,
     initialQuestion: questionFromParams(q),
     recorded,
-    opening: openingMessage(maps),
+    starts: newConversationStarts(maps),
     shelf: firstCases(maps),
     initialOpen: open,
     initialPetal: petal,

@@ -13,15 +13,12 @@ export function MappingBox({
   press,
   onPublish,
   wallet,
-  quote,
 }: {
   view: MappingView;
   press: PublishPressView | null;
   onPublish: () => void;
   /** the wallet chosen on the map: what can be added about it (a note or a name, or having it mapped) */
   wallet?: { heading: string; body: ReactNode } | undefined;
-  /** what stands in the box while there's nothing to add (a power quote) */
-  quote?: ReactNode;
 }) {
   return (
     <div className="flex flex-col gap-text-gap p-block-gap">
@@ -53,9 +50,6 @@ export function MappingBox({
         </ul>
       )}
       {view.empty && <p className="m-0 type-ui text-muted">{view.empty}</p>}
-      {view.empty && !wallet && quote && (
-        <div className="flex justify-center pt-text-gap">{quote}</div>
-      )}
       {press && <PublishPress view={press} onPublish={onPublish} />}
     </div>
   );

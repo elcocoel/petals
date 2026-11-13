@@ -1,6 +1,7 @@
 // What stands where the composer will be, until a wallet is connected. A question that came with the link
 // waits here, and is in the composer once they've connected. NEAR, Ethereum and Solana, as the signed-out
 // page offers them (components/workspace/NotSignedIn.tsx; flow 1, 13 Nov). Words from lib/door-words.ts.
+import type { ReactNode } from 'react';
 import { doorWords, notSignedInWords } from '../../lib/door-words.ts';
 import { ActionRow } from '../ui/ActionRow.tsx';
 import { Button } from '../ui/Button.tsx';
@@ -12,6 +13,7 @@ export function ConnectWallet({
   onConnect,
   onConnectEvm,
   onConnectSolana,
+  ask,
 }: {
   question: string;
   busy: boolean;
@@ -22,6 +24,8 @@ export function ConnectWallet({
   onConnectEvm?: (() => void) | undefined;
   /** a Solana wallet's way in, where the page has one */
   onConnectSolana?: (() => void) | undefined;
+  /** which wallet, or the one being asked (WalletAsk) */
+  ask?: ReactNode;
 }) {
   const others = Boolean(onConnectEvm || onConnectSolana);
   return (
@@ -43,6 +47,7 @@ export function ConnectWallet({
           </Button>
         )}
       </ActionRow>
+      {ask}
       {failed && <p className="error my-0">{failed}</p>}
     </div>
   );
