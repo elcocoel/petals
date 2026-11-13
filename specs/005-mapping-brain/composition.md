@@ -19,6 +19,18 @@ So the shared map composes what everyone published. No author's work replaces an
 
 In a version, a **layer** is any of Petals' documents about the address, by its hash: a `layer/v1`, a reading (`snapshot/v1`), a value, proposals, a mark, vesting, payouts or a set of claims. That is how values, proposals and logos go onto the map as layers, the same way readings do. Each document keeps its own format and version (`protocols.md`). A published document is kept once, by its hash, and never changed.
 
+### 1b. Three kinds of unit, always told apart
+
+Every unit a layer carries is one of three kinds, and a reader can always tell which:
+
+| Kind | What it is | How it's marked today | Where it isn't yet |
+|---|---|---|---|
+| **Claim** | what someone asserts about an account: a name, a role, a note | its own format (`claim/v*`): `kind` stated or sourced, `evidence` (a proposal or a transaction quoted, or a page), `by` who answers for it | nothing missing |
+| **On-chain data** | read from a chain: who holds what, who voted, what was paid | `snapshot/v1` (its chain, `block_height`, `sources`), proposals (the source's block, every vote), payouts (each with its transaction and block) | `value` mixes it with outside prices (each figure names its `source`), and `vesting` with published and inferred schedules (each allocation names how it's `known`) |
+| **Deterministic result** | computed from on-chain data by a named method | `layer/v1`: `from` (the hashes it was computed from), `how.method`, `standing` | `how.method` is free text: it must name the method and its version (for example `blocs/agreement@2`), so anyone can recompute it from `from` and get the same rows |
+
+So the kind of a unit is its format's, except in the two mixed formats, where each figure or allocation says its own (`value`'s `source`, `vesting`'s `known`); a reader that separates the three reads those fields. A deterministic result names the units it came from (`from`) and the versioned method, and its rows are what that method gives from them, so two authors who run the same method on the same data at the same block state the same facts (sections 3 and 5). A claim is never composed as chain data: claims stand side by side (section 8, `claim/<verb>`), and only chain data and results can "differ".
+
 ## 2. Publishing: a signed version (`publication/v1`)
 
 Publishing is the step `data.md` left open: **an author signs one of their versions, and it goes to the shared map.** The version is the one `data.md` defines: the layers by hash, and the version it came from. One press is one publication, an entry in an append-only record.
@@ -55,7 +67,7 @@ NEAR signs it with NEP-413 (`recipient` this site, a fresh 32-byte `nonce`), as 
 
 ## 2b. One press, many publications (`manifest/v1`; change 2, additive to `publication/v1`)
 
-An author can publish several data units with **one press and one signature**: a press of their own across many maps, or a bulk import. Each unit stays an ordinary `publication/v1`, about one map, with its own layers, `parent`, `previous` and `published_at`. Only how it is signed is new: one signature covers a **manifest** that lists them, and each publication points at it. Nothing else changes: composing, facts and credit read each publication as they read one signed alone.
+An author can publish several data units with **one press and one signature**: a press of their own across many maps, or a bulk import. A person who has their agents map many networks and then publishes the whole contribution signs **once**, however many maps and addresses it touches. What it adds to each address is its own layer (or layers), in that address's own publication, credited and composed like any other layer. Each unit stays an ordinary `publication/v1`, about one map, with its own layers, `parent`, `previous` and `published_at`. Only how it is signed is new: one signature covers a **manifest** that lists them, and each publication points at it. Nothing else changes: composing, facts and credit read each publication as they read one signed alone.
 
 **The manifest** is a document of its own, kept once in the record by its hash, like a layer:
 
