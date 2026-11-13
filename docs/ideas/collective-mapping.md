@@ -12,7 +12,7 @@ The Power Map is a collective construction: its people build it together, and no
 - **Facts you confirmed:** facts someone had published that you read again and matched, independently.
 - **Accounts that built on your work:** each other account that built on a layer of yours or reused it. These are your points.
 
-Points aren't money, and there's no token. They're proof of work for the common good: a future airdrop or governance token, even one without economic value, could read them. Anyone can work all three counts out again from the record.
+Points aren't money, and there's no token. Anyone can work all three counts out again from the record.
 
 RaidGuild's map shows it today: two authors, Petals' own mapping, imported and unsigned, and petals.near, whose names for RaidGuild's accounts were signed by its wallet. Each has its own counts.
 
@@ -21,8 +21,6 @@ Results read from a chain are deterministic. So the question isn't whose map win
 ## Publishing
 
 What you keep about a map stays private until you publish it. Publishing signs one of your versions with your own wallet: its layers, by their hashes, and the version it came from. It moves no funds and costs nothing, like signing in. Each press is an entry in a record that's only ever added to, in the order the server received it.
-
-What you publish is a contribution to the public good, under the protocol, with no licence of its own.
 
 ## How layers meet
 
