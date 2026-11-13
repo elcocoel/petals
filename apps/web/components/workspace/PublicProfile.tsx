@@ -1,8 +1,13 @@
 // A person's public profile, as anyone reads it (/u/<account>), in the lobby's own head: their picture, an
 // eyebrow saying the chain and where the profile is (NEAR Social, or Petals), their name in the title's size,
 // the bio in the lead's size and the links they declare, each with the badge that says only that. A profile
-// from NEAR Social on another chain's page says it's the same person's. With none, it says so. Props only:
-// the page reads GET /api/v1/profiles/:account. Words from lib/lobby-view.ts.
+// from NEAR Social on another chain's page says it's the same person's. With none, it says so. Under it, their
+// contribution to the map in the lobby's own design: three counts (facts added first, confirmed, accounts that
+// built on the work) and what they published, about what and when, so authorship shows to anyone. Props only:
+// the page reads GET /api/v1/profiles/:account and GET /api/v1/credit/:account. Words from lib/lobby-view.ts and
+// lib/contribution-view.ts.
+
+import { type ContributionView, publicContributionWords } from '../../lib/contribution-view.ts';
 import { shortId } from '../../lib/flower-view.ts';
 import {
   type PublicProfileAnswer,
@@ -13,8 +18,18 @@ import { serviceName } from '../../lib/near-social.ts';
 import { walletChain } from '../../lib/profile-view.ts';
 import { Badge } from '../ui/Badge.tsx';
 import { Mono } from '../ui/Mono.tsx';
+import { SectionName } from '../ui/SectionName.tsx';
+import { Contribution } from './Contribution.tsx';
+import { Published } from './Published.tsx';
 
-export function PublicProfile({ answer }: { answer: PublicProfileAnswer }) {
+export function PublicProfile({
+  answer,
+  contribution,
+}: {
+  answer: PublicProfileAnswer;
+  /** Their contribution to the map, when it could be read. */
+  contribution?: ContributionView;
+}) {
   const { account, profile, source } = answer;
   const chain = walletChain(answer.chain === 'near' ? 'mainnet' : answer.chain);
   const where =
@@ -78,6 +93,13 @@ export function PublicProfile({ answer }: { answer: PublicProfileAnswer }) {
         <p className="my-0 type-caption text-muted">{publicProfileWords.linked}</p>
       )}
       {!profile && <p className="my-0 type-lead text-muted">{publicProfileWords.none}</p>}
+      {contribution && (
+        <section className="flex flex-col gap-block-gap border-t border-hairline pt-space-32">
+          <SectionName name={publicContributionWords.title} />
+          <Contribution contribution={contribution} />
+          <Published contribution={contribution} words={publicContributionWords} />
+        </section>
+      )}
     </article>
   );
 }
