@@ -22,9 +22,9 @@ Signing in moves no funds and costs nothing. Payments are separate, and Petals n
 
 ## 3. Credit for Petals’ agent
 
-Petals’ agent runs on NEAR AI, and each answer is paid as it goes, in dollars with NEAR beside. A flower costs a few cents. When your conversation needs credit, the chat shows a row to add it:
+Petals’ agent runs on NEAR AI, and each answer is paid as it goes, in dollars with NEAR beside. A flower costs a few cents. Until you have credit, the chat shows a row to add some, starting at 1 in **Dollars to add**:
 
-- **Add 1 NEAR:** your wallet asks you to approve one plain transfer of 1 NEAR. This needs NEAR in the wallet.
+- **Add**, with the dollars and the NEAR they come to beside them (such as **Add $1.00 · 0.29 NEAR**): your wallet asks you to approve one plain transfer of that NEAR. This needs NEAR in the wallet.
 - **Pay with another token,** with no NEAR needed. Pick the token and its chain, the dollars to add, and an address on that chain, where anything not swapped goes back. Then press **Get the address to send to**. Send exactly the amount shown, in one transfer from any wallet, to that address, with the memo if one is shown, before the time shown. The chat says when the credit is added. This goes through NEAR Intents.
 
 To have NEAR in your wallet, buy it on an exchange that lists NEAR and withdraw it to your wallet’s address.
