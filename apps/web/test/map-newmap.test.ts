@@ -30,7 +30,10 @@ test('the placeholder, the strip of work and the landed reading', () => {
     /progress\?: \{ map: string \| 'new'; words: string; share: number \| null \} \| null \| undefined;/,
   );
   expect(canvas).toMatch(/landed\?: MapLanded \| null \| undefined;/);
-  expect(canvas).toMatch(/\(\) => dressedIn\(withLanded\(given, landed\), person\.view\),/);
+  // a reading just made lands, and over it the reading composed from the layers on (wave 8, OVERLAYS's useComposed)
+  expect(canvas).toMatch(
+    /\(\) => dressedIn\(withLanded\(withLanded\(given, landed\), composedLanded\), person\.view\),/,
+  );
   expect(canvas).toMatch(
     /const at = home \? spreadPlace\(pendingPlace, home, spreadOf\(gravity\)\) : pendingPlace;/,
   );
