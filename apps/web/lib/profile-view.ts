@@ -86,8 +86,7 @@ export function walletRefusal(
       : typeof (e as { message?: unknown } | null)?.message === 'string'
         ? (e as { message: string }).message
         : String(e);
-  if (code === 4001 || /reject|denied|declin|cancel|closed/i.test(said))
-    return declined(wallet);
+  if (code === 4001 || /reject|denied|declin|cancel|closed/i.test(said)) return declined(wallet);
   if (code === -32002) return profilePageWords.busy(wallet);
   return profilePageWords.answered(wallet, said || profilePageWords.notAdded);
 }
