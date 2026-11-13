@@ -40,8 +40,7 @@ export const fundsWords = {
  * Its links are the account's own declaration, so their badge says only that.
  */
 export const profileWords = {
-  /** The badges beside the account: the chain it's on, and where its profile is. */
-  chain: 'NEAR',
+  /** The badges beside the account where its profile is (the chain's badge is its name, lib/profile-view.ts). */
   social: 'NEAR Social',
   inPetals: 'In Petals',
   noProfile: 'No profile',

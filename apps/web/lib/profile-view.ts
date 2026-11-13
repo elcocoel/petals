@@ -63,20 +63,23 @@ export interface WalletRow {
   when: string;
 }
 
+/** A proven wallet's chain, by name, from the network the server names it on. */
+export const walletChain = (network: string) =>
+  network === 'eip155'
+    ? 'Ethereum'
+    : network === 'solana'
+      ? 'Solana'
+      : network === 'testnet'
+        ? 'NEAR testnet'
+        : 'NEAR';
+
 export function walletRows(wallets: readonly ProvenWallet[]): WalletRow[] {
   return wallets.map((w) => ({
     key: `${w.network}:${w.account_id}`,
     ...(w.network === 'eip155' || w.network === 'solana'
       ? { shown: shortId(w.account_id), full: w.account_id }
       : shownAccount(w.account_id)),
-    chain:
-      w.network === 'eip155'
-        ? 'Ethereum'
-        : w.network === 'solana'
-          ? 'Solana'
-          : w.network === 'testnet'
-            ? 'NEAR testnet'
-            : 'NEAR',
+    chain: walletChain(w.network),
     when: profilePageWords.provedOn(dateLabel(w.proved_at)),
   }));
 }
