@@ -814,6 +814,11 @@
   line-height: var(--joy-move-answer-leading);
 }
 
+/* row.answer */
+:root[data-version="2"] [data-b="row"] [data-answer] strong {
+  font-weight: var(--joy-move-answer-bold);
+}
+
 /* row.sign */
 :root[data-version="2"] [data-b="row"] [data-sign] {
   position: relative;

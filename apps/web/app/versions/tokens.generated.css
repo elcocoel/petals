@@ -80,6 +80,7 @@
   --joy-move-underline-at: -3px;
   --joy-move-card-underline: 6px;
   --joy-move-answer-leading: 1.75;
+  --joy-move-answer-bold: 550;
   --joy-move-mark-base-axes: "CRSV" 0, "ELSH" 0, "ELXP" 0, "slnt" -8, "wght" 358;
   --joy-move-wordmark-fill: calc(100cqi / 3.62);
   --joy-move-sign-turn: 90deg;

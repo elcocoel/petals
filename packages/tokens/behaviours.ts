@@ -186,7 +186,11 @@ export const behaviours = [
     purpose: 'A click opens a folded row and folds the one that was open: one at a time, no timer',
     via: 'script',
   },
-  { name: 'row.answer', purpose: "An answer's lines sit roomier than body text", via: 'css' },
+  {
+    name: 'row.answer',
+    purpose: "An answer's lines sit roomier than body text, its key words a lighter bold",
+    via: 'css',
+  },
   { name: 'row.sign', purpose: 'The sign turns between plus and minus', via: 'css' },
   { name: 'row.cursor', purpose: "The transcript's cursor blinks", via: 'css' },
   // item

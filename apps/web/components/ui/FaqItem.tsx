@@ -2,7 +2,8 @@
 // so it needs no JavaScript. A numbered item lines its answer up under the question on one twelve-column grid.
 // The landing's, unnumbered, reads calmer (Elco, 13 Nov: "more spacious more calmness more joy ... it shouldn't
 // feel like a page of a book"): the question a lead's size, room under it, the answer in two short columns
-// with roomier lines (row.answer), and its key concepts in bold, written between ** in the copy. In version 2
+// with roomier lines and room from its edges (row.answer), its key concepts in a lighter bold, written between
+// ** in the copy. In version 2
 // it starts folded and opens by a click, one at a time: apps/web/app/versions/peek.ts, `row.peek`.
 import type { ReactNode } from 'react';
 import type { GlyphKind } from '../../lib/figures.ts';
@@ -14,15 +15,9 @@ export type AnswerBlock = string | { readonly list: readonly string[] };
 
 /** A line's words, with what's between ** in bold. */
 function words(line: string): ReactNode[] {
-  return line.split(/\*\*(.+?)\*\*/).map((part, i) =>
-    i % 2 === 1 ? (
-      <strong key={part} className="font-semibold">
-        {part}
-      </strong>
-    ) : (
-      part
-    ),
-  );
+  return line
+    .split(/\*\*(.+?)\*\*/)
+    .map((part, i) => (i % 2 === 1 ? <strong key={part}>{part}</strong> : part));
 }
 
 export function FaqItem({
@@ -62,7 +57,12 @@ export function FaqItem({
   );
   if (!index)
     return (
-      <details open={open} data-b="row" className="border-b border-hairline py-block-gap">
+      // room from its edges as between its columns (Elco, 13 Nov: open, the words were "cramped")
+      <details
+        open={open}
+        data-b="row"
+        className="border-b border-hairline px-block-gap py-block-gap open:pb-column-gap md:px-column-gap"
+      >
         <summary className="flex list-none items-center gap-block-gap [&::-webkit-details-marker]:hidden">
           <span className="min-w-0 flex-1 type-lead">{question}</span>
           {sign}
