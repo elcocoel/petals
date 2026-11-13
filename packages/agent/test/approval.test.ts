@@ -194,6 +194,26 @@ describe('a model that goes straight to a new map', () => {
     expect(names(es).at(-1)).toBe('done');
   });
 
+  test('a model that goes quiet after drawing gets one call with no tools, so the flower comes with words', async () => {
+    const first = await asked();
+    const { es, llm } = await chat(
+      [
+        { calls: [NEAR] },
+        { calls: [PROPOSE] },
+        { calls: [VALIDATE] },
+        { calls: [RENDER] },
+        { content: '' },
+        { content: HERE },
+      ],
+      { said: 'yes', thread: reply(first.thread, 'yes') },
+    );
+    expect(pick(es, 'flower')).toHaveLength(1);
+    expect(llm.requests).toHaveLength(6);
+    expect(llm.requests[5]?.tools).toBeUndefined();
+    expect(said(es)).toEqual([HERE]);
+    expect(names(es)).not.toContain('error');
+  });
+
   test('one event per target in a chat; what is not held in the same round still runs', async () => {
     const { es, tools } = await chat([
       { calls: [{ name: 'list_flowers', args: {} }, NEAR, NEAR, BITCOIN] },

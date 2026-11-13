@@ -411,7 +411,8 @@ async function loop(
     const held = gate?.check(call.name, args, messages.slice(1));
     return !!held && refusedCalls.has(refusedCall(call.name, held.target_key, args));
   };
-  // A model that answered a refusal with nothing but more of the same gets one call with no tools.
+  // A model that answered a refusal with nothing but more of the same, or nothing at all after its tools, gets
+  // one call with no tools.
   let mustSpeak = false;
 
   // A store that fails here must not stop the chat: only a crash would then lose this much.
@@ -759,6 +760,12 @@ async function loop(
         : { role: 'assistant', content: c.message.content };
       const text = answer.content?.trim();
       if (refused.size && !text && !kept.length && !mustSpeak) {
+        mustSpeak = true;
+        continue;
+      }
+      // A model that goes quiet after its tools ran (a flower drawn, then no words, would show an error
+      // under the flower) gets the same one call with no tools.
+      if (rounds > 0 && !text && !kept.length && !mustSpeak) {
         mustSpeak = true;
         continue;
       }
