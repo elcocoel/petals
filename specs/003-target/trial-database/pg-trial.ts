@@ -12,7 +12,7 @@ import { spawnSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 
 const [repo, sqliteFile, pg, mode, outFile] = process.argv.slice(2) as [string, string, string, string, string];
-const C = '/opt/homebrew/bin/container';
+const C = 'container';
 const lines: string[] = [];
 const say = (s: string) => {
   lines.push(s);
