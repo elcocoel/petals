@@ -1,4 +1,4 @@
-// Figma's Footer (66:2360), a band as tall as the screen on the FAQ's grey, everything at its bottom edge: on the
+// Figma's Footer (66:2360), a band on the FAQ's grey with a section's padding above its content: on the
 // left half, the wordmark as wide as that half (mark.fill) with the small print under it; bottom right, the site's
 // pages and the outside links. The content sits one block gap from the window's own edges (left, right, bottom),
 // not on the page's inset column. Only links that go somewhere: an outside link shows once its address is set.
@@ -33,9 +33,9 @@ export function Footer() {
       data-surface="ground"
       data-tone="stone"
       data-b="surface"
-      className="@container relative flex min-h-svh flex-col justify-end overflow-hidden border-t border-hairline"
+      className="@container relative overflow-hidden border-t border-hairline"
     >
-      <div className="flex flex-col gap-column-gap px-block-gap pb-block-gap antialiased md:flex-row md:items-end md:justify-between">
+      <div className="flex flex-col gap-column-gap px-block-gap pt-section-padding pb-block-gap antialiased md:flex-row md:items-end md:justify-between">
         <div className="@container flex w-full flex-col gap-block-gap md:w-1/2">
           <Wordmark size="fill" />
           <p className="my-0 type-lead">
