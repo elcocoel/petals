@@ -4,7 +4,7 @@ title: Publishing
 order: 20
 ---
 
-What you keep about a map stays private until you publish it. Publishing signs one of your versions with your own wallet, and it goes to the shared map. One press is one publication, an entry in a record that is only ever added to.
+What you keep about a map stays private until you publish it. Publishing signs one of your versions with your own wallet, and it goes to the shared map: a contribution to the public good, under the protocol, with no licence of its own. One press is one publication, an entry in a record that is only ever added to.
 
 ## What you sign
 
