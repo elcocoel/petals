@@ -1,7 +1,7 @@
 // The way to add credit for Petals' agent, where the person meets it in the chat (B): one line and one
 // button, which opens the wallet, and beside it paying with any other token from any chain through NEAR
-// Intents: pick the token, the dollars and a refund address, then send the exact amount to
-// the address given, in one transfer from any wallet. Props only: viewmodels/usePay.ts and useTopUp.ts
+// Intents: pick the token and a refund address (the dollars are the row's one amount), then send the exact
+// amount to the address given, in one transfer from any wallet. Props only: viewmodels/usePay.ts and useTopUp.ts
 // hold the payments. Words from lib/pay.ts and lib/intents.ts.
 import { intentWords, type TopUpView } from '../../lib/intents.ts';
 import { PAY_NEAR, type PayPhase, payWords } from '../../lib/pay.ts';
@@ -70,13 +70,18 @@ export function PayRow({
       </ActionRow>
       {phase === 'failed' && <p className="my-0 type-ui text-muted">{failedWords}</p>}
       {topUp?.open &&
-        (sent && !sent.ended ? <Sending sent={sent} topUp={topUp} /> : <Form topUp={topUp} />)}
+        (sent && !sent.ended ? (
+          <Sending sent={sent} topUp={topUp} />
+        ) : (
+          <Form topUp={topUp} withUsd={!amount} />
+        ))}
       {sent?.ended && <p className="my-0 type-ui text-muted">{sent.status}</p>}
     </div>
   );
 }
 
-function Form({ topUp }: { topUp: TopUpView }) {
+/** `withUsd`: the dollars here too, where the row above has none to share (no price, or a transfer waiting). */
+function Form({ topUp, withUsd }: { topUp: TopUpView; withUsd: boolean }) {
   const { actions } = topUp;
   if (!topUp.groups) return <p className="my-0 type-ui text-muted">{intentWords.loading}</p>;
   return (
@@ -92,13 +97,15 @@ function Form({ topUp }: { topUp: TopUpView }) {
       />
       {topUp.asset && (
         <>
-          <Field
-            id="topup-usd"
-            label={intentWords.usd}
-            value={topUp.usd}
-            onChange={actions.setUsd}
-            scale="app"
-          />
+          {withUsd && (
+            <Field
+              id="topup-usd"
+              label={intentWords.usd}
+              value={topUp.usd}
+              onChange={actions.setUsd}
+              scale="app"
+            />
+          )}
           <Field
             id="topup-refund"
             label={topUp.refundLabel}
