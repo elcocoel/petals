@@ -1,5 +1,5 @@
-// The one press that publishes what a person kept about a map (lib/publish-press.ts): how many can go, that
-// the wallet signs once and nothing is spent, why the rest stay private, folded. Props only.
+// The one press that publishes what a person mapped (lib/publish-press.ts): the names that go, read first, then
+// the press, that the wallet signs once and nothing is spent, and why the rest stay private, folded. Props only.
 import type { PublishPressView, PublishRow } from '../lib/publish-press.ts';
 import { Button } from './ui/Button.tsx';
 import { TextLink } from './ui/TextLink.tsx';
@@ -13,13 +13,9 @@ export function PublishPress({
 }) {
   return (
     <section className="flex flex-col items-start gap-space-4">
-      {view.counts && <p className="my-0 type-ui">{view.counts}</p>}
-      {/* every item, read before the press (Elco: "Let me look first") */}
+      {/* every name, read before the press (Elco: "Let me look first") */}
       {view.rows && (
         <>
-          {view.rows.readings && (
-            <Rows heading={view.rows.readings.heading} rows={view.rows.readings.rows} />
-          )}
           {view.rows.going.length > 0 && <Rows heading={view.rows.goes} rows={view.rows.going} />}
           {view.rows.staying.length > 0 && (
             <Rows heading={view.rows.stays} rows={view.rows.staying} />

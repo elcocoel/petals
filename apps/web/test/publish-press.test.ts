@@ -1,8 +1,10 @@
-// Publishing what a person kept about a map, with one press (Elco, 12 Nov).
+// Publishing what a person mapped, with one press (Elco, 12 Nov). Wave 8 (13 Nov): one signed version of their
+// layers, from their wallet (composition.md §2).
 import { describe, expect, test } from 'vitest';
-import { publishPressView, publishWords } from '../lib/publish-press.ts';
+import type { PublishableData } from '../lib/agent-client.ts';
+import { publishPressView, publishWords, signerOf } from '../lib/publish-press.ts';
 
-const data = {
+const data: PublishableData = {
   about: 'eip155:100:0xf02f',
   name: 'RaidGuild',
   ready: 63,
@@ -11,40 +13,84 @@ const data = {
     { id: 'b', subject: '0xd26a', verb: 'named', why: 'No proposal declares it.' },
   ],
   published: 0,
+  layers: [
+    {
+      sha256: 'c3',
+      petal: 'claims/v1',
+      title: 'Names and notes · 63',
+      cases: { new_data: { whats: ['names'] } },
+    },
+  ],
 };
 
+const wallets = [
+  {
+    network: 'mainnet',
+    account_id: 'alice.near',
+    proved_at: '2026-11-11T09:00:00Z',
+    author: 'near:mainnet:alice.near',
+  },
+  {
+    network: 'eip155',
+    account_id: '0xced608aa29bb92185d9b6340adcbfa263dae075b',
+    proved_at: '2026-11-12T09:00:00Z',
+    author: 'eip155:1:0xced608aa29bb92185d9b6340adcbfa263dae075b',
+  },
+];
+const signer = signerOf(wallets);
+const one = signer;
+
 describe('the publish press', () => {
-  test('says how many can go and how many stay, and why the rest stay, folded', () => {
-    const v = publishPressView(data, 'ready', null);
-    expect(v?.press).toBe(publishWords.press);
-    expect(v?.counts).toBe('63 can go on the shared map in your name; 2 stay private.');
-    expect(v?.why?.lines).toEqual([
+  test('signs as the person’s first wallet that names its author', () => {
+    expect(signer).toEqual({
+      wallet: wallets[0],
+      author: 'near:mainnet:alice.near',
+      shown: 'alice.near',
+    });
+    expect(
+      signerOf([{ ...wallets[0], author: undefined } as never, wallets[1] as never])?.author,
+    ).toBe('eip155:1:0xced608aa29bb92185d9b6340adcbfa263dae075b');
+    expect(signerOf([])).toBeNull();
+  });
+
+  test('presses once; the wallet signs once and nothing is spent', () => {
+    expect(publishPressView(data, 'ready', null, one)).toMatchObject({
+      press: publishWords.press,
+      sign: publishWords.sign,
+    });
+  });
+
+  test('is not there with no layers to publish, or no wallet to sign', () => {
+    expect(publishPressView({ ...data, layers: [] }, 'ready', null, one)).toBeNull();
+    expect(publishPressView(data, 'ready', null, null)).toBeNull();
+    expect(publishPressView(null, 'ready', null, one)).toBeNull();
+  });
+
+  test('waits on the wallet, then says what joined the map, or why not', () => {
+    expect(publishPressView(data, 'signing', null, one)).toMatchObject({
+      press: publishWords.signing,
+      busy: true,
+    });
+    expect(
+      publishPressView(data, 'published', publishWords.published('1 new kind of data'), one),
+    ).toMatchObject({
+      press: null,
+      said: 'On the shared map in your name: 1 new kind of data.',
+    });
+    expect(publishPressView(data, 'failed', publishWords.otherWallet, one)?.said).toBe(
+      publishWords.otherWallet,
+    );
+  });
+
+  test('with no names listed, the private ones fold under one line, each with why', () => {
+    expect(publishPressView(data, 'ready', null, one)?.why?.lines).toEqual([
       '0xced6: No proposal declares it.',
       '0xd26a: No proposal declares it.',
     ]);
   });
-
-  test('is not there when nothing can go', () => {
-    expect(publishPressView({ ...data, ready: 0 }, 'ready', null)).toBeNull();
-    expect(publishPressView(null, 'ready', null)).toBeNull();
-  });
-
-  test('waits on the wallet, then says what went, or why not', () => {
-    expect(publishPressView(data, 'signing', null)).toMatchObject({
-      press: publishWords.signing,
-      busy: true,
-    });
-    expect(publishPressView(data, 'published', publishWords.published(63))).toMatchObject({
-      press: null,
-      said: 'Published on the shared map: 63.',
-    });
-    expect(publishPressView(data, 'failed', publishWords.otherWallet)?.said).toBe(
-      publishWords.otherWallet,
-    );
-  });
 });
 
-describe('the list, read before the press (Elco: "Let me look first")', () => {
+describe('the names, read before the press (Elco: "Let me look first")', () => {
   test('every name that goes, one per row: its address, its source and quote, its confidence; then the private ones with why', () => {
     const v = publishPressView(
       {
@@ -73,6 +119,7 @@ describe('the list, read before the press (Elco: "Let me look first")', () => {
       },
       'ready',
       null,
+      one,
     );
     expect(v?.rows?.going).toEqual([
       {
@@ -98,54 +145,7 @@ describe('the list, read before the press (Elco: "Let me look first")', () => {
       'No proposal declares it.',
       'No proposal declares it.',
     ]);
-    // with the list, the private ones are in it, not folded apart
+    // with the list, nothing is folded
     expect(v?.why).toBeNull();
-  });
-});
-
-describe('readings you drew go with them (wave 7)', () => {
-  test('listed first, each in words with its accounts; the press and the result say so', () => {
-    const v = publishPressView(
-      {
-        ...data,
-        readings: [
-          {
-            layer: 'Readings',
-            id: 'r1',
-            title: 'RaidGuild',
-            what: 'Moloch v3 (Baal) members on Gnosis, 11 Nov',
-            as_of: '2026-11-11',
-            accounts: 174,
-          },
-        ],
-      },
-      'ready',
-      null,
-    );
-    expect(v?.press).toBe(publishWords.pressAll);
-    expect(v?.counts).toContain('1 reading you drew goes with them.');
-    expect(v?.rows?.readings?.rows[0]).toMatchObject({
-      name: 'Moloch v3 (Baal) members on Gnosis, 11 Nov',
-      address: '174 accounts',
-    });
-    expect(publishWords.publishedAll(62, 1)).toBe(
-      'Published on the shared map: 62 names and notes, 1 reading.',
-    );
-  });
-
-  test('readings alone, with no names to go, still offer the press', () => {
-    const v = publishPressView(
-      {
-        ...data,
-        ready: 0,
-        private: [],
-        readings: [
-          { layer: 'Readings', id: 'r1', title: 'X', what: 'X', as_of: '2026-11-11', accounts: 3 },
-        ],
-      },
-      'ready',
-      null,
-    );
-    expect(v?.press).toBe(publishWords.pressAll);
   });
 });
