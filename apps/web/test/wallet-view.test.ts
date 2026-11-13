@@ -51,25 +51,17 @@ describe('where authors differ on a wallet', () => {
     const credit = {
       pieces: {
         amount: {
-          'near:mainnet:cronus.near': {
-            differs: [
-              { value: '534', by: ['near:mainnet:mapping.petals.near'] },
-              { value: '535', by: ['near:mainnet:elco.near'] },
-            ],
+          'cronus.near': {
+            by: ['near:mainnet:mapping.petals.near'],
+            differs: [{ value: '535', by: ['near:mainnet:elco.near'] }],
           },
         },
-        kind: { 'near:mainnet:cronus.near': {} },
+        kind: { 'cronus.near': {} },
       },
       authors: { 'near:mainnet:mapping.petals.near': { name: "Petals' mapping" } },
     };
     expect(differsOf(credit, 'cronus.near', (p) => p)).toEqual([
-      {
-        what: 'amount',
-        values: [
-          { value: '534', by: "Petals' mapping" },
-          { value: '535', by: 'elco.near' },
-        ],
-      },
+      { what: 'amount', drawnBy: "Petals' mapping", values: [{ value: '535', by: 'elco.near' }] },
     ]);
     expect(differsOf(undefined, 'cronus.near', (p) => p)).toEqual([]);
   });

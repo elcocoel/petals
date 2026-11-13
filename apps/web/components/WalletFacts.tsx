@@ -31,8 +31,11 @@ export function WalletFacts({ view }: { view: WalletView }) {
           </Mono>
           {view.differs.map((d) => (
             <p key={d.what} className="my-0 type-ui">
-              <span className="text-muted">{d.what} </span>
-              {d.values.map((v) => walletWords.value(v.value, v.by)).join(' · ')}
+              <span className="text-muted">{d.what}: </span>
+              {[
+                walletWords.drawn(d.drawnBy),
+                ...d.values.map((v) => walletWords.value(v.value, v.by)),
+              ].join(' · ')}
             </p>
           ))}
         </div>

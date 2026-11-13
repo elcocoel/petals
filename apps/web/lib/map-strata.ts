@@ -5,6 +5,8 @@
 // and when, how it was read, what it was built on, and whether it's on in the map you see. 'Not recorded' wherever
 // the record has nothing. Pure. The words are drafts.
 
+import { chainLabel } from './flower-view.ts';
+
 export type Standing = 'verified' | 'inferred' | 'lead';
 
 /**
@@ -105,12 +107,12 @@ export interface CardLayer {
   petal: string;
   title?: string | null;
   whats?: readonly string[];
+  /** the moments it states (core's compose State): a chain's block, or an instant, and a window for spans */
   states?: readonly {
     chain?: string;
-    block?: number | string;
+    block?: number;
     at?: string;
-    from?: string;
-    to?: string;
+    window?: { from: string; to: string };
   }[];
   collected_at?: string | null;
   source?: string | { name?: string } | null;
@@ -154,9 +156,11 @@ const day = (iso: string) =>
 /** What a layer states: its blocks, its instants or its windows, in words. */
 function coversOf(states: CardLayer['states']): string | null {
   const words = (states ?? []).map((s) => {
-    if (s.from && s.to) return `${day(s.from)} to ${day(s.to)}`;
-    if (s.block !== undefined && s.block !== null)
-      return `block ${Number(s.block).toLocaleString('en-US')}`;
+    if (s.window) return `${day(s.window.from)} to ${day(s.window.to)}`;
+    if (s.block !== undefined) {
+      const chain = s.chain ? chainLabel(s.chain) : null;
+      return `${chain ? `${chain} ` : ''}block ${s.block.toLocaleString('en-US')}`;
+    }
     if (s.at) return `as of ${day(s.at)}`;
     return null;
   });

@@ -41,7 +41,7 @@ const layers: CardLayer[] = [
   {
     sha256: 'c'.repeat(64),
     petal: 'proposals/v3',
-    states: [{ from: '2021-02-03T00:00:00Z', to: '2026-11-11T00:00:00Z' }],
+    states: [{ window: { from: '2021-02-03T00:00:00Z', to: '2026-11-11T00:00:00Z' } }],
     by: ['near:mainnet:mapping.petals.near'],
     first: {
       author: 'near:mainnet:mapping.petals.near',
@@ -72,7 +72,7 @@ describe('a map’s layers as strata', () => {
   });
   test('what each covers, and its kind', () => {
     expect(strataLine(strata[0] ?? ({} as never))).toBe(
-      'a reading · block 37,912,004 · read 9 Nov 2026',
+      'a reading · Gnosis block 37,912,004 · read 9 Nov 2026',
     );
     expect(strata[1]?.title).toBe('proposals and votes');
     expect(strata[1]?.covers).toBe('3 Feb 2021 to 11 Nov 2026');
