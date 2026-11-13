@@ -39,6 +39,7 @@ import { publicOrigin, siteLinks } from '../../lib/site-links.ts';
 import { type HeroStoryClock, useHeroStory } from '../../viewmodels/useHeroStory.ts';
 import { CopyPrompt } from '../CopyPrompt.tsx';
 import { Button } from '../ui/Button.tsx';
+import { ConnectButton } from '../ui/ConnectButton.tsx';
 import { Icon } from '../ui/Icon.tsx';
 import { IconButton } from '../ui/IconButton.tsx';
 import { Mono } from '../ui/Mono.tsx';
@@ -152,9 +153,7 @@ const Intro = memo(function Intro() {
         {/* Connect the one dark button, first; beside it, lighter, the setup prompt to copy and a smaller one
             with a star for GitHub */}
         <div className="flex flex-wrap items-center gap-space-8">
-          <Button href={siteLinks.lobby} arrow>
-            {hero.ask.action}
-          </Button>
+          <ConnectButton label={hero.ask.action} />
           <CopyPrompt
             prompt={setup.prompt(publicOrigin)}
             originIn={publicOrigin}

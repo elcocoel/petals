@@ -77,6 +77,7 @@ import { Callout } from '../components/ui/Callout.tsx';
 import { Card } from '../components/ui/Card.tsx';
 import { ChooseFile } from '../components/ui/ChooseFile.tsx';
 import { ColourPick } from '../components/ui/ColourPick.tsx';
+import { ConnectButton, ConnectButtonView } from '../components/ui/ConnectButton.tsx';
 import { Drawing } from '../components/ui/Drawing.tsx';
 import { EmptySlot } from '../components/ui/EmptySlot.tsx';
 import { FaqItem } from '../components/ui/FaqItem.tsx';
@@ -1449,6 +1450,34 @@ export const registry: LabEntry[] = [
         ),
       },
     ],
+  },
+  {
+    id: 'ConnectButtonView',
+    group: 'Controls',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/ui/ConnectButton.tsx',
+    states: [
+      { name: 'visitor', render: () => <ConnectButtonView label="Connect" account={null} /> },
+      {
+        name: 'connected, named account',
+        render: () => <ConnectButtonView label="Connect" account="alice.near" />,
+      },
+      {
+        name: 'connected, long address',
+        render: () => (
+          <ConnectButtonView label="Connect" account="0x8ba1f109551bD432803012645Ac136ddd64DBA72" />
+        ),
+      },
+    ],
+  },
+  {
+    id: 'ConnectButton',
+    group: 'Controls',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/ui/ConnectButton.tsx',
+    states: [{ name: 'as the page reads it', render: () => <ConnectButton label="Connect" /> }],
   },
   {
     id: 'Button',
