@@ -1,4 +1,4 @@
-// B, the payment step: what a payment sends, what's left (dollars first, NEAR beside), and where the chat offers it.
+// The payment step: what a payment sends, what's left (dollars first, NEAR beside), and where the chat offers it.
 
 import { DEFAULT_VIEW } from '@petal/core/view';
 import { createElement } from 'react';
@@ -23,7 +23,7 @@ describe('paying for Petals’ agent', () => {
     expect(yoctoOf(0.5)).toBe('500000000000000000000000');
   });
 
-  test('money reads dollars first, NEAR beside at today’s price (Elco, 10 Nov)', () => {
+  test('money reads dollars first, NEAR beside at today’s price', () => {
     expect(money(2, 4)).toEqual({ usd: '2.00', near: '0.50' });
     expect(moneyWords(money(2, 4))).toBe('$2.00 · 0.50 NEAR');
     expect(payWords.balance(money(1, 3.62))).toBe('Balance: $1.00 · 0.28 NEAR');
@@ -85,7 +85,7 @@ describe('paying for Petals’ agent', () => {
   });
 });
 
-describe('about $1, never twice (wave 5, Elco’s mainnet test)', () => {
+describe('about $1, never twice', () => {
   test('dollars become NEAR at today’s price, in thousandths, never less than asked', () => {
     expect(nearFor(1, 3.42)).toBe(0.293);
     expect(nearFor(1, null)).toBeNull();

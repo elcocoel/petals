@@ -1,5 +1,5 @@
-// surface.drift, surface.shimmer, surface.connect and surface.tone. Elco: "All of them need to be softer and
-// softly in motion", the colour behind the mouse is gone, and a line between stars stays off the content.
+// surface.drift, surface.shimmer, surface.connect and surface.tone. All of them are soft and
+// softly in motion, the colour behind the mouse is gone, and a line between stars stays off the content.
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tones, v2 } from '@petal/tokens';
@@ -134,7 +134,7 @@ describe('a line between two stars', () => {
   const WIDTH = 1440;
   const HEIGHT = 1050;
 
-  test('stars are far fewer than Elco first saw, and only show in the corners', () => {
+  test('stars are few, and only show in the corners', () => {
     const stars = starsOn(WIDTH, HEIGHT);
     expect(stars.length).toBeGreaterThan(4);
     // The first pass had 16 stars and 26 specks to about 1,400px² each, or some 1,500 on a band this size.

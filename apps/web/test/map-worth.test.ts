@@ -1,5 +1,5 @@
-// Elco, 12 Nov walk 3 on Ref Finance: "at some magnification show treasury and token price ... switchable from
-// OVERLAYS' tools box". Each map's card says them (value/v2's treasury, value/v1's price); the map shows them
+// At some magnification a map shows its treasury and token price, switchable from the Tools box. Each map's
+// card says them (value/v2's treasury, value/v1's price); the map shows them
 // under the name once a flower is big enough, never where something else stands.
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -26,7 +26,7 @@ test('the treasury and the token price, each where the card has it, never a gues
     'Treasury $7,034,000 (1 unpriced)',
     '1 COMP = $19.85, 12 Nov',
   ]);
-  // a price says it's a price, and its day: never a treasury of a few dollars (Elco, 12 Nov)
+  // a price says it's a price, and its day: never a treasury of a few dollars
   expect(worthWords(value({ treasury_usd: null }))).toEqual(['1 COMP = $19.85, 12 Nov']);
   expect(worthWords(value({ price: null, treasury_usd: '60.81', treasury_unpriced: 0 }))).toEqual([
     'Treasury $60.81',

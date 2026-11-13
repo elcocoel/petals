@@ -1,4 +1,4 @@
-// META's QA, 12 Nov (checked by PM): "labels never sit on each other or run off the window". A flower's notes
+// Labels never sit on each other or run off the window. A flower's notes
 // give way to what's already on the screen (the map's names, its neighbours' names, the boxes over the map); the
 // chosen petal's note slides clear of a box; the neighbours' names stay inside the window; the flower that speaks
 // is drawn under the names; a folded stack's count finds a free place or keeps quiet.
@@ -65,7 +65,7 @@ test("the chosen petal's note slides clear of a box over the map", () => {
   expect(s.x + s.width).toBeLessThanOrEqual(panel.x0);
 });
 
-test("the pointed petal's note slides clear of a box over the map too (12 Nov, wave 4)", () => {
+test("the pointed petal's note slides clear of a box over the map too", () => {
   const i = m.order[0] as number;
   const k = 140 / m.R;
   const free = marks(m, at(k), { index: i, presence: 1 }).focus;

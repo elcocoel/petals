@@ -1,4 +1,4 @@
-// A NEAR account's public profile on NEAR Social, as the lobby shows it (Elco, 9 Nov): plain text, links
+// A NEAR account's public profile on NEAR Social, as the lobby shows it: plain text, links
 // as declared, nothing when there's nothing.
 import { describe, expect, test } from 'vitest';
 import { socialProfile } from '../lib/near-social.ts';

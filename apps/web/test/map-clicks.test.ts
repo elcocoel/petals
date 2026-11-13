@@ -1,5 +1,5 @@
-// The two clicks Elco named (12 Nov): "a click on the line can do is highlight the petals that hold that token";
-// "clicking a proposal should highlight the wallets that voted and show dots for positive and negative votes".
+// Two clicks: a click on a line highlights the petals that hold that token; a click on a proposal highlights
+// the wallets that voted and shows dots for positive and negative votes.
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { expect, test } from 'vitest';
@@ -55,7 +55,7 @@ test('a stack of more than STACK_FOLD proposals folds into one mark with its cou
   expect(land).toMatch(/\.\.\.\(open\.length \? \{ opened: open \} : \{\}\),/);
 });
 
-test('the page hears which proposal is pinned, and when it is let go (OVERLAYS, Elco walk 3)', () => {
+test('the page hears which proposal is pinned, and when it is let go', () => {
   const land = text('landscape/useLandscape.ts');
   expect(land).toMatch(
     /onProposal\?: \(p: \{ flower: string; id: string; proposal: Proposal \| null \} \| null\) => void;/,

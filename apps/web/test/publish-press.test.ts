@@ -1,4 +1,4 @@
-// Publishing what a person mapped, with one press (Elco, 12 Nov). Wave 8 (13 Nov): one signed version of their
+// Publishing what a person mapped, with one press: one signed version of their
 // layers, from their wallet (composition.md §2).
 import { describe, expect, test } from 'vitest';
 import type { PublishableData } from '../lib/agent-client.ts';
@@ -90,7 +90,7 @@ describe('the publish press', () => {
   });
 });
 
-describe('the names, read before the press (Elco: "Let me look first")', () => {
+describe('the names, read before the press', () => {
   test('every name that goes, one per row: its address, its source and quote, its confidence; then the private ones with why', () => {
     const v = publishPressView(
       {

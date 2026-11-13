@@ -1,6 +1,5 @@
-// Elco, 12 Nov walk: "one click put something in the center ... a dashed line on the center for focus all the dowels
-// are organized around that ... what everything else gets compared to"; "how could I select two dowels and see only
-// those connections".
+// One click puts something in the centre: a dashed line marks the focus the dowels are arranged around, what
+// everything else is compared to; two dowels chosen show only their connections.
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { expect, test } from 'vitest';

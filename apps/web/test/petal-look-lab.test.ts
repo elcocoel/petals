@@ -1,5 +1,5 @@
-// The petal look is in /lab first (#76; design/flower-art-direction/default-system-vnext.md): nothing on the live
-// flowers draws its colours or its highlight until Elco has seen them. Only the petal look's bench hands the canvas
+// The petal look is in /lab first: nothing on the live
+// flowers draws its colours or its highlight yet. Only the petal look's bench hands the canvas
 // one; the canvas draws as it always has unless handed one.
 import { createHash } from 'node:crypto';
 import { readdirSync, readFileSync } from 'node:fs';

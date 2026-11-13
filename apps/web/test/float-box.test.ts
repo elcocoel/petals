@@ -31,7 +31,7 @@ const BOX: Rect = { x: 300, y: 200, w: 480, h: 500 };
 const barInside = (r: Rect, win: Size) =>
   r.x >= 0 && r.x + r.w <= win.w && r.y >= 0 && r.y + floatBox.bar <= win.h;
 
-describe('where the conversation starts (design/conversation.md, line 3)', () => {
+describe('where the conversation starts', () => {
   const base = floatBox['base-height'];
 
   test('beside the work menu, it starts past it', () => {
@@ -102,7 +102,7 @@ describe('where the conversation starts (design/conversation.md, line 3)', () =>
   });
 });
 
-describe('a sheet over a base (box.split, design/conversation.md, lines 5 to 11)', () => {
+describe('a sheet over a base (box.split)', () => {
   const SPLIT: Rect = { x: 300, y: 100, w: 480, h: 600, base: 200 };
   const sheetOf = (r: Rect) => r.h - (r.base ?? 0);
 
@@ -200,7 +200,7 @@ describe('moving', () => {
   });
 });
 
-describe('snapping (box.snap; Elco, walk 5: "snap to the edges more easily")', () => {
+describe('snapping to the edges (box.snap)', () => {
   const { inset, gap, bar } = floatBox;
   const PANEL = 312;
   test("let go near the window's edges, it lands on them, where the boxes start", () => {
@@ -232,7 +232,7 @@ describe('snapping (box.snap; Elco, walk 5: "snap to the edges more easily")', (
   });
 });
 
-describe("a room that starts below the site's nav (top; OVERLAYS, 12 Nov: the map's panels as boxes)", () => {
+describe("a room that starts below the site's nav (top: the map's panels as boxes)", () => {
   const NAV = 96;
   const { inset, bar } = floatBox;
   test('no bar goes above it, moved or kept', () => {
@@ -411,7 +411,7 @@ describe('the views', () => {
   });
 });
 
-describe('what the conversation covers of /make’s canvas (#78)', () => {
+describe('what the conversation covers of /make’s canvas', () => {
   const conversation = { x: 330, y: 24, w: 480, h: 700 };
   test('its right edge and the gap, from the canvas’s left', () => {
     expect(

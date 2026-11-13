@@ -1,6 +1,6 @@
-// Elco, 11 Nov, walk 1 on /map: "I want to see me being able to switch the legends live and watching the map
-// adapt". The legend's choice brings the map's data again in the new view; the scene is built again where you
-// were, at the same zoom and place and inside the flower you were in, not from the map's home.
+// The legends switch live and the map adapts. The legend's choice brings the map's data again in the new view;
+// the scene is built again where you were, at the same zoom and place and inside the flower you were in, not from
+// the map's home.
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { expect, test } from 'vitest';
