@@ -119,7 +119,7 @@ describe('what can go where', () => {
       // who backs each wallet, where a flower's reading has delegations (no choices on segments), and
       // what it holds by its vesting schedules
       segments: ['backers', 'vesting'],
-      lines: [],
+      lines: ['votes_alike'],
       // a person's annotations name accounts: labels show them once chosen
       labels: ['kind', 'identity', 'voted', 'tranche', 'name', 'name_kind'],
     });
