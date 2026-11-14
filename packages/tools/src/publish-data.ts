@@ -40,13 +40,14 @@ import {
   validateClaim,
 } from '@petal/core';
 import type { Claim, ClaimEvidence, Spec } from '@petal/core/types';
-import { nonceStore, privateStore } from './drafts.ts';
+import { nonceStore, privateStore, stateDirOf } from './drafts.ts';
 import { ToolFailure } from './errors.ts';
 import { retiredClaim } from './hidden.ts';
 import { mapViews } from './map.ts';
 import { aboutOneOf, cardAccounts, PUBLISHED } from './mapping-claims.ts';
 import { appendPress, appendPublication, authorName, compositionOf, recordOf } from './record.ts';
 import { petalsHoldings } from './record-import.ts';
+import { keptScore } from './scores.ts';
 import { SEARCH_RERANKER, SearchModelDown } from './search-model.ts';
 import { mapIndex } from './tools/maps.ts';
 import { searchModelOf } from './tools/search-petals.ts';
@@ -269,6 +270,7 @@ async function confidences(
   const model = searchModelOf(ctx);
   if (!model)
     return { scores: nulls, scored_by: null, unscored: 'no model is set up on this site' };
+  const by = ctx.config.fake ? 'fake-words' : SEARCH_RERANKER;
   try {
     const scores: (number | null)[] = [];
     for (const c of claims) {
@@ -277,12 +279,15 @@ async function confidences(
       for (const e of c.evidence) {
         const docs = wordsIn(e);
         if (!docs.length) continue;
-        const read = Math.max(...(await model.rerank(statementOf(c, e), docs)));
+        const statement = statementOf(c, e);
+        const read = await keptScore(stateDirOf(ctx.config), by, statement, docs, async () =>
+          Math.max(...(await model.rerank(statement, docs))),
+        );
         best = best === null ? read : Math.max(best, read);
       }
       scores.push(best === null ? null : Math.round(best * 100) / 100);
     }
-    return { scores, scored_by: ctx.config.fake ? 'fake-words' : SEARCH_RERANKER };
+    return { scores, scored_by: by };
   } catch (e) {
     if (e instanceof SearchModelDown)
       return { scores: nulls, scored_by: null, unscored: e.message };
