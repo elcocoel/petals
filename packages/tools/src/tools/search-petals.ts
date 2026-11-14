@@ -285,7 +285,9 @@ function docSet(ctx: ToolContext, model: SearchModel | null): Promise<SearchSet>
 
 const objectWords = (o: Claim['object']) => (typeof o === 'string' ? o : o.value);
 /** An account as a map's petals have it: an EVM address in lower case. */
-const accountKey = (id: string) => (id.startsWith('eip155:') ? id.toLowerCase() : id);
+// a claim writes an account's `_` as %5F (CAIP-10, claims/refs.ts) where a reading keeps it as is: one key for both
+const accountKey = (id: string) =>
+  id.startsWith('eip155:') ? id.toLowerCase() : id.replace(/%5F/gi, '_');
 
 /** Each verb in words, as a claim's title reads it (core's VERBS say what each means). */
 const VERB_WORDS: Record<string, string> = {

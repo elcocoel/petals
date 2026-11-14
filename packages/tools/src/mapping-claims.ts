@@ -46,7 +46,9 @@ export async function keepMappingClaims(
 }
 
 /** An account as a map's petals have it: an EVM address in lower case. */
-const accountKey = (id: string) => (id.startsWith('eip155:') ? id.toLowerCase() : id);
+// a claim writes an account's `_` as %5F (CAIP-10, claims/refs.ts) where a reading keeps it as is: one key for both
+const accountKey = (id: string) =>
+  id.startsWith('eip155:') ? id.toLowerCase() : id.replace(/%5F/gi, '_');
 
 /**
  * The accounts a map is about: its own address, its readings' petals, and the accounts its readings name as
