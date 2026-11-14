@@ -301,7 +301,8 @@ export function payRoutes(d: PayDeps): Hono {
 
   // -- a top-up through NEAR Intents, so a person can pay with any token from any chain:
   //    GET  /api/v1/pay/tokens          what a person can pay from: every token and chain 1Click lists
-  //    POST /api/v1/pay/intents         { usd, origin_asset, refund_to } → a deposit address to send to
+  //    POST /api/v1/pay/intents         { usd, origin_asset, refund_to, account_id? } → a deposit address to send to;
+  //                                     with the contract, account_id names the NEAR balance it funds (anyone's)
   //    GET  /api/v1/pay/intents/:deposit where it stands; once it's landed, the dollars are on their credit
   // Into NEAR Intents under Petals' account, mainnet only, as NEAR Intents is. It lands as the dollars of
   // USDC it delivered, once, with its own entry, at the price it came in at.
@@ -327,8 +328,9 @@ export function payRoutes(d: PayDeps): Hono {
         usd?: unknown;
         origin_asset?: unknown;
         refund_to?: unknown;
+        account_id?: unknown;
       } | null;
-      const { usd, origin_asset, refund_to } = body ?? {};
+      const { usd, origin_asset, refund_to, account_id } = body ?? {};
       if (typeof usd !== 'number' || !(usd > 0) || usd > 1000) {
         return fail(c, 'bad_input', 'usd is how many dollars to add, more than 0 and at most 1000');
       }
@@ -346,7 +348,7 @@ export function payRoutes(d: PayDeps): Hono {
           "refund_to is your address on the token's chain, where anything unswapped goes back",
         );
       }
-      // with the contract, the top-up lands there as NEAR, on the person's own NEAR account: the one way in
+      // with the contract, the top-up lands there as NEAR, on the NEAR balance it names (anyone's), else the person's own
       let into: { contract: string; payer: string; nearUsd: number } | undefined;
       if (d.credit) {
         if (d.credit.contract.network !== 'mainnet')
@@ -355,12 +357,17 @@ export function payRoutes(d: PayDeps): Hono {
             'bad_input',
             'NEAR Intents pays into the credit contract on mainnet only.',
           );
-        const payer = me.accounts[0];
+        if (
+          account_id !== undefined &&
+          (typeof account_id !== 'string' || !NEAR_ACCOUNT.test(account_id))
+        )
+          return fail(c, 'bad_input', 'account_id is the NEAR account whose balance this funds');
+        const payer = (account_id as string | undefined) ?? me.accounts[0];
         if (!payer)
           return fail(
             c,
             'unauthorised',
-            'Sign in with your NEAR account: a top-up lands on it, in the credit contract.',
+            'Name the NEAR account to fund (account_id), or sign in with yours: a top-up lands on it, in the credit contract.',
           );
         const nearUsd = await price();
         if (nearUsd === null)
