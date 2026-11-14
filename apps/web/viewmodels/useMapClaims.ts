@@ -7,7 +7,8 @@ import { readMapClaims } from '../lib/agent-client.ts';
 
 const asked = new Map<string, Promise<Claim[] | null>>();
 
-const read = (map: string) => {
+/** A map's claims, asked once a visit and shared by every reader (Insights, the map's pins). */
+export const readClaimsOnce = (map: string) => {
   let p = asked.get(map);
   if (!p) {
     p = readMapClaims(map).then(
@@ -24,7 +25,7 @@ export function useMapClaims(map: string | null): Claim[] | null {
   useEffect(() => {
     if (!map) return;
     let gone = false;
-    void read(map).then((claims) => {
+    void readClaimsOnce(map).then((claims) => {
       if (!gone) setGot({ map, claims });
     });
     return () => {

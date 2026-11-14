@@ -88,7 +88,7 @@ test('on the map: the boxes over it, the names inside the window, the speaker un
   );
   expect(land).toMatch(/if \(onTop\) node\.insertBefore\(d\.scene\.root, scene\.top\);/);
   expect(land).toMatch(
-    /pointer\.inside && i === under && \(entered < 0 \|\| i === entered\) && pointedWay < 0;/,
+    /pointer\.inside &&\s+!onPin &&\s+i === under &&\s+\(entered < 0 \|\| i === entered\) &&\s+pointedWay < 0;/,
   );
   expect(text('components/ui/FloatBox.tsx')).toMatch(/data-float=""/);
   const scene = text('landscape/scene.ts');

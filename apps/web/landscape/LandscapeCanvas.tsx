@@ -11,7 +11,7 @@
 // asks (the Power Map), a search field tops the chain list, and while something's typed the maps it finds stand
 // in the chains' place; pressing one goes to its chain and into its flower.
 import { type Proposal, redress, type SeamPiece } from '@petal/core';
-import type { View } from '@petal/core/types';
+import type { Claim, View } from '@petal/core/types';
 import { colourKeysOf, EVERY_FLOWER, inUse, latestView } from '@petal/core/view';
 import { flowerKeys, grades, KEY_BY_NAME, keyLines, mapKeys } from '@petal/core/wedge/keys';
 import { floatBox } from '@petal/tokens';
@@ -25,6 +25,7 @@ import {
   useRef,
   useState,
 } from 'react';
+import { ClaimPinCard } from '../components/ClaimPinCard.tsx';
 import { MapClaims } from '../components/MapClaims.tsx';
 import { MapLayers } from '../components/MapLayers.tsx';
 import { MapProposal } from '../components/MapProposal.tsx';
@@ -52,6 +53,7 @@ import { CHOOSABLE } from '../lib/person-view.ts';
 import { proposalView, proposalWords } from '../lib/proposal-view.ts';
 import { type LegendEdit, onlyWhatDraws } from '../lib/view-edit.ts';
 import { differsOf, walletView, walletWords } from '../lib/wallet-view.ts';
+import { useClaimPins } from '../viewmodels/useClaimPins.ts';
 import { useComposed } from '../viewmodels/useComposed.ts';
 import { useFloatBoxes } from '../viewmodels/useFloatBoxes.ts';
 import { useLegendEdit } from '../viewmodels/useLegendEdit.ts';
@@ -61,6 +63,7 @@ import { useMapClaims } from '../viewmodels/useMapClaims.ts';
 import { useMapRecord } from '../viewmodels/useMapRecord.ts';
 import { useMapSearch } from '../viewmodels/useMapSearch.ts';
 import { usePersonView } from '../viewmodels/usePersonView.ts';
+import type { PinAnchor } from './pins.ts';
 import {
   type Continent,
   freePlace,
@@ -114,6 +117,9 @@ export type MapShow =
   | { wallet: string; chain?: string | null }
   | { line: readonly [string, string] }
   | { proposal: { map: string; id: string } };
+
+/** No claims for the map's pins. */
+const NO_PINS: ReadonlyMap<string, readonly Claim[]> = new Map();
 
 /** The strip's words while a change in Tools reads the map again. */
 const UPDATING = 'Updating the map';
@@ -358,6 +364,7 @@ function Land({
   pending,
   progress,
   unlabelled,
+  pins,
 }: {
   data: LandscapeData;
   probe: boolean;
@@ -392,6 +399,8 @@ function Land({
   unlabelled: boolean;
   /** work running on this chain's map: under a flower (its place here), the placeholder or the map's foot, or null */
   progress: { at: number | 'pending' | 'map'; words: string; share: number | null } | null;
+  /** claims as pins (landscape/pins.ts): what they say by map, the open one and its box, and who's told */
+  pins: Pick<LandscapeAt, 'claims' | 'onPinMaps' | 'pinOpen' | 'pinCard' | 'onPin'>;
 }) {
   const svg = useRef<SVGSVGElement>(null);
   const at = useRef<LandscapeAt | null>(null);
@@ -411,6 +420,7 @@ function Land({
     pending,
     progress,
     unlabelled,
+    ...pins,
     ...(onPick ? { onPick } : {}),
   };
   useLandscape(svg, data, probe, aside, at);
@@ -445,6 +455,10 @@ function Land({
   useEffect(() => {
     if (unlabelled !== undefined) at.current?.redraw?.();
   }, [unlabelled]);
+  // new claims read, or a pin opened or closed: drawn again
+  useEffect(() => {
+    if (pins.claims || pins.pinOpen !== undefined) at.current?.redraw?.();
+  }, [pins.claims, pins.pinOpen]);
   return (
     // surface.canvas
     <svg
@@ -757,6 +771,21 @@ export function LandscapeCanvas({
   const [gravity, setGravity] = useState(GRAVITY_DEFAULT);
   // the least confidence an insight needs to show, from Tools, for the visit
   const [confidence, setConfidence] = useState(0);
+  // claims as pins on the map (landscape/pins.ts): the maps drawn big enough to carry them, their claims, the open one
+  const [pinMaps, setPinMaps] = useState<readonly string[]>([]);
+  const [openPin, setOpenPin] = useState<PinAnchor | null>(null);
+  const pinCard = useRef<HTMLElement | null>(null);
+  const keepPins = useCallback(
+    (cs: readonly Claim[]) => atConfidence(cs, confidence),
+    [confidence],
+  );
+  const pinClaims = useClaimPins(pinMaps, keepPins);
+  const pinNames = useMemo(() => {
+    const f = openPin ? data.flowers.find((x) => x.map === openPin.map) : undefined;
+    return new Map(
+      (f?.reading.petals ?? []).filter((p) => !p.tail).map((p) => [p.id, p.name] as const),
+    );
+  }, [openPin, data.flowers]);
   // treasury and token price under the names at some magnification, switched in the legend
   const [worth, setWorth] = useState(true);
   const [insightsOn, setInsightsOn] = useState(true);
@@ -1226,6 +1255,24 @@ export function LandscapeCanvas({
           pending={pendingHere}
           progress={progressHere}
           unlabelled={latestView(person.view).dimensions.labels === null}
+          pins={{
+            // Insights switched off in Information: its pins go with it
+            claims: insightsOn ? pinClaims : NO_PINS,
+            onPinMaps: setPinMaps,
+            pinOpen: openPin?.key ?? null,
+            pinCard,
+            onPin: setOpenPin,
+          }}
+        />
+      )}
+      {openPin && (
+        <ClaimPinCard
+          claims={openPin.claims}
+          names={pinNames}
+          card={(el) => {
+            pinCard.current = el;
+          }}
+          place={fill === 'window' ? 'fixed' : 'absolute'}
         />
       )}
       {movable ? (
