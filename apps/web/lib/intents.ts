@@ -166,6 +166,9 @@ export function homeChain(walletChains: readonly string[]): string {
 /** An amount as people write it: four significant figures, no trailing zeros. */
 const figure = (n: number) => String(Number(n.toPrecision(4)));
 
+/** An address shortened in the middle, its start and end kept: 0x76b4…730E8. */
+export const shortAddress = (a: string) => (a.length > 14 ? `${a.slice(0, 6)}…${a.slice(-5)}` : a);
+
 /** A day as people say it where they are: Fri 21 Nov. */
 function dayWords(at: string | null | undefined): string | null {
   if (!at) return null;
@@ -308,6 +311,8 @@ export interface TopUpView {
   address: {
     line: string;
     address: string;
+    /** shortened in the middle, for a phone's width: Copy gives it whole */
+    short: string;
     memo: string | null;
     quote: string;
     /** where it stands, once something arrived */

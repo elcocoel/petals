@@ -116,9 +116,16 @@ export function money(
   return { usd: at(u), near: n === null ? null : at(n) };
 }
 
-/** Money in words: "$1.00 · 0.28 NEAR", or "$1.00" with no price. The one look, everywhere. */
+/** A figure with its thousands grouped: 1250000.00 is 1,250,000.00. */
+export const grouped = (figure: string) => {
+  const [whole = '', part] = figure.split('.');
+  const g = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return part === undefined ? g : `${g}.${part}`;
+};
+
+/** Money in words: "$1.00 · 0.28 NEAR", or "$1.00" with no price, thousands grouped. The one look, everywhere. */
 export const moneyWords = (m: Money) =>
-  m.near === null ? `$${m.usd}` : `$${m.usd} · ${m.near} NEAR`;
+  m.near === null ? `$${grouped(m.usd)}` : `$${grouped(m.usd)} · ${grouped(m.near)} NEAR`;
 
 /** The hash and the account a wallet's answer names, whichever shape the wallet gave. */
 export function sentBy(outcome: unknown): { hash: string; account: string } | null {

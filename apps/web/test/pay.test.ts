@@ -33,6 +33,11 @@ describe('paying for Petals’ agent', () => {
     expect(payWords.balance(money(1, 3.62))).toBe('Balance: $1.00 · 0.28 NEAR');
   });
 
+  test('a big amount has its thousands grouped, a small one is as it was', () => {
+    expect(moneyWords(money(1250000, 3.4))).toBe('$1,250,000.00 · 367,647.06 NEAR');
+    expect(moneyWords(money(999, null))).toBe('$999.00');
+  });
+
   test('a small cost keeps its places, so it never reads as nothing; a balance takes two', () => {
     expect(money(0.012, 3.6, 'cost')).toEqual({ usd: '0.012', near: '0.003' });
     expect(money(0.0042, 3.6, 'cost')).toEqual({ usd: '0.004', near: '0.001' });
@@ -166,7 +171,7 @@ describe('the dollars the person chooses', () => {
 
   test('no ceiling: any size typed, commas too', () => {
     expect(payOffer('5000', 3.42, false)).toMatchObject({
-      label: 'Add $5000.00 · 1461.99 NEAR',
+      label: 'Add $5,000.00 · 1,461.99 NEAR',
       canPay: true,
     });
     expect(payOffer('5,000', 3.42, false).send).toBe(payOffer('5000', 3.42, false).send);

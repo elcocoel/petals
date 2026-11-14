@@ -32,7 +32,7 @@ export function TokenPay({ topUp }: { topUp: TopUpView }) {
         <div
           role="listbox"
           aria-label={intentWords.chain}
-          className="flex h-drawing-240 min-w-0 flex-col overflow-y-auto border border-hairline"
+          className="h-drawing-240 min-w-0 overflow-y-auto border border-hairline"
         >
           {topUp.chains === null ? (
             <NavItem label={intentWords.loading} muted />
@@ -52,7 +52,7 @@ export function TokenPay({ topUp }: { topUp: TopUpView }) {
         <div
           role="listbox"
           aria-label={intentWords.token}
-          className="flex h-drawing-240 min-w-0 flex-col overflow-y-auto border border-hairline"
+          className="h-drawing-240 min-w-0 overflow-y-auto border border-hairline"
         >
           {topUp.chains !== null && topUp.tokens.length === 0 ? (
             <NavItem label={intentWords.none} muted />
@@ -77,8 +77,13 @@ export function TokenPay({ topUp }: { topUp: TopUpView }) {
             <div className="flex min-w-0 flex-1 basis-drawing-240 flex-col gap-space-8">
               <p className="my-0 type-ui">{address.line}</p>
               <ActionRow gap="tight">
-                <span className="min-w-0 wrap-anywhere">
-                  <Mono as="span">{address.address}</Mono>
+                <span className="min-w-0 whitespace-nowrap">
+                  <span className="sm:hidden">
+                    <Mono as="span">{address.short}</Mono>
+                  </span>
+                  <span className="hidden sm:inline">
+                    <Mono as="span">{address.address}</Mono>
+                  </span>
                 </span>
                 <Button variant="quiet" onClick={() => actions.copy('address', address.address)}>
                   {topUp.copied === 'address' ? intentWords.copied : intentWords.copy}

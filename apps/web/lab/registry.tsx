@@ -593,6 +593,7 @@ const TOPUP_BASE: TopUpView = {
 const TOPUP_ADDRESS = {
   line: intentWords.send('USDT', 'Ethereum'),
   address: '0x76b4c56085ED136a8744D52bE956396624a730E8',
+  short: '0x76b4…730E8',
   memo: null,
   quote: quoteLine(
     {

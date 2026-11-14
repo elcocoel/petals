@@ -330,7 +330,7 @@ export function useLobby() {
               label: withdrawing
                 ? payWords.paying
                 : `${fundsWords.withdraw} ${moneyWords(money(usdNow, nearUsd))}`,
-              canPress: !withdrawing && takeYocto !== null && BigInt(takeYocto) <= BigInt(held),
+              canPress: !withdrawing && takeYocto !== null,
               onPress: withdraw,
             },
       line: funds.signer ? payWords.fundsFor(shortId(funds.signer)) : null,

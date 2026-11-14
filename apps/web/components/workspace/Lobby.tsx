@@ -218,8 +218,8 @@ export function Lobby({
           layout="split"
           figure="start"
         >
-          <Funds balance={funds.balance} {...money} tip={tip} />
-          <Usage usage={usage} />
+          <Funds balance={funds.balance} {...money} />
+          <Usage usage={usage} tip={tip} />
         </Section>
 
         {/* the visit's one quote, in a band of its own, the art given room */}

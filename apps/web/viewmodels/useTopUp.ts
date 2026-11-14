@@ -15,6 +15,7 @@ import {
   isUnderWay,
   type PayToken,
   quoteLine,
+  shortAddress,
   type TopUp,
   type TopUpRow,
   type TopUpView,
@@ -155,6 +156,7 @@ export function useTopUp(
         ? {
             line: intentWords.send(token.symbol, chainName(token.chain)),
             address: shown.deposit_address,
+            short: shortAddress(shown.deposit_address),
             memo: shown.deposit_memo ?? null,
             quote: quoteLine(shown, token.symbol),
             status: shown.status === 'PENDING_DEPOSIT' ? null : intentWords.state[shown.status],

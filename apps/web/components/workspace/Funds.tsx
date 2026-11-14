@@ -2,19 +2,18 @@
 // NEAR beside at today's price; one amount, on a slider from a dollar to five whose end goes further while it's
 // held there, and in a field as wide as its figure; Add and Withdraw side by side, both acting on that amount (Add
 // into the signed-in person's balance from any NEAR wallet, Withdraw that much of the wallet's own balance back
-// to it, greyed only past what's held); paying with another token (TokenPay); the tip, in plain sight; and one
+// to it); paying with another token (TokenPay); and one
 // short line saying what the last action did, which never hides a control and clears on the next. Props only:
 // viewmodels/useLobby.ts holds it. Words from lib/lobby-view.ts and lib/pay.ts.
 
 import type { TopUpView } from '../../lib/intents.ts';
 import { fundsWords } from '../../lib/lobby-view.ts';
-import { type Money, SLIDE_USD } from '../../lib/pay.ts';
+import { grouped, type Money, SLIDE_USD } from '../../lib/pay.ts';
 import { ActionRow } from '../ui/ActionRow.tsx';
 import { Button } from '../ui/Button.tsx';
 import { Field } from '../ui/Field.tsx';
 import { Mono } from '../ui/Mono.tsx';
 import { Range } from '../ui/Range.tsx';
-import { TipControl, type TipView } from './TipControl.tsx';
 import { TokenPay } from './TokenPay.tsx';
 
 /** A press in the panel: its words, and whether it can be pressed now. */
@@ -34,7 +33,6 @@ export function Funds({
   withdraw,
   line,
   topUp,
-  tip,
   status,
 }: {
   /** What's left, dollars first and NEAR beside, as /make shows it; null until it can be read. */
@@ -61,8 +59,6 @@ export function Funds({
   line?: string | null;
   /** Paying with another token through NEAR Intents, laid out. */
   topUp?: TopUpView;
-  /** The person's tip; absent where only the balance shows. */
-  tip?: TipView;
   /** What the last action did, in one line; null before any. */
   status?: string | null;
 }) {
@@ -73,18 +69,18 @@ export function Funds({
       {balance !== null && held !== null && allowance ? (
         // one figure: what the person can use, saying in a few words that Petals' allowance is in it
         <p className="my-0 flex flex-wrap items-baseline gap-x-block-gap">
-          <span className="type-heading whitespace-nowrap">${balance.usd}</span>
+          <span className="type-heading whitespace-nowrap">${grouped(balance.usd)}</span>
           <span className="type-ui whitespace-nowrap text-muted">{fundsWords.withAllowance}</span>
         </p>
       ) : balance !== null && held !== null ? (
         // the contract's own NEAR, as the chain says it, and the balance in dollars beside
         <p className="my-0 flex flex-wrap items-baseline gap-x-block-gap">
           <span className="type-heading whitespace-nowrap">{fundsWords.near(held)}</span>
-          <span className="type-ui whitespace-nowrap text-muted">${balance.usd}</span>
+          <span className="type-ui whitespace-nowrap text-muted">${grouped(balance.usd)}</span>
         </p>
       ) : balance !== null ? (
         <p className="my-0 flex flex-wrap items-baseline gap-x-block-gap">
-          <span className="type-heading whitespace-nowrap">${balance.usd}</span>
+          <span className="type-heading whitespace-nowrap">${grouped(balance.usd)}</span>
           {balance.near !== null && (
             <span className="type-ui whitespace-nowrap text-muted">
               {fundsWords.near(balance.near)}
@@ -119,7 +115,7 @@ export function Funds({
           />
         </div>
       )}
-      <ActionRow gap="tight">
+      <ActionRow gap="tight" stacked>
         <Button variant="primary" disabled={!add.canPress} onClick={add.onPress}>
           {add.label}
         </Button>
@@ -141,7 +137,6 @@ export function Funds({
           <TokenPay topUp={topUp} />
         </div>
       )}
-      {tip && tip.percent !== null && tip.scale && <TipControl {...tip} inline />}
     </div>
   );
 }
