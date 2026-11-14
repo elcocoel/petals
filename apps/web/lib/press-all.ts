@@ -33,11 +33,23 @@ export const pressAllWords = {
   none: 'Nothing you’ve kept on a map waits to be published.',
   /** the read refused, with the server's reason */
   unread: (why: string) => `Couldn’t read what you’ve kept: ${why}`,
-  published: (n: number) =>
-    n === 1
-      ? 'On the shared map in your name: 1 map.'
-      : `On the shared map in your name: ${n} maps.`,
+  /** what this press published, and, read from the person's credit, all that stands in their name now */
+  published: (n: number, all?: { layers: number; maps: number } | null) => {
+    const press = `This press: ${n === 1 ? '1 version' : `${n} versions`}.`;
+    if (!all) return press;
+    const layers = all.layers === 1 ? '1 layer' : `${all.layers} layers`;
+    const maps = all.maps === 1 ? '1 map' : `${all.maps} maps`;
+    return `${press} In your name: ${layers} on ${maps}.`;
+  },
 } as const;
+
+/** All that stands in the person's name (credit/v1): their layers, and the maps those layers are on. */
+export function inYourName(credit: {
+  layers: readonly { map: string }[];
+  totals: { layers: number };
+}): { layers: number; maps: number } {
+  return { layers: credit.totals.layers, maps: new Set(credit.layers.map((l) => l.map)).size };
+}
 
 const row = (key: string, name: string, about: string, source: string | null, why: string | null) =>
   ({

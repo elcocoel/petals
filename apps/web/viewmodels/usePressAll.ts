@@ -8,10 +8,11 @@ import {
   type PressAll,
   preparePress,
   publishPress,
+  readMyCredit,
   readPressAll,
   readSession,
 } from '../lib/agent-client.ts';
-import { type PressAllRead, pressAllView, pressAllWords } from '../lib/press-all.ts';
+import { inYourName, type PressAllRead, pressAllView, pressAllWords } from '../lib/press-all.ts';
 import { asksSignIn, signPublication } from '../lib/publication-sign.ts';
 import {
   nearSigner,
@@ -86,7 +87,9 @@ export function usePressAll(active: boolean, landed: () => void) {
         setPhase('failed');
         return;
       }
-      setSaid(pressAllWords.published(out.publications.length));
+      // this press, then everything in their name now, from their credit (none read: this press alone)
+      const credit = await readMyCredit().catch(() => null);
+      setSaid(pressAllWords.published(out.publications.length, credit && inYourName(credit)));
       setPhase('published');
       landed();
     } catch {
