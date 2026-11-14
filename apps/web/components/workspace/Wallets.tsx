@@ -117,24 +117,6 @@ export function Wallets({
           </div>
         </div>
       )}
-      {adding.kind === 'scan' && (
-        <div className="flex flex-col items-start gap-space-8 border-t border-hairline pt-text-gap">
-          <p className="my-0 type-body">{profilePageWords.scan}</p>
-          {/* biome-ignore lint/performance/noImgElement: a QR code drawn here, as a data: URL */}
-          <img
-            className="block h-auto max-w-full border border-hairline"
-            src={adding.qr}
-            width={240}
-            height={240}
-            alt={profilePageWords.qrAlt}
-          />
-          {onStop && (
-            <Button variant="quiet" onClick={onStop}>
-              {profilePageWords.stop}
-            </Button>
-          )}
-        </div>
-      )}
       {adding.kind === 'adding' && (
         <p className="my-0 flex flex-wrap items-baseline gap-text-gap">
           <span className="type-body">{profilePageWords.waitingFor(adding.wallet)}</span>

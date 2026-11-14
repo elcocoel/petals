@@ -2669,7 +2669,6 @@ export const registry: LabEntry[] = [
               { id: 'a', name: 'MetaMask', icon: null },
               { id: 'b', name: 'SafePal', icon: null },
             ]}
-            qr={null}
             waitingFor={null}
             onChoose={() => {}}
             onStop={() => {}}
@@ -2680,13 +2679,7 @@ export const registry: LabEntry[] = [
         name: 'waiting for one',
         wide: true,
         render: () => (
-          <WalletAsk
-            pick={null}
-            qr={null}
-            waitingFor="SafePal"
-            onChoose={() => {}}
-            onStop={() => {}}
-          />
+          <WalletAsk pick={null} waitingFor="SafePal" onChoose={() => {}} onStop={() => {}} />
         ),
       },
     ],
