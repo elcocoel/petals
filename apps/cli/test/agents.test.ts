@@ -303,8 +303,48 @@ describe('jobs wait', () => {
     const down = async () => {
       throw new Error('connect ECONNREFUSED');
     };
-    expect(await waitForJob({ env, site: SITE, fetch: down, now: () => clock.t })).toMatchObject({
-      error: { code: 'source_failed' },
+    const sleep = async (ms: number) => {
+      clock.t += ms;
+    };
+    expect(
+      await waitForJob({ env, site: SITE, fetch: down, now: () => clock.t, sleep, forS: 60 }),
+    ).toMatchObject({ error: { code: 'source_failed' } });
+  });
+
+  test('a dropped ask (a restart, a 502 or 504, no connection) is asked again, and the job still comes', async () => {
+    const env = home();
+    joinAgent(env, KEY, 'codex');
+    const clock = { t: 0 };
+    const s = site(
+      [
+        { status: 502, body: { error: 'Bad gateway' } },
+        { status: 504, body: { error: 'Gateway timeout' } },
+        { body: { job: { id: 'job_1', brief: 'read it' }, project: { exploration: '/s/x' } } },
+      ],
+      clock,
+    );
+    let refused = true;
+    const flaky = async (url: string, init?: RequestInit) => {
+      if (refused) {
+        refused = false;
+        throw new Error('fetch failed');
+      }
+      return s.fetch(url, init);
+    };
+    const pauses: number[] = [];
+    const sleep = async (ms: number) => {
+      pauses.push(ms);
+      clock.t += ms;
+    };
+    const out = await waitForJob({
+      env,
+      site: SITE,
+      fetch: flaky,
+      now: () => clock.t,
+      sleep,
+      forS: 600,
     });
+    expect(out).toMatchObject({ job: { id: 'job_1' } });
+    expect(pauses).toEqual([1000, 2000, 4000]);
   });
 });
