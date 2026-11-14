@@ -15,7 +15,18 @@
 // origin is refused here, following the same rule as Go's CrossOriginProtection: a request with no
 // Origin and no Sec-Fetch-Site isn't from a browser, and it holds no cookie unless its owner gave it one.
 import { createHash, randomBytes } from 'node:crypto';
-import { accountRef, TOOLS_VERSION } from '@petal/core';
+import {
+  accountRef,
+  canonicalJson,
+  LINK_VERSION,
+  type Link,
+  linkStated,
+  linkStatement,
+  sha256Hex,
+  TOOLS_VERSION,
+  textNamesLink,
+  validateLink,
+} from '@petal/core';
 import type { Nep413Proof } from '@petal/core/types';
 import {
   type Eip191Proof,
@@ -267,6 +278,57 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
 
   const newHandle = (c: Context) => openSession(c, `anon_${randomBytes(16).toString('hex')}`);
 
+  /** A person's profile: their NEAR account, the master key (mainnet first), CAIP-10; null with none. */
+  async function profileOf(person: string): Promise<string | null> {
+    const near = (await walletsOf(person)).filter(
+      (w) => w.network === 'mainnet' || w.network === 'testnet',
+    );
+    return (near.find((w) => w.network === 'mainnet') ?? near[0])?.caip10 ?? null;
+  }
+
+  /**
+   * The link a linked wallet's signed text states, kept with the person's profile for its next press: the profile's
+   * own publication about its own account carries it, so NEAR signs it too (composition.md, section 2c). A text
+   * that states no link of this profile and this wallet keeps nothing.
+   */
+  async function keepLink(
+    person: string,
+    network: 'eip155' | 'solana',
+    account: string,
+    proof: unknown,
+  ) {
+    const p = proof as { message?: unknown; signature?: unknown } | null;
+    if (typeof p?.message !== 'string' || typeof p.signature !== 'string') return;
+    const profile = await profileOf(person);
+    const issued = /^Issued At: (.+)$/m.exec(p.message)?.[1]?.trim();
+    if (!profile || !issued || !linkStated(p.message)) return;
+    const link: Omit<Link, 'proof'> = {
+      petal: LINK_VERSION,
+      profile,
+      wallet: caip10Of(network, account),
+      linked_at: issued,
+    };
+    if (!textNamesLink(p.message, link)) return;
+    const doc = {
+      ...link,
+      proof: {
+        standard: network === 'eip155' ? 'eip191' : 'ed25519',
+        message: p.message,
+        signature: p.signature,
+      },
+    };
+    if (!validateLink(doc).ok) return;
+    await store.layer.keep({
+      owner: person,
+      hash: sha256Hex(canonicalJson(doc)),
+      about: profile,
+      standing: 'verified',
+      body: canonicalJson(doc),
+      credential: null,
+      created_at: iso(),
+    });
+  }
+
   async function walletsOf(person: string) {
     return (await store.walletBinding.ofPerson(person)).flatMap((w) => {
       try {
@@ -379,13 +441,25 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
       )
         return fail(c, 'bad_input', `address must be ${evm ? 'an EVM' : 'a Solana'} address`);
       const chainId = typeof asked.chain_id === 'number' && asked.chain_id > 0 ? asked.chain_id : 1;
+      const at = iso();
+      // a NEAR profile linking this wallet: the text states the link it signs (link/v1, composition.md 2c)
+      const session = await sessionOf(c);
+      const profile =
+        session && isPerson(session.subject) ? await profileOf(session.subject) : null;
       const said = {
         domain: site.hostname,
         address,
         nonce,
-        issuedAt: iso(),
+        issuedAt: at,
         expiresAt: expires_at,
-        statement: signInMessage(site.hostname),
+        statement: profile
+          ? linkStatement({
+              petal: LINK_VERSION,
+              profile,
+              wallet: caip10Of(asked.chain, address),
+              linked_at: at,
+            })
+          : signInMessage(site.hostname),
       };
       const message = evm
         ? siweMessage({ ...said, uri: site.origin ?? `https://${site.hostname}`, chainId })
@@ -581,6 +655,11 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
         return fail(c, 'bad_input', 'That wallet already belongs to another account.');
       }
     }
+    // its signed link, new or signed again, kept with the profile for its next press
+    if (network === 'eip155' || network === 'solana') {
+      const body = (await c.req.json().catch(() => null)) as { proof?: unknown } | null;
+      await keepLink(person, network, accountId, body?.proof);
+    }
     return ok(c, { wallets: await walletsOf(person) });
   });
 
@@ -604,7 +683,15 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
         'Your NEAR account is your profile, so it can’t be disconnected.',
       );
     }
-    await store.walletBinding.unbind(person, d.cipher().index(wallet.caip10));
+    const index = d.cipher().index(wallet.caip10);
+    await store.walletBinding.unbind(person, index);
+    // a session it opened ends now, and its signed link goes, so the profile's next press leaves it out
+    await store.session.endWith(person, `wallet:${index}`);
+    for (const row of await store.layer.list(person)) {
+      const doc = JSON.parse(row.body) as { petal?: string; wallet?: string };
+      if (doc.petal === LINK_VERSION && doc.wallet === wallet.caip10)
+        await store.layer.remove(person, row.hash);
+    }
     return ok(c, { wallets: await walletsOf(person) });
   });
 

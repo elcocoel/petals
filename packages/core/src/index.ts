@@ -100,6 +100,15 @@ export {
   stateKey,
 } from './compose/facts.ts';
 export {
+  LINK_VERSION,
+  type Link,
+  linkHash,
+  linkStated,
+  linkStatement,
+  textNamesLink,
+  validateLink,
+} from './compose/link.ts';
+export {
   buildSpec,
   choicesFromSpec,
   DEFAULT_CONVENTION,

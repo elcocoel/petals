@@ -19,6 +19,7 @@ import {
   compose,
   type Entry,
   IMPORTED_AUTHOR,
+  LINK_VERSION,
   layerTitle,
   MANIFEST_VERSION,
   type Manifest,
@@ -805,6 +806,13 @@ function walletOf(who: { authors: readonly string[] }, author: string): string {
       `${author} isn't one of your wallets.`,
       'Publish with a wallet you signed in with or added on your profile.',
     );
+  // the profile's master key is its NEAR account: it signs every publication (composition.md, section 2c)
+  if (standardOf(mine) !== 'nep413')
+    throw new ToolFailure(
+      'unauthorised',
+      "Publish with your NEAR account: your linked wallets' work is credited to it.",
+      "Choose your NEAR account as the author, as /api/v1/me's wallets list it.",
+    );
   return mine;
 }
 
@@ -823,7 +831,19 @@ async function versionOf(
 ): Promise<{ p: Publishable; version: Version } | { p: Publishable; why: string }> {
   const p = await publishable(ctx, owner, about, author, shared ? { shared, cases: false } : {});
   const line = await lineOf(ctx, p.about, author);
-  if (!p.layers.length && !line.signsImport)
+  // the profile's own account: a link disconnected since its last version leaves this one (composition.md, 2c)
+  let drops = false;
+  if (aboutKey(p.about) === aboutKey(author)) {
+    const kept = new Set(
+      (await keptDocs(ctx, owner, p.about, shared))
+        .filter((d) => d.petal === LINK_VERSION)
+        .map((d) => d.sha256),
+    );
+    const carried = line.carried.filter((l) => l.petal !== LINK_VERSION || kept.has(l.sha256));
+    drops = carried.length !== line.carried.length;
+    line.carried = carried;
+  }
+  if (!p.layers.length && !line.signsImport && !drops)
     return {
       p,
       why: p.private.length

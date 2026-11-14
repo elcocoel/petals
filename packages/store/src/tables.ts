@@ -687,6 +687,14 @@ export function tables(db: Db) {
       /** Null once expired. */
       get: (hash: string, now: string) =>
         db.get<SessionRow>('SELECT * FROM session WHERE hash = ? AND expires_at > ?', hash, now),
+      /** Ends a person's sessions opened with one credential: a wallet they disconnected no longer signs in. */
+      async endWith(subject: string, credential: string) {
+        await db.run(
+          'DELETE FROM session WHERE subject = ? AND credential = ?',
+          subject,
+          credential,
+        );
+      },
       async delete(hash: string) {
         await db.run('DELETE FROM session WHERE hash = ?', hash);
       },
@@ -2175,6 +2183,9 @@ export function tables(db: Db) {
         )) === 1,
       get: (owner: string, hash: string) =>
         db.get<LayerRow>('SELECT * FROM layer WHERE owner = ? AND hash = ?', owner, hash),
+      /** One of the owner's kept layers, gone: a link they disconnected, before their next press. */
+      remove: async (owner: string, hash: string) =>
+        (await db.run('DELETE FROM layer WHERE owner = ? AND hash = ?', owner, hash)) === 1,
       /** An owner's layers, about one address or all, oldest first. */
       list: (owner: string, about?: string) =>
         about

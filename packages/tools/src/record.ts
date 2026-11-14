@@ -11,15 +11,19 @@ import {
   creditOf,
   type Entry,
   IMPORTED_AUTHOR,
+  LINK_VERSION,
   type Manifest,
   manifestHash,
   type Publication,
   pressedWith,
   publicationHash,
   sha256Hex,
+  textNamesLink,
+  validateLink,
   validateManifest,
   validatePublication,
 } from '@petal/core';
+import { eip191Signer, solanaSigned } from '@petal/near/auth';
 import { privateStore } from './drafts.ts';
 import { findSnapshot } from './tools/shared.ts';
 import type { ToolContext } from './types.ts';
@@ -96,13 +100,51 @@ export const authorOf = (given: string) =>
       ? `near:${given.endsWith('.testnet') ? 'testnet' : 'mainnet'}:${given}`
       : given;
 
-/** One author's credit (credit/v1), from the whole record, with its hash. */
+/**
+ * The wallets publicly linked to a NEAR profile, wallet → profile (composition.md, section 2c): from each profile's
+ * latest signed version about its own account, each link checked, its text naming it and the wallet's own
+ * signature over that text. A link only one side signed isn't here.
+ */
+export async function publicLinks(ctx: ToolContext, record?: readonly Entry[]) {
+  const entries = record ?? (await recordOf(ctx));
+  const latest = new Map<string, Entry>();
+  for (const e of entries) {
+    const p = e.publication;
+    if (p.proof && p.author.startsWith('near:') && aboutKey(p.about) === aboutKey(p.author))
+      latest.set(p.author, e);
+  }
+  const store = privateStore(ctx.config);
+  const out = new Map<string, string>();
+  for (const [profile, e] of latest)
+    for (const l of e.publication.layers) {
+      if (l.petal !== LINK_VERSION) continue;
+      const row = await store.publication.layer(l.sha256);
+      const v = validateLink(row?.body ? JSON.parse(row.body) : null);
+      if (!v.ok || v.value.profile !== profile || !textNamesLink(v.value.proof.message, v.value))
+        continue;
+      const { wallet, proof } = v.value;
+      const address = wallet.split(':').at(-1) ?? '';
+      const signed =
+        proof.standard === 'eip191'
+          ? eip191Signer(proof.message, proof.signature) === address.toLowerCase()
+          : solanaSigned(address, proof.message, proof.signature);
+      if (signed) out.set(wallet, profile);
+    }
+  return out;
+}
+
+/** One author's credit (credit/v1), from the whole record, with its hash: a profile's publicly linked wallets too. */
 export async function creditFor(
   ctx: ToolContext,
   author: string,
 ): Promise<Credit & { hash: string }> {
   const entries = await recordOf(ctx);
-  const credit = creditOf(author, entries, await layersOf(ctx, entries));
+  const credit = creditOf(
+    author,
+    entries,
+    await layersOf(ctx, entries),
+    await publicLinks(ctx, entries),
+  );
   return { ...credit, hash: sha256Hex(canonicalJson(credit)) };
 }
 
@@ -277,6 +319,8 @@ export async function mapRecord(ctx: ToolContext, about: string) {
   if (!map)
     return { layers: [], authors: [], differs: 0, composed_from: [], rule: 'compose/v1' as const };
   const counts = new Map((await authorsOn(ctx, about)).map((a) => [a.author, a]));
+  // a line signed by a wallet with a public link is the profile's, through that wallet
+  const links = await publicLinks(ctx);
   const entries = await recordOf(ctx, about);
   const docs = await layersOf(ctx, entries);
   const at = new Map(entries.map((e) => [e.hash, e.publication.published_at]));
@@ -303,6 +347,7 @@ export async function mapRecord(ctx: ToolContext, about: string) {
       author: a.author,
       name: authorName(a.author),
       imported: a.imported,
+      ...(links.has(a.author) ? { profile: links.get(a.author) } : {}),
       first: counts.get(a.author)?.first ?? 0,
       confirmed: counts.get(a.author)?.confirmed ?? 0,
       built_on: counts.get(a.author)?.built_on ?? 0,
