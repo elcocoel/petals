@@ -31,7 +31,7 @@ Every row is live on mainnet unless its status says otherwise.
 | ------------------------------------------------------------------------------------------------ | ------ | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
 | Petals' agent runs on NEAR AI Cloud; every answer keeps its TEE signature and attestation report | live   | `packages/agent/src/near-ai.ts`, `packages/agent/src/signature.ts`, `packages/agent/test/signature.test.ts` | With the invite link, ask a question; the answer's report is served at `/api/v1/attestations/<report_sha256>` | The attestation report NEAR AI returned, matched by its hash    |
 | A person's conversations and pages stay private                                                  | live   | `packages/tools/test/private-state.test.ts`; run owners in `specs/001-petal-core/contracts/http-api.md`     | `curl -sI https://petals.elementarycomplexity.com/lobby`                                                      | `307` to `/`: a person's own page is closed to visitors         |
-| Mail addresses and phone numbers are never published in claims about people                      | live   | `packages/core/src/claims/people.ts`                                                                        | Read the rule at the top of that file                                                                         | Values, notes and quotes with an address or number stay private |
+| Mail addresses and phone numbers are kept out of published claims about people                   | live   | `packages/core/src/claims/people.ts`                                                                        | Read the rule at the top of that file                                                                         | Values, notes and quotes with an address or number stay private |
 
 ### AI Security & Defense
 
@@ -188,3 +188,4 @@ Needs Node 24 and pnpm 10.33.0 (pinned in `.nvmrc` and `package.json`). Run from
   join networks that share accounts. The Texture and Markings dimensions take no data yet and are hidden.
 - On a map where `petals.near` signed a version over Petals' earlier imported mapping, the import counts as
   `petals.near`'s earlier version (`specs/005-mapping-brain/composition.md`).
+- One claim published before contact details were kept out of claims still carries them; the record is append-only.
