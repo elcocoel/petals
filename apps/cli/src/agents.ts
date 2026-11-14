@@ -133,6 +133,7 @@ export interface WaitOptions {
   forS?: number;
   fetch?: Fetch;
   now?: () => number;
+  sleep?: (ms: number) => Promise<void>;
   /** where the file keeps the current project, so each flower drawn for the job is saved there */
   currentFile?: string;
 }
@@ -162,7 +163,18 @@ export async function waitForJob(o: WaitOptions): Promise<Json> {
   const AGAIN = again(me.worker);
   const f: Fetch = o.fetch ?? ((url, init) => fetch(url, init));
   const now = o.now ?? Date.now;
+  const sleep = o.sleep ?? ((ms: number) => new Promise<void>((r) => setTimeout(r, ms)));
   const until = now() + (o.forS ?? WAIT_FOR_S) * 1000;
+  // An ask the site dropped (a restart, a 502 or 504 from its tunnel, no connection): ask again after a
+  // pause, longer each time, while the window lasts.
+  let drops = 0;
+  const askAgain = async (): Promise<boolean> => {
+    const ms = Math.min(1000 * 2 ** drops, 15_000);
+    if (until - now() - ms < 5000) return false;
+    drops++;
+    await sleep(ms);
+    return true;
+  };
   for (;;) {
     const left = Math.floor((until - now()) / 1000);
     if (left < 5) {
@@ -183,6 +195,7 @@ export async function waitForJob(o: WaitOptions): Promise<Json> {
         signal: AbortSignal.timeout((wait_s + 15) * 1000),
       });
     } catch (e) {
+      if (await askAgain()) continue;
       return {
         error: {
           code: 'source_failed',
@@ -190,6 +203,7 @@ export async function waitForJob(o: WaitOptions): Promise<Json> {
         },
       };
     }
+    if ((res.status === 502 || res.status === 504) && (await askAgain())) continue;
     const body = (await res.json().catch(() => null)) as Json | null;
     if (!res.ok || !body) {
       if (res.status === 401 || res.status === 403) {
@@ -205,6 +219,7 @@ export async function waitForJob(o: WaitOptions): Promise<Json> {
         ? body
         : { error: { code: 'source_failed', message: `Petals' site answered ${res.status}.` } };
     }
+    drops = 0;
     const job = body.job as Json | null | undefined;
     if (!job) continue;
     const project = (body.project ?? {}) as { exploration?: unknown; question?: unknown };
