@@ -34,6 +34,10 @@ export interface Published {
 
 export const DEFAULT_RECIPIENT = 'petals.testnet';
 
+/** The network a prepared entry is signed on: its recipient's (petals.near is mainnet's map). */
+export const networkOf = (recipient: string): 'testnet' | 'mainnet' =>
+  recipient.endsWith('.testnet') ? 'testnet' : 'mainnet';
+
 /** The exact text a maker signs (shared-map.md): {"petal":"publish/v1","entry_sha256":"…"}. */
 export function publishMessage(entrySha256: string): string {
   return JSON.stringify({ petal: 'publish/v1', entry_sha256: entrySha256 });

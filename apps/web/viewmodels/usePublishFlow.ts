@@ -2,7 +2,13 @@
 // publish_flower.
 import { useState } from 'react';
 import { preparePublish, publishEntry } from '../lib/agent-client.ts';
-import { type EntryDraft, type Prepared, type Published, proofFrom } from '../lib/publish.ts';
+import {
+  type EntryDraft,
+  networkOf,
+  type Prepared,
+  type Published,
+  proofFrom,
+} from '../lib/publish.ts';
 import { signPrepared } from '../lib/wallet.ts';
 
 export type PublishStep = 'ready' | 'preparing' | 'signing' | 'publishing' | 'done' | 'failed';
@@ -31,7 +37,7 @@ export function usePublishFlow({
       }
       if (!p) throw new Error('Nothing to sign.');
       setStep('signing');
-      const signed = await signPrepared(p);
+      const signed = await signPrepared(p, networkOf(p.recipient));
       setAccount(signed.accountId);
       setStep('publishing');
       setPublished(await publishEntry(p.entry_sha256, proofFrom(signed, p)));
