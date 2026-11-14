@@ -1324,6 +1324,45 @@ describe('EVM and Solana wallets (multi-chain wallet connection)', () => {
     expect(me2.person_id).toBe(owner);
   });
 
+  test('Disconnect takes a linked Ethereum or Solana wallet off the profile; the NEAR account stays', async () => {
+    const otherNear = testSigner('other.testnet');
+    const { app } = setup({ rpc: [maker, otherNear] });
+    const near = new Browser(app);
+    await near.signIn();
+    expect((await prove(near, 'eip155', '/api/v1/me/wallets')).res.status).toBe(200);
+    expect((await prove(near, 'solana', '/api/v1/me/wallets')).res.status).toBe(200);
+    const del = (b: Browser, caip10: string, origin: string | null = SITE) =>
+      b.request(`/api/v1/me/wallets/${encodeURIComponent(caip10)}`, {
+        method: 'DELETE',
+        headers: origin ? { origin } : {},
+      });
+    const evmCaip10 = `eip155:1:${evm.address}`;
+    // signed out, from another site, someone else's: refused
+    expect((await del(new Browser(app), evmCaip10)).status).toBe(401);
+    const foreign = await del(near, evmCaip10, 'https://evil.example');
+    expect(foreign.status).toBe(401);
+    expect(((await foreign.json()) as Err).error.message).toMatch(/another site/);
+    const other = new Browser(app);
+    await other.signIn(otherNear);
+    expect((await del(other, evmCaip10)).status).toBe(404);
+    // the NEAR account is the profile: refused, and still there
+    const nearOff = await del(near, 'near:testnet:maker.testnet');
+    expect(nearOff.status).toBe(400);
+    // the Ethereum one comes off
+    const off = await del(near, evmCaip10);
+    expect(off.status).toBe(200);
+    const { wallets } = (await off.json()) as { wallets: { network: string }[] };
+    expect(wallets.map((w) => w.network).sort()).toEqual(['solana', 'testnet']);
+    // and no longer signs in to the profile; it's refused as any wallet linked to no NEAR profile
+    const evmIn = await prove(new Browser(app), 'eip155');
+    expect(evmIn.res.status).toBe(401);
+    expect(((await evmIn.res.json()) as { error: { message: string } }).error.message).toBe(
+      NEAR_FIRST,
+    );
+    // linked again later, it's theirs again
+    expect((await prove(near, 'eip155', '/api/v1/me/wallets')).res.status).toBe(200);
+  });
+
   test("a NEAR person adds an EVM wallet and a Solana one; another person can't take them", async () => {
     const otherNear = testSigner('other.testnet');
     const { app } = setup({ rpc: [maker, otherNear] });
