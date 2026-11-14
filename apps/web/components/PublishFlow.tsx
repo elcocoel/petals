@@ -2,7 +2,7 @@
 import { outside } from '../lib/outside.ts';
 // The publish steps (T066): prepare_publish, sign in the wallet (NEP-413, one prompt), then
 // publish_flower. Shows the key, the writer and the explorer link, and why the receipt "fails".
-import type { EntryDraft, Prepared } from '../lib/publish.ts';
+import { type EntryDraft, networkOf, type Prepared } from '../lib/publish.ts';
 import { usePublishFlow } from '../viewmodels/usePublishFlow.ts';
 import { Button } from './ui/Button.tsx';
 
@@ -19,7 +19,7 @@ export function PublishFlow({
   });
   return (
     <section className="box">
-      <h2>Publish on NEAR (testnet)</h2>
+      <h2>Publish on NEAR ({prepared ? networkOf(prepared.recipient) : 'testnet'})</h2>
       <p>
         Your wallet asks for one signature: a NEP-413 message that names this entry’s hash. No gas,
         no transaction in your wallet. Petal’s writer then puts the entry on the shared map, with
