@@ -108,6 +108,16 @@ Needs Node 24 and pnpm 10.33.0 (pinned in `.nvmrc` and `package.json`). Run from
 2. Draw a flower from a recorded fixture, with no wallet, model key, network or payment.
 
    ```sh
+   pnpm demo
+   ```
+
+   Expect thirteen `PASS` lines and `All checks pass.` (exit 0), with the flower at `out/demo/landing-flower.svg`: the
+   landing flower's entry hash and maker signature, the shipped reading re-hashed, its figures recomputed (371
+   validators, a Nakamoto count of 9) and two renders to the same hash, all from files in the repo. Any failure exits 1.
+
+   By hand:
+
+   ```sh
    export PETAL_STATE_DIR="$(mktemp -d /tmp/petals-demo.XXXXXX)"
    pnpm -s petal figures near-validators --fake
    pnpm -s petal render near-validators --fake --out "$PETAL_STATE_DIR/flower.svg"
@@ -182,7 +192,9 @@ Needs Node 24 and pnpm 10.33.0 (pinned in `.nvmrc` and `package.json`). Run from
 ## Known limits
 
 - Withdrawal and the charge limits are enforced by the deployed contract (its code hash is checkable in step 6).
-  `petals.near` can upgrade it during the hackathon, so that holds for the code deployed, not forever.
+  `petals-credit.near` itself holds a full-access key, the same key as `petals.near`'s, and v3 was deployed with that
+  key rather than through `upgrade()`. So the guarantees hold for the deployed code while that key exists, and
+  `petals.near` can upgrade the contract during the hackathon.
   `petals-charger.near` and `petals-writer.near` each hold a restricted key (`charge` on the credit contract;
   `__fastdata_kv` on `petals.near`) and also the owner's full-access key.
 - Readers cover specific systems on NEAR, Ethereum, Base, Arbitrum, Gnosis and Solana; other chains aren't read.
