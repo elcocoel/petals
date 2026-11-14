@@ -19,6 +19,7 @@ import type { ContributionView } from '../../lib/contribution-view.ts';
 import type { ConversationRow } from '../../lib/conversation-list.ts';
 import { shortId } from '../../lib/flower-view.ts';
 import {
+  editorWords,
   lobbyWords,
   type MapTile,
   type ProfileEditorView,
@@ -39,6 +40,7 @@ import type {
 import { MapList } from '../MapList.tsx';
 import { Badge } from '../ui/Badge.tsx';
 import { Card } from '../ui/Card.tsx';
+import { IconButton } from '../ui/IconButton.tsx';
 import { Quote } from '../ui/Quote.tsx';
 import { Section } from '../ui/Section.tsx';
 import { SectionName } from '../ui/SectionName.tsx';
@@ -48,7 +50,6 @@ import { Contribution } from './Contribution.tsx';
 import { Conversations } from './Conversations.tsx';
 import { Funds } from './Funds.tsx';
 import { Profile } from './Profile.tsx';
-import { ProfileEditor } from './ProfileEditor.tsx';
 import { ProfileHead } from './ProfileHead.tsx';
 import { Published } from './Published.tsx';
 import type { TipView } from './TipControl.tsx';
@@ -169,32 +170,44 @@ export function Lobby({
         </Section>
 
         <Section id="profile">
-          {editor ? (
-            <div className="flex flex-col gap-column-gap">
-              <ProfileEditor view={editor} />
-              {walletsCard}
+          <div className="grid grid-cols-1 items-start gap-column-gap lg:grid-cols-split-flip">
+            {/* the profile card, edited in place: its pencil on hover, or a press anywhere on it that isn't a
+                link; the pencil is the keyboard's way in */}
+            {/* biome-ignore lint/a11y/noStaticElementInteractions: the pencil is the card's button; this only widens its target */}
+            {/* biome-ignore lint/a11y/useKeyWithClickEvents: the pencil is the card's button; this only widens its target */}
+            <div
+              className={`group relative flex min-w-0 flex-col gap-space-32 ${!editor && profile.edit ? 'cursor-pointer' : ''}`}
+              onClick={(e) => {
+                if (editor || !profile.edit) return;
+                if ((e.target as HTMLElement).closest('a,button,input,textarea,select,label'))
+                  return;
+                profile.edit();
+              }}
+            >
+              {!editor && profile.edit && (
+                <span className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 focus-within:opacity-100">
+                  <IconButton icon="edit" label={editorWords.edit} onClick={profile.edit} />
+                </span>
+              )}
+              <ProfileHead
+                account={profile.account}
+                chain={profile.chain}
+                social={profile.social}
+                editor={editor}
+              />
+              <Profile
+                social={profile.social}
+                onEdit={profile.edit}
+                saved={profile.saved}
+                published={profile.published}
+                editor={editor}
+                {...(profile.account
+                  ? { publicHref: `/u/${encodeURIComponent(profile.account)}` }
+                  : {})}
+              />
             </div>
-          ) : (
-            <div className="grid grid-cols-1 items-start gap-column-gap lg:grid-cols-split-flip">
-              <div className="flex min-w-0 flex-col gap-space-32">
-                <ProfileHead
-                  account={profile.account}
-                  chain={profile.chain}
-                  social={profile.social}
-                />
-                <Profile
-                  social={profile.social}
-                  onEdit={profile.edit}
-                  saved={profile.saved}
-                  published={profile.published}
-                  {...(profile.account
-                    ? { publicHref: `/u/${encodeURIComponent(profile.account)}` }
-                    : {})}
-                />
-              </div>
-              {walletsCard}
-            </div>
-          )}
+            {walletsCard}
+          </div>
         </Section>
 
         <Section
