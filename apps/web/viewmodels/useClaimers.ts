@@ -3,7 +3,7 @@
 // Petals', the petals.near account it publishes as.
 import type { Claim } from '@petal/core/types';
 import { useEffect, useState } from 'react';
-import type { PublicProfileAnswer } from '../lib/lobby-view.ts';
+import { readPublicProfile } from '../lib/agent-client.ts';
 
 /** Petals' own account: its mapping's claims are its own. */
 export const PETALS_ACCOUNT = 'petals.near';
@@ -24,8 +24,7 @@ const asked = new Map<string, Promise<Claimer | null>>();
 const readClaimer = (account: string) => {
   let p = asked.get(account);
   if (!p) {
-    p = fetch(`/api/v1/profiles/${encodeURIComponent(account)}`)
-      .then((r) => (r.ok ? (r.json() as Promise<PublicProfileAnswer>) : null))
+    p = readPublicProfile(account)
       .then((a) => (a?.profile ? { name: a.profile.name, avatar: a.profile.avatar } : null))
       .catch(() => null);
     asked.set(account, p);

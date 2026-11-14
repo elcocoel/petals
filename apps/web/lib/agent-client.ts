@@ -28,6 +28,7 @@ import type { ElsewhereRead } from './elsewhere.ts';
 import type { InFront } from './in-front.ts';
 import type { PayToken, TopUp } from './intents.ts';
 import type { Job } from './jobs.ts';
+import type { PublicProfileAnswer } from './lobby-view.ts';
 import type { MapClaims } from './map-claims.ts';
 import type { MapRecord } from './map-history.ts';
 import type { LayerCard } from './map-layers.ts';
@@ -1039,6 +1040,12 @@ export async function readWallets(): Promise<ProvenWallet[] | null> {
 export async function readPowerMap(): Promise<BenchLandscape | { error: string }> {
   const res = await fetch('/map/data');
   return (await res.json()) as BenchLandscape | { error: string };
+}
+
+/** Anyone's public profile, by any one of their accounts (GET /api/v1/profiles/:account), or null for none. */
+export async function readPublicProfile(account: string): Promise<PublicProfileAnswer | null> {
+  const res = await fetch(`/api/v1/profiles/${encodeURIComponent(account)}`);
+  return res.ok ? ((await res.json()) as PublicProfileAnswer) : null;
 }
 
 /** The person's tip and the price's scale for it (GET /api/v1/me/tip), or null: not signed in. */
