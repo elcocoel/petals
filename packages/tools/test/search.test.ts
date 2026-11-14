@@ -12,6 +12,7 @@ import {
   type Findable,
   find,
   joinSets,
+  meaningRead,
   memoryVectors,
   searchSet,
   snippetOf,
@@ -19,7 +20,13 @@ import {
   wordsOf,
 } from '../src/search-index.ts';
 import { fakeSearchModel, type SearchModel, searchModel } from '../src/search-model.ts';
-import { claimTitle, MEANING_OFF, searchPetals, shortRef } from '../src/tools/search-petals.ts';
+import {
+  claimTitle,
+  MEANING_OFF,
+  MEANING_SOON,
+  searchPetals,
+  shortRef,
+} from '../src/tools/search-petals.ts';
 import { rig, type TestRig } from './helpers.ts';
 
 // biome-ignore lint/suspicious/noExplicitAny: walking tool outputs
@@ -229,8 +236,25 @@ describe('search_petals', () => {
     });
   });
 
+  test("a search never waits for new texts' meaning: it answers by their words, says so, and the next one has it", async () => {
+    const first = await searchPetals(r.ctx, 'open calls feed', { kinds: ['doc'], rerank: false });
+    expect(first.meaning).toBe('on');
+    expect(first.says).toMatch(/found by their words for now/);
+    expect(first.results.length).toBeGreaterThan(0);
+    await meaningRead();
+    const next = await searchPetals(r.ctx, 'open calls feed', { kinds: ['doc'], rerank: false });
+    expect(next.says).toBeUndefined();
+    expect(MEANING_SOON(1)).toBe(
+      'The newest entry is found by its words for now, while its meaning is read.',
+    );
+  });
+
   test('a page of the docs is as good as its best section: the one that matches comes before long pages that half match', async () => {
+    // the first search answers by words while the docs' meaning is read; once it's kept, by meaning too
+    await searchPetals(r.ctx, 'voting blocs', { kinds: ['doc'], rerank: false });
+    await meaningRead();
     const quick = await searchPetals(r.ctx, 'voting blocs', { kinds: ['doc'], rerank: false });
+    expect(quick.says).toBeUndefined();
     expect(quick.results[0]?.id).toBe('brain/governance/voting-blocs-over-time.md');
   });
 

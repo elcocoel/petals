@@ -208,17 +208,74 @@ export const embeddedText = (d: Findable) =>
   (d.text.startsWith(d.title) ? d.text : `${d.title}\n${d.text}`).slice(0, EMBEDDED_CHARS);
 
 /** Each document's vector, embedding only the texts no vector is kept for yet, and keeping those. */
+/** Texts being embedded now, by model and sha256: a search never waits for them, and none is asked twice. */
+const reading = new Set<string>();
+const pending = new Set<Promise<void>>();
+
+/** Settles once every text being embedded after a search is kept (tests, and a warm that wants it done). */
+export async function meaningRead(): Promise<void> {
+  while (pending.size) await Promise.all([...pending]);
+}
+
+/** Embeds these texts and keeps them, after the search that found them missing has answered. */
+function readLater(
+  model: SearchModel,
+  keep: VectorKeep,
+  todo: readonly { sha256: string; text: string }[],
+) {
+  const fresh = todo.filter((t) => !reading.has(`${model.embedding}:${t.sha256}`));
+  if (!fresh.length) return;
+  for (const t of fresh) reading.add(`${model.embedding}:${t.sha256}`);
+  const done = (async () => {
+    try {
+      const vectors = await model.embed(
+        fresh.map((t) => t.text),
+        'document',
+      );
+      await keep.put(
+        model.embedding,
+        fresh.map((t, i) => ({ sha256: t.sha256, vector: vectors[i] as Float32Array })),
+      );
+    } catch (e) {
+      console.warn(
+        `petal: search couldn't read ${fresh.length} texts' meaning yet: ${(e as Error).message}`,
+      );
+    } finally {
+      for (const t of fresh) reading.delete(`${model.embedding}:${t.sha256}`);
+    }
+  })();
+  pending.add(done);
+  void done.finally(() => pending.delete(done));
+}
+
+/**
+ * Each document's vector, kept by the sha256 of its text. With `wait: false` a search doesn't wait for the texts
+ * not embedded yet: they're embedded after it, and until then found by their words (an empty vector).
+ */
 export async function vectorsOf(
   docs: readonly Findable[],
   model: SearchModel,
   keep: VectorKeep,
-): Promise<Float32Array[]> {
+  o: { wait?: boolean } = {},
+): Promise<{ vectors: Float32Array[]; waiting: number }> {
   const texts = docs.map(embeddedText);
   const shas = texts.map((t) => sha256Hex(t));
   const kept = await keep.get(model.embedding, [...new Set(shas)]);
   const missing = [...new Set(shas.filter((s) => !kept.has(s)))];
+  const textOf = new Map(shas.map((s, i) => [s, texts[i] as string]));
+  if (missing.length && o.wait === false) {
+    readLater(
+      model,
+      keep,
+      missing.map((sha256) => ({ sha256, text: textOf.get(sha256) as string })),
+    );
+    const none = new Float32Array(0);
+    return {
+      vectors: shas.map((s) => kept.get(s) ?? none),
+      waiting: shas.filter((s) => !kept.has(s)).length,
+    };
+  }
   if (missing.length) {
-    const textOf = new Map(shas.map((s, i) => [s, texts[i] as string]));
     const vectors = await model.embed(
       missing.map((s) => textOf.get(s) as string),
       'document',
@@ -227,7 +284,7 @@ export async function vectorsOf(
     await keep.put(model.embedding, rows);
     for (const r of rows) kept.set(r.sha256, r.vector);
   }
-  return shas.map((s) => kept.get(s) as Float32Array);
+  return { vectors: shas.map((s) => kept.get(s) as Float32Array), waiting: 0 };
 }
 
 /** Cosine (the vectors are unit length): every document, nearest first. */
@@ -281,6 +338,8 @@ export interface SearchSet {
   docs: readonly Findable[];
   words: WordIndex;
   vectors: readonly Float32Array[] | null;
+  /** documents whose meaning is still being read: found by their words until it is */
+  waiting: number;
   /** a document's place by its id */
   placeOf(id: string): number | undefined;
   /** the documents with this exact key */
@@ -293,16 +352,19 @@ export async function searchSet(
   docs: readonly Findable[],
   model: SearchModel | null,
   keep: VectorKeep,
+  o: { wait?: boolean } = {},
 ): Promise<SearchSet> {
   const byKey = new Map<string, number[]>();
   docs.forEach((d, i) => {
     for (const k of new Set((d.keys ?? []).map(keyOf))) byKey.set(k, [...(byKey.get(k) ?? []), i]);
   });
   const byId = new Map(docs.map((d, i) => [d.id, i]));
+  const meaning = model ? await vectorsOf(docs, model, keep, o) : null;
   return {
     docs,
     words: wordIndex(docs),
-    vectors: model ? await vectorsOf(docs, model, keep) : null,
+    vectors: meaning?.vectors ?? null,
+    waiting: meaning?.waiting ?? 0,
     placeOf: (id) => byId.get(id),
     keyed: (k) => byKey.get(keyOf(k)) ?? [],
   };
@@ -315,6 +377,7 @@ export function joinSets(a: SearchSet, b: SearchSet): SearchSet {
     docs: [...a.docs, ...b.docs],
     words: joinWords(a.words, b.words),
     vectors: a.vectors && b.vectors ? [...a.vectors, ...b.vectors] : null,
+    waiting: a.waiting + b.waiting,
     placeOf: (id) => {
       const at = b.placeOf(id);
       return at === undefined ? a.placeOf(id) : at + n;

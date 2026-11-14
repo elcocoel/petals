@@ -187,7 +187,8 @@ async function mapSet(ctx: ToolContext, model: SearchModel | null): Promise<MapS
   const kept = mapSets.get(key);
   if (kept) {
     const was = await kept.catch(() => null);
-    if (was?.sig === sig) return was;
+    // a set still waiting on new texts' meaning is built again from what's kept by now (cheap)
+    if (was?.sig === sig && !was.set.waiting) return was;
   }
   const made = (async () => {
     const markOf = new Map<string, Mark>();
@@ -231,7 +232,12 @@ async function mapSet(ctx: ToolContext, model: SearchModel | null): Promise<MapS
       for (const r of claimRows)
         docs.push(claimDoc(r, mapOfAccount.get(accountKey(r.subject)), nameOf));
     }
-    return { sig, cards, nameOf, set: await searchSet(docs, model, keepOf(store)) };
+    return {
+      sig,
+      cards,
+      nameOf,
+      set: await searchSet(docs, model, keepOf(store), { wait: false }),
+    };
   })();
   mapSets.set(key, made);
   return made;
@@ -275,7 +281,13 @@ function docSet(ctx: ToolContext, model: SearchModel | null): Promise<SearchSet>
   const key = `${ctx.config.root}|${model?.embedding ?? 'words'}`;
   let made = docSets.get(key);
   if (!made) {
-    made = searchSet(docDocs(ctx.config.root), model, keepOf(privateStore(ctx.config)));
+    made = searchSet(docDocs(ctx.config.root), model, keepOf(privateStore(ctx.config)), {
+      wait: false,
+    });
+    // still waiting on some texts' meaning: the next search builds it again from what's kept by then
+    void made.then((s) => {
+      if (s.waiting) docSets.delete(key);
+    });
     // a model that stopped answering while it was built: the next search builds it again
     made.catch(() => docSets.delete(key));
     docSets.set(key, made);
@@ -446,6 +458,12 @@ const idOf = (f: Findable) =>
       ? f.id.slice(f.kind.length + 1)
       : f.id;
 
+/** What search says while the newest entries' meaning is still being read: they're found by their words. */
+export const MEANING_SOON = (n: number) =>
+  n === 1
+    ? 'The newest entry is found by its words for now, while its meaning is read.'
+    : `${n} of the newest entries are found by their words for now, while their meaning is read.`;
+
 /** What search says when its model isn't running: it falls back to word search. */
 export const MEANING_OFF =
   "Search by meaning is off right now: its model isn't running, so these were found by their words alone.";
@@ -475,13 +493,18 @@ export async function searchPetals(
 ): Promise<SearchResults> {
   const model = searchModelOf(ctx);
   const off = async (): Promise<SearchResults> => ({
-    results: await searchWith(ctx, null, q, o),
+    results: (await searchWith(ctx, null, q, o)).results,
     meaning: 'off',
     says: MEANING_OFF,
   });
   if (!model) return off();
   try {
-    return { results: await searchWith(ctx, model, q, o), meaning: 'on' };
+    const found = await searchWith(ctx, model, q, o);
+    return {
+      results: found.results,
+      meaning: 'on',
+      ...(found.waiting ? { says: MEANING_SOON(found.waiting) } : {}),
+    };
   } catch (e) {
     if (e instanceof SearchModelDown) {
       console.warn(`petal: search by words alone: ${e.message}`);
@@ -496,7 +519,7 @@ async function searchWith(
   model: SearchModel | null,
   q: string,
   o: Parameters<typeof searchPetals>[2] = {},
-): Promise<SearchAnswer[]> {
+): Promise<{ results: SearchAnswer[]; waiting: number }> {
   const kinds = new Set(o.kinds ?? DEFAULT_KINDS);
   const sets: SearchSet[] = [];
   // the map, and the person's own, only when something other than the docs is asked for
@@ -509,7 +532,7 @@ async function searchWith(
   }
   if (kinds.has('doc')) sets.push(await docSet(ctx, model));
   const [first, ...rest] = sets;
-  if (!first) return [];
+  if (!first) return { results: [], waiting: 0 };
   const set = rest.reduce(joinSets, first);
   const found = await find(set, q, model, {
     n: o.limit ?? 10,
@@ -532,7 +555,7 @@ async function searchWith(
     ...(f.at ? { at: f.at } : {}),
     ...(o.snippets ? { snippet: snippetOf(f.text, q) } : {}),
   });
-  return found.map((f) => {
+  const results = found.map((f) => {
     const matched = f.matched ?? [];
     const card = f.kind === 'map' ? shared?.cards.get(f.id) : undefined;
     return {
@@ -541,6 +564,7 @@ async function searchWith(
       ...(matched.length ? { matched: matched.map(answer) } : {}),
     };
   });
+  return { results, waiting: set.waiting };
 }
 
 const ANSWER = obj(['kind', 'id', 'title', 'score', 'ranks'], {
