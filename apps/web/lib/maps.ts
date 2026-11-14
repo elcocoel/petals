@@ -31,6 +31,8 @@ export interface MapReading {
   made_by: string | null;
   /** oldest first */
   drawings: MapDrawing[];
+  /** the map at a past moment (one of a series): the Play shows it, the map never draws it as the map */
+  dated?: boolean;
 }
 
 export interface MapCard {

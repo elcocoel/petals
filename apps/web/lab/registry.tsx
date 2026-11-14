@@ -4638,6 +4638,8 @@ export const registry: LabEntry[] = [
 
 /** Exported by components/ but not drawn here, each for a stated reason. */
 export const NOT_IN_LAB: Record<string, string> = {
+  PlayControl:
+    "the Play's control, placed under the flower it moves on each frame by the map: shown on /map and /make inside a map with dated readings",
   ClaimPinCard:
     "a pin's claims, opened over the map beside the pin, which the map places on each frame: shown on /map",
   Landing: 'the whole landing page, at /; each of its sections is here',

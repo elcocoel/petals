@@ -31,6 +31,7 @@ import { MapLayers } from '../components/MapLayers.tsx';
 import { MapProposal } from '../components/MapProposal.tsx';
 import { MapSearch } from '../components/MapSearch.tsx';
 import { MapStrata } from '../components/MapStrata.tsx';
+import { PlayControl } from '../components/PlayControl.tsx';
 import { FloatBox } from '../components/ui/FloatBox.tsx';
 import { IconButton } from '../components/ui/IconButton.tsx';
 import { NavItem } from '../components/ui/NavItem.tsx';
@@ -50,6 +51,7 @@ import { authorSwatches, strataOf, strataWords } from '../lib/map-strata.ts';
 import type { CanvasHit } from '../lib/panel-view.ts';
 import { panelWords } from '../lib/panel-words.ts';
 import { CHOOSABLE } from '../lib/person-view.ts';
+import { playSteps } from '../lib/play.ts';
 import { proposalView, proposalWords } from '../lib/proposal-view.ts';
 import { tiesOf } from '../lib/ties.ts';
 import { type LegendEdit, onlyWhatDraws } from '../lib/view-edit.ts';
@@ -64,6 +66,7 @@ import { useMapClaims } from '../viewmodels/useMapClaims.ts';
 import { useMapRecord } from '../viewmodels/useMapRecord.ts';
 import { useMapSearch } from '../viewmodels/useMapSearch.ts';
 import { usePersonView } from '../viewmodels/usePersonView.ts';
+import { usePlay } from '../viewmodels/usePlay.ts';
 import type { PinAnchor } from './pins.ts';
 import {
   type Continent,
@@ -401,7 +404,7 @@ function Land({
   /** work running on this chain's map: under a flower (its place here), the placeholder or the map's foot, or null */
   progress: { at: number | 'pending' | 'map'; words: string; share: number | null } | null;
   /** claims as pins (landscape/pins.ts): what they say by map, the open one and its box, and who's told */
-  pins: Pick<LandscapeAt, 'claims' | 'onPinMaps' | 'pinOpen' | 'pinCard' | 'onPin'>;
+  pins: Pick<LandscapeAt, 'claims' | 'onPinMaps' | 'pinOpen' | 'pinCard' | 'onPin' | 'playBox'>;
 }) {
   const svg = useRef<SVGSVGElement>(null);
   const at = useRef<LandscapeAt | null>(null);
@@ -604,9 +607,15 @@ export function LandscapeCanvas({
   }, [composed, strata, given]);
   // and dressed in the person's view in the browser, at once (core redress: after a change in Tools the map
   // redraws without the second's wait): the server's reading in that view comes after and draws the same
+  // a moment the Play shows for the flower you're in (viewmodels/usePlay.ts), as a landed reading of its map
+  const [played, setPlayed] = useState<MapLanded | null>(null);
   const data = useMemo(
-    () => dressedIn(withLanded(withLanded(given, landed), composedLanded), person.view),
-    [given, landed, composedLanded, person.view],
+    () =>
+      dressedIn(
+        withLanded(withLanded(withLanded(given, landed), composedLanded), played),
+        person.view,
+      ),
+    [given, landed, composedLanded, played, person.view],
   );
   // 'edit' (the Power Map, the legend switched live and the map adapting): Settings' own hands, for anyone: a
   // person's view is kept on the server, a visitor's by its hash in their browser
@@ -775,6 +784,8 @@ export function LandscapeCanvas({
   const [pinMaps, setPinMaps] = useState<readonly string[]>([]);
   const [openPin, setOpenPin] = useState<PinAnchor | null>(null);
   const pinCard = useRef<HTMLElement | null>(null);
+  // the Play's control, placed under the flower it moves on each frame
+  const playBox = useRef<HTMLElement | null>(null);
   const keepPins = useCallback(
     (cs: readonly Claim[]) => atConfidence(cs, confidence),
     [confidence],
@@ -944,6 +955,16 @@ export function LandscapeCanvas({
   const claims = shownClaims;
   // the map's layers, each with its period and who mapped it, from its card and its insights
   const card = useMapCard(legend && movable ? (inFlower?.map ?? null) : null, version);
+  // the Play (lib/play.ts): the flower you're in through its dated readings, one moment after another
+  const playMoments = useMemo(() => playSteps(card?.readings), [card]);
+  const playFlower = useMemo(
+    () =>
+      inFlower?.map && playMoments.length > 0
+        ? { map: inFlower.map, chain: inFlower.place.chain, name: inFlower.name }
+        : null,
+    [inFlower?.map, inFlower?.place.chain, inFlower?.name, playMoments.length],
+  );
+  const play = usePlay(playFlower, playMoments, person.hash, setPlayed);
   // the map's layers as strata, each first author in their colour (the card's layers and authors)
   const strataLayers = useMemo(
     () => (card?.layers && card.authors ? strataOf(card.layers, card.authors) : null),
@@ -1263,7 +1284,20 @@ export function LandscapeCanvas({
             pinOpen: openPin?.key ?? null,
             pinCard,
             onPin: setOpenPin,
+            playBox,
           }}
+        />
+      )}
+      {playFlower && (
+        <PlayControl
+          steps={playMoments}
+          at={play.at}
+          playing={play.playing}
+          onToggle={play.toggle}
+          box={(el) => {
+            playBox.current = el;
+          }}
+          place={fill === 'window' ? 'fixed' : 'absolute'}
         />
       )}
       {openPin && (
