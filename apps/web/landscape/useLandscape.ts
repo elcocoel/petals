@@ -651,13 +651,19 @@ export function useLandscape(
         speaking = speaks;
       }
       const slid = new Map<number, { x: number; y: number }>();
+      // on a pin, the pointer is the pin's: the petal under it doesn't open and carry its pin away
+      const onPin = pointer.inside && pins.at(pointer.x, pointer.y) !== null;
       for (const [i, d] of lives) {
         const p = d.live.pointer;
         p.x = pointer.x;
         p.y = pointer.y;
         // on a way out, the pointer is the way's, not a petal's (so no note covers the way's count)
         p.inside =
-          pointer.inside && i === under && (entered < 0 || i === entered) && pointedWay < 0;
+          pointer.inside &&
+          !onPin &&
+          i === under &&
+          (entered < 0 || i === entered) &&
+          pointedWay < 0;
         p.dragging = pointer.dragging;
         d.live.calm = calm;
         // The page's chosen petal, marked only in the flower it opened in.
@@ -723,7 +729,10 @@ export function useLandscape(
       if (!raf) raf = requestAnimationFrame(frame);
     };
 
-    /** The open pin's box, beside its pin, inside the window; hidden while its pin isn't drawn. */
+    /**
+     * The open pin's box beside its pin, on its right, or its left where the right runs into the window's edge or
+     * another box over the map; hidden while its pin isn't drawn.
+     */
     const placeCard = () => {
       const card = at?.current?.pinCard?.current;
       if (!card) return;
@@ -733,8 +742,31 @@ export function useLandscape(
         card.style.visibility = 'hidden';
         return;
       }
-      const x = Math.max(8, Math.min(g.x + 3 * PIN, cam.width - card.offsetWidth - 8));
-      const y = Math.max(8, Math.min(g.y - 2 * PIN, cam.height - card.offsetHeight - 8));
+      const w = card.offsetWidth;
+      const h = card.offsetHeight;
+      const map = node.getBoundingClientRect();
+      const boxes = [...document.querySelectorAll<HTMLElement>('section[data-float]')]
+        .filter((b) => b !== card && !b.hidden)
+        .map((b) => b.getBoundingClientRect())
+        .filter((r) => r.width > 0 && r.height > 0);
+      const y = Math.max(8, Math.min(g.y - 2 * PIN, cam.height - h - 8));
+      const fits = (x: number) =>
+        x >= 8 &&
+        x + w <= cam.width - 8 &&
+        !boxes.some(
+          (r) =>
+            x < r.right - map.left &&
+            x + w > r.left - map.left &&
+            y < r.bottom - map.top &&
+            y + h > r.top - map.top,
+        );
+      const right = g.x + 3 * PIN;
+      const left = g.x - w - PIN;
+      const x = fits(right)
+        ? right
+        : fits(left)
+          ? left
+          : Math.max(8, Math.min(right, cam.width - w - 8));
       card.style.translate = `${Math.round(x)}px ${Math.round(y)}px`;
       card.style.visibility = 'visible';
     };
