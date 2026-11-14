@@ -8,6 +8,7 @@
 // transfer that has already gone.
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { addMyWallet, confirmPay, readWallets, sessionClient } from '../lib/agent-client.ts';
+import { shortId } from '../lib/flower-view.ts';
 import {
   PAY_USD,
   type PayInfo,
@@ -194,7 +195,7 @@ export function usePay(
           await sendFrom(where.network, where.receiver, payAction(where, yoctoOf(send), signer)),
         );
         if (!sent) throw new Error('no transaction');
-        setAdded(payWords.addedFor(String(send), signer, sent.account));
+        setAdded(payWords.addedFor(String(send), shortId(signer), shortId(sent.account)));
         setPhase('added');
         paid();
         return;

@@ -35,6 +35,12 @@ export const fundsWords = {
   /** The credit or NEAR's price couldn't be read. */
   unread: 'Your balance can’t be read right now.',
   withdraw: 'Withdraw',
+  /** The panel's one amount, which both Add and Withdraw act on. */
+  amount: 'Dollars',
+  /** Over the other-token fields, laid out in the panel. */
+  otherToken: 'Or pay with another token, from any chain',
+  /** What a withdrawal of some of the balance did. */
+  took: (near: string, to: string) => `Withdrew ${near} NEAR to ${to}.`,
   /** Beside Withdraw: what it takes out, which is everything the person holds in the contract. */
   /** Withdraw's own words while the contract holds something: what it takes out, as Add says what it adds. */
   withdrawAmount: (m: Money) => `Withdraw ${moneyWords(m)}`,
