@@ -183,9 +183,14 @@ export async function sendAs(
  * Connects a wallet on `network`, or uses the one already connected there, and names its account: for a
  * write the person's own wallet signs (NEAR Social's), where no Petals sign-in is asked.
  */
-export async function connectWallet(network: Network, read?: ReadKept): Promise<string> {
+export async function connectWallet(
+  network: Network,
+  read?: ReadKept,
+  /** sign the wallet in afresh, as after it named another account */
+  signInFirst = false,
+): Promise<string> {
   const connector = await connectorFor(network);
-  const known = await connector.wallet().catch(() => null);
+  const known = signInFirst ? null : await connector.wallet().catch(() => null);
   const already = known ? await signingAccount(known, network, read) : null;
   // the account it signs with, which for Meteor isn't always the first it names
   const account = already ?? (await signingAccount(await connector.connect(), network, read));

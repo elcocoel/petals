@@ -160,7 +160,7 @@ export const editorWords = {
   rejected: (why: string) => `NEAR Social didn’t take it, so nothing changed: ${why}.`,
   slow: 'NEAR Social hasn’t confirmed it yet. Look again in a minute.',
   otherWallet: (wallet: string, account: string) =>
-    `Your wallet is on ${wallet}. Switch it to ${account} to publish.`,
+    `Your wallet is on ${wallet}, so nothing was sent. Press again to sign in to it as ${account}.`,
   tryAgain: 'Try again',
 } as const;
 
