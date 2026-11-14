@@ -108,6 +108,16 @@ Needs Node 24 and pnpm 10.33.0 (pinned in `.nvmrc` and `package.json`). Run from
 2. Draw a flower from a recorded fixture, with no wallet, model key, network or payment.
 
    ```sh
+   pnpm demo
+   ```
+
+   Expect thirteen `PASS` lines and `All checks pass.` (exit 0), with the flower at `out/demo/landing-flower.svg`: the
+   landing flower's entry hash and maker signature, the shipped reading re-hashed, its figures recomputed (371
+   validators, a Nakamoto count of 9) and two renders to the same hash, all from files in the repo. Any failure exits 1.
+
+   By hand:
+
+   ```sh
    export PETAL_STATE_DIR="$(mktemp -d /tmp/petals-demo.XXXXXX)"
    pnpm -s petal figures near-validators --fake
    pnpm -s petal render near-validators --fake --out "$PETAL_STATE_DIR/flower.svg"
