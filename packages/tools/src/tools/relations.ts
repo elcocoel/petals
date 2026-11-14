@@ -136,6 +136,25 @@ const ACCOUNT_REF: JSONSchema = {
     'chain:address, such as eip155:1:0xabc or near:mainnet:alice.near. A bare address also works, and then it stands for that address on every chain it appears on.',
 };
 
+/**
+ * The Power Map's groups and pairs, from the readings drawn on it only: their own index, so a newer read kept but
+ * not drawn never becomes a group's latest there, and the map's roads stay on the flowers it shows. The agent's
+ * relations tools keep the index of every stored reading.
+ */
+export async function drawnOverview(ctx: ToolContext, snapshots: readonly string[]) {
+  const index = stateIndex(stateDirOf(ctx.config), 'map-index.db');
+  const drawn = [...new Set(snapshots)].sort();
+  try {
+    return await index.answer(
+      { list: async () => drawn.map((sha256) => ({ sha256 })), get: (sha) => ctx.store.get(sha) },
+      (q) => q.overview({ kind: 'holdings', limit: 5000 }),
+    );
+  } catch (e) {
+    if (e instanceof RelationsError) throw new ToolFailure(e.code, e.message, e.hint);
+    throw e;
+  }
+}
+
 /** Sync the index with what's stored, ask it, and say which stored snapshots it could not read. */
 async function ask<T extends object>(ctx: ToolContext, fn: (q: Queries) => T): Promise<T> {
   const index = stateIndex(stateDirOf(ctx.config));

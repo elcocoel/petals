@@ -41,6 +41,7 @@ import {
 } from '../record.ts';
 import { findTool } from '../registry.ts';
 import { brainOf } from '../tools/brain.ts';
+import { drawnOverview } from '../tools/relations.ts';
 import { base, findSnapshot } from '../tools/shared.ts';
 import type { ToolContext } from '../types.ts';
 import { valuesOf } from '../value-store.ts';
@@ -395,11 +396,16 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
   app.get('/api/v1/map', async (c) => {
     const view = await viewAsked(ctx, c.req.query('view'));
     if (!view) return respond(c, noView());
-    const overview = (await run('relations_overview', { kind: 'holdings', limit: 5000 })) as {
-      groups?: Record<string, unknown>[];
-      pairs?: Record<string, unknown>[];
-    };
-    if (isToolError(overview)) return respond(c, overview);
+    // the roads between the flowers drawn on the map: from those readings only, never a newer one kept undrawn
+    let overview: { groups?: Record<string, unknown>[]; pairs?: Record<string, unknown>[] };
+    try {
+      overview = (await drawnOverview(
+        ctx,
+        (await mapViews(ctx)).map((v) => v.snapshot),
+      )) as unknown as typeof overview;
+    } catch (e) {
+      return respond(c, versioned(fromThrown(e, 'internal')));
+    }
     return named(c, {
       made: new Date().toISOString(),
       source: (ctx.config.apiBase ?? '').replace(/\/+$/, ''),
