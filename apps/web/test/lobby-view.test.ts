@@ -7,6 +7,7 @@ import {
   shownAccount,
   WITHDRAW_ALL,
   withdrawn,
+  withdrawView,
 } from '../lib/lobby-view.ts';
 
 describe('the profile part’s money', () => {
@@ -36,6 +37,29 @@ describe('the profile part’s money', () => {
       type: 'FunctionCall',
       params: { methodName: 'withdraw', args: {}, gas: '30000000000000', deposit: '1' },
     });
+  });
+});
+
+describe('Withdraw says what it can and can’t take out', () => {
+  test('with no contract, no Withdraw', () => {
+    expect(withdrawView(null, 1, 3.46)).toBeNull();
+    expect(withdrawView('0', 1, null)).toBeNull();
+  });
+
+  test('credit from before the contract: Withdraw is there, takes nothing, and says why', () => {
+    const v = withdrawView('0', 1, 3.46);
+    expect(v?.enabled).toBe(false);
+    expect(v?.can).toBe(fundsWords.nothingToWithdraw);
+    expect(v?.cannot).toBe(fundsWords.cannotWithdraw({ usd: '1.00', near: '0.29' }));
+  });
+
+  test('what the contract holds can come out; the rest says why it can’t', () => {
+    const all = withdrawView('840000000000000000000000', 3.0408, 3.62);
+    expect(all?.enabled).toBe(true);
+    expect(all?.can).toBe(fundsWords.canWithdraw({ usd: '3.04', near: '0.84' }));
+    expect(all?.cannot).toBeNull();
+    const both = withdrawView('840000000000000000000000', 4.0408, 3.62);
+    expect(both?.cannot).toBe(fundsWords.cannotWithdraw({ usd: '1.00', near: '0.28' }));
   });
 });
 

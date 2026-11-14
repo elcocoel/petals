@@ -4,13 +4,20 @@
 // invites a chat of theirs falls back on, so a person on an invite reads what they can spend (13 Nov). It's read once, in the
 // layout (viewmodels/useWorkPanel.ts), and again whenever `cue` changes: after each turn and on every move,
 // and after a payment (reread). /make's composer, the panel's Lobby section and the
-// lobby's Balance card all show this one value. And Withdraw, which takes everything out of the contract
-// while it holds something: the person's own wallet calls the contract, and the server reads that
+// lobby's Balance card all show this one value. And Withdraw, always there with the contract and saying what
+// it can take out (what the contract holds) and what it can't (credit off the contract), which takes everything
+// out of the contract while it holds something: the person's own wallet calls the contract, and the server reads that
 // transaction back and says what's left (POST /api/v1/pay). There is no timer. lib/lobby-view.ts holds the
 // arithmetic and the words.
 import { useCallback, useEffect, useState } from 'react';
 import { confirmPay, readCredit, readPay } from '../lib/agent-client.ts';
-import { type HeldCredit, WITHDRAW_ALL, type WithdrawPhase, withdrawn } from '../lib/lobby-view.ts';
+import {
+  type HeldCredit,
+  WITHDRAW_ALL,
+  type WithdrawPhase,
+  withdrawn,
+  withdrawView,
+} from '../lib/lobby-view.ts';
 import { type Credit, type Money, money, type PayInfo, sentBy } from '../lib/pay.ts';
 import { profilePageWords, walletRefusal } from '../lib/profile-view.ts';
 import { connectWallet, sendAction } from '../lib/wallet.ts';
@@ -89,6 +96,7 @@ export function useFunds(cue: string) {
     })();
   }, [info, held]);
 
+  const balanceUsd = (credit?.left_usd ?? 0) + inviteLeft;
   return {
     /** Where a payment goes and NEAR's price (GET /api/v1/pay), read with the credit: the pay step's too. */
     where: info,
@@ -96,10 +104,10 @@ export function useFunds(cue: string) {
      * What's left, dollars first and NEAR beside at today's price , their own and on their
      * invites; nothing given yet is none. Null until Petals has said.
      */
-    balance: (info
-      ? money((credit?.left_usd ?? 0) + inviteLeft, info.near_usd)
-      : null) as Money | null,
+    balance: (info ? money(balanceUsd, info.near_usd) : null) as Money | null,
     held,
+    /** Withdraw, with the contract: what it takes out and what stays, and why; null with no contract. */
+    withdrawal: withdrawView(held, balanceUsd, info?.near_usd ?? null),
     phase,
     withdrew,
     /** Why the last withdrawal didn't go through; null for the plain words. */

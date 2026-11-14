@@ -1,23 +1,21 @@
 // Paying for Petals' agent: the one payment, which the wallet sends and the server checks on chain, to
 // where GET /api/v1/pay says. That's read once, with the one balance (useFunds, in the layout), and handed in
 // as `where`; `paid` reads both again once a payment lands. lib/pay.ts holds the arithmetic and the words.
-// The person sets how many dollars (about $1 to start), and a transfer the wallet sent is kept until the
-// server confirms it, so pressing again never sends a second one. The NEAR comes from one of the person's own
-// wallets: a NEAR wallet in the browser that isn't theirs yet (a second one, or none chosen since they signed in
+// The person sets how many dollars (about $1 to start; the field stays while they type, and with no amount the
+// press waits), and a transfer the wallet sent is kept until the server confirms it, so pressing again never
+// sends a second one. The NEAR comes from one of the person's own wallets: a NEAR wallet in the browser that isn't theirs yet (a second one, or none chosen since they signed in
 // with a linked wallet) is bound first, with one signature and nothing spent, so the server never refuses a
 // transfer that has already gone.
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { addMyWallet, confirmPay, readWallets, sessionClient } from '../lib/agent-client.ts';
 import {
-  money,
-  nearFor,
-  PAY_NEAR,
   PAY_USD,
   type PayInfo,
   type PayPhase,
   PENDING_KEY,
   type PendingPay,
   payAction,
+  payOffer,
   payWords,
   sentBy,
   yoctoOf,
@@ -121,8 +119,9 @@ export function usePay(
     setWhy(null);
   }
 
-  const amount = Number(usd);
-  const near = nearFor(amount, where?.near_usd ?? null);
+  // with a price, the person chooses the dollars, and the field stays while they type, empty included
+  const offer = payOffer(usd, where?.near_usd ?? null, Boolean(pending));
+  const send = offer.send;
 
   const confirm = useCallback(
     async (p: PendingPay) => {
@@ -141,11 +140,13 @@ export function usePay(
       setPhase('failed');
       return;
     }
+    // a transfer already out: confirm that one, never send again
+    const out = pending ?? readPending();
+    // only the dollars chosen go: no amount yet, nothing is asked of the wallet
+    if (!out && send === null) return;
     setPhase('paying');
     setWhy(null);
     try {
-      // a transfer already out: confirm that one, never send again
-      const out = pending ?? readPending();
       // the NEAR comes from one of their own wallets, bound first if it isn't, before any is sent
       let mine: boolean;
       try {
@@ -162,7 +163,10 @@ export function usePay(
         await confirm(out);
         return;
       }
-      const send = near ?? PAY_NEAR;
+      if (send === null) {
+        setPhase('ready');
+        return;
+      }
       const action = payAction(where, yoctoOf(send));
       const sent = sentBy(await sendAction(where.network, where.receiver, action));
       if (!sent) throw new Error('no transaction');
@@ -178,13 +182,7 @@ export function usePay(
     } catch {
       setPhase('failed');
     }
-  }, [where, from, pending, near, confirm]);
-
-  const label = pending
-    ? payWords.confirm
-    : near !== null
-      ? payWords.buttonUsd(money(amount, where?.near_usd ?? null))
-      : payWords.button(PAY_NEAR);
+  }, [where, from, pending, send, confirm]);
 
   return {
     /** The pay row that's live; earlier ones were answered or passed. */
@@ -192,14 +190,14 @@ export function usePay(
     phase,
     added,
     /** what the press says, and the dollars the person chose (none to choose while a transfer waits) */
-    label,
-    amount: pending || near === null ? null : { usd, label: payWords.amount, onUsd: setUsd },
+    label: offer.label,
+    amount: offer.field ? { usd, label: payWords.amount, onUsd: setUsd } : null,
     /** the one amount, which paying with another token reads too */
     usd,
     setUsd,
     /** a transfer out and not confirmed yet: what the row says after a failed press */
     failedWords: why ?? (pending ? payWords.pending : payWords.failed),
-    canPay: Boolean(pending) || near === null || amount > 0,
+    canPay: offer.canPay,
     pay: () => void pay(),
   };
 }

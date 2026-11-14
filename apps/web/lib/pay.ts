@@ -114,6 +114,29 @@ export function sentBy(outcome: unknown): { hash: string; account: string } | nu
   return typeof hash === 'string' && typeof account === 'string' ? { hash, account } : null;
 }
 
+/**
+ * What the pay row offers for the dollars typed. With a price, the person chooses the dollars: the field stays
+ * while they type (empty included), the press sends just that, and waits while there's no amount. With no
+ * price, one NEAR. `waiting`: a transfer out and not confirmed yet, which the press confirms instead.
+ */
+export function payOffer(usd: string, nearUsd: number | null, waiting: boolean) {
+  const priced = nearUsd !== null && nearUsd > 0;
+  const amount = Number(usd);
+  const send = priced ? nearFor(amount, nearUsd) : PAY_NEAR;
+  return {
+    /** the NEAR the press sends; null while there's no amount to send */
+    send,
+    /** the dollars field shows */
+    field: priced && !waiting,
+    label: waiting
+      ? payWords.confirm
+      : priced
+        ? payWords.buttonUsd(money(send === null ? 0 : amount, nearUsd))
+        : payWords.button(PAY_NEAR),
+    canPay: waiting || send !== null,
+  };
+}
+
 /** Where the one payment is: offered, waiting for the wallet, added, or it didn't go through. */
 export type PayPhase = 'ready' | 'paying' | 'added' | 'failed';
 

@@ -21,6 +21,7 @@ import {
 } from '../lib/agent-client.ts';
 import { contributionView } from '../lib/contribution-view.ts';
 import { evmWallets } from '../lib/evm-wallet.ts';
+import { fundsWords } from '../lib/lobby-view.ts';
 import { PHONE, qrOf } from '../lib/phone-wallet.ts';
 import {
   type AddWalletPhase,
@@ -247,6 +248,9 @@ export function useLobby() {
         amount: pay.amount,
         failedWords: pay.failedWords,
         canPay: pay.canPay,
+        // the lobby's own words: what adding is here, not the chat's first-question line
+        line: funds.where?.method === 'deposit' ? fundsWords.addDeposit : fundsWords.addTransfer,
+        addedWords: fundsWords.added,
       },
     },
     tip: {

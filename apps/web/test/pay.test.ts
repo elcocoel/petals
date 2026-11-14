@@ -14,6 +14,7 @@ import {
   nearFor,
   PAY_NEAR,
   payAction,
+  payOffer,
   payWords,
   sentBy,
   yoctoOf,
@@ -117,6 +118,55 @@ describe('about $1, never twice', () => {
     expect(waiting).toContain(payWords.confirm);
     expect(waiting).toContain(payWords.pending);
     expect(waiting).not.toContain(payWords.amount);
+  });
+});
+
+describe('the dollars the person chooses', () => {
+  test('with a price, the field stays while they type, and an empty one waits instead of sending 1 NEAR', () => {
+    expect(payOffer('1', 3.42, false)).toEqual({
+      send: 0.293,
+      field: true,
+      label: 'Add $1.00 · 0.29 NEAR',
+      canPay: true,
+    });
+    for (const typed of ['', '0', 'abc', '-2']) {
+      expect(payOffer(typed, 3.42, false)).toEqual({
+        send: null,
+        field: true,
+        label: 'Add $0.00 · 0.00 NEAR',
+        canPay: false,
+      });
+    }
+    expect(payOffer('5', 3.42, false).label).toBe('Add $5.00 · 1.46 NEAR');
+    expect(payOffer('5', 3.42, false).send).toBe(1.462);
+  });
+
+  test('with no price, one NEAR; a transfer out is confirmed, with no field', () => {
+    expect(payOffer('', null, false)).toEqual({
+      send: PAY_NEAR,
+      field: false,
+      label: payWords.button(PAY_NEAR),
+      canPay: true,
+    });
+    expect(payOffer('', 3.42, true)).toMatchObject({
+      field: false,
+      label: payWords.confirm,
+      canPay: true,
+    });
+  });
+
+  test('a page with its own words says them first', () => {
+    const html = renderToStaticMarkup(
+      createElement(PayRow, {
+        phase: 'ready',
+        added: null,
+        onPay: () => {},
+        line: 'Choose how much to add.',
+      }),
+    );
+    expect(html).toContain('Choose how much to add.');
+    expect(html).not.toContain(payWords.start);
+    expect(html).not.toContain(payWords.out);
   });
 });
 
