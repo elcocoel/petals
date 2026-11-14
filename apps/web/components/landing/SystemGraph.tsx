@@ -4,7 +4,8 @@
 // other chains at the foot; along each line what travels there moves, and a part says what it is while it's
 // pointed at. The parts sit in one grid of four columns, so the lines run straight; the lines, the regions and
 // what travels are drawn behind them, measured from where the parts landed. With reduced motion nothing
-// travels. The words are lib/system-graph.ts's. It takes the band's whole column, so the labels stay legible.
+// travels. The words are lib/system-graph.ts's. It takes the band's whole column, so the labels stay legible; on a
+// phone it keeps a flower's width and scrolls sideways rather than squeezing its parts.
 import { useLayoutEffect, useRef, useState } from 'react';
 import {
   BANDS,
@@ -113,8 +114,9 @@ export function SystemGraph() {
   const railX = (laid?.boxes.petals?.x ?? PAD.rail) - (PAD.rail - PAD.petals);
 
   return (
-    // room on the left for the rail and its name, so nothing passes the column's edge
-    <div ref={frame} className="relative w-full px-space-32 md:px-column-gap">
+    <div className="w-full overflow-x-auto">
+    {/* room on the left for the rail and its name, so nothing passes the column's edge */}
+    <div ref={frame} className="relative w-full min-w-flower-width px-space-32 md:min-w-0 md:px-column-gap">
       {laid && (
         <svg
           aria-hidden="true"
@@ -217,6 +219,7 @@ export function SystemGraph() {
           return row.parts.map((id) => <Part key={id} part={PARTS[id]} />);
         })}
       </div>
+    </div>
     </div>
   );
 }
