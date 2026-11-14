@@ -14,7 +14,7 @@ type Out = Record<string, any>;
 
 const ROOT = join(import.meta.dirname, '..');
 const OUT = join(ROOT, 'out', 'demo');
-/** The first flower on NEAR, the one the landing shows: who stands behind NEAR's validators. */
+/** The landing's drawing, as first published on NEAR testnet: who stands behind NEAR's validators. The landing shows the same spec published again on mainnet (62eaaefb…). */
 const FLOWER = '9ac16c8917aa5ca579c8421a';
 const MEASURE = 'validator_stake_current_epoch';
 const TX = 'Bs8E4tJ3mFvkLaENbbY82hkAj5hWofZU5R4yVuh5UzXu';
