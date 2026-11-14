@@ -1,6 +1,8 @@
 // A public site (PETAL_PUBLIC=1): it does no work for a visitor that reaches outside it. No chain reads,
 // web reads, searches, payment quotes or chain writes: a person's own agent does those on their machine
 // and posts what it made. The shared map is the copies of published rows the site ships.
+
+import { randomBytes } from 'node:crypto';
 import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -276,9 +278,14 @@ describe("a reading made on the person's machine, posted so the site can draw it
     expect(notOne.status).toBe(400);
     expect(((await notOne.json()) as Out).error.message).toContain('valid snapshot');
 
-    const big = await put(ref, sha, 'x'.repeat(2 * 1024 * 1024 + 1));
+    const big = await put(ref, sha, 'x'.repeat(32 * 1024 * 1024 + 1));
     expect(big.status).toBe(400);
-    expect(((await big.json()) as Out).error.message).toContain('2 MiB');
+    expect(((await big.json()) as Out).error.message).toContain('32 MiB');
+    // a gzip of a few MiB, within 32 MiB inflated, passes the size checks (a monthly reading's is about 2 MiB)
+    const wide = gzipSync(randomBytes(3 * 1024 * 1024));
+    expect(wide.length).toBeGreaterThan(2 * 1024 * 1024);
+    const past = await put(ref, sha, wide, { 'content-encoding': 'gzip' });
+    expect(((await past.json()) as Out).error.message).toContain('not JSON');
 
     const bomb = gzipSync(Buffer.alloc(40 * 1024 * 1024, 32));
     const inflated = await put(ref, sha, bomb, { 'content-encoding': 'gzip' });

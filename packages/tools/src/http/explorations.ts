@@ -69,9 +69,8 @@ const SHA = /^[0-9a-f]{64}$/;
 const NEVER_STORE = 'no-store';
 const gunzip = promisify(gunzipCb);
 
-/** A posted reading on the wire, gzipped or not. Bodies run 50 KB to 0.8 MB gzipped. */
-export const SNAPSHOT_WIRE_MAX_BYTES = 2 * 1024 * 1024;
-/** The same reading inflated: a small gzip can't grow past this. */
+/** A posted reading, inflated: no reading is larger, and a gzip can't grow past it. On the wire, gzipped or not,
+ * a body is held to the same, since a gzip smaller than its reading is the point of sending one. */
 export const SNAPSHOT_MAX_BYTES = 32 * 1024 * 1024;
 /** The one route whose body may pass the door's 256 KiB: it has its own limits, above. */
 export const isSnapshotPost = (c: Context) =>
@@ -277,9 +276,8 @@ export function explorationRoutes(
   app.put(
     '/api/v1/explorations/:ref/snapshots/:sha256',
     bodyLimit({
-      maxSize: SNAPSHOT_WIRE_MAX_BYTES,
-      onError: (c) =>
-        fail(c, toolError('bad_input', 'The body is larger than 2 MiB. Send it gzipped.')),
+      maxSize: SNAPSHOT_MAX_BYTES,
+      onError: (c) => fail(c, toolError('bad_input', 'The body is larger than 32 MiB.')),
     }),
     async (c) => {
       const sha = c.req.param('sha256');
