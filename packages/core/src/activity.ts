@@ -6,9 +6,12 @@
 //   last_active   date      when it last voted; where a source keeps no vote's time (Sputnik), the time of the
 //                           proposal it last voted on, inferred, and its label says so
 //   voted         category  'voted' or 'never voted', for every petal of the reading
+//   votes_alike   relation  a line between two petals that voted alike, as the voting blocs find them over every
+//                           proposal read (BLOCS_DEFAULTS), its value their agreement (0 to 1)
 //
 // What isn't here: a map with no proposals read gets none of the three, and transfers aren't kept per wallet (a
 // reading holds balances), so there's no last transfer. Pure.
+import { BLOCS_DEFAULTS, type BlocPair, votingBlocs } from './blocs.ts';
 import { canonicalJson, sha256Hex } from './hash.ts';
 import type { Proposals } from './proposals.ts';
 import type { SeamPiece } from './seam.ts';
@@ -89,5 +92,32 @@ export function activityPieces(s: Snapshot, p: Proposals | null): SeamPiece[] {
       standing: untimed ? 'inferred' : 'verified',
       values: [...last].map(([participant, at]) => ({ participant, value: at })),
     });
+  // the pairs that voted alike, as lines between this reading's petals
+  const lines = pairsOf(p).flatMap((x) => {
+    const from = petal.get(key(x.a));
+    const to = petal.get(key(x.b));
+    return from !== undefined && to !== undefined ? [{ from, to, value: String(x.agreement) }] : [];
+  });
+  if (lines.length)
+    pieces.push({
+      ...base,
+      name: 'votes_alike',
+      kind: 'relation',
+      unit: 'agreement',
+      label: `voted alike on at least ${BLOCS_DEFAULTS.min_agreement * 100}% of ${BLOCS_DEFAULTS.min_shared}+ shared proposals from ${span}`,
+      standing: 'verified',
+      lines,
+    });
   return pieces;
+}
+
+/** The voting blocs' pairs over every proposal read, found once for each set of proposals (every drawing shares it). */
+const pairs = new WeakMap<Proposals, readonly BlocPair[]>();
+function pairsOf(p: Proposals): readonly BlocPair[] {
+  let found = pairs.get(p);
+  if (!found) {
+    found = votingBlocs(p).pairs;
+    pairs.set(p, found);
+  }
+  return found;
 }

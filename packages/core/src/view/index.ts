@@ -78,6 +78,7 @@ export const ACTIVITY: readonly Piece[] = [
   { name: 'votes_cast', kind: 'count' },
   { name: 'last_active', kind: 'date' },
   { name: 'voted', kind: 'category' },
+  { name: 'votes_alike', kind: 'relation' },
 ];
 
 /**
