@@ -39,11 +39,12 @@ test('the section: the map to the window, the whole of it and the button over it
   expect(map).toMatch(/<CoverLink href=\{into\.href\} label=\{into\.label\} \/>/);
   // the card and the button share the foot, which lets a press through to the map's link but on the button
   expect(map).toMatch(/className="pointer-events-none absolute inset-x-0 bottom-0 /);
-  expect(map).toMatch(
-    /<div className="pointer-events-auto md:col-start-2 md:justify-self-center">/,
+  expect(map).toMatch(/<div className="pointer-events-auto">\s+<Button href=\{into\.href\} arrow>/);
+  // the card is the landing's own card, a box over the map the map's names keep clear of, right above the button
+  expect(map).toMatch(/data-float=""\s+data-b="box"\s+data-kind="plate"/);
+  expect(map.indexOf('data-kind="plate"')).toBeLessThan(
+    map.indexOf('<Button href={into.href} arrow>'),
   );
-  // the card is a box over the map: the map's names keep clear of it
-  expect(map).toMatch(/<section\s+data-float=""\s+data-b="box"\s+data-kind="float"/);
   expect(text('components/ui/CoverLink.tsx')).toMatch(
     /<span className="sr-only">\{label\}<\/span>/,
   );
