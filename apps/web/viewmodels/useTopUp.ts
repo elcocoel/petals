@@ -72,6 +72,8 @@ export function useTopUp(
     ? picked
     : (onChain.find((t) => t.symbol === OPENS_ON.symbol)?.asset ?? onChain[0]?.asset ?? '');
 
+  // the chosen token's address, asked for the moment it's chosen, once a visit (again after a failed ask)
+  const tried = useRef(new Set<string>());
   const ask = useCallback(async (origin: string) => {
     setError(null);
     setAskingFor(origin);
@@ -79,14 +81,13 @@ export function useTopUp(
       const t = await startTopUp({ origin_asset: origin });
       setGiven((g) => ({ ...g, [origin]: t }));
     } catch (e) {
+      tried.current.delete(origin);
       setError((e instanceof Error && e.message) || intentWords.state.FAILED);
     } finally {
       setAskingFor((a) => (a === origin ? null : a));
     }
   }, []);
 
-  // the chosen token's address, asked for the moment it's chosen, once a visit
-  const tried = useRef(new Set<string>());
   useEffect(() => {
     if (!asset || given[asset] || tried.current.has(asset)) return;
     tried.current.add(asset);
