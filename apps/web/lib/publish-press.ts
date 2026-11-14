@@ -136,17 +136,18 @@ export function publishPressView(
   signsIn = false,
 ): PublishPressView | null {
   if (!data) return null;
+  // published, the card stays, with what joined the map; its press has nothing left to do
   if (phase === 'published')
     return {
-      title: null,
-      press: null,
+      title: publishWords.what(data.layers?.length ?? 0),
+      press: publishWords.press,
       step: said,
       running: false,
       sign: publishWords.sign,
       why: null,
       rows: null,
       said,
-      busy: false,
+      busy: true,
     };
   if (!(data.layers?.length && signer)) return null;
   const going: PublishRow[] = (data.claims ?? []).map((c) => ({

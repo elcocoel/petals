@@ -15,6 +15,8 @@ import {
 } from './publish-press.ts';
 
 export const pressAllWords = {
+  /** the press's title before the read says how much */
+  kept: 'What you’ve kept',
   /** the one line of what goes, at the top of the press: one version on each map */
   what: (maps: number, layers: number) =>
     `What you’ve kept: ${maps === 1 ? '1 map' : `${maps} maps`}, ${layers === 1 ? '1 layer' : `${layers} layers`}`,
@@ -51,16 +53,17 @@ const row = (key: string, name: string, about: string, source: string | null, wh
 /** Where the read is: running, refused (with why), or done. */
 export type PressAllRead = { reading: true } | { unread: string } | { done: true };
 
+// One card in every state: the same title, the press (waiting when it can't be pressed) and only the step changing.
 const line = (step: string, running = false): PublishPressView => ({
-  title: null,
-  press: null,
+  title: pressAllWords.kept,
+  press: pressAllWords.press,
   step,
   running,
   sign: publishWords.sign,
   why: null,
   rows: null,
   said: null,
-  busy: false,
+  busy: true,
 });
 
 /**
@@ -77,15 +80,20 @@ export function pressAllView(
 ): PublishPressView | null {
   if (phase === 'published')
     return {
-      title: null,
-      press: null,
+      title: read
+        ? pressAllWords.what(
+            read.maps.length,
+            read.maps.reduce((n, m) => n + m.layers, 0),
+          )
+        : pressAllWords.kept,
+      press: pressAllWords.press,
       step: said,
       running: false,
       sign: publishWords.sign,
       why: null,
       rows: null,
       said,
-      busy: false,
+      busy: true,
     };
   if ('reading' in state) return line(pressAllWords.reading, true);
   if ('unread' in state) return line(pressAllWords.unread(state.unread));

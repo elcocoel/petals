@@ -82,8 +82,9 @@ describe('the publish press', () => {
     expect(
       publishPressView(data, 'published', publishWords.published('1 new kind of data'), one),
     ).toMatchObject({
-      press: null,
-      said: 'On the shared map in your name: 1 new kind of data.',
+      press: publishWords.press,
+      busy: true,
+      step: 'On the shared map in your name: 1 new kind of data.',
     });
     expect(publishPressView(data, 'failed', publishWords.otherWallet, one)?.said).toBe(
       publishWords.otherWallet,

@@ -22,21 +22,24 @@ const READ = {
 };
 
 describe('one press over many maps', () => {
-  test('a person with nothing anywhere to publish meets no press, only a line saying so', () => {
+  test('one card in every state: with nothing to publish, its press waits and its line says so', () => {
     expect(pressAllView(null, 'ready', null)).toBeNull();
     const none = pressAllView({ ...READ, maps: [] }, 'ready', null);
-    expect(none?.step).toBe(pressAllWords.none);
-    expect(none?.press).toBeNull();
+    expect(none).toMatchObject({
+      title: pressAllWords.kept,
+      press: pressAllWords.press,
+      step: pressAllWords.none,
+      busy: true,
+    });
   });
 
   test('a slow read says it is reading, and a refused one says why, never looking empty', () => {
     const reading = pressAllView(null, 'ready', null, false, { reading: true });
     expect(reading?.step).toBe(pressAllWords.reading);
-    expect(reading?.running).toBe(true);
-    expect(reading?.press).toBeNull();
+    expect(reading).toMatchObject({ title: pressAllWords.kept, running: true, busy: true });
     const refused = pressAllView(null, 'ready', null, false, { unread: 'Not signed in.' });
     expect(refused?.step).toBe(pressAllWords.unread('Not signed in.'));
-    expect(refused?.press).toBeNull();
+    expect(refused?.busy).toBe(true);
   });
 
   test('the press first, with one line of what goes; the maps and why the rest stay, folded under it', () => {
@@ -73,8 +76,12 @@ describe('one press over many maps', () => {
     expect(pressAllView(READ, 'sending', null)?.step).toBe(publishWords.sending);
     expect(pressAllView(READ, 'ready', null)?.step).toBeNull();
     const done = pressAllView(READ, 'published', pressAllWords.published(2));
-    expect(done?.press).toBeNull();
-    expect(done?.said).toBe('On the shared map in your name: 2 maps.');
+    expect(done).toMatchObject({
+      title: pressAllWords.what(2, 4),
+      press: pressAllWords.press,
+      step: 'On the shared map in your name: 2 maps.',
+      busy: true,
+    });
   });
 });
 
