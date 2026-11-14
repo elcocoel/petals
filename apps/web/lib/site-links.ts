@@ -6,7 +6,7 @@ import { flowerImage } from './flower-view.ts';
 export const askHref = (question: string) => `/make?q=${encodeURIComponent(question)}`;
 
 /** The published shape the landing's live reading shows, and whose reading its findings quote. */
-const LIVE_SHAPE = '9ac16c8917aa5ca579c8421a';
+const LIVE_SHAPE = '62eaaefb9f5852c72d37a63c';
 
 /**
  * The address other people's AI reaches Petals at, on every page, so what the landing hands out works
