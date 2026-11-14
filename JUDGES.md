@@ -3,13 +3,13 @@
 Petals maps who holds power in an on-chain network and draws it as a flower: one petal per account, sized by its share.
 An agent reads the chain with deterministic tools, records the source and block of every reading, and keeps facts apart
 from what it inferred. It runs on NEAR mainnet: NEAR sign-in, an agent on NEAR AI Cloud, a credit contract, NEAR Intents
-top-ups and maps published to FastData.
+top-ups and flowers published to FastData.
 
 Live: https://petals.elementarycomplexity.com · Repo map: [AGENTS.md](AGENTS.md#repo-map) · Licence: MIT.
 
 The submission form carries a no-wallet invite link for the hosted agent; it is not in this repo.
 
-**One fixed public flower:** https://petals.elementarycomplexity.com/f/62eaaefb9f5852c72d37a63c (a map published to
+**One fixed public flower:** https://petals.elementarycomplexity.com/f/62eaaefb9f5852c72d37a63c (a flower published to
 FastData by `petals-writer.near`, signed by `petals.near`).
 
 ## Three steps, no wallet
@@ -37,28 +37,28 @@ Every row is live on mainnet unless its status says otherwise.
 
 | Claim                                                                                                             | Status | Code or test                                                                                                                                       | Check                                                                              | Expected                                                                                                                                |
 | ----------------------------------------------------------------------------------------------------------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `petals-credit.near`: only an account withdraws its own balance; only the charger charges, never beyond a balance | live   | `packages/near/contract/src/lib.rs` (`withdraw`, `charge`)                                                                                         | Step 7 below: code hash and `config`                                               | Code hash `Dy3xxsZTPsviKF6G4gFsAPnwHw5rJ4eGHNADZNdPshNx`; `{"owner":"petals.near","charger":"petals-charger.near","wnear":"wrap.near"}` |
-| The service keys are restricted                                                                                   | live   | `packages/near/scripts/credit-setup.ts`                                                                                                            | `view_access_key_list` for `petals-charger.near` and `petals-writer.near` (step 7) | `FunctionCall(petals-credit.near: charge)` and `FunctionCall(petals.near: __fastdata_kv)`, each beside a full-access key                |
+| `petals-credit.near`: only an account withdraws its own balance; only the charger charges, never beyond a balance | live   | `packages/near/contract/src/lib.rs` (`withdraw`, `charge`)                                                                                         | Step 6 below: code hash and `config`                                               | Code hash `Dy3xxsZTPsviKF6G4gFsAPnwHw5rJ4eGHNADZNdPshNx`; `{"owner":"petals.near","charger":"petals-charger.near","wnear":"wrap.near"}` |
+| The service keys are restricted                                                                                   | live   | `packages/near/scripts/credit-setup.ts`                                                                                                            | `view_access_key_list` for `petals-charger.near` and `petals-writer.near` (step 6) | `FunctionCall(petals-credit.near: charge)` and `FunctionCall(petals.near: __fastdata_kv)`, each beside a full-access key                |
 | Sign-in proves control of a NEAR account (NEP-413); Ethereum and Solana wallets link to the same person           | live   | `packages/near/src/auth/nep413.ts`, `packages/near/src/auth/wallets.ts`, `packages/near/test/nep413.test.ts`, `packages/near/test/wallets.test.ts` | `pnpm vitest run packages/near/test`                                               | All tests pass                                                                                                                          |
-| Every published version is signed by its author (manifest/v1)                                                     | live   | `packages/core/schema/manifest.schema.json`, `packages/core/test/manifest.test.ts`, `packages/agent/test/publish-press.test.ts`                    | Step 3 above                                                                       | Entries with `"signed": true` and their author                                                                                          |
+| Every version a person publishes is signed by them with NEP-413 (manifest/v1 when one press covers many maps)     | live   | `packages/core/schema/manifest.schema.json`, `packages/core/test/manifest.test.ts`, `packages/agent/test/publish-press.test.ts`                    | Step 3 above                                                                       | `petals.near` and `elcocoel.near` entries with `"signed": true`; Petals' imported mapping with `"signed": false`                        |
 | Agent keys are stripped from notes                                                                                | live   | `packages/tools/src/tools/explorations.ts` (`withoutKeys`)                                                                                         | Read the function                                                                  | `petal_agent_…` replaces any key in a note                                                                                              |
 
 ### Social Money
 
-| Claim                                                                                | Status | Code or test                                                                             | Check                                                                       | Expected                                                                            |
-| ------------------------------------------------------------------------------------ | ------ | ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| NEAR communities' votes and members are read from their Sputnik DAO contracts        | live   | `packages/inputs/src/modules/sputnik-dao.ts`, `packages/inputs/test/sputnik-dao.test.ts` | `curl -s https://petals.elementarycomplexity.com/api/v1/maps`               | Maps with ids `near:mainnet:*.sputnik-dao.near`, such as `templar.sputnik-dao.near` |
-| Ties between accounts that voted alike are drawn inside a flower                     | live   | `apps/web/lib/ties.ts`                                                                   | On `/map`, open Ref Finance                                                 | Ties between its voters, on by default                                              |
-| Profiles come from NEAR Social, and a person can write theirs from the lobby         | live   | `apps/web/lib/near-social.ts`                                                            | `curl -s https://api2.near.social/v1/accounts/mob.near`                     | A profile as Petals reads one                                                       |
-| Every addition carries its author, and credit goes to whoever published a fact first | live   | `packages/core/src/compose/credit.ts`, `packages/core/test/compose.test.ts`              | `curl -s https://petals.elementarycomplexity.com/api/v1/credit/petals.near` | `credit/v1` with the author's layers and counts                                     |
+| Claim                                                                                | Status | Code or test                                                                                                            | Check                                                                       | Expected                                                                            |
+| ------------------------------------------------------------------------------------ | ------ | ----------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| NEAR communities' votes and members are read from their Sputnik DAO contracts        | live   | `packages/inputs/src/modules/sputnik-dao.ts`, `packages/inputs/test/sputnik-dao.test.ts`                                | `curl -s https://petals.elementarycomplexity.com/api/v1/maps`               | Maps with ids `near:mainnet:*.sputnik-dao.near`, such as `templar.sputnik-dao.near` |
+| Ties between accounts that voted alike are drawn inside a flower                     | live   | `packages/core/src/activity.ts` (votes_alike), `packages/core/src/view/index.ts` (DEFAULT_VIEW), `apps/web/lib/ties.ts` | On `/map`, open Ref Finance                                                 | Ties between its voters, on by default                                              |
+| Profiles come from NEAR Social, and a person can write theirs from the lobby         | live   | `apps/web/lib/near-social.ts`                                                                                           | `curl -s https://api2.near.social/v1/accounts/mob.near`                     | A profile as Petals reads one                                                       |
+| Every addition carries its author, and credit goes to whoever published a fact first | live   | `packages/core/src/compose/credit.ts`, `packages/core/test/compose.test.ts`                                             | `curl -s https://petals.elementarycomplexity.com/api/v1/credit/petals.near` | `credit/v1` with the author's layers and counts                                     |
 
 ### AI Swarms
 
-| Claim                                                                            | Status | Code or test                                                                                             | Check                                                                                              | Expected                                                    |
-| -------------------------------------------------------------------------------- | ------ | -------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
-| Petals' agent hands mapping jobs to agents people connect; they work in parallel | live   | `packages/agent/src/jobs.ts`, `packages/agent/test/hand-job.test.ts`, `packages/tools/test/jobs.test.ts` | https://petals.elementarycomplexity.com/setup and https://petals.elementarycomplexity.com/skill.md | The prompt and skill an agent follows to join and take jobs |
-| One press signs a whole swarm's work (manifest/v1: one press, many publications) | live   | `packages/core/schema/manifest.schema.json`, `packages/agent/test/publish-press.test.ts`                 | Step 3 above                                                                                       | Many entries from one signed press                          |
-| One Brain guides every agent                                                     | live   | `brain/`, `packages/tools/test/brain.test.ts`                                                            | https://petals.elementarycomplexity.com/docs/brain and `/api/v1/brain/usage`                       | The chapters and recipes, and how often each is used        |
+| Claim                                                                            | Status | Code or test                                                                                             | Check                                                                                                                                                                             | Expected                                                    |
+| -------------------------------------------------------------------------------- | ------ | -------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| Petals' agent hands mapping jobs to agents people connect; they work in parallel | live   | `packages/agent/src/jobs.ts`, `packages/agent/test/hand-job.test.ts`, `packages/tools/test/jobs.test.ts` | https://petals.elementarycomplexity.com/setup and https://petals.elementarycomplexity.com/skill.md                                                                                | The prompt and skill an agent follows to join and take jobs |
+| One press signs a whole swarm's work (manifest/v1: one press, many publications) | live   | `packages/core/schema/manifest.schema.json`, `packages/agent/test/publish-press.test.ts`                 | `pnpm vitest run packages/agent/test/publish-press.test.ts`; live, the `petals.near` entry dated 2026-11-14T00:01:56Z in step 3 above is one of 267 maps signed by that one press | Tests pass; one signature over many maps                    |
+| One Brain guides every agent                                                     | live   | `brain/`, `packages/tools/test/brain.test.ts`                                                            | https://petals.elementarycomplexity.com/docs/brain and `/api/v1/brain/usage`                                                                                                      | The chapters and recipes, and how often each is used        |
 
 ### Agent Economy
 
@@ -87,11 +87,11 @@ Every row is live on mainnet unless its status says otherwise.
   https://etherscan.io/tx/0x7a1ad72f82366250a91f5303920bb7a238fa73f79f123394a7c81622803aa431, then
   https://nearblocks.io/txns/BHJ5Y5dSomzhoUUkmffxGZVxurJzyKZWvNVFsRrpRs8Z and
   https://nearblocks.io/txns/58875yYdkWquBHdPFKnVP1uJJbYdxF5YzBWhXFAnAwJW
-- A map published to FastData: https://nearblocks.io/txns/65guEPJJQCFwmKTSzMBSLEYpFU15mvZvZbaspEWt4qbm
+- A flower published to FastData: https://nearblocks.io/txns/65guEPJJQCFwmKTSzMBSLEYpFU15mvZvZbaspEWt4qbm
 - A NEAR Social profile write: https://nearblocks.io/txns/2E1y78FT11G13vF8ED2XWEQ911442bwYoKQMGVyfMAWY
 
-FastData writes (maps, NEAR Social) go to an account with no contract, so the explorer shows the receipt as failed by
-design; the indexer reads the call (step 7).
+FastData writes (flowers, NEAR Social) go to an account with no contract, so the explorer shows the receipt as failed by
+design; the indexer reads the call (step 6).
 
 ## Verify it in ten minutes
 
@@ -124,14 +124,7 @@ Needs Node 24 and pnpm 10.33.0 (pinned in `.nvmrc` and `package.json`). Run from
 
    Expect the last line `check: all green`.
 
-4. Optional: from a fresh clone of HEAD with no keys in the environment, the golden tests twice, the scans and the
-   recorded end-to-end test.
-
-   ```sh
-   bash tests/e2e/clean-checkout.sh
-   ```
-
-5. Run the site and API locally (two terminals, both from the root).
+4. Run the site and API locally (two terminals, both from the root).
 
    ```sh
    export PETAL_STATE_DIR="$(mktemp -d /tmp/petals-server.XXXXXX)"
@@ -145,10 +138,10 @@ Needs Node 24 and pnpm 10.33.0 (pinned in `.nvmrc` and `package.json`). Run from
    http://127.0.0.1:3000/api/v1/health returns JSON with `"ok": true`, `"fake": true` and `"llm": "recorded"`. A fresh
    local Power Map is empty: the public collection is deployment state, not part of the clone.
 
-6. The live server's health: https://petals.elementarycomplexity.com/api/v1/health returns `"ok": true`,
+5. The live server's health: https://petals.elementarycomplexity.com/api/v1/health returns `"ok": true`,
    `"fake": false` and the deployed `"commit"`.
 
-7. Check the NEAR pieces on chain, read-only, with no install.
+6. Check the NEAR pieces on chain, read-only, with no install.
 
    ```sh
    # The credit contract: its code hash is Dy3xxsZTPsviKF6G4gFsAPnwHw5rJ4eGHNADZNdPshNx
@@ -163,7 +156,7 @@ Needs Node 24 and pnpm 10.33.0 (pinned in `.nvmrc` and `package.json`). Run from
    curl -s https://rpc.mainnet.fastnear.com -H 'content-type: application/json' \
      -d '{"jsonrpc":"2.0","id":1,"method":"query","params":{"request_type":"view_access_key_list","finality":"final","account_id":"petals-charger.near"}}'
 
-   # A published map, read back from FastData: written by petals-writer.near to petals.near at block 224,536,338
+   # A published flower, read back from FastData: written by petals-writer.near to petals.near at block 224,536,338
    curl -s -X POST https://kv.main.fastnear.com/v0/latest/petals.near/petals-writer.near \
      -H 'content-type: application/json' -d '{"key":"petal/v1/spec/62eaaefb9f5852c72d37a63c"}'
 
@@ -176,13 +169,14 @@ Needs Node 24 and pnpm 10.33.0 (pinned in `.nvmrc` and `package.json`). Run from
 
 ## Known limits
 
-- Withdrawal and the charge limits are enforced by the deployed contract (its code hash is checkable in step 7).
+- Withdrawal and the charge limits are enforced by the deployed contract (its code hash is checkable in step 6).
   `petals.near` can upgrade it during the hackathon, so that holds for the code deployed, not forever.
   `petals-charger.near` and `petals-writer.near` each hold a restricted key (`charge` on the credit contract;
   `__fastdata_kv` on `petals.near`) and also the owner's full-access key.
 - Readers cover specific systems on NEAR, Ethereum, Base, Arbitrum, Gnosis and Solana; other chains aren't read.
 - The hosted agent needs credit or an invite; browsing the Power Map and the docs needs nothing. Flows that move funds
   or publish need a NEAR wallet and can't be exercised read-only.
+- The recorded end-to-end suite (`tests/e2e`) is behind the current code; `scripts/check.sh` is the gate.
 - A fresh local clone has an empty Power Map; the fixtures replay recorded data, not today's network.
 - Ties inside a flower are drawn where a map has votes-alike data (for example Ref Finance); on the Power Map, lines
   join networks that share accounts. The Texture and Markings dimensions take no data yet and are hidden.

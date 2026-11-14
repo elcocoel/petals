@@ -26,5 +26,5 @@ renders them.
 | `docs/`               | The documentation's own pages; the site renders them with the brain, the specs and the schemas                 |
 | `specs/`              | The specifications: core, system, target, workspace, mapping brain, the map, and the protocols                 |
 | `fixtures/`           | Recorded data, so tests and a clean clone run with no keys and no network                                      |
-| `tests/`              | End-to-end tests, including the clean-checkout check                                                           |
+| `tests/`              | End-to-end tests (the recorded suite is behind the current code)                                               |
 | `scripts/`            | The gate (`check.sh`) and maintenance scripts                                                                  |

@@ -97,7 +97,7 @@ The API is a separate process. The Next.js site forwards API requests to `PETAL_
 | `docs/`               | The documentation's own pages; the site renders them with the brain, the specs and the schemas                 |
 | `specs/`              | The specifications: core, system, target, workspace, mapping brain, the map, and the protocols                 |
 | `fixtures/`           | Recorded data, so tests and a clean clone run with no keys and no network                                      |
-| `tests/`              | End-to-end tests, including the clean-checkout check                                                           |
+| `tests/`              | End-to-end tests (the recorded suite is behind the current code)                                               |
 | `scripts/`            | The gate (`check.sh`) and maintenance scripts                                                                  |
 
 ## Collective mapping
@@ -113,7 +113,7 @@ The Power Map is built together by its people, and three counts per person show 
 | Owner                   | `petals.near` signed the base data on 267 maps once; upgrades the credit contract this first wave                                                                                                                     | [Manifest schema](packages/core/schema/manifest.schema.json)                                                               |
 | NEAR AI Cloud, in a TEE | Petals' hosted agent; each answer can carry a `provider_tee` signature made inside the model's enclave                                                                                                                | [Client](packages/agent/src/near-ai.ts), [signatures](packages/agent/src/signature.ts)                                     |
 | NEAR Intents (1Click)   | Top up from supported tokens and chains                                                                                                                                                                               | [1Click adapter](packages/near/src/pay/one-click.ts), [payment routes](packages/agent/src/pay-routes.ts)                   |
-| FastData publications   | `petals-writer.near` writes published map data to `petals.near` with a key restricted to `__fastdata_kv`; the account also holds the owner's full-access key                                                          | [Writer](packages/near/src/map/fastdata-writer.ts), [reader](packages/near/src/map/fastdata-reader.ts)                     |
+| FastData publications   | `petals-writer.near` writes published flowers to `petals.near` with a key restricted to `__fastdata_kv`; the account also holds the owner's full-access key                                                           | [Writer](packages/near/src/map/fastdata-writer.ts), [reader](packages/near/src/map/fastdata-reader.ts)                     |
 | NEAR Social             | Public profile data, read from NEAR Social's API                                                                                                                                                                      | [Profile integration](apps/web/lib/near-social.ts)                                                                         |
 | near-connect, NEP-413   | Sign in by proving control of an account, through near-connect's wallet picker                                                                                                                                        | [Wallet](apps/web/lib/wallet.ts), [verifier](packages/near/src/auth/nep413.ts)                                             |
 | Sputnik DAO             | Read NEAR DAO governance                                                                                                                                                                                              | [Reader](packages/inputs/src/modules/sputnik-dao.ts)                                                                       |
@@ -150,7 +150,7 @@ curl -s https://rpc.mainnet.fastnear.com -H 'content-type: application/json' \
   -d '{"jsonrpc":"2.0","id":1,"method":"query","params":{"request_type":"call_function","finality":"final","account_id":"petals-credit.near","method_name":"config","args_base64":"e30="}}'
 ```
 
-A published map on FastData: `petals-writer.near` wrote the key `petal/v1/spec/62eaaefb9f5852c72d37a63c` to `petals.near` at block 224,536,338 ([transaction](https://nearblocks.io/txns/65guEPJJQCFwmKTSzMBSLEYpFU15mvZvZbaspEWt4qbm)). Read it back, and see it [drawn](https://petals.elementarycomplexity.com/f/62eaaefb9f5852c72d37a63c):
+A published flower on FastData: `petals-writer.near` wrote the key `petal/v1/spec/62eaaefb9f5852c72d37a63c` to `petals.near` at block 224,536,338 ([transaction](https://nearblocks.io/txns/65guEPJJQCFwmKTSzMBSLEYpFU15mvZvZbaspEWt4qbm)). Read it back, and see it [drawn](https://petals.elementarycomplexity.com/f/62eaaefb9f5852c72d37a63c):
 
 ```sh
 curl -s -X POST https://kv.main.fastnear.com/v0/latest/petals.near/petals-writer.near \
