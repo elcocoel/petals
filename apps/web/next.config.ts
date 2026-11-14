@@ -18,7 +18,9 @@ const app = fileURLToPath(new URL('.', import.meta.url));
 function runtimeFiles(): string[] {
   const seen = new Set<string>();
   const out = new Set<string>();
-  const skip = new Set(['next', 'react', 'react-dom']);
+  // Next and React bring their own; Reown's AppKit runs only in the browser (the phone wallet's popup), so its
+  // tree (viem and the rest) stays out of every server function, which would otherwise outgrow the host's limits
+  const skip = new Set(['next', 'react', 'react-dom', '@reown/appkit']);
   const find = (from: string, dep: string) => {
     for (let d = from; ; d = dirname(d)) {
       const candidate = join(d, 'node_modules', dep);
