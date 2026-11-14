@@ -82,18 +82,18 @@ The Power Map is built together by its people, and three counts per person show 
 
 ## NEAR integrations
 
-| Piece                 | Role                                                     | Source                                                                                                                     |
-| --------------------- | -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| NEAR AI Cloud         | Petals' hosted agent                                     | [Client](packages/agent/src/near-ai.ts)                                                                                    |
-| NEAR wallet / NEP-413 | Sign in by proving control of an account                 | [Verifier](packages/near/src/auth/nep413.ts)                                                                               |
-| NEAR Intents          | Top up from supported tokens and chains                  | [1Click adapter](packages/near/src/pay/one-click.ts), [payment routes](packages/agent/src/pay-routes.ts)                   |
-| petals-credit.near    | Mainnet credit contract: payments go in as deposits, and a person can always withdraw theirs; upgradable by petals.near during this first wave | [Rust contract](packages/near/contract/src/lib.rs) |
-| petals-charger.near   | Can only charge the credit contract for the agent's answers | [Rust contract](packages/near/contract/src/lib.rs) |
-| petals-writer.near    | Can only write Petals' published map data                | [Publishing](packages/tools/src/publish-data.ts) |
-| petals.near           | Signed Petals' base data on 267 maps, once               | [Manifest schema](packages/core/schema/manifest.schema.json) |
-| NEAR Social           | Public profile data                                      | [Profile integration](apps/web/lib/near-social.ts)                                                                         |
-| Sputnik DAO           | Read NEAR DAO governance                                 | [Reader](packages/inputs/src/modules/sputnik-dao.ts)                                                                       |
-| People's own agents   | Join a person's work and return mapping jobs             | [Connection chapters](https://petals.elementarycomplexity.com/docs/connect-your-agent), [jobs](packages/agent/src/jobs.ts) |
+| Piece                 | Role                                                                                | Source                                                                                                                     |
+| --------------------- | ----------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| NEAR AI Cloud         | Petals' hosted agent                                                                | [Client](packages/agent/src/near-ai.ts)                                                                                    |
+| NEAR wallet / NEP-413 | Sign in by proving control of an account                                            | [Verifier](packages/near/src/auth/nep413.ts)                                                                               |
+| NEAR Intents          | Top up from supported tokens and chains                                             | [1Click adapter](packages/near/src/pay/one-click.ts), [payment routes](packages/agent/src/pay-routes.ts)                   |
+| petals-credit.near    | Mainnet credit contract: payments go in as deposits, always withdrawable            | [Rust contract](packages/near/contract/src/lib.rs)                                                                         |
+| petals-charger.near   | Can only charge the credit contract for the agent's answers                         | [Rust contract](packages/near/contract/src/lib.rs)                                                                         |
+| petals-writer.near    | Can only write Petals' published map data                                           | [Publishing](packages/tools/src/publish-data.ts)                                                                           |
+| petals.near           | Signed the base data on 267 maps once; upgrades the credit contract this first wave | [Manifest schema](packages/core/schema/manifest.schema.json)                                                               |
+| NEAR Social           | Public profile data                                                                 | [Profile integration](apps/web/lib/near-social.ts)                                                                         |
+| Sputnik DAO           | Read NEAR DAO governance                                                            | [Reader](packages/inputs/src/modules/sputnik-dao.ts)                                                                       |
+| People's own agents   | Join a person's work and return mapping jobs                                        | [Connection chapters](https://petals.elementarycomplexity.com/docs/connect-your-agent), [jobs](packages/agent/src/jobs.ts) |
 
 ## Data coverage
 
