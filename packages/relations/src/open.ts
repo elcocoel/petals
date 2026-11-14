@@ -410,9 +410,12 @@ async function readOrSkip(
 
 const open = new Map<string, RelationsIndex>();
 
-/** The process's one index for a state folder. Nothing touches the disk until it's asked something. */
-export function stateIndex(stateDir: string): RelationsIndex {
-  const path = join(stateDir, 'index.db');
+/**
+ * The process's one index for a state folder, by its file (index.db: every stored reading). Nothing touches the
+ * disk until it's asked something.
+ */
+export function stateIndex(stateDir: string, file = 'index.db'): RelationsIndex {
+  const path = join(stateDir, file);
   let index = open.get(path);
   if (!index) {
     index = new RelationsIndex(path);

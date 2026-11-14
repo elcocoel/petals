@@ -122,6 +122,27 @@ describe('the map', () => {
     expect(Array.isArray(map.pairs)).toBe(true);
   });
 
+  test("GET /api/v1/map's roads come from the drawn readings, never a newer read kept undrawn", async () => {
+    await drawnView('Founders Guild v1', 'mapping.petals.near');
+    // a newer read of the same DAO, stored (a mapping run kept it) but drawn on no view
+    const s = await loadSnapshot(r.ctx, MOLOCH);
+    const later = { ...s, snapshot: { ...s.snapshot, as_of: '2030-01-01T00:00:00Z' } };
+    const kept = (await r.ctx.store.put(later as never)).sha256;
+    expect(kept).not.toBe(MOLOCH);
+    const app = new Hono();
+    app.route(
+      '/',
+      httpApp(r.ctx, { gate: { subjectOf: async () => null, refuseForeign: () => null } }),
+    );
+    const map = (await (await app.request('/api/v1/map')).json()) as Out;
+    const shas = map.groups.map((g: Out) => g.snapshot_sha256);
+    expect(shas).toContain(MOLOCH);
+    expect(shas).not.toContain(kept);
+    // the agent's relations tools still read every stored reading
+    const all = await run('relations_overview', { kind: 'holdings', limit: 5000 });
+    expect(all.groups.map((g: Out) => g.snapshot_sha256)).toContain(kept);
+  });
+
   test('GET /api/v1/map/views lists the same views with their pictures, without readings', async () => {
     const sha = await drawnView('Founders Guild v1', 'mapping.petals.near');
     const app = new Hono();
