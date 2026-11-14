@@ -15,6 +15,12 @@ export const dynamic = 'force-dynamic';
 
 type Query = Record<string, string | string[] | undefined>;
 
+/** The session holds an invite that can still pay (GET /api/v1/auth/invite). */
+async function inviteActive(cookie: string | null): Promise<boolean> {
+  const got = await api<{ invite: { status: string } | null }>('/api/v1/auth/invite', { cookie });
+  return got.ok && got.value.invite?.status === 'active';
+}
+
 /** A server that plays a recorded run plays it for anyone, signed in or not. */
 async function recordedHere(): Promise<boolean> {
   const health = await api<ApiHealth>('/api/v1/health');
@@ -24,11 +30,13 @@ async function recordedHere(): Promise<boolean> {
 export default async function MakePage({ searchParams }: { searchParams: Promise<Query> }) {
   const q = await searchParams;
   // Signed out, /make is the oops page. /api/v1/me answers only for a person with a wallet. Another door's
-  // conversation (?elsewhere=) needs no wallet here, and a recorded run plays for anyone.
-  const me = await api<{ person_id: string }>('/api/v1/me', {
-    cookie: (await headers()).get('cookie'),
-  });
-  if (!me.ok && !q.elsewhere && !(await recordedHere())) {
+  // conversation (?elsewhere=) needs no wallet here, and a recorded run plays for anyone. A visitor whose
+  // session holds a funded invite (POST /api/v1/auth/invite) is let in with no wallet: the invite pays for their
+  // chats, as the server's chat admits them, and the session keeps their work.
+  const cookie = (await headers()).get('cookie');
+  const me = await api<{ person_id: string }>('/api/v1/me', { cookie });
+  const invited = !me.ok && (await inviteActive(cookie));
+  if (!me.ok && !invited && !q.elsewhere && !(await recordedHere())) {
     return <SignedOut question={questionFromParams(q) ?? ''} />;
   }
   const person = await viewerView();
@@ -38,6 +46,7 @@ export default async function MakePage({ searchParams }: { searchParams: Promise
     <OpenedConversation opens={conversationAt(q)}>
       <InteractionSurface
         {...(await workspaceHome(q, person.hash))}
+        invited={invited}
         // Open choices of look, read from the address: ?box=ink and ?order=scatter.
         surface={q.box === 'ink' ? 'ink' : 'ground'}
         scatter={q.order === 'scatter'}
