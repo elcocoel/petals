@@ -1844,8 +1844,11 @@ export function tables(db: Db) {
         at: string,
       ): Promise<JobRow | null> =>
         db.tx(async () => {
+          // taken, or put back as open with nobody holding it since (reopened while its worker was still on it):
+          // the work done is kept, never thrown away
           const taken = await db.get<JobRecord>(
-            `SELECT * FROM job WHERE id = ? AND (exploration = ? OR conversation = ?) AND status = 'taken'`,
+            `SELECT * FROM job WHERE id = ? AND (exploration = ? OR conversation = ?)
+               AND (status = 'taken' OR (status = 'open' AND taken_by IS NULL))`,
             id,
             exploration,
             exploration,

@@ -87,7 +87,7 @@ describe('jobs over HTTP', () => {
   });
 
   test('it reports a taken job once, done or failed, and the page reads it with any link', async () => {
-    const { app, cont, read } = await project();
+    const { app, id, cont, read } = await project();
     await send(app, 'POST', `/api/v1/explorations/${cont}/jobs/take`, {});
     await send(app, 'POST', `/api/v1/explorations/${cont}/jobs/take`, {});
     const result = { summary: 'Three members hold most of the shares.', steps: [0] };
@@ -108,6 +108,23 @@ describe('jobs over HTTP', () => {
       ['job_0', 'done'],
       ['job_1', 'failed'],
     ]);
+    // a job put back as open while its worker was still on it: nobody took it since, so its report still lands
+    const store = privateStore(r.ctx.config);
+    await store.job.add({
+      id: 'job_2',
+      exploration: id,
+      run: null,
+      kind: 'map',
+      title: 'Map Moloch',
+      brief: 'Moloch: who holds the shares?',
+      inputs: {},
+      at: '2026-11-09T12:05:00.000Z',
+    });
+    await send(app, 'POST', `/api/v1/explorations/${cont}/jobs/take`, {});
+    expect(await store.job.reopen('job_2', '2026-11-09T13:00:00.000Z')).not.toBeNull();
+    expect(await report('job_2', { result })).toMatchObject({
+      job: { id: 'job_2', status: 'done' },
+    });
     expect(list.jobs[0]).toMatchObject({ result, failed: null });
     expect(list.jobs[0]).not.toHaveProperty('run');
   });
