@@ -16,6 +16,7 @@ import {
   type MapRow,
   type MapWriter,
   mirror,
+  mirrorReader,
   toMapRow,
 } from '@petal/near/map';
 import { fakeQuote, quote1Click } from '@petal/near/pay';
@@ -107,6 +108,54 @@ export function heldMapReader(dir: string, receiver: string): MapReader {
   };
 }
 
+type MapConfig = NonNullable<Config['map']>;
+
+/** The map's writer, with its key, every write mirrored in the state folder; none without the key. */
+function siteWriter(m: MapConfig, root: string, stateDir: string): MapWriter | null {
+  if (!m.writer || !m.keyFile) return null;
+  return deferred(() =>
+    mirror(
+      join(stateDir, 'mirror'),
+      fastDataWriter({
+        network: m.network,
+        receiver: m.receiver,
+        writer: m.writer as string,
+        keyFile: resolve(root, m.keyFile as string),
+      }),
+    ),
+  );
+}
+
+/** What this site's writer wrote, from its mirror: only the rows that landed on chain. */
+function landed(dir: string, writer: string, receiver: string): MapReader {
+  const r = mirrorReader(dir, { writer, receiver });
+  return {
+    latest: async (prefix, o) => (await r.latest(prefix, o)).filter((x) => x.tx_hash !== ''),
+    get: async (key, w) => {
+      const x = await r.get(key, w);
+      return x && x.tx_hash !== '' ? x : null;
+    },
+  };
+}
+
+/** The rows a public site ships, and after them what it wrote itself. */
+function heldAndWritten(held: MapReader, written: MapReader): MapReader {
+  return {
+    async latest(prefix, o = {}) {
+      const a = await held.latest(prefix, { ...(o.writers ? { writers: o.writers } : {}) });
+      const seen = new Set(a.map((r) => `${r.writer}\u0000${r.key}`));
+      const b = (
+        await written.latest(prefix, { ...(o.writers ? { writers: o.writers } : {}) })
+      ).filter((r) => !seen.has(`${r.writer}\u0000${r.key}`));
+      const all = [...a, ...b];
+      return o.limit === undefined ? all : all.slice(0, Math.max(0, o.limit));
+    },
+    async get(key, writer) {
+      return (await held.get(key, writer)) ?? written.get(key, writer);
+    },
+  };
+}
+
 export function createContext(cfg: Config): ToolContext {
   const root = resolve(cfg.root);
   const fixturesDir = resolve(root, cfg.fixturesDir ?? 'fixtures');
@@ -124,7 +173,8 @@ export function createContext(cfg: Config): ToolContext {
   let map: ToolContext['map'];
   const m = cfg.fake ? null : (cfg.map ?? null);
   if (cfg.public) {
-    // No chain reads and no writer: the rows it ships, trusted as the configured map's would be.
+    // The rows it ships, trusted as the configured map's would be. With its writer's key set, the person signed in
+    // publishes their own flower through it (publish.ts): what it wrote is read back from its mirror, once landed.
     const writers = m
       ? m.trustedWriters.length
         ? m.trustedWriters
@@ -133,9 +183,14 @@ export function createContext(cfg: Config): ToolContext {
           : []
       : [];
     const receiver = m?.receiver ?? 'petals.testnet';
+    const held = heldMapReader(join(fixturesDir, 'map-rows'), receiver);
+    const writer = m ? siteWriter(m, root, stateDir) : null;
     map = {
-      reader: heldMapReader(join(fixturesDir, 'map-rows'), receiver),
-      writer: null,
+      reader:
+        writer && m?.writer
+          ? heldAndWritten(held, landed(join(stateDir, 'mirror'), m.writer, receiver))
+          : held,
+      writer,
       receiver,
       trustedWriters: writers.length ? writers : ['petals-writer.testnet'],
     };
@@ -143,21 +198,8 @@ export function createContext(cfg: Config): ToolContext {
     const reader: MapReader = deferred(() =>
       fastDataReader({ network: m.network, receiver: m.receiver }),
     );
-    // The writer writes where the map is, testnet or mainnet, with its key; a public site has none (above).
-    const writer: MapWriter | null =
-      m.writer && m.keyFile
-        ? deferred(() =>
-            mirror(
-              join(stateDir, 'mirror'),
-              fastDataWriter({
-                network: m.network,
-                receiver: m.receiver,
-                writer: m.writer as string,
-                keyFile: resolve(root, m.keyFile as string),
-              }),
-            ),
-          )
-        : null;
+    // The writer writes where the map is, testnet or mainnet, with its key.
+    const writer = siteWriter(m, root, stateDir);
     const trustedWriters = m.trustedWriters.length ? m.trustedWriters : m.writer ? [m.writer] : [];
     map = { reader, writer, receiver: m.receiver, trustedWriters };
   } else {
@@ -171,13 +213,15 @@ export function createContext(cfg: Config): ToolContext {
   }
 
   const network = m?.network ?? 'testnet';
-  const rpc = cfg.public
-    ? publicRpc(cfg.apiBase)
-    : cfg.fake
-      ? offlineRpc
-      : jsonRpc(cfg.rpcUrl ?? RPC_URLS[network], {
-          ...(cfg.fastnearApiKey ? { apiKey: cfg.fastnearApiKey } : {}),
-        });
+  // a public site reads the chain only to check a publishing person's signature, and only with a writer
+  const rpc =
+    cfg.public && !map.writer
+      ? publicRpc(cfg.apiBase)
+      : cfg.fake
+        ? offlineRpc
+        : jsonRpc(cfg.rpcUrl ?? RPC_URLS[network], {
+            ...(cfg.fastnearApiKey ? { apiKey: cfg.fastnearApiKey } : {}),
+          });
 
   // The recorded dry quote in fake mode; otherwise a live dry quote (keyless, no money moves).
   let quoter: ((req: QuoteRequest) => Promise<QuoteResult>) | undefined;
