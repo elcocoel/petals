@@ -332,3 +332,38 @@ describe('a published name, as a public source states it (people.ts)', () => {
     expect(ok(named([{ ...proposal, note: 'a known scammer' }])).ok).toBe(false);
   });
 });
+
+describe('an address for mail or a phone number stays private (people.ts)', () => {
+  test('in a value, a note or a quote; names and handles publish', () => {
+    const noted = (value: string, evidence: ClaimEvidence[] = []) =>
+      v3({
+        subject: ADA,
+        verb: 'noted',
+        object: { value },
+        issued_at: WHEN,
+        kind: 'sourced',
+        evidence: [
+          { type: 'page', url: 'https://example.org/', found_by: CODEX, found_at: WHEN },
+          ...evidence,
+        ],
+        by: PERSON,
+      });
+    for (const c of [
+      noted('Write to ada@example.org'),
+      noted('Call +44 20 7946 0958'),
+      noted('Call (415) 555-0132'),
+      noted('Runs the pool', [
+        { type: 'note', note: 'mail ada@example.org', found_by: CODEX, found_at: WHEN },
+      ]),
+    ]) {
+      expect(ok(c).ok).toBe(false);
+      expect(ok(c, { private: true }).ok).toBe(true);
+    }
+    for (const c of [
+      noted('Ada Byron, @ada on X, since 2021-05-11'),
+      noted('Proposal 245 passed at block 56112646 with 1,234,567 votes'),
+      noted('See https://medium.com/@ada/post'),
+    ])
+      expect(ok(c).ok).toBe(true);
+  });
+});
