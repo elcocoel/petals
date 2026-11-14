@@ -115,111 +115,116 @@ export function SystemGraph() {
 
   return (
     <div className="w-full overflow-x-auto">
-    {/* room on the left for the rail and its name, so nothing passes the column's edge */}
-    <div ref={frame} className="relative w-full min-w-flower-width px-space-32 md:min-w-0 md:px-column-gap">
-      {laid && (
-        <svg
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 overflow-visible"
-          width={laid.w}
-          height={laid.h}
-          viewBox={`0 0 ${laid.w} ${laid.h}`}
-        >
-          {(['petals', 'server'] as const).map((r) => {
-            const b = laid.boxes[r];
-            return b ? (
-              <rect
-                key={r}
-                x={b.x}
-                y={b.y}
-                width={b.w}
-                height={b.h}
-                fill={r === 'petals' ? 'var(--figure-accent)' : 'none'}
-                fillOpacity={0.06}
-                stroke="var(--hairline)"
-                strokeWidth={1}
-              />
-            ) : null;
+      {/* room on the left for the rail and its name, so nothing passes the column's edge */}
+      <div
+        ref={frame}
+        className="relative w-full min-w-flower-width px-space-32 md:min-w-0 md:px-column-gap"
+      >
+        {laid && (
+          <svg
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 overflow-visible"
+            width={laid.w}
+            height={laid.h}
+            viewBox={`0 0 ${laid.w} ${laid.h}`}
+          >
+            {(['petals', 'server'] as const).map((r) => {
+              const b = laid.boxes[r];
+              return b ? (
+                <rect
+                  key={r}
+                  x={b.x}
+                  y={b.y}
+                  width={b.w}
+                  height={b.h}
+                  fill={r === 'petals' ? 'var(--figure-accent)' : 'none'}
+                  fillOpacity={0.06}
+                  stroke="var(--hairline)"
+                  strokeWidth={1}
+                />
+              ) : null;
+            })}
+            {LINES.map((line, i) => {
+              const a = laid.boxes[line.from];
+              const b = laid.boxes[line.to];
+              if (!a || !b) return null;
+              const drawn = route(line, a, b, railX);
+              const dur = `${Math.max(1.2, drawn.length / SPEED)}s`;
+              const ways =
+                line.travel === 'both' ? (['forward', 'back'] as const) : ([line.travel] as const);
+              return (
+                <g key={`${line.from}-${line.to}`}>
+                  <path d={drawn.d} fill="none" stroke="var(--hairline)" strokeWidth={1} />
+                  {!still &&
+                    ways.map((way, k) => (
+                      <circle key={way} r={2.5} fill="var(--figure-accent)">
+                        <animateMotion
+                          dur={dur}
+                          begin={`${(i * 0.37 + k * 0.9).toFixed(2)}s`}
+                          repeatCount="indefinite"
+                          path={drawn.d}
+                          keyPoints={way === 'back' ? '1;0' : '0;1'}
+                          keyTimes="0;1"
+                          calcMode="linear"
+                        />
+                      </circle>
+                    ))}
+                  {line.label && (
+                    <text
+                      x={drawn.at.x}
+                      y={drawn.at.y}
+                      textAnchor="middle"
+                      dominantBaseline="central"
+                      // the rail's name runs along it, so it stays inside the column
+                      transform={
+                        line.route === 'rail'
+                          ? `rotate(-90 ${drawn.at.x} ${drawn.at.y})`
+                          : undefined
+                      }
+                      // on a phone the lines run too close for their names
+                      className="hidden type-mono md:inline"
+                      fill="var(--text-muted)"
+                      stroke="var(--surface)"
+                      strokeWidth={6}
+                      paintOrder="stroke"
+                    >
+                      {line.label}
+                    </text>
+                  )}
+                </g>
+              );
+            })}
+          </svg>
+        )}
+        <div className="relative grid grid-cols-4 gap-x-space-8 gap-y-space-32 md:gap-x-column-gap">
+          {ROWS.map((row) => {
+            if ('band' in row) {
+              return (
+                <p
+                  key={row.band}
+                  data-petals={row.band === 'petals' ? '' : undefined}
+                  className="col-span-4 my-0 type-mono text-muted"
+                >
+                  {BANDS[row.band]}
+                </p>
+              );
+            }
+            if ('region' in row) {
+              return (
+                <p
+                  key="server"
+                  data-server=""
+                  data-petals=""
+                  className="col-span-4 my-0 type-mono text-muted"
+                >
+                  {SERVER}
+                </p>
+              );
+            }
+            return row.parts.map((id) => <Part key={id} part={PARTS[id]} />);
           })}
-          {LINES.map((line, i) => {
-            const a = laid.boxes[line.from];
-            const b = laid.boxes[line.to];
-            if (!a || !b) return null;
-            const drawn = route(line, a, b, railX);
-            const dur = `${Math.max(1.2, drawn.length / SPEED)}s`;
-            const ways =
-              line.travel === 'both' ? (['forward', 'back'] as const) : ([line.travel] as const);
-            return (
-              <g key={`${line.from}-${line.to}`}>
-                <path d={drawn.d} fill="none" stroke="var(--hairline)" strokeWidth={1} />
-                {!still &&
-                  ways.map((way, k) => (
-                    <circle key={way} r={2.5} fill="var(--figure-accent)">
-                      <animateMotion
-                        dur={dur}
-                        begin={`${(i * 0.37 + k * 0.9).toFixed(2)}s`}
-                        repeatCount="indefinite"
-                        path={drawn.d}
-                        keyPoints={way === 'back' ? '1;0' : '0;1'}
-                        keyTimes="0;1"
-                        calcMode="linear"
-                      />
-                    </circle>
-                  ))}
-                {line.label && (
-                  <text
-                    x={drawn.at.x}
-                    y={drawn.at.y}
-                    textAnchor="middle"
-                    dominantBaseline="central"
-                    // the rail's name runs along it, so it stays inside the column
-                    transform={
-                      line.route === 'rail' ? `rotate(-90 ${drawn.at.x} ${drawn.at.y})` : undefined
-                    }
-                    // on a phone the lines run too close for their names
-                    className="hidden type-mono md:inline"
-                    fill="var(--text-muted)"
-                    stroke="var(--surface)"
-                    strokeWidth={6}
-                    paintOrder="stroke"
-                  >
-                    {line.label}
-                  </text>
-                )}
-              </g>
-            );
-          })}
-        </svg>
-      )}
-      <div className="relative grid grid-cols-4 gap-x-space-8 gap-y-space-32 md:gap-x-column-gap">
-        {ROWS.map((row) => {
-          if ('band' in row) {
-            return (
-              <p
-                key={row.band}
-                data-petals={row.band === 'petals' ? '' : undefined}
-                className="col-span-4 my-0 type-mono text-muted"
-              >
-                {BANDS[row.band]}
-              </p>
-            );
-          }
-          if ('region' in row) {
-            return (
-              <p
-                key="server"
-                data-server=""
-                data-petals=""
-                className="col-span-4 my-0 type-mono text-muted"
-              >
-                {SERVER}
-              </p>
-            );
-          }
-          return row.parts.map((id) => <Part key={id} part={PARTS[id]} />);
-        })}
+        </div>
       </div>
-    </div>
     </div>
   );
 }
