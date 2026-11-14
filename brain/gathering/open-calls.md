@@ -21,7 +21,7 @@ Who is paying for work right now: a DAO's request for proposals, a grants progra
 
 ## Reading them right
 
-- **A status is kept as said, beside its deadline.** A call can still say "accepting submissions" after its deadline has passed (NEAR's newest RFP did, on 12 Nov 2026): give both, and never correct one with the other.
+- **A call whose own deadline has passed has closed,** whatever status its source still gives: Petals' feed leaves it out, and so do you. Before its deadline, give its status as said, beside the deadline.
 - **A forum post isn't an RFP until it says so.** Telling a request for proposals from a discussion is your reading: say it's inferred, with the post as its evidence.
 - **One call, many places.** The same call can show in Karma, the DAO's forum and its own site: it's one call, matched by its link.
 - **The budget as said,** in the call's own words and currency, never a dollar figure the call didn't give.
