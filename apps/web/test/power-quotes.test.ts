@@ -1,4 +1,4 @@
-// The illustrated power quotes for empty screens: the 13 selected, each with its picture.
+// The illustrated power quotes for empty screens: the approved selection, each with its picture.
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, test } from 'vitest';
@@ -6,7 +6,7 @@ import { POWER_QUOTES, quoteFor } from '../lib/power-quotes.ts';
 
 describe('the power quotes', () => {
   test('the final selection, each with its words, its author and a picture that’s there', () => {
-    expect(POWER_QUOTES).toHaveLength(13);
+    expect(POWER_QUOTES).toHaveLength(18);
     for (const q of POWER_QUOTES) {
       expect(q.quote.length, q.id).toBeGreaterThan(0);
       expect(q.author.length, q.id).toBeGreaterThan(0);
