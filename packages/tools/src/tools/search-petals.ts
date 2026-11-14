@@ -516,6 +516,8 @@ async function searchWith(
     rerank: o.rerank === false ? 0 : RERANKED,
     // a map with what matched under it, or a page with its sections, when those are asked for; else each as itself
     group: kinds.has('map') || kinds.has('doc'),
+    // the docs alone: a page by its best section (a map keeps its proposals adding up under it)
+    groupBest: !kinds.has('map'),
     prefix: o.prefix === true,
     only: (d) => kinds.has(d.kind),
   });

@@ -260,6 +260,11 @@ export interface FindOptions {
   depth?: number;
   /** one answer per group (a map with the proposals that matched), each as its group's own document */
   group?: boolean;
+  /**
+   * grouped, a group scores as its best member alone, not as its best few added up: a page of the docs is as good
+   * as its best section, so a long page with many weak matches doesn't pass the one page that matches
+   */
+  groupBest?: boolean;
   /** the question's last word also matches the words it begins, for search as someone types */
   prefix?: boolean;
   /** only the documents this keeps are ranked */
@@ -373,7 +378,7 @@ export async function find(
       const head = set.placeOf(g) ?? (members[0] as number);
       return {
         at: head,
-        score: groupScore(members.map(fusedOf)),
+        score: o.groupBest ? Math.max(...members.map(fusedOf)) : groupScore(members.map(fusedOf)),
         r: ranks.get(head) ?? {},
         members: members.filter((m) => m !== head),
       };
