@@ -1,7 +1,8 @@
 // REAL PEOPLE. This file is the rule, and it is changed here.
 //
 // A claim publishes as it is, names and all, whether it's kept in a person's own project (`{ private: true }`)
-// or published: no name net reads it. The claimer answers for it, and the qualifier rates it before the press.
+// or published: no name net reads it. Only an address for mail or a phone number in its words keeps it in the
+// person's project. The claimer answers for it, and the qualifier rates it before the press.
 // A claim taken from a source (`sourced`) says what its source says, with the source. One worked out from
 // traces (`inferred`: patterns, timing, style, scraps put together) is marked inferred, with its method and
 // whatever evidence it has.
@@ -21,6 +22,7 @@
 // - Refs: only the namespaces in refs.ts parse. `person:`, `entity:` and friends are refused by name.
 // - `object.value` and `qualifiers`: typed per verb (validate.ts), so none can hold a sentence.
 // - The words below, wherever text can sit, except in an inferred claim.
+// - Published: no address for mail and no phone number in a value, a note or a quote.
 // - Inferred: `method` and `grounds` are required, and grounds can't be inbound transfers alone.
 //
 // What no machine here can catch, so a person or a later filter must (open question 15): whether a stated
@@ -49,7 +51,13 @@ export const PERSON_NAMESPACES: ReadonlySet<string> = new Set([
 export const FORBIDDEN_WORDS =
   /scam|sybil|fraud|launder|thief|thieves|criminal|terroris|hacker|ponzi|rug-?pull|drainer|money.?mule/i;
 
+/** An address for mail, or a phone number written with a + or as 3-3-4. */
+const EMAIL = /[\p{L}\d._%+-]+@[\p{L}\d-]+(?:\.[\p{L}\d-]+)*\.\p{L}{2,}/u;
+const PHONE = /\+\d{1,3}[\s.-]?\(?\d[\d\s().-]{5,}\d|\(?\b\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}\b/;
+
 const REASON = {
+  contact:
+    "an address for mail or a phone number stays in the person's own project: the record can't take it back (people.ts)",
   person:
     'claims name accounts, contracts and groups, not natural people (people.ts, first-version rule)',
   word: 'this word is not in the vocabulary: say what the accounts did, not what anyone is',
@@ -59,8 +67,8 @@ const REASON = {
 
 const namespaceOf = (ref: string): string => ref.slice(0, Math.max(0, ref.indexOf(':')));
 
-/** The rule, as far as a machine can check it: the same for a claim kept privately or published. */
-export function peopleRuleIssues(c: Claim, _scope: PeopleScope = {}): ValidationIssue[] {
+/** The rule, as far as a machine can check it, for a claim kept where `scope` says. */
+export function peopleRuleIssues(c: Claim, scope: PeopleScope = {}): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
   const add = (path: string, rule: string, message: string) => issues.push({ path, rule, message });
 
@@ -99,6 +107,18 @@ export function peopleRuleIssues(c: Claim, _scope: PeopleScope = {}): Validation
   for (const [path, text] of texts)
     if (!inferred && text !== undefined && FORBIDDEN_WORDS.test(text))
       add(path, 'vocabulary', REASON.word);
+
+  // Published, an address for mail or a phone number in its words stays private; names and handles go.
+  if (!scope.private) {
+    const words: [string, string | undefined][] = [
+      ['/object/value', typeof c.object === 'string' ? undefined : c.object.value],
+      ...c.evidence.map((e, i): [string, string | undefined] => [`/evidence/${i}/note`, e.note]),
+      ...c.evidence.map((e, i): [string, string | undefined] => [`/evidence/${i}/quote`, e.quote]),
+    ];
+    for (const [path, text] of words)
+      if (text !== undefined && (EMAIL.test(text) || PHONE.test(text)))
+        add(path, 'no_contact', REASON.contact);
+  }
 
   // `confidence` rates a claim, so it rests on the claim. Everything else inferred links accounts.
   if (c.kind === 'inferred' && c.verb !== 'confidence') {
