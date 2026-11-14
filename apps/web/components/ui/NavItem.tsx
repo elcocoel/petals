@@ -52,6 +52,7 @@ export function NavItem({
   label,
   icon,
   logo,
+  mark,
   trail,
   working,
   muted,
@@ -64,6 +65,8 @@ export function NavItem({
   icon?: IconName;
   /** A logo before the words, round, in the icon's place (a chain's, in the map's chain list). */
   logo?: string | null | undefined;
+  /** Where there's no logo: a name whose first letter stands in its place (a token with none). */
+  mark?: string;
   /** When it last moved, or a count: a few characters of mono, never cut. */
   trail?: string;
   /** Something is working there now; the words are read aloud in place of the square. */
@@ -79,7 +82,7 @@ export function NavItem({
   const expanded = 'expanded' in where ? where.expanded : undefined;
   const content = (
     <>
-      {logo && <Logo src={logo} />}
+      {logo ? <Logo src={logo} /> : mark ? <Logo letter={mark} /> : null}
       {icon && (
         <span
           className={`flex shrink-0 text-muted ${expanded ? 'rotate-90' : ''}`}

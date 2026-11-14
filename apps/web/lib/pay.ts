@@ -58,8 +58,14 @@ export const PAY_NEAR = 1;
 /** What the pay row offers to add, in dollars, before the person changes it (about $1). */
 export const PAY_USD = 1;
 
-/** The top of the lobby's dollars slider. */
+/** The top of the conversation's dollars slider. */
 export const PAY_USD_MAX = 100;
+
+/** The lobby's dollars slider: a dollar to five, and held at five it goes further (grownTop). */
+export const SLIDE_USD = { min: 1, top: 5 } as const;
+
+/** The slider's next top, held at its end: twice as far. */
+export const grownTop = (top: number) => top * 2;
 
 /** NEAR for `usd` dollars at today's price, in thousandths and never less than asked; null without a price. */
 export function nearFor(usd: number, near_usd: number | null): number | null {
@@ -110,9 +116,16 @@ export function money(
   return { usd: at(u), near: n === null ? null : at(n) };
 }
 
-/** Money in words: "$1.00 · 0.28 NEAR", or "$1.00" with no price. The one look, everywhere. */
+/** A figure with its thousands grouped: 1250000.00 is 1,250,000.00. */
+export const grouped = (figure: string) => {
+  const [whole = '', part] = figure.split('.');
+  const g = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return part === undefined ? g : `${g}.${part}`;
+};
+
+/** Money in words: "$1.00 · 0.28 NEAR", or "$1.00" with no price, thousands grouped. The one look, everywhere. */
 export const moneyWords = (m: Money) =>
-  m.near === null ? `$${m.usd}` : `$${m.usd} · ${m.near} NEAR`;
+  m.near === null ? `$${grouped(m.usd)}` : `$${grouped(m.usd)} · ${grouped(m.near)} NEAR`;
 
 /** The hash and the account a wallet's answer names, whichever shape the wallet gave. */
 export function sentBy(outcome: unknown): { hash: string; account: string } | null {

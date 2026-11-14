@@ -24,6 +24,8 @@ const DRAWINGS = [
   'components/landing/HeroGlass.tsx',
   // a grade's five steps in the look's own colours, under Colour in Tools
   'components/ui/Ramp.tsx',
+  // an address to send to, as a QR code for a phone's camera
+  'components/ui/Qr.tsx',
   // the landing's system graph: its lines, regions and what travels on them
   'components/landing/SystemGraph.tsx',
 ];

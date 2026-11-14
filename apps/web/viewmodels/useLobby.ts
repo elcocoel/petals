@@ -23,8 +23,9 @@ import {
 import { contributionView } from '../lib/contribution-view.ts';
 import { evmWallets } from '../lib/evm-wallet.ts';
 import { shortId } from '../lib/flower-view.ts';
+import { homeChain } from '../lib/intents.ts';
 import { fundsWords, nearExact } from '../lib/lobby-view.ts';
-import { money, moneyWords, payWords, sentBy, yoctoOf } from '../lib/pay.ts';
+import { grownTop, money, moneyWords, payWords, SLIDE_USD, sentBy, yoctoOf } from '../lib/pay.ts';
 import { PHONE } from '../lib/phone-wallet.ts';
 import {
   type AddWalletPhase,
@@ -40,7 +41,7 @@ import {
 } from '../lib/profile-view.ts';
 import { solanaWallets } from '../lib/solana-wallet.ts';
 import { tipLine } from '../lib/tip.ts';
-import { connectWallet, SIGN_IN_NETWORK, sendFrom, signPrepared } from '../lib/wallet.ts';
+import { SIGN_IN_NETWORK, sendFrom, signPrepared } from '../lib/wallet.ts';
 import { usePay } from './usePay.ts';
 import { usePowerQuote } from './usePowerQuote.ts';
 import { evmProof, solanaProof } from './useSession.ts';
@@ -117,12 +118,17 @@ export function useLobby() {
   const asking = ADDING;
   const paid = funds.reread;
   const pay = usePay(funds.where ?? null, asking, paid, funds.signer ?? null);
-  // or any other token, from any chain, through NEAR Intents, beside it in the same row
-  const topUp = useTopUp(asking, paid, pay);
   const nearUsd = funds.where?.near_usd ?? null;
-  // the other-token fields are laid out from the start: their token list is read once, now
-  const openTopUp = useRef(topUp.actions.open);
-  useEffect(() => openTopUp.current(), []);
+  // or any other token, from any chain, through NEAR Intents, opening on a chain they hold a wallet on
+  const topUp = useTopUp(
+    asking,
+    paid,
+    nearUsd,
+    homeChain(Array.isArray(wallets) ? wallets.map((w) => w.chain) : []),
+  );
+  // the slider's top, a dollar to five at first; held at its end, it goes further
+  const [top, setTop] = useState<number>(SLIDE_USD.top);
+  const setUsd = pay.setUsd;
 
   // Withdraw: the panel's one amount, out of the wallet's own balance in the contract, back to it. Any NEAR
   // wallet may send it; the chain answers for what it holds.
@@ -133,6 +139,11 @@ export function useLobby() {
   /** which press spoke last: the panel's one line is its */
   const [last, setLast] = useState<'add' | 'withdraw' | null>(null);
   const usdNow = Number(pay.usd.replace(/,/g, '')) || 0;
+  const grow = useCallback(() => {
+    const next = grownTop(Math.max(top, Math.ceil(usdNow)));
+    setTop(next);
+    setUsd(String(next));
+  }, [top, usdNow, setUsd]);
   const takeNear = nearUsd && nearUsd > 0 ? Math.floor((usdNow / nearUsd) * 1000) / 1000 : 0;
   const takeYocto = takeNear > 0 ? yoctoOf(takeNear) : null;
   const held = funds.held;
@@ -303,7 +314,7 @@ export function useLobby() {
             0.005
           : false,
       // the one amount both presses act on
-      amount: pay.amount ? { ...pay.amount, label: fundsWords.amount } : null,
+      amount: pay.amount ? { ...pay.amount, label: fundsWords.amount, top, onGrow: grow } : null,
       add: {
         label: pay.phase === 'paying' ? payWords.paying : pay.label,
         canPress: pay.canPay && pay.phase !== 'paying',
@@ -319,7 +330,7 @@ export function useLobby() {
               label: withdrawing
                 ? payWords.paying
                 : `${fundsWords.withdraw} ${moneyWords(money(usdNow, nearUsd))}`,
-              canPress: !withdrawing && takeYocto !== null && BigInt(takeYocto) <= BigInt(held),
+              canPress: !withdrawing && takeYocto !== null,
               onPress: withdraw,
             },
       line: funds.signer ? payWords.fundsFor(shortId(funds.signer)) : null,

@@ -26,7 +26,7 @@ import type { ListedConversation, ListedProject } from './conversation-list.ts';
 import { decodeDraft } from './draft.ts';
 import type { ElsewhereRead } from './elsewhere.ts';
 import type { InFront } from './in-front.ts';
-import type { PayToken, TopUp } from './intents.ts';
+import type { PayToken, TopUp, TopUpRow } from './intents.ts';
 import type { Job } from './jobs.ts';
 import type { PublicProfileAnswer } from './lobby-view.ts';
 import type { MapClaims } from './map-claims.ts';
@@ -1102,13 +1102,22 @@ export async function readPayTokens(): Promise<PayToken[]> {
   return ((await res.json()) as { tokens?: PayToken[] }).tokens ?? [];
 }
 
-/** A deposit address for `usd` dollars of credit, paid in `origin_asset`; what can't be swapped goes to `refund_to`. */
+/**
+ * An address that takes any amount of `origin_asset`, landing as NEAR on the person's balance; what can't be
+ * swapped goes back to `refund_to`, their own linked wallet on that chain when it's left out.
+ */
 export async function startTopUp(body: {
-  usd: number;
   origin_asset: string;
-  refund_to: string;
+  refund_to?: string;
 }): Promise<TopUp> {
   return (await sessionPost<{ top_up: TopUp }>('/api/v1/pay/intents', body)).top_up;
+}
+
+/** The person's top-ups, newest first, each as 1Click sees it now; none when it can't be read. */
+export async function readTopUps(): Promise<TopUpRow[]> {
+  const res = await fetch('/api/v1/pay/intents', { cache: 'no-store' });
+  if (!res.ok) return [];
+  return ((await res.json()) as { top_ups?: TopUpRow[] }).top_ups ?? [];
 }
 
 /** Where a top-up stands. Once it has landed, the dollars are on the person's credit. */

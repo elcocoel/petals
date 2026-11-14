@@ -1,8 +1,9 @@
 // Paying with any token, from any chain, through NEAR Intents. The server's GET /api/v1/pay/tokens lists what
-// 1Click swaps; POST /api/v1/pay/intents gives a deposit address and the exact amount to send; GET
-// /api/v1/pay/intents/:deposit says where it stands, and at SUCCESS the dollars are on the person's credit.
-// One plain transfer from whatever wallet they have, on any computer. Pure: what's offered, how it's named,
-// and the words.
+// 1Click swaps; choosing one, POST /api/v1/pay/intents gives an address that takes any amount of it, at or above
+// a dollar's worth less slippage, landing as NEAR on the person's balance, and waiting a week; GET
+// /api/v1/pay/intents lists their top-ups, what was sent and what landed; GET /api/v1/pay/intents/:deposit says
+// where one stands. One plain transfer from whatever wallet they have, on any computer. Pure: what's offered, in
+// what order, how it's named, and the words.
 
 /** A token a person can pay with, as GET /api/v1/pay/tokens lists it. */
 export interface PayToken {
@@ -31,10 +32,27 @@ export interface TopUp {
   origin_asset?: string;
   amount_in_formatted?: string;
   amount_in_usd?: string | number | null;
+  /** what the reference lands as, in dollars: beside amount_in_usd, the fees */
+  amount_out_usd?: string | number | null;
   deadline?: string;
   usd?: number;
   status: TopUpStatus;
   credited_usd?: number | null;
+}
+
+/** One of the person's top-ups, as GET /api/v1/pay/intents lists it, newest first. */
+export interface TopUpRow {
+  deposit_address: string;
+  created_at: string;
+  origin_asset: string | null;
+  deadline: string | null;
+  status: TopUpStatus | string;
+  /** the token amount as sent, once 1Click saw it */
+  sent: string | null;
+  sent_usd: string | null;
+  /** what reached their balance, once it landed */
+  landed_near: string | null;
+  landed_usd: string | null;
 }
 
 /** Still on its way: worth reading again. */
@@ -74,139 +92,244 @@ const CHAINS: Record<string, string> = {
 export const chainName = (chain: string) =>
   CHAINS[chain] ?? `${chain.charAt(0).toUpperCase()}${chain.slice(1)}`;
 
-/** One choice in the token list: "USDC on Base". */
-export interface TokenChoice {
-  value: string;
-  label: string;
-}
+/** Below the address's dollar reference, by this much, a transfer is still taken (the server's slippage). */
+const SLIPPAGE = 0.01;
 
-/**
- * What most people hold, first, so the list doesn't open on two hundred tokens: the dollar
- * stablecoins on the biggest chains, and each big coin on its own chain. A symbol and a chain, in this order.
- */
-export const COMMON: readonly (readonly [symbol: string, chain: string])[] = [
-  ['USDC', 'eth'],
-  ['USDC', 'base'],
-  ['USDC', 'sol'],
-  ['USDC', 'arb'],
-  ['USDC', 'near'],
-  ['USDT', 'eth'],
-  ['USDT', 'tron'],
-  ['USDT', 'sol'],
-  ['ETH', 'eth'],
-  ['ETH', 'base'],
-  ['ETH', 'arb'],
-  ['BTC', 'btc'],
-  ['SOL', 'sol'],
-  ['wNEAR', 'near'],
+/** The chains most people hold on, first, in this order; the rest after them, the most tokens first. */
+const CHAINS_FIRST = [
+  'eth',
+  'base',
+  'sol',
+  'arb',
+  'near',
+  'tron',
+  'bsc',
+  'btc',
+  'pol',
+  'op',
+  'avax',
 ];
 
-const choiceOf = (t: PayToken): TokenChoice => ({
-  value: t.asset,
-  label: `${t.symbol} on ${chainName(t.chain)}`,
-});
+/** On a chain, what most people hold first, in this order. */
+const TOKENS_FIRST = ['USDC', 'USDT', 'ETH', 'BTC', 'SOL', 'NEAR', 'WNEAR'];
+
+/** 1Click still lists a token it's replaced, so it goes last. */
+const deprecated = (t: PayToken) => /\(DEPRECATED\)$/i.test(t.symbol);
+
+const finds = (q: string, t: PayToken) =>
+  !q || t.symbol.toLowerCase().includes(q) || chainName(t.chain).toLowerCase().includes(q);
+
+const firstOf = (list: readonly string[], v: string) => {
+  const i = list.indexOf(v);
+  return i === -1 ? list.length : i;
+};
+
+/** The chains with a token the search finds (all of them with none), the common ones first. */
+export function chainsOf(
+  tokens: readonly PayToken[],
+  search = '',
+): { chain: string; count: number }[] {
+  const q = search.trim().toLowerCase();
+  const count = new Map<string, number>();
+  for (const t of tokens) if (finds(q, t)) count.set(t.chain, (count.get(t.chain) ?? 0) + 1);
+  return [...count.entries()]
+    .map(([chain, n]) => ({ chain, count: n }))
+    .sort(
+      (a, b) =>
+        firstOf(CHAINS_FIRST, a.chain) - firstOf(CHAINS_FIRST, b.chain) ||
+        b.count - a.count ||
+        chainName(a.chain).localeCompare(chainName(b.chain)),
+    );
+}
+
+/** One chain's tokens the search finds: what most people hold first, the replaced ones last. */
+export function tokensOn(tokens: readonly PayToken[], chain: string, search = ''): PayToken[] {
+  const q = search.trim().toLowerCase();
+  return tokens
+    .filter((t) => t.chain === chain && finds(q, t))
+    .sort(
+      (a, b) =>
+        Number(deprecated(a)) - Number(deprecated(b)) ||
+        firstOf(TOKENS_FIRST, a.symbol.toUpperCase()) -
+          firstOf(TOKENS_FIRST, b.symbol.toUpperCase()) ||
+        a.symbol.localeCompare(b.symbol, undefined, { sensitivity: 'base' }),
+    );
+}
+
+/** The chain the list opens on: one the person has a wallet on, Ethereum's first, else NEAR. */
+export function homeChain(walletChains: readonly string[]): string {
+  if (walletChains.includes('Ethereum')) return 'eth';
+  if (walletChains.includes('Solana')) return 'sol';
+  return 'near';
+}
+
+/** An amount as people write it: four significant figures, no trailing zeros. */
+const figure = (n: number) => String(Number(n.toPrecision(4)));
+
+/** An address shortened in the middle, its start and end kept: 0x76b4…730E8. */
+export const shortAddress = (a: string) => (a.length > 14 ? `${a.slice(0, 6)}…${a.slice(-5)}` : a);
+
+/** A day as people say it where they are: Fri 21 Nov. */
+function dayWords(at: string | null | undefined): string | null {
+  if (!at) return null;
+  const d = new Date(at);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' });
+}
 
 /**
- * The tokens: the common ones first, in their own group, then the rest, a chain's together, the chains with
- * the most tokens first, as 1Click lists each one's.
+ * Under the address, in one line: the fees, the least it takes and until when, from the address's own
+ * reference (a dollar's worth of the token, and what that lands as).
  */
-export function tokenChoices(
-  tokens: readonly PayToken[],
-): { group: string; choices: TokenChoice[] }[] {
-  const common = COMMON.flatMap(([symbol, chain]) =>
-    tokens.filter((t) => t.symbol === symbol && t.chain === chain).slice(0, 1),
-  );
-  const first = new Set(common.map((t) => t.asset));
-  const by = new Map<string, PayToken[]>();
-  for (const t of tokens) {
-    if (!first.has(t.asset)) by.set(t.chain, [...(by.get(t.chain) ?? []), t]);
+export function quoteLine(t: TopUp, symbol: string): string {
+  const parts: string[] = [];
+  const usdIn = Number(t.amount_in_usd);
+  const usdOut = Number(t.amount_out_usd);
+  if (usdIn > 0 && usdOut > 0) {
+    const pct = Math.max(0, (1 - usdOut / usdIn) * 100);
+    parts.push(intentWords.fees(pct < 0.1 ? '0.1' : pct.toFixed(1)));
   }
-  const rest = [...by.entries()]
-    .sort((a, b) => b[1].length - a[1].length)
-    .map(([chain, list]) => ({ group: chainName(chain), choices: list.map(choiceOf) }));
-  return common.length > 0
-    ? [{ group: intentWords.common, choices: common.map(choiceOf) }, ...rest]
-    : rest;
+  const least = Number(t.amount_in_formatted);
+  if (least > 0) parts.push(intentWords.least(figure(least * (1 - SLIPPAGE)), symbol));
+  const until = dayWords(t.deadline);
+  if (until) parts.push(intentWords.until(until));
+  return parts.join(' · ');
 }
 
-/** Dollars as typed: a number above 0, as the server takes (the quote says what it costs), or null. */
-export function dollarsOf(typed: string): number | null {
-  const n = Number(typed.replace(/[$,\s]/g, ''));
-  return Number.isFinite(n) && n > 0 ? Math.round(n * 100) / 100 : null;
+/** A top-up in the history: when, what was sent, the NEAR it should land as at today's price, what landed. */
+export interface HistoryRow {
+  key: string;
+  when: string;
+  sent: string;
+  expected: string;
+  landed: string;
+  status: string;
 }
 
-/** When to send it by, as a time of day where the person is. */
-export function untilWords(deadline: string | undefined): string | null {
-  if (!deadline) return null;
-  const at = new Date(deadline);
-  if (Number.isNaN(at.getTime())) return null;
-  return at.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+/**
+ * The person's top-ups with something sent: an address asked for and never paid isn't one. Expected is what
+ * was sent, in NEAR at today's price, before fees; landed is what reached their balance.
+ */
+export function historyRows(
+  rows: readonly TopUpRow[],
+  tokens: readonly PayToken[],
+  nearUsd: number | null,
+): HistoryRow[] {
+  return rows
+    .filter((r) => r.sent !== null || r.status !== 'PENDING_DEPOSIT')
+    .map((r) => {
+      const token = tokens.find((t) => t.asset === r.origin_asset);
+      const sentUsd = Number(r.sent_usd);
+      return {
+        key: r.deposit_address,
+        when: dayWords(r.created_at) ?? '',
+        sent:
+          r.sent !== null
+            ? token
+              ? intentWords.amountOn(figure(Number(r.sent)), token.symbol, chainName(token.chain))
+              : figure(Number(r.sent))
+            : intentWords.nothing,
+        expected:
+          sentUsd > 0 && nearUsd
+            ? intentWords.near(figure(sentUsd / nearUsd))
+            : intentWords.nothing,
+        landed:
+          r.landed_near !== null
+            ? intentWords.near(figure(Number(r.landed_near)))
+            : intentWords.nothing,
+        status:
+          r.status in intentWords.state
+            ? intentWords.state[r.status as TopUpStatus]
+            : String(r.status),
+      };
+    });
 }
 
 export const intentWords = {
-  other: 'Pay with another token',
+  search: 'Search tokens and chains',
+  chain: 'Chain',
   token: 'Token',
-  pick: 'Pick a token and its chain',
-  /** The list's first group, what most people hold (tokenChoices). */
-  common: 'Common',
   loading: 'Reading the tokens…',
-  usd: 'Dollars to add',
-  refund: (chain: string) => `Your address on ${chain}, where anything not swapped goes back`,
-  get: 'Get the address to send to',
-  getting: 'Getting the address…',
-  badUsd: 'Dollars above 0.',
-  noRefund: 'Your address on that chain, for anything not swapped.',
-  send: (amount: string, symbol: string, chain: string) =>
-    `Send exactly ${amount} ${symbol} on ${chain}, in one transfer from any wallet, to:`,
+  none: 'No token by that name.',
+  /** The address's place before a token is chosen. */
+  pick: 'Pick a token to get its address.',
+  asking: 'Getting its address…',
+  send: (symbol: string, chain: string) =>
+    `Send any amount of ${symbol} on ${chain} to this address. It lands as NEAR on your balance.`,
   memo: 'With this memo:',
-  before: (time: string) => `Send it before ${time}.`,
+  fees: (pct: string) => `Fees about ${pct}%`,
+  least: (amount: string, symbol: string) => `at least ${amount} ${symbol}`,
+  until: (day: string) => `open until ${day}`,
+  refund: (chain: string) => `Your address on ${chain}, where anything not swapped goes back`,
+  /** Under the refund field: Enter, or leaving it, asks again. */
+  refundThen: 'Then press Enter.',
   copy: 'Copy',
   copied: 'Copied',
-  status: {
-    PENDING_DEPOSIT: 'Waiting for your transfer.',
-    KNOWN_DEPOSIT_TX: 'Your transfer arrived. Swapping it now.',
-    PROCESSING: 'Swapping it now.',
-    INCOMPLETE_DEPOSIT: 'Less arrived than asked, so it goes back to your address.',
-    REFUNDED: 'It went back to your address.',
-    FAILED: "That didn't go through. Try again.",
+  history: 'Your top-ups',
+  historyNone: 'Nothing sent yet. What you send shows here, with what landed.',
+  heads: { when: 'When', sent: 'Sent', expected: 'Expected', landed: 'Landed', status: 'Status' },
+  amountOn: (amount: string, symbol: string, chain: string) => `${amount} ${symbol} on ${chain}`,
+  near: (near: string) => `${near} NEAR`,
+  nothing: '–',
+  /** 1Click's states, said plainly. */
+  state: {
+    PENDING_DEPOSIT: 'Waiting for your transfer',
+    KNOWN_DEPOSIT_TX: 'Arrived, swapping',
+    PROCESSING: 'Swapping',
+    SUCCESS: 'Landed',
+    INCOMPLETE_DEPOSIT: 'Below the least it takes: going back',
+    REFUNDED: 'Sent back',
+    FAILED: 'Didn’t go through',
   } as const,
-  added: (usd: number) => `Added $${usd.toFixed(2)}. Send your question again.`,
 } as const;
 
-/** What a top-up's state says, in the words above. */
-export function statusLine(t: Pick<TopUp, 'status' | 'credited_usd' | 'usd'>): string {
-  if (t.status === 'SUCCESS') return intentWords.added(t.credited_usd ?? t.usd ?? 0);
-  return intentWords.status[t.status];
+/** One chain in the list beside the tokens. */
+export interface ChainChoice {
+  chain: string;
+  name: string;
+  icon: string | null;
 }
 
-/** Paying with another token, as the pay row shows it (viewmodels/useTopUp.ts makes it). */
-export interface TopUpView {
-  open: boolean;
-  /** null while the list is on its way */
-  groups: { group: string; choices: TokenChoice[] }[] | null;
+/** One token in the chain's list. */
+export interface TokenPick {
   asset: string;
-  usd: string;
-  refund: string;
-  refundLabel: string;
-  getting: boolean;
-  error: string | null;
-  sent: {
+  symbol: string;
+  icon: string | null;
+}
+
+/** Paying with another token, as the money panel shows it (viewmodels/useTopUp.ts makes it). */
+export interface TopUpView {
+  search: string;
+  /** null while the list is on its way */
+  chains: ChainChoice[] | null;
+  chain: string;
+  tokens: TokenPick[];
+  asset: string;
+  /** asking for the chosen token's address */
+  asking: boolean;
+  /** where to send the chosen token, once the server gave it */
+  address: {
     line: string;
     address: string;
+    /** shortened in the middle, for a phone's width: Copy gives it whole */
+    short: string;
     memo: string | null;
-    before: string | null;
-    status: string;
-    ended: boolean;
-    landed: boolean;
+    quote: string;
+    /** where it stands, once something arrived */
+    status: string | null;
   } | null;
+  /** the server asked for a refund address on this chain: the one field, then Enter */
+  refund: { label: string; value: string } | null;
+  error: string | null;
   copied: 'address' | 'memo' | null;
+  /** null while it's being read */
+  history: HistoryRow[] | null;
   actions: {
-    open: () => void;
-    setAsset: (asset: string) => void;
-    setUsd: (usd: string) => void;
-    setRefund: (refund: string) => void;
-    get: () => void;
+    search: (q: string) => void;
+    chooseChain: (chain: string) => void;
+    choose: (asset: string) => void;
+    setRefund: (v: string) => void;
+    sendRefund: () => void;
     copy: (which: 'address' | 'memo', text: string) => void;
-    again: () => void;
   };
 }
