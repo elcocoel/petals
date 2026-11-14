@@ -25,6 +25,7 @@ import type { Catalogue, Settings } from './composer-options.ts';
 import type { ListedConversation, ListedProject } from './conversation-list.ts';
 import { decodeDraft } from './draft.ts';
 import type { ElsewhereRead } from './elsewhere.ts';
+import type { InFront } from './in-front.ts';
 import type { PayToken, TopUp } from './intents.ts';
 import type { Job } from './jobs.ts';
 import type { MapClaims } from './map-claims.ts';
@@ -50,6 +51,8 @@ export interface ChatRequest {
   run_id?: string;
   /** a pick for this conversation, from here on */
   settings?: Settings;
+  /** what is in front of the person on the canvas as they ask (lib/in-front.ts) */
+  in_front?: InFront;
 }
 
 export type RunRead = { ok: true; run: Run } | { ok: false; code: string; message: string };

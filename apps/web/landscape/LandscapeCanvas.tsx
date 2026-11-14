@@ -277,6 +277,12 @@ function withLanded<D extends { flowers: CanvasFlower[]; chains: CanvasChain[] }
   return { ...data, flowers: [...data.flowers, flower] };
 }
 
+/** What the person looks at inside the map they're in, besides the map itself (onLooking). */
+export interface MapLooking {
+  layers: { map: string; on: readonly string[] } | null;
+  proposal: { map: string; id: string } | null;
+}
+
 export interface MapWallet {
   id: string;
   chain: string;
@@ -468,6 +474,7 @@ export function LandscapeCanvas({
   panelEdge,
   onWallet,
   onEnter,
+  onLooking,
   information,
   ownBox = false,
   show,
@@ -519,6 +526,11 @@ export function LandscapeCanvas({
   onWallet?: ((wallet: MapWallet | null) => void) | undefined;
   /** Told the map of the flower the person goes into, and null when they come out (/make's mapping state). */
   onEnter?: ((map: string | null) => void) | undefined;
+  /**
+   * Told what else the person looks at inside the map they're in, as it changes (/make sends it with every turn):
+   * the layers still on where some are switched off (null when all are on), and the proposal pinned on its ring.
+   */
+  onLooking?: ((looking: MapLooking) => void) | undefined;
   /**
    * What the page's conversation is about (on /make the map is always there, and an answer moves it): a DAO by its
    * map, flown to and entered; a wallet, lit everywhere it sits on its chain (the chosen chain, else the one on
@@ -866,6 +878,19 @@ export function LandscapeCanvas({
   useEffect(() => {
     toldEnter.current?.(enteredMap);
   }, [enteredMap]);
+  // the map gone from the page: nobody is inside it any more
+  useEffect(() => () => toldEnter.current?.(null), []);
+  // what else the person is looking at inside it, for a page that asks (/make sends it with every turn): the
+  // layers still on where some are off, and the proposal pinned on its ring
+  const toldLooking = useRef(onLooking);
+  toldLooking.current = onLooking;
+  const pinnedId = pinned?.id ?? null;
+  useEffect(() => {
+    toldLooking.current?.({
+      layers: strata && layersOn ? { map: strata.map, on: layersOn } : null,
+      proposal: pinnedId && enteredMap ? { map: enteredMap, id: pinnedId } : null,
+    });
+  }, [strata, layersOn, pinnedId, enteredMap]);
   // the wallet chosen, with the flower it was chosen in, for the page
   const toldWallet = useRef(onWallet);
   toldWallet.current = onWallet;
