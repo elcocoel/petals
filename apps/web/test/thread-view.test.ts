@@ -81,11 +81,11 @@ describe('the steps', () => {
     });
   });
 
-  test('tool calls are counted, and what is happening now is the status row’s to say', () => {
+  test('tool calls are counted once the turn ends; while it runs they are the status row’s, open', () => {
     const items = [you('q'), stage, tool('1'), tool('2')];
-    expect(view(items, { busy: true })[1]).toMatchObject({ summary: '2 tool calls' });
+    expect(view(items, { busy: true }).some((r) => r.kind === 'steps')).toBe(false);
     expect(view(items)[1]).toMatchObject({ summary: '2 tool calls' });
-    expect(view([you('q'), stage, tool('1'), say('a')], { busy: true })[1]).toMatchObject({
+    expect(view([you('q'), stage, tool('1'), say('a')])[1]).toMatchObject({
       summary: '1 tool call',
     });
   });

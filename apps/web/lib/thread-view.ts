@@ -16,6 +16,7 @@ import { modeWords } from './mapping.ts';
 import { type Block as MarkdownBlock, parseMarkdown } from './markdown.ts';
 import { PAYMENT_REQUIRED } from './pay.ts';
 import { blocksOf, type ChatState, type Done, type Opened, type Step } from './thread.ts';
+import { toolDoing } from './tool-words.ts';
 import { workspaceUrl } from './workspace-url.ts';
 
 /** What the recorded run (fixtures/transcripts/skeleton.json) was really asked. */
@@ -143,6 +144,8 @@ export interface TurnRow {
   text: string;
   /** what the agent is doing now, in its own words */
   headline?: string;
+  /** a turn at work: each step it has taken, in plain words, as it started; the last not done yet runs now */
+  doing?: { text: string; done: boolean; failed: boolean }[];
   /** a lost turn offers to follow its run again */
   refollow?: { label: string; disabled: boolean };
 }
@@ -200,9 +203,29 @@ function turnRow(v: Pick<ThreadInput, 'items' | 'turn' | 'busy' | 'lostAgain'>):
       return row('Your question landed. Petals is about to start…');
     case 'working': {
       const latest = v.items.findLast((x) => x.kind === 'stage' || x.kind === 'progress');
+      // this turn's steps, open as they happen, so a slow one says what it's doing
+      const said = v.items.findLastIndex((x) => x.kind === 'user');
+      const doing = v.items.slice(said + 1).flatMap((x) =>
+        x.kind === 'tool'
+          ? [
+              {
+                text: toolDoing(x.name, x.args),
+                done: Boolean(x.result),
+                failed: x.result ? !x.result.ok : false,
+              },
+            ]
+          : [],
+      );
+      // between tools it's the model's turn again: that's said too, so something always runs
+      if (doing.length && doing.every((d) => d.done)) {
+        doing.push({ text: 'Thinking it over', done: false, failed: false });
+      }
       return {
         ...row('Petals is working on it. This can take a while.'),
-        ...(latest ? { headline: `${(latest as { message: string }).message}…` } : {}),
+        ...(latest && !doing.length
+          ? { headline: `${(latest as { message: string }).message}…` }
+          : {}),
+        ...(doing.length ? { doing } : {}),
       };
     }
     case 'lost':
@@ -262,6 +285,8 @@ export function threadView(v: ThreadInput): Row[] {
   let next: { key: string; next: NextOnMap } | null = null;
   const lastAsked = blocks.findLastIndex((x) => x.kind === 'user');
   const rows: Row[] = [];
+  // while a turn runs, its own steps are shown open in its status (turnRow), not folded here too
+  const runningFrom = v.busy ? blocks.findLastIndex((b) => b.kind === 'user') : blocks.length;
   blocks.forEach((b, i) => {
     const key = `${i}-${b.kind}`;
     switch (b.kind) {
@@ -312,7 +337,7 @@ export function threadView(v: ThreadInput): Row[] {
         break;
       case 'steps': {
         const tools = b.steps.filter((s) => s.kind === 'tool').length;
-        if (!tools) break;
+        if (!tools || i > runningFrom) break;
         rows.push({
           kind: 'steps',
           key,
