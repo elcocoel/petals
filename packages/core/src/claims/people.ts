@@ -5,8 +5,10 @@
 // exception, so names found while mapping can reach the shared map: a name a public source ties to an address
 // publishes as a claim, said as that source says it, with the source (`sourcedName`): a `named` claim taken from
 // its source, resting on a proposal, a transaction, or a public page or post (an official page, a forum or
-// governance post, a post on X), with that source's own words quoted. A name worked out from traces (patterns,
-// timing, style, scraps put together) is inferred, and stays private. In a person's own project, rules 2 and 5
+// governance post, a post on X), with that source's own words quoted. The same holds for any claim taken from
+// such a source (`publiclySourced`): its quotes are kept as written, and a sourced note keeps its words; the
+// claimer's own evidence notes are still checked. A name worked out from traces (patterns, timing, style, scraps
+// put together) is inferred, and stays private. In a person's own project, rules 2 and 5
 // give way for claim/v2's named and noted and for the evidence's notes and quotes; rules 1, 3 and 4 hold
 // everywhere.
 //
@@ -84,19 +86,21 @@ const publicSource = (e: Claim['evidence'][number]): boolean =>
   ((e.type === 'page' || e.type === 'post') && !!e.url);
 
 /**
- * A name a public source ties to the address: a `named` claim taken from its source (sourced, never worked
- * out), with a piece of evidence that is a proposal, a transaction, or a page or a post with its address, quoting
- * the words that tie the name to the account. Said as the source says it, with the source.
+ * A claim taken from a public source (sourced, never worked out), with a piece of evidence that is a proposal,
+ * a transaction, or a page or a post with its address, quoting the source's own words. Said as the source says
+ * it, with the source; the claimer answers for it.
  */
-export function sourcedName(c: Claim): boolean {
+export function publiclySourced(c: Claim): boolean {
   return (
-    c.verb === 'named' &&
     c.kind === 'sourced' &&
     c.evidence.some(
       (e) => publicSource(e) && typeof e.quote === 'string' && e.quote.trim().length > 0,
     )
   );
 }
+
+/** A name a public source ties to the address: a `named` claim, publicly sourced. */
+export const sourcedName = (c: Claim): boolean => c.verb === 'named' && publiclySourced(c);
 
 /** The rule, as far as a machine can check it, for a claim kept where `scope` says. */
 export function peopleRuleIssues(c: Claim, scope: PeopleScope = {}): ValidationIssue[] {
@@ -138,15 +142,16 @@ export function peopleRuleIssues(c: Claim, scope: PeopleScope = {}): ValidationI
 
   // Names: allowed in a person's own project; published only as a public source states them.
   if (!scope.private) {
-    const declared = sourcedName(c);
-    if (c.verb === 'named' && !declared) add('/object/value', 'no_free_text_name', REASON.name);
+    const sourced = publiclySourced(c);
+    if (c.verb === 'named' && !sourced) add('/object/value', 'no_free_text_name', REASON.name);
     const words: [string, string | undefined][] = [
-      ...((c.verb === 'noted' || c.verb === 'is_a') && typeof c.object !== 'string'
+      // a sourced note says what its source says; any other note, or a type, is the claimer's own words
+      ...(((c.verb === 'noted' && !sourced) || c.verb === 'is_a') && typeof c.object !== 'string'
         ? ([['/object/value', c.object.value]] as [string, string][])
         : []),
       ...c.evidence.map((e, i): [string, string | undefined] => [`/evidence/${i}/note`, e.note]),
-      // a sourced name's record, page or post is quoted as written: its own words carry the name
-      ...(declared
+      // a public source's record, page or post is quoted as written: its own words may carry names
+      ...(sourced
         ? []
         : c.evidence.map((e, i): [string, string | undefined] => [
             `/evidence/${i}/quote`,
