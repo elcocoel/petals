@@ -23,7 +23,7 @@ Which files to load for each task. The doctrine always comes first, so no row li
 | Validators and the stake behind them | validators, stake, staking | `stake-behind-the-network` | `where-power-lives` |
 | What it's worth | worth, value, price, dollars | `value` | `vesting` |
 | What a treasury paid out | payouts, paid out, spending, spent, recipients | `payouts` | `from-proposal-to-action` |
-| When it unlocks | unlock, vesting, cliff, release | `vesting` | `value` |
+| When it unlocks, how much is locked | unlock, locked, vesting, cliff, release | `vesting` | `value` |
 | How it changed over time | changed, history, since, over time | `over-time` | n/a |
 | What's already on the map, and going there | navigate, take me, go to, open, what's there, already, on the map, what we found | `on-the-map` | `going-deeper` |
 | What to offer after an answer | more, deeper, next | `going-deeper` | n/a |

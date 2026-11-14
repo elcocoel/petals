@@ -178,7 +178,8 @@ export const getMap = defineTool<{ map: string }, Record<string, unknown>>({
     "totals, by its schedules); its payouts in short; Insights, the claims Petals' mapping made about its accounts and those people " +
     'published, each with who answers for it; and the ' +
     "signed-in person's own names for its accounts, which are theirs alone until they publish them. " +
-    'describe_snapshot and compute_figures count a reading; find_voting_blocs and list_payouts go deeper.',
+    "How much of a token is locked or unlocked now is its vesting's totals (locked, unlocked), not a holder's " +
+    'balance. describe_snapshot and compute_figures count a reading; find_voting_blocs and list_payouts go deeper.',
   input: obj(
     ['map'],
     {
