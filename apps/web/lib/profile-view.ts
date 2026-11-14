@@ -50,6 +50,11 @@ export const profilePageWords = {
   busy: (wallet: string) =>
     `${wallet} already has a request open. Open ${wallet}, answer it, then try again.`,
   answered: (wallet: string, why: string) => `${wallet} answered: ${why}`,
+  /** The wallet's window went away before it said yes or no. */
+  closed: (wallet: string) => `${wallet} was closed before it answered, so nothing was sent.`,
+  /** The wallet couldn't reach its network. */
+  network: (wallet: string) =>
+    `${wallet} couldn’t reach the network. Check your connection, then try again.`,
   notAdded: 'That wallet wasn’t added. Try again.',
   claims: 'Claims',
   /** How many accounts the claims are about. */
@@ -106,8 +111,11 @@ export function walletRefusal(
       : typeof (e as { message?: unknown } | null)?.message === 'string'
         ? (e as { message: string }).message
         : String(e);
-  if (code === 4001 || /reject|denied|declin|cancel|closed/i.test(said)) return declined(wallet);
+  if (code === 4001 || /reject|denied|declin/i.test(said)) return declined(wallet);
+  if (/cancel|closed/i.test(said)) return profilePageWords.closed(wallet);
   if (code === -32002) return profilePageWords.busy(wallet);
+  if (/failed to fetch|networkerror|network request failed|load failed|timed? ?out/i.test(said))
+    return profilePageWords.network(wallet);
   return profilePageWords.answered(wallet, said || profilePageWords.notAdded);
 }
 

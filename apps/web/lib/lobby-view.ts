@@ -63,8 +63,8 @@ export const fundsWords = {
   waiting: payWords.paying,
   /** With the amount that came out. */
   withdrew: (near: string) => `Withdrew ${near} NEAR.`,
-  /** After the pay step's own. */
-  failed: "That withdrawal didn't go through. Try again.",
+  /** A no to a withdrawal. */
+  declined: (wallet: string) => `${wallet} declined. Nothing was taken out.`,
 } as const;
 
 /**

@@ -21,6 +21,7 @@ import {
   sentBy,
   yoctoOf,
 } from '../lib/pay.ts';
+import { profilePageWords, walletRefusal } from '../lib/profile-view.ts';
 import {
   connectedAccount,
   type Network,
@@ -191,10 +192,26 @@ export function usePay(
       if (where.method === 'deposit') {
         // into the signed-in person's balance, named in the deposit, from whichever NEAR wallet pays; the
         // balance is then read from the contract again
-        const sent = sentBy(
-          await sendFrom(where.network, where.receiver, payAction(where, yoctoOf(send), signer)),
-        );
-        if (!sent) throw new Error('no transaction');
+        let sent: ReturnType<typeof sentBy>;
+        try {
+          sent = sentBy(
+            await sendFrom(
+              where.network,
+              where.receiver,
+              payAction(where, yoctoOf(send), signer),
+              switching,
+            ),
+          );
+        } catch (e) {
+          setWhy(walletRefusal(profilePageWords.nearWallet, e));
+          throw e;
+        }
+        // an answer with nothing sent: the wallet isn't signed in on this page, so the next press signs it in
+        setSwitching(!sent);
+        if (!sent) {
+          setWhy(payWords.nothingSent);
+          throw new Error('no transaction');
+        }
         setAdded(payWords.addedFor(String(send), shortId(signer), shortId(sent.account)));
         setPhase('added');
         paid();
@@ -209,12 +226,15 @@ export function usePay(
         if (e instanceof WrongAccount) {
           setSwitching(true);
           setWhy(payWords.wrongAccount(e.connected, e.signer));
-        }
+        } else setWhy(walletRefusal(profilePageWords.nearWallet, e));
         throw e;
       }
-      setSwitching(false);
       const sent = sentBy(answer);
-      if (!sent) throw new Error('no transaction');
+      setSwitching(!sent);
+      if (!sent) {
+        setWhy(payWords.nothingSent);
+        throw new Error('no transaction');
+      }
       const p: PendingPay = {
         network: where.network,
         account: sent.account,
@@ -224,7 +244,9 @@ export function usePay(
       keepPending(p);
       setPending(p);
       await confirm(p);
-    } catch {
+    } catch (e) {
+      // the wallet's or the server's own words, kept when a step above already said why
+      setWhy((w) => w ?? (e instanceof Error && e.message ? e.message : null));
       setPhase('failed');
     }
   }, [where, from, pending, send, signer, switching, confirm, paid]);
