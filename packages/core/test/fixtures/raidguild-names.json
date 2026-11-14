@@ -255,7 +255,7 @@
     "subject": "eip155:100:0xce7298e5ef1ae8af0573edc2ebd03ab0f837e214",
     "verb": "named",
     "object": {
-      "value": "Elco (old wallet)"
+      "value": "Member (old wallet)"
     },
     "kind": "sourced",
     "evidence": [
@@ -530,7 +530,7 @@
     "subject": "eip155:100:0x14a81ca2dd1202de7a6190e16d81aa3e4116fdf0",
     "verb": "named",
     "object": {
-      "value": "Elco"
+      "value": "Member"
     },
     "kind": "sourced",
     "evidence": [
@@ -541,7 +541,7 @@
         "url": "https://gnosisscan.io/tx/0xab8595006b7ebca017a25ece3991df1d9f6b53427b6c4aa0cf1ecded2a78424a",
         "tx": "eip155:100:0xab8595006b7ebca017a25ece3991df1d9f6b53427b6c4aa0cf1ecded2a78424a",
         "proposal": "proposal:eip155:100:0xf02fd4286917270cb94fbc13a0f4e1ed76f7e986:122",
-        "quote": "Elco request to transfer shares to new address",
+        "quote": "Member request to transfer shares to new address",
         "note": "New mintShares recipient; #164 incoming Bard wearer, #180 and #202 payout corroboration. Proposal passed; action succeeded."
       }
     ],

@@ -2857,7 +2857,7 @@ export const registry: LabEntry[] = [
       {
         name: 'a name, at the title’s size',
         render: () => (
-          <InlineText label="Name" size="title" value="Elco Coel" onChange={() => {}} />
+          <InlineText label="Name" size="title" value="Your name" onChange={() => {}} />
         ),
       },
       {

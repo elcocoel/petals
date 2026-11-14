@@ -1,6 +1,6 @@
 // The tools' Config from the environment (.env.example): @petal/tools' configFromEnv, the one
 // mapping every door uses, so PETAL_FAKE=1 and the rest mean the same here as on the site. The CLI
-// adds only its --fake flag. It never reads ../.secrets/ itself: a key file is only ever a path
+// adds only its --fake flag. It never reads a keys folder itself: a key file is only ever a path
 // handed on to the tools.
 import { existsSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';

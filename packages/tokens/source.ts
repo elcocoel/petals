@@ -146,7 +146,7 @@ export const sizes = {
   'Figure height': 288,
   'Icon size': 18,
   /**
-   * The app's sizes (Elco, 10 Nov: "like the side of a professional software like Orca"): the landing's
+   * The app's sizes, as in professional desktop software: the landing's
    * sizes read as a page, and a tool needs to show forty minutes of work at a glance. One row of the side
    * panel, the panel open, and an icon beside UI text.
    */

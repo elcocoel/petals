@@ -4,7 +4,7 @@
 // 1Click dry quote (no money moves, FR-031). Nothing here signs: publishing with a wallet is T073,
 // so this stops at prepare_publish and its sign_url.
 //
-// The keys come from the environment only; this file never reads ../.secrets/. For example:
+// The keys come from the environment only; this file never reads a keys folder. For example:
 //   set -a; source /path/to/keys/near-ai.env; set +a
 //   PETAL_LIVE=1 PETAL_WRITER_KEY_FILE=/path/to/keys/petal-writer.testnet.json pnpm test:e2e
 // The map defaults to testnet (petals.testnet, petals-writer.testnet) when no PETAL_MAP_* is set.
