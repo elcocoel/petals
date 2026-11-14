@@ -109,6 +109,10 @@ Start with [contribution paths](https://petals.elementarycomplexity.com/docs/bui
 
 The [media page](https://petals.elementarycomplexity.com/docs/build-it-with-us/media-kit) links to the demo and system illustration.
 
+## NEAR HACKATHON
+
+Built for NEAR HACKATHON. The code was written with AI coding agents (Claude Code and Codex). Third-party libraries are listed in the package manifests and pnpm-lock.yaml.
+
 ## Licence
 
 [MIT](LICENSE).
