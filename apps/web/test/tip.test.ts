@@ -4,7 +4,9 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, test } from 'vitest';
 import { TipControl } from '../components/workspace/TipControl.tsx';
+import { Usage } from '../components/workspace/Usage.tsx';
 import type { Catalogue } from '../lib/composer-options.ts';
+import type { UsageView } from '../lib/profile-view.ts';
 import { tipLine, tipWords, typicalTurn } from '../lib/tip.ts';
 
 const model = (id: string, usd_per_turn: number | null) => ({
@@ -85,5 +87,17 @@ describe('the row', () => {
 
   test('is not there until Petals has said what it is', () => {
     expect(html({ percent: null as unknown as number })).toBe('');
+  });
+
+  test('in the lobby it sits in Usage, a slider in plain sight, whatever the usage says', () => {
+    const states: (UsageView | 'reading' | 'unread')[] = [
+      'reading',
+      'unread',
+      { rows: [], summary: '' },
+    ];
+    for (const usage of states) {
+      const card = renderToStaticMarkup(createElement(Usage, { usage, tip: props }));
+      expect(card).toContain('type="range"');
+    }
   });
 });
