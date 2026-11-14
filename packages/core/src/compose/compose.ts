@@ -400,15 +400,34 @@ export interface Cases {
 
 const instant = (s: State) => (s.at ? Date.parse(s.at) : (s.block ?? 0));
 
+/** A composed map's slots by key, each what's newest state, and the states each what is at: read once per map. */
+interface MapIndex {
+  bySlot: Map<string, Slot>;
+  newest: Map<string, State>;
+  subjectsAt: Set<string>;
+}
+const indexes = new WeakMap<Composition, MapIndex>();
+
+function indexOf(map: Composition): MapIndex {
+  const kept = indexes.get(map);
+  if (kept) return kept;
+  const index: MapIndex = {
+    bySlot: new Map(map.slots.map((s) => [slotKey(s), s])),
+    newest: new Map(),
+    subjectsAt: new Set(),
+  };
+  for (const s of map.slots) {
+    const newest = index.newest.get(s.what);
+    if (!newest || instant(s.state) > instant(newest)) index.newest.set(s.what, s.state);
+    index.subjectsAt.add(`${s.what}\u0000${stateKey(s.state)}`);
+  }
+  indexes.set(map, index);
+  return index;
+}
+
 /** Which of the four cases each fact of a layer would be on this map, as its author would publish it. */
 export function casesOf(map: Composition, doc: unknown, author: string): Cases {
-  const bySlot = new Map(map.slots.map((s) => [slotKey(s), s]));
-  const whats = new Map<string, State[]>();
-  const subjectsAt = new Set<string>();
-  for (const s of map.slots) {
-    whats.set(s.what, [...(whats.get(s.what) ?? []), s.state]);
-    subjectsAt.add(`${s.what}\u0000${stateKey(s.state)}`);
-  }
+  const { bySlot, newest: newestOf, subjectsAt } = indexOf(map);
   const out: Cases = {
     new_data: { whats: [] },
     new_moment: { states: [] },
@@ -421,20 +440,14 @@ export function casesOf(map: Composition, doc: unknown, author: string): Cases {
   const matchBy = new Set<string>();
   const differBy = new Set<string>();
   for (const f of factsOf(doc)) {
-    const states = whats.get(f.what);
-    if (!states) {
+    const newest = newestOf.get(f.what);
+    if (!newest) {
       newData.add(f.what);
       continue;
     }
     if (!subjectsAt.has(`${f.what}\u0000${stateKey(f.state)}`)) {
       const k = `${f.what}\u0000${stateKey(f.state)}`;
-      if (!newMoments.has(k)) {
-        const newest = states.reduce<State | null>(
-          (a, b) => (!a || instant(b) > instant(a) ? b : a),
-          null,
-        );
-        newMoments.set(k, { what: f.what, state: f.state, newest });
-      }
+      if (!newMoments.has(k)) newMoments.set(k, { what: f.what, state: f.state, newest });
       continue;
     }
     const slot = bySlot.get(slotOf(f));
