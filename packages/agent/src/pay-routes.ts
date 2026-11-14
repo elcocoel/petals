@@ -15,7 +15,9 @@
 //
 // With the credit contract (credit.ts), the person deposits into it instead: GET says the
 // contract and `method: "deposit"`, and POST, sent after a deposit or a withdrawal, checks that transaction
-// and sets the person's credit to what the wallet they signed in with holds in the contract now.
+// and sets the person's credit to what the wallet they signed in with holds in the contract now. It's the one way
+// money comes in: a plain transfer to Petals' account isn't credited, and a NEAR Intents top-up lands in the
+// contract as NEAR on the person's own NEAR account (wNEAR by ft_transfer_call, unwrapped there).
 import type { Price } from '@petal/core';
 import { TOOLS_VERSION } from '@petal/core';
 import {
@@ -171,9 +173,15 @@ export function payRoutes(d: PayDeps): Hono {
           "Couldn't read the transaction on NEAR, so nothing changed. Send it again.",
         );
       }
-      // with the contract, a deposit or a withdrawal in it; a plain transfer to Petals' account still counts
-      if (d.credit && t.receiver_id !== receiver)
-        return contractPaid(c, d.credit, me, account_id, t);
+      // with the contract, a deposit or a withdrawal in it, and nothing else: it's the one way money comes in
+      if (d.credit) {
+        if (t.receiver_id !== receiver) return contractPaid(c, d.credit, me, account_id, t);
+        return fail(
+          c,
+          'bad_input',
+          `Credit goes into ${d.credit.contract.contract} now: add funds there, as a deposit. A transfer to ${receiver} isn't credited.`,
+        );
+      }
       if (
         t.signer_id !== account_id ||
         t.receiver_id !== receiver ||
@@ -338,10 +346,41 @@ export function payRoutes(d: PayDeps): Hono {
           "refund_to is your address on the token's chain, where anything unswapped goes back",
         );
       }
+      // with the contract, the top-up lands there as NEAR, on the person's own NEAR account: the one way in
+      let into: { contract: string; payer: string; nearUsd: number } | undefined;
+      if (d.credit) {
+        if (d.credit.contract.network !== 'mainnet')
+          return fail(
+            c,
+            'bad_input',
+            'NEAR Intents pays into the credit contract on mainnet only.',
+          );
+        const payer = me.accounts[0];
+        if (!payer)
+          return fail(
+            c,
+            'unauthorised',
+            'Sign in with your NEAR account: a top-up lands on it, in the credit contract.',
+          );
+        const nearUsd = await price();
+        if (nearUsd === null)
+          return fail(
+            c,
+            'source_failed',
+            "Couldn't read NEAR's price, so nothing changed. Try again.",
+          );
+        into = { contract: d.credit.contract.contract, payer, nearUsd };
+      }
       let quote: Awaited<ReturnType<typeof depositQuote>>;
       try {
         quote = await depositQuote(
-          { usd, originAsset: origin_asset, refundTo: refund_to, recipient: PAY_RECEIVER.mainnet },
+          {
+            usd,
+            originAsset: origin_asset,
+            refundTo: refund_to,
+            recipient: PAY_RECEIVER.mainnet,
+            ...(into ? { into } : {}),
+          },
           d.oneClick,
         );
       } catch (e) {
@@ -386,6 +425,19 @@ export function payRoutes(d: PayDeps): Hono {
       return fail(c, 'source_failed', `NEAR Intents couldn't say: ${(e as Error).message}`);
     }
     const credited = s.credited;
+    // landed in the contract: the person's credit is what they hold there now
+    if (s.status === 'SUCCESS' && d.credit && row.quote.includes('"into"')) {
+      const nearUsd = await price();
+      if (nearUsd !== null)
+        await chainChat(
+          d.store,
+          d.credit,
+          me.person,
+          me.accounts,
+          nearUsd,
+          () => new Date(clock()),
+        ).catch(() => null);
+    }
     return ok(c, {
       top_up: {
         deposit_address: row.deposit_address,
@@ -409,10 +461,15 @@ type Settling = Pick<PayDeps, 'store' | 'oneClick' | 'price' | 'clock'>;
  */
 export async function settleTopUp(d: Settling, person: string, row: TopUpRow) {
   const clock = d.clock ?? Date.now;
-  const quote = JSON.parse(row.quote) as { deposit_memo: string | null };
+  const quote = JSON.parse(row.quote) as { deposit_memo: string | null; into?: unknown };
   const s = await swapStatus(row.deposit_address, quote.deposit_memo, d.oneClick);
   let credited: number | null = null;
-  if (s.status === 'SUCCESS') {
+  if (s.status === 'SUCCESS' && quote.into) {
+    // delivered into the credit contract: the person's own there, read back from it, never the ledger's
+    const usdIn = s.amount_out_usd !== null ? Number(s.amount_out_usd) : row.usd;
+    await d.store.topUp.settle(row.deposit_address, usdIn, new Date(clock()).toISOString());
+    credited = usdIn;
+  } else if (s.status === 'SUCCESS') {
     // the dollars it delivered, as USDC (six decimals), at the price it came in at
     const delivered =
       s.amount_out_usd !== null
