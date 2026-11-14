@@ -25,7 +25,6 @@ const FIRST_FLOWER = '9ac16c8917aa5ca579c8421a';
 /** The tools that reach outside the site, write a chain, or keep a person's own work (005): a public site refuses each. */
 const ON_THEIR_MACHINE = [
   'add_layer',
-  'compose_view',
   'find_target',
   'get_snapshot',
   'look_up',
@@ -156,6 +155,70 @@ describe('a public site holds no key and reads nothing outside', () => {
     expect(names).toContain('save_step');
     expect(names).toContain('render_flower');
     for (const n of ON_THEIR_MACHINE) expect(names).not.toContain(n);
+  });
+});
+
+describe('a view of layers kept on the site, made through its /mcp', () => {
+  const layer = {
+    petal: 'layer/v1',
+    about: 'near:mainnet:validators-test',
+    kind: 'measures',
+    measures: [{ name: 'proposals_written', unit: 'proposals', kind: 'count' }],
+    rows: [{ participant: 'figment.poolv1.near', measure: 'proposals_written', value: '9' }],
+    how: {
+      method: 'counted submission events by who sent them',
+      sources: [{ url: 'https://rpc.example' }],
+    },
+    from: [],
+    when: { as_of: '2026-11-09T00:00:00Z' },
+    standing: 'verified',
+  };
+  const call = async (app: Hono, args: Out): Promise<Out> => {
+    const res = await app.request('/mcp', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        accept: 'application/json, text/event-stream',
+      },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'tools/call',
+        params: { name: 'compose_view', arguments: args },
+      }),
+    });
+    const text = await res.text();
+    return (JSON.parse(text.includes('data:') ? (text.split('data:')[1] as string) : text) as Out)
+      .result;
+  };
+
+  test("a reading and the project's own layer make one view; another project's layer is not found", async () => {
+    const r = await rig();
+    const ctx = { ...r.ctx, config: { ...r.ctx.config, public: true } };
+    const app = httpApp(ctx);
+    const base = testFixture('two-participants');
+    const mine = ((await callTool('start_exploration', { question: 'who writes?' }, ctx)) as Out)
+      .link.url as string;
+    const other = ((await callTool('start_exploration', { question: 'someone else' }, ctx)) as Out)
+      .link.url as string;
+    const kept = (await callTool('keep_layer', { exploration: mine, layer }, ctx)) as Out;
+    expect(kept.error).toBeUndefined();
+
+    const view = await call(app, { base: base.sha256, layers: [kept.hash], exploration: mine });
+    expect(view.isError).toBeFalsy();
+    expect(view.structuredContent.measures).toEqual([
+      expect.objectContaining({ id: 'validator_stake_current_epoch', from: base.sha256 }),
+      expect.objectContaining({ id: 'proposals_written', standing: 'verified', from: kept.hash }),
+    ]);
+    // the view is held, so a flower can be drawn of it
+    expect(await ctx.store.get(view.structuredContent.sha256)).not.toBeNull();
+
+    for (const args of [{}, { exploration: other }]) {
+      const refused = await call(app, { base: base.sha256, layers: [kept.hash], ...args });
+      expect(refused.isError).toBe(true);
+      expect(refused.structuredContent.error.code).toBe('not_found');
+    }
+    expect(outside).toEqual([]);
   });
 });
 
