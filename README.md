@@ -13,7 +13,7 @@ An account becomes a petal. Its dimensions can show different data: voting power
 3. Open **Interpretation and sources**. The legend explains the current view and links its sources. In the default view, every petal has equal width: width carries no data. Height shows stake share on a linear scale. The remaining validators are grouped into an explicit “everyone else” petal. Your saved view can differ, so read the date and the legend before comparing petals.
 4. Read [how Petals fits together](https://petals.elementarycomplexity.com/docs/getting-started/how-petals-works), then inspect the [brain](https://petals.elementarycomplexity.com/docs/brain) and [schemas](https://petals.elementarycomplexity.com/docs/data-protocol). The reference pages render the repository's own files.
 
-Browsing needs no wallet or credit. Talking with Petals' hosted agent needs wallet sign-in and credit.
+Browsing needs no wallet or credit. Talking with Petals' hosted agent needs credit and a sign-up with a NEAR wallet. Ethereum and Solana wallets linked afterwards sign in to the same profile and pay through NEAR Intents.
 
 ## Run from a clean checkout
 
@@ -78,7 +78,7 @@ The API is a separate process. The Next.js site forwards API requests to `PETAL_
 
 ## Collective mapping
 
-The Power Map is built together by its people, and three counts per person show who's helping: facts they added first, facts they confirmed, and accounts that built on their work. A map is everything its authors published about one address: each publication is a version signed by its author's wallet and kept in an append-only record, and the map is composed from that record, fact by fact, the same way every time. The same value at the same block is one fact, credited to everyone who stated it; a different value is marked for anyone to check, and both stand. Nobody's work replaces another's, and anyone can recompute each author's counts from the record. See [collective mapping](https://petals.elementarycomplexity.com/docs/ideas/collective-mapping) and the [spec](specs/005-mapping-brain/composition.md).
+The Power Map is built together by its people, and three counts per person show who's helping: facts they added first, facts they confirmed, and accounts that built on their work. A map is everything its authors published about one address: each publication is a version signed by its author's wallet and kept in an append-only record, and the map is composed from that record, fact by fact, the same way every time. The same value at the same block is one fact, credited to everyone who stated it; a different value is marked for anyone to check, and both stand. Nobody's work replaces another's, and anyone can recompute each author's counts from the record. One press can carry many publications in one manifest (`manifest/v1`); Petals' base data on 267 maps is signed once by petals.near, checkable from each map's version history. See [collective mapping](https://petals.elementarycomplexity.com/docs/ideas/collective-mapping) and the [spec](specs/005-mapping-brain/composition.md).
 
 ## NEAR integrations
 
@@ -87,8 +87,10 @@ The Power Map is built together by its people, and three counts per person show 
 | NEAR AI Cloud         | Petals' hosted agent                                     | [Client](packages/agent/src/near-ai.ts)                                                                                    |
 | NEAR wallet / NEP-413 | Sign in by proving control of an account                 | [Verifier](packages/near/src/auth/nep413.ts)                                                                               |
 | NEAR Intents          | Top up from supported tokens and chains                  | [1Click adapter](packages/near/src/pay/one-click.ts), [payment routes](packages/agent/src/pay-routes.ts)                   |
-| petals.near           | Mainnet recipient for direct NEAR top-ups                | [Transfer verification](packages/near/src/pay/transfer.ts)                                                                 |
-| Credit contract       | Deposit, charge and withdrawal implementation on testnet | [Rust contract](packages/near/contract/src/lib.rs)                                                                         |
+| petals-credit.near    | Mainnet credit contract: payments go in as deposits, and a person can always withdraw theirs; upgradable by petals.near during this first wave | [Rust contract](packages/near/contract/src/lib.rs) |
+| petals-charger.near   | Can only charge the credit contract for the agent's answers | [Rust contract](packages/near/contract/src/lib.rs) |
+| petals-writer.near    | Can only write Petals' published map data                | [Publishing](packages/tools/src/publish-data.ts) |
+| petals.near           | Signed Petals' base data on 267 maps, once               | [Manifest schema](packages/core/schema/manifest.schema.json) |
 | NEAR Social           | Public profile data                                      | [Profile integration](apps/web/lib/near-social.ts)                                                                         |
 | Sputnik DAO           | Read NEAR DAO governance                                 | [Reader](packages/inputs/src/modules/sputnik-dao.ts)                                                                       |
 | People's own agents   | Join a person's work and return mapping jobs             | [Connection chapters](https://petals.elementarycomplexity.com/docs/connect-your-agent), [jobs](packages/agent/src/jobs.ts) |
