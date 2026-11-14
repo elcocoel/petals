@@ -108,6 +108,7 @@ import { Section } from '../components/ui/Section.tsx';
 import { SectionHead } from '../components/ui/SectionHead.tsx';
 import { SectionName } from '../components/ui/SectionName.tsx';
 import { Select } from '../components/ui/Select.tsx';
+import { Soon } from '../components/ui/Soon.tsx';
 import { SourceLink } from '../components/ui/SourceLink.tsx';
 import { Switch } from '../components/ui/Switch.tsx';
 import { Terminal } from '../components/ui/Terminal.tsx';
@@ -2219,6 +2220,23 @@ export const registry: LabEntry[] = [
             line={tipLine(0, null, null)}
             failed="tip_percent is off the scale"
           />
+        ),
+      },
+    ],
+  },
+  {
+    id: 'Soon',
+    group: 'Actions',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/ui/Soon.tsx',
+    states: [
+      {
+        name: 'a destination without an address: greyed, its tooltip while the pointer is on it',
+        render: () => (
+          <Soon side="right">
+            <span className="type-label">Leaderboard</span>
+          </Soon>
         ),
       },
     ],
