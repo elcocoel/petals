@@ -368,7 +368,30 @@ export function agentLinkRoutes(d: AgentLinkDeps): Hono {
         };
       }),
     );
-    return ok(c, { agents });
+    // and agents working in the person's own conversations with no agent key (petal.mjs start, opened by them,
+    // or a connector): each conversation an agent has named itself in, as the live hub last saw it, in memory
+    // only, so a restart forgets it until that agent's next call. A job's conversation shows as its worker's job.
+    const live = d.tools.live;
+    const jobs = new Set(held.map((j) => j.conversation).filter((x): x is string => !!x));
+    const working = live
+      ? (await store.exploration.listByOwner(owner, Number.MAX_SAFE_INTEGER)).flatMap((x) => {
+          const p = live.presenceOf(x.id);
+          if (!p?.client || jobs.has(x.id)) return [];
+          return [
+            {
+              name: p.client,
+              n: 1,
+              worker: null,
+              waiting: false,
+              last_seen: p.last_at,
+              can: null,
+              job: null,
+              conversation: { id: x.id, title: x.title ?? x.question },
+            },
+          ];
+        })
+      : [];
+    return ok(c, { agents: [...agents, ...working] });
   });
 
   return app;
