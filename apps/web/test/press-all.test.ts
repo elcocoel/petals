@@ -42,22 +42,28 @@ describe('one press over many maps', () => {
     expect(refused?.busy).toBe(true);
   });
 
-  test('the press first, with one line of what goes; the maps and why the rest stay, folded under it', () => {
+  test('one title in every state, the press beside it, what goes on one line, then the one step line; nothing folded', () => {
     const v = pressAllView(READ, 'ready', null);
     if (!v) throw new Error('a press with maps to publish');
-    expect(v.title).toBe(pressAllWords.what(2, 4));
-    expect(v.press).toBe(pressAllWords.press);
+    expect(v).toMatchObject({
+      title: pressAllWords.kept,
+      count: pressAllWords.count(2, 4),
+      press: pressAllWords.press,
+    });
     const html = renderToStaticMarkup(
       createElement(PublishPress, { view: v, onPublish: () => {} }),
     );
-    // the press comes before the folded list
-    expect(html.indexOf(pressAllWords.press)).toBeLessThan(html.indexOf('<details'));
-    expect(html.indexOf('<details')).toBeLessThan(html.indexOf('RaidGuild'));
-    expect(html).toContain('RaidGuild');
-    expect(html).toContain(pressAllWords.layers(3));
-    expect(html).toContain('marketing DAO');
-    expect(html).toContain(pressAllWords.why);
-    expect(html).toContain('Nothing new since your last version.');
+    // title, press, what goes, then where it stands
+    const at = (t: string) => html.indexOf(t);
+    expect(at(pressAllWords.kept)).toBeLessThan(at(pressAllWords.press));
+    expect(at(pressAllWords.press)).toBeLessThan(at(pressAllWords.count(2, 4)));
+    expect(at(pressAllWords.count(2, 4))).toBeLessThan(at(publishWords.sign));
+    expect(html).not.toContain('<details');
+    // the same title while it's read, with the line under it kept in place
+    expect(pressAllView(null, 'ready', null, false, { reading: true })).toMatchObject({
+      title: pressAllWords.kept,
+      count: '',
+    });
   });
 
   test('says beforehand when the wallet signs in first, a new QR by phone', () => {
@@ -77,7 +83,8 @@ describe('one press over many maps', () => {
     expect(pressAllView(READ, 'ready', null)?.step).toBeNull();
     const done = pressAllView(READ, 'published', pressAllWords.published(2));
     expect(done).toMatchObject({
-      title: pressAllWords.what(2, 4),
+      title: pressAllWords.kept,
+      count: pressAllWords.count(2, 4),
       press: pressAllWords.press,
       step: 'This press: 2 versions.',
       busy: true,

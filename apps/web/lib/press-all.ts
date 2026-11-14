@@ -17,9 +17,9 @@ import {
 export const pressAllWords = {
   /** the press's title before the read says how much */
   kept: 'What you’ve kept',
-  /** the one line of what goes, at the top of the press: one version on each map */
-  what: (maps: number, layers: number) =>
-    `What you’ve kept: ${maps === 1 ? '1 map' : `${maps} maps`}, ${layers === 1 ? '1 layer' : `${layers} layers`}`,
+  /** what goes, on its own line under the title: one version on each map */
+  count: (maps: number, layers: number) =>
+    `${maps === 1 ? '1 map' : `${maps} maps`}, ${layers === 1 ? '1 layer' : `${layers} layers`}`,
   press: 'Publish all',
   /** the server's prepare, seconds over many maps */
   preparing: (n: number) => (n === 1 ? 'Preparing 1 version…' : `Preparing ${n} versions…`),
@@ -68,6 +68,7 @@ export type PressAllRead = { reading: true } | { unread: string } | { done: true
 // One card in every state: the same title, the press (waiting when it can't be pressed) and only the step changing.
 const line = (step: string, running = false): PublishPressView => ({
   title: pressAllWords.kept,
+  count: '',
   press: pressAllWords.press,
   step,
   running,
@@ -92,12 +93,13 @@ export function pressAllView(
 ): PublishPressView | null {
   if (phase === 'published')
     return {
-      title: read
-        ? pressAllWords.what(
+      title: pressAllWords.kept,
+      count: read
+        ? pressAllWords.count(
             read.maps.length,
             read.maps.reduce((n, m) => n + m.layers, 0),
           )
-        : pressAllWords.kept,
+        : '',
       press: pressAllWords.press,
       step: said,
       running: false,
@@ -113,7 +115,8 @@ export function pressAllView(
   if (read.maps.length === 0) return line(pressAllWords.none);
   const layers = read.maps.reduce((n, m) => n + m.layers, 0);
   return {
-    title: pressAllWords.what(read.maps.length, layers),
+    title: pressAllWords.kept,
+    count: pressAllWords.count(read.maps.length, layers),
     press: pressAllWords.press,
     step: stepOf(phase, said, signsIn, pressAllWords.preparing(read.maps.length)),
     running: pressRuns(phase),

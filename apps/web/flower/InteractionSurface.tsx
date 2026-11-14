@@ -439,8 +439,8 @@ export function InteractionSurface({
         />
         {state.mode === 'mapping' && (
           // the mapping state, under the conversation and right above the composer's switch: the press last,
-          // where the eye and the hand already are; it scrolls in its own room, at most half the box
-          <div className="max-h-1/2 shrink-0 overflow-y-auto border-t border-hairline">
+          // where the eye and the hand already are; it scrolls in its own room, at most three quarters of the box
+          <div className="max-h-3/4 shrink-0 overflow-y-auto border-t border-hairline">
             <MappingBox
               view={mapping}
               press={publishing.view}
