@@ -4,6 +4,7 @@
 // its underline when the tile is pointed at (link.card). Without an `href` the tile is a slot waiting for
 // its address: it shows, but goes nowhere.
 import type { ReactNode } from 'react';
+import { outside } from '../../lib/outside.ts';
 import { Icon } from './Icon.tsx';
 
 export function PlateLink({
@@ -35,7 +36,13 @@ export function PlateLink({
       </div>
     );
   return (
-    <a href={href} data-b="link" data-kind="card" className="flex h-full flex-col no-underline">
+    <a
+      href={href}
+      {...outside(href)}
+      data-b="link"
+      data-kind="card"
+      className="flex h-full flex-col no-underline"
+    >
       {box}
       {action && (
         <span className="mt-block-gap inline-flex items-center gap-space-8 type-label">

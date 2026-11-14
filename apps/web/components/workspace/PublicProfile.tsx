@@ -21,6 +21,7 @@ import { Badge } from '../ui/Badge.tsx';
 import { Mono } from '../ui/Mono.tsx';
 import { SectionName } from '../ui/SectionName.tsx';
 import { Contribution } from './Contribution.tsx';
+import { DeclaredLink } from './DeclaredLink.tsx';
 import { Published } from './Published.tsx';
 
 export function PublicProfile({
@@ -72,7 +73,7 @@ export function PublicProfile({
               <span className="w-1/5 shrink-0 type-caption text-muted wrap-anywhere">
                 {serviceName(service)}
               </span>
-              <span className="min-w-0 flex-1 type-label wrap-anywhere">{value}</span>
+              <DeclaredLink service={service} value={value} />
               <Badge>{profileWords.declared}</Badge>
             </li>
           ))}

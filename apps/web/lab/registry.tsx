@@ -119,6 +119,7 @@ import { AccountMenu } from '../components/workspace/AccountMenu.tsx';
 import { Claims } from '../components/workspace/Claims.tsx';
 import { Contribution } from '../components/workspace/Contribution.tsx';
 import { Conversations } from '../components/workspace/Conversations.tsx';
+import { DeclaredLink } from '../components/workspace/DeclaredLink.tsx';
 import { FlowerShelf } from '../components/workspace/FlowerShelf.tsx';
 import { Funds } from '../components/workspace/Funds.tsx';
 import { MappingBox } from '../components/workspace/MappingBox.tsx';
@@ -3261,6 +3262,27 @@ export const registry: LabEntry[] = [
         ),
       },
       { name: 'still reading', render: () => <Contribution contribution="reading" /> },
+    ],
+  },
+  {
+    id: 'DeclaredLink',
+    group: 'The workspace',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/workspace/DeclaredLink.tsx',
+    states: [
+      {
+        name: 'a bare host, as https',
+        render: () => <DeclaredLink service="website" value="www.elementarycomplexity.com" />,
+      },
+      {
+        name: 'a handle, on its service',
+        render: () => <DeclaredLink service="github" value="elcocoel" />,
+      },
+      {
+        name: 'not an address: text',
+        render: () => <DeclaredLink service="website" value="ask me" />,
+      },
     ],
   },
   {

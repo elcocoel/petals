@@ -3,6 +3,7 @@
 // action line of a note box (Figma's "ASK WHY", 66:2231).
 import Link from 'next/link';
 import type { ReactNode } from 'react';
+import { outside } from '../../lib/outside.ts';
 import { Icon, type IconName } from './Icon.tsx';
 
 const VARIANTS = {
@@ -54,7 +55,14 @@ export function TextLink({
     );
   }
   return (
-    <a href={href} rel={rel} target={target} data-b="link" className={look}>
+    <a
+      href={href}
+      {...outside(href)}
+      {...(rel ? { rel } : {})}
+      {...(target ? { target } : {})}
+      data-b="link"
+      className={look}
+    >
       {inner}
     </a>
   );

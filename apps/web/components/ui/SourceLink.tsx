@@ -16,7 +16,7 @@ export function SourceLink({
     <a
       href={href}
       target="_blank"
-      rel="noreferrer"
+      rel="noopener noreferrer"
       title={`${name}: ${href}`}
       aria-label={`${name}, an outside source`}
       data-b="link"

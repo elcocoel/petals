@@ -1,5 +1,7 @@
 // T168: which model answered, in the words thread-view.ts chose, kept quiet in mono. With a summary, the
 // note folds under it, with the side panel's chevron, as the steps do.
+
+import { outside } from '../../lib/outside.ts';
 import type { Segment } from '../../lib/thread-view.ts';
 import { Icon } from '../ui/Icon.tsx';
 
@@ -27,7 +29,7 @@ function Note({ line }: { line: Segment[] }) {
         if (s.t === 'a') {
           return (
             // biome-ignore lint/suspicious/noArrayIndexKey: a line is whole, it never reorders
-            <a key={i} href={s.href}>
+            <a key={i} href={s.href} {...outside(s.href)}>
               {s.v}
             </a>
           );
