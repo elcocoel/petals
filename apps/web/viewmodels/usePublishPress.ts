@@ -1,28 +1,27 @@
 // The publish press's state for one map (lib/publish-press.ts): what the person would publish there, and
-// the one press. It prepares the publication in the name of their first wallet, has that wallet sign its two
-// lines, and sends the proof. When it lands, `joined` says which publication joined which map, so the map
-// and Information read the map again and mark it.
+// the one press. It prepares the publication in the name of the profile's NEAR wallet (nearSigner, as the press
+// over many maps does), has that wallet sign its two lines, and sends the proof. When it lands, `joined` says
+// which publication joined which map, so the map and Information read the map again and mark it.
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   type PublishableData,
   preparePublication,
   publishPublication,
   readPublishable,
-  readWallets,
+  readSession,
 } from '../lib/agent-client.ts';
 import { casesLine, countsOf, type Joined, joinedOf } from '../lib/mapping.ts';
-import type { ProvenWallet } from '../lib/profile-view.ts';
 import { asksSignIn, signPublication } from '../lib/publication-sign.ts';
 import {
+  nearSigner,
   type PublishPhase,
   publishPressView,
   publishWords,
-  signerOf,
 } from '../lib/publish-press.ts';
 
 export function usePublishPress(map: string | null) {
   const [data, setData] = useState<PublishableData | null>(null);
-  const [wallets, setWallets] = useState<ProvenWallet[]>([]);
+  const [me, setMe] = useState<Awaited<ReturnType<typeof readSession>>>(null);
   const [phase, setPhase] = useState<PublishPhase>('ready');
   const [said, setSaid] = useState<string | null>(null);
   const [joined, setJoined] = useState<Joined | null>(null);
@@ -30,9 +29,9 @@ export function usePublishPress(map: string | null) {
   const [signsIn, setSignsIn] = useState(false);
   useEffect(() => {
     let gone = false;
-    void readWallets()
+    void readSession()
       .then((got) => {
-        if (!gone) setWallets(got ?? []);
+        if (!gone) setMe(got);
       })
       .catch(() => {});
     return () => {
@@ -55,7 +54,7 @@ export function usePublishPress(map: string | null) {
       gone = true;
     };
   }, [map]);
-  const signer = useMemo(() => signerOf(wallets), [wallets]);
+  const signer = useMemo(() => (me ? nearSigner(me) : null), [me]);
   const pressable = Boolean(map && signer && data?.layers?.length);
   useEffect(() => {
     if (!(pressable && signer) || phase === 'signing') return;
