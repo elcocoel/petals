@@ -22,9 +22,9 @@ A button, a field, a menu, a floating box, a badge: each lives once, in `apps/we
 
 ## TypeScript end to end, and a schema for every shape
 
-The site, the server, the tools, the command line and the scripts are TypeScript, type-checked together on every check; Node runs the scripts as TypeScript directly.
+The site, the server, the tools, the command line and the Node scripts are TypeScript, type-checked together on every check; Node runs the scripts as TypeScript directly.
 
-Every kind of data Petals keeps or shares is a JSON Schema with a versioned id. Each is pinned to a real example by its hash, every example must validate, and a version once pinned keeps its schema, so old documents stay readable. See [the data protocol](/docs/data-protocol).
+Every format in the data protocol is a JSON Schema with a versioned id. Each is pinned to a real example by its hash, every example must validate, and a version once pinned keeps its schema, so old documents stay readable. See [the data protocol](/docs/data-protocol).
 
 ## One renderer for every petal
 

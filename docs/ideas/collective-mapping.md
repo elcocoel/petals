@@ -9,16 +9,16 @@ The Power Map is a collective construction: its people build it together, and no
 ## Three counts per person
 
 - **Facts you added first:** new data, new moments and new wallets the map didn't have until you published them.
-- **Facts you confirmed:** facts someone had published that you read again and matched, independently.
+- **Facts you confirmed:** facts someone had published that you published too, with the same value.
 - **Accounts that built on your work:** each other account that built on a layer of yours or reused it. These are your points.
 
-RaidGuild's map shows it today: two authors, Petals' own mapping, imported and unsigned, and petals.near, whose names for RaidGuild's accounts were signed by its wallet. Each has its own counts.
+RaidGuild's map shows it today: one author, petals.near, whose wallet signed names for RaidGuild's accounts and a version built on Petals' own imported mapping.
 
 Results read from a chain are deterministic. So the question isn't whose map wins: it's how layers from different people add up to a fuller map.
 
 ## Publishing
 
-What you keep about a map stays private until you publish it. Publishing signs one of your versions with your own wallet: its layers, by their hashes, and the version it came from. It moves no funds and costs nothing, like signing in. Each press is an entry in a record that's only ever added to, in the order the server received it.
+What you keep about a map stays private until you publish it. Publishing signs your versions with your own wallet, one press for any number of maps: each version's layers, by their hashes, and the version it came from. It moves no funds and costs nothing, like signing in. Each version is an entry in a record that's only ever added to, in the order the server received it.
 
 ## How layers meet
 
@@ -42,6 +42,6 @@ Credit is kept per fact, for every author who stated it, in the order they publi
 - **Copying a popular layer.** A use's point goes only to the authors who published the layer before that use. A copy earns a confirmation, never earlier points.
 - **Many wallets, one person.** Named, not solved. Each account counts once per layer, and its own use never counts.
 - **Claims that disagree,** such as two names for one account. A claim is an interpretation, not a chain read: all are shown side by side, and none wins. A fuller treatment comes later.
-- **What came before.** What Petals loaded before the record began is one import by `mapping.petals.near`, said plainly as imported and unsigned, never shown as signed.
+- **What came before.** What Petals loaded before the record began is one import by `mapping.petals.near`, imported and unsigned; on a map where petals.near has signed a version over it, the import counts as petals.near's earlier version.
 
 See [publication/v1](/docs/data-protocol/schemas/publication-v1) and [credit/v1](/docs/data-protocol/schemas/credit-v1) for the fields.
