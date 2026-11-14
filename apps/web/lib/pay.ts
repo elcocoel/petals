@@ -132,7 +132,8 @@ export function sentBy(outcome: unknown): { hash: string; account: string } | nu
  */
 export function payOffer(usd: string, nearUsd: number | null, waiting: boolean) {
   const priced = nearUsd !== null && nearUsd > 0;
-  const amount = Number(usd);
+  // any size, as typed: '5,000' too
+  const amount = Number(usd.replace(/,/g, ''));
   const send = priced ? nearFor(amount, nearUsd) : PAY_NEAR;
   return {
     /** the NEAR the press sends; null while there's no amount to send */

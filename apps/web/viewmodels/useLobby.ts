@@ -23,7 +23,7 @@ import {
 import { contributionView } from '../lib/contribution-view.ts';
 import { evmWallets } from '../lib/evm-wallet.ts';
 import { shortId } from '../lib/flower-view.ts';
-import { fundsWords } from '../lib/lobby-view.ts';
+import { fundsWords, nearExact } from '../lib/lobby-view.ts';
 import { money, moneyWords, payWords, sentBy, yoctoOf } from '../lib/pay.ts';
 import { PHONE } from '../lib/phone-wallet.ts';
 import {
@@ -130,7 +130,7 @@ export function useLobby() {
   const [took, setTook] = useState<string | null>(null);
   /** which press spoke last: the panel's one line is its */
   const [last, setLast] = useState<'add' | 'withdraw' | null>(null);
-  const usdNow = Number(pay.usd) || 0;
+  const usdNow = Number(pay.usd.replace(/,/g, '')) || 0;
   const takeNear = nearUsd && nearUsd > 0 ? Math.floor((usdNow / nearUsd) * 1000) / 1000 : 0;
   const takeYocto = takeNear > 0 ? yoctoOf(takeNear) : null;
   const held = funds.held;
@@ -287,6 +287,7 @@ export function useLobby() {
     quote,
     menu: { open: menuOpen, toggle: toggleMenu, close: closeMenu },
     money: {
+      held: funds.held !== null ? nearExact(funds.held) : null,
       // the one amount both presses act on
       amount: pay.amount ? { ...pay.amount, label: fundsWords.amount } : null,
       add: {
