@@ -90,11 +90,17 @@ describe('the map', () => {
     expect(none.views).toBeUndefined();
     expect(none.views_total).toBe(1);
     expect(none.hint).toMatch(/pass q/);
-    // a view nobody named is still found by its reading and reader, and says its maker isn't recorded
+    // a view nobody named is still found by its reading and reader
     const sha = found.views[0].view_url.split('/d/')[1];
-    await privateStore(r.ctx.config).draft.label(sha, { name: null, made_by: null });
+    await privateStore(r.ctx.config).draft.label(sha, {
+      name: null,
+      made_by: 'mapping.petals.near',
+    });
     const all = await run('list_flowers', { q: 'moloch' });
-    expect(all.views[0]).toMatchObject({ name: null, made_by: 'not recorded' });
+    expect(all.views[0]).toMatchObject({ name: null, snapshot: MOLOCH });
+    // and one with no maker (drawn in a conversation, never published) isn't on the shared map
+    await privateStore(r.ctx.config).draft.label(sha, { name: null, made_by: null });
+    expect((await run('list_flowers', { q: 'moloch' })).views ?? []).toHaveLength(0);
   });
 
   test('find_target answers a name from the map, with its stored snapshot, so no fresh read is needed', async () => {
@@ -141,6 +147,29 @@ describe('the map', () => {
     // the agent's relations tools still read every stored reading
     const all = await run('relations_overview', { kind: 'holdings', limit: 5000 });
     expect(all.groups.map((g: Out) => g.snapshot_sha256)).toContain(kept);
+  });
+
+  test("a flower drawn in someone's conversation stays off the shared map and its roads; its short link opens", async () => {
+    await drawnView('Founders Guild v1', 'mapping.petals.near');
+    // a newer read of the DAO, drawn in a conversation (no maker: nobody published it, Petals didn't load it)
+    const s = await loadSnapshot(r.ctx, MOLOCH);
+    const later = { ...s, snapshot: { ...s.snapshot, as_of: '2030-01-01T00:00:00Z' } };
+    const kept = (await r.ctx.store.put(later as never)).sha256;
+    const proposed = await run('propose_spec', { network: 'moloch-v1', sha256: kept });
+    const drawn = await run('render_flower', { spec: proposed.spec });
+    expect((await privateStore(r.ctx.config).draft.get(drawn.spec_sha256))?.made_by).toBeNull();
+    const app = new Hono();
+    app.route(
+      '/',
+      httpApp(r.ctx, { gate: { subjectOf: async () => null, refuseForeign: () => null } }),
+    );
+    const map = (await (await app.request('/api/v1/map')).json()) as Out;
+    expect(map.views.map((v: Out) => v.snapshot)).toEqual([MOLOCH]);
+    expect(map.groups.map((g: Out) => g.snapshot_sha256)).not.toContain(kept);
+    expect((await run('list_flowers', { q: 'moloch' })).views).toHaveLength(1);
+    // whoever has its link still opens it
+    const link = await app.request(`/d/${drawn.spec_sha256}`);
+    expect(link.status).toBe(302);
   });
 
   test('GET /api/v1/map/views lists the same views with their pictures, without readings', async () => {

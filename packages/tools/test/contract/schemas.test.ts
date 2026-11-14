@@ -57,7 +57,14 @@ describe('inputs and outputs match their schemas (near-validators fixture)', () 
     await run('compute_figures', { sha256: f.sha256, measure: 'validator_stake_current_epoch' });
     const v = await run('validate_spec', { spec: f.spec, interpretation: INTERPRETATION });
     expect(v.valid).toBe(true);
-    await run('render_flower', { spec: f.spec, include_svg: true });
+    const drawn = (await run('render_flower', { spec: f.spec, include_svg: true })) as {
+      spec_sha256: string;
+    };
+    // on the shared map, as Petals' loads put a view there
+    await privateStore(r.ctx.config).draft.label(drawn.spec_sha256, {
+      name: null,
+      made_by: 'mapping.petals.near',
+    });
     const prep = await run('prepare_publish', { entry: f.draft });
     const proof = r.signer.sign({
       message: prep.message as string,

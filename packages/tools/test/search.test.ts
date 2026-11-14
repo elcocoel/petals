@@ -198,7 +198,7 @@ describe('search_petals', () => {
     const drawn = (await callTool('render_flower', { spec: proposed.spec as Spec }, r.ctx)) as Out;
     await privateStore(r.ctx.config).draft.label(drawn.spec_sha256, {
       name: 'Founders Guild v1',
-      made_by: null,
+      made_by: 'mapping.petals.near',
     });
     const [view] = await mapViews(r.ctx);
     const about = view?.map as string;
