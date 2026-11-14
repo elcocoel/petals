@@ -82,11 +82,12 @@ describe('api', () => {
 });
 
 describe('the seam', () => {
-  test('the proxy runs on exactly the paths the site forwards', () => {
+  test('the proxy runs on exactly the paths the site forwards, and on any page opened with an invite', () => {
     const proxy = readFileSync(join(import.meta.dirname, '../proxy.ts'), 'utf8');
-    const matcher = /matcher:\s*\[([^\]]*)\]/.exec(proxy)?.[1] ?? '';
-    const listed = [...matcher.matchAll(/'([^']+)'/g)].map((m) => m[1]);
-    expect(listed).toEqual(FORWARDED);
+    const matcher = /matcher:\s*\[([\s\S]*?)\n {2}\],/.exec(proxy)?.[1] ?? '';
+    const paths = matcher.split('\n').filter((l) => /^\s*'[^']+',$/.test(l));
+    expect(paths.map((l) => l.trim().slice(1, -2))).toEqual(FORWARDED);
+    expect(matcher).toContain("{ source: '/:path*', has: [{ type: 'query', key: 'invite' }] }");
   });
 
   test('the server is on this machine unless the site is told where', () => {
