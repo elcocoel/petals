@@ -22,9 +22,20 @@ const READ = {
 };
 
 describe('one press over many maps', () => {
-  test('a person with nothing anywhere to publish meets no press', () => {
+  test('a person with nothing anywhere to publish meets no press, only a line saying so', () => {
     expect(pressAllView(null, 'ready', null)).toBeNull();
-    expect(pressAllView({ ...READ, maps: [] }, 'ready', null)).toBeNull();
+    const none = pressAllView({ ...READ, maps: [] }, 'ready', null);
+    expect(none?.across).toBe(pressAllWords.none);
+    expect(none?.press).toBeNull();
+  });
+
+  test('a slow read says it is reading, and a refused one says why, never looking empty', () => {
+    const reading = pressAllView(null, 'ready', null, false, { reading: true });
+    expect(reading?.across).toBe(pressAllWords.reading);
+    expect(reading?.press).toBeNull();
+    const refused = pressAllView(null, 'ready', null, false, { unread: 'Not signed in.' });
+    expect(refused?.across).toBe(pressAllWords.unread('Not signed in.'));
+    expect(refused?.press).toBeNull();
   });
 
   test('every map that goes, with its layers, then the press, then why the rest stay', () => {
