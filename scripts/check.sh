@@ -6,11 +6,13 @@
 
 cd "$(dirname "$0")/.." || exit 1
 
-# A login shell finds ~/.local/bin/node (v22) first, so load nvm and use .nvmrc.
+# With nvm, use .nvmrc's Node; without it, the Node already on PATH. Node 24 is required either way (below).
 export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
-# shellcheck disable=SC1091
-source "$NVM_DIR/nvm.sh"
-nvm use >/dev/null || exit 1
+if [ -s "$NVM_DIR/nvm.sh" ]; then
+  # shellcheck disable=SC1091
+  source "$NVM_DIR/nvm.sh"
+  nvm use >/dev/null || exit 1
+fi
 
 set -euo pipefail
 
