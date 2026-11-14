@@ -17,6 +17,7 @@ import {
   readMyCredit,
   readMyUsage,
   readWallets,
+  removeMyWallet,
   sessionClient,
 } from '../lib/agent-client.ts';
 import { contributionView } from '../lib/contribution-view.ts';
@@ -206,6 +207,20 @@ export function useLobby() {
       setAdding({ kind: 'failed', why: why(e) });
     }
   }, []);
+  /** What the last Disconnect did, or the server's words when it didn't. */
+  const [removed, setRemoved] = useState<string | null>(null);
+  /** Takes a linked Ethereum or Solana wallet off the profile, and says so. */
+  const removeWallet = useCallback(async (row: WalletRow) => {
+    if (!row.caip10) return;
+    setRemoved(null);
+    try {
+      const { wallets: now } = await removeMyWallet(row.caip10);
+      setWallets(walletRows(now));
+      setRemoved(profilePageWords.disconnected(row.shown));
+    } catch (e) {
+      setRemoved(why(e));
+    }
+  }, []);
   /** Stops waiting for a wallet that doesn't answer, or puts the pick away; a later answer is left unused. */
   const stopAdding = useCallback(() => {
     attempt.current += 1;
@@ -231,6 +246,8 @@ export function useLobby() {
     adding,
     addWallet: (kind: WalletKind, pick?: string) => void addWallet(kind, pick),
     stopAdding,
+    removeWallet: (row: WalletRow) => void removeWallet(row),
+    removed,
     claims,
     conversations: bus.rows,
     contribution: typeof credit === 'string' ? credit : contributionView(credit),

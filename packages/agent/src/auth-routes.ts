@@ -584,6 +584,30 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
     return ok(c, { wallets: await walletsOf(person) });
   });
 
+  // An Ethereum or Solana wallet the person linked, taken off them, by its CAIP-10 as GET /api/v1/me lists it: its
+  // binding goes, so it no longer signs in to this profile or pays for it. The NEAR account is the profile itself
+  // and stays. This is Petals' private table only: a link already published stays in the public record, and the
+  // profile's next press leaves it out.
+  app.delete('/api/v1/me/wallets/:caip10', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    if (!originAllowed(c)) return badOrigin(c);
+    const session = await sessionOf(c);
+    if (!session || !isPerson(session.subject)) return fail(c, 'unauthorised', 'Not signed in.');
+    const person = session.subject;
+    const caip10 = c.req.param('caip10');
+    const wallet = (await walletsOf(person)).find((w) => w.caip10 === caip10);
+    if (!wallet) return fail(c, 'not_found', 'That wallet isn’t connected to your account.');
+    if (wallet.network !== 'eip155' && wallet.network !== 'solana') {
+      return fail(
+        c,
+        'bad_input',
+        'Your NEAR account is your profile, so it can’t be disconnected.',
+      );
+    }
+    await store.walletBinding.unbind(person, d.cipher().index(wallet.caip10));
+    return ok(c, { wallets: await walletsOf(person) });
+  });
+
   const gate: RouteAuth = {
     subjectOf: async (c) => (await sessionOf(c))?.subject ?? null,
     callerOf: async (c) => {

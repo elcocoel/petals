@@ -15,6 +15,10 @@ export const profilePageWords = {
   /** Under a wallet: when it signed. */
   provedOn: (date: string) => `Signed in on ${date}`,
   walletsNote: 'Each one signed a message with its own key, so it’s proven yours.',
+  /** On an Ethereum or Solana wallet's row: takes it off the profile (the NEAR account is the profile). */
+  disconnect: 'Disconnect',
+  /** Once it's off. */
+  disconnected: (shown: string) => `Disconnected ${shown}. It no longer signs in to this profile.`,
   /** The Wallets widget's one action: adding more wallets. */
   addWallet: 'Add a wallet',
   /** The two ways to add one (buttons say Connect; /make's door says the same). */
@@ -131,6 +135,8 @@ export interface WalletRow {
   chain: string;
   /** "Signed in on 11 Nov 2026" */
   when: string;
+  /** An Ethereum or Solana wallet's CAIP-10, for Disconnect; absent for NEAR, which is the profile. */
+  caip10?: string;
 }
 
 /** A proven wallet's chain, by name, from the network the server names it on. */
@@ -151,6 +157,7 @@ export function walletRows(wallets: readonly ProvenWallet[]): WalletRow[] {
       : shownAccount(w.account_id)),
     chain: walletChain(w.network),
     when: profilePageWords.provedOn(dateLabel(w.proved_at)),
+    ...((w.network === 'eip155' || w.network === 'solana') && w.author ? { caip10: w.author } : {}),
   }));
 }
 

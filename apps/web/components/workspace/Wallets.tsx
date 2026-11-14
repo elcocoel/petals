@@ -4,7 +4,9 @@
 // answer, it says so. Its one action, Add a wallet, asks another wallet to sign, as signing in does. With
 // a phone first (any phone wallet, by a QR code it shows here until the phone says yes) and the wallets in this
 // browser after, it asks which, each by its own name and icon; while a wallet is asked it names it, with a way
-// to stop waiting; what the wallet answers, a no included, shows plainly.
+// to stop waiting; what the wallet answers, a no included, shows plainly. An Ethereum or Solana wallet's row has
+// Disconnect, which takes it off the profile, and what the server said shows under the list; the NEAR account is
+// the profile and has none.
 // Props only: viewmodels/useLobby.ts reads it and adds. Words from lib/profile-view.ts.
 import {
   type AddWalletPhase,
@@ -31,6 +33,8 @@ export function Wallets({
   adding = { kind: 'ready' },
   onAdd,
   onStop,
+  onRemove,
+  removed = null,
   logos,
 }: {
   wallets: WalletRow[] | 'reading' | 'unread';
@@ -39,6 +43,10 @@ export function Wallets({
   onAdd?: (kind: WalletKind, pick?: string) => void;
   /** Stops waiting, or puts the pick away. */
   onStop?: () => void;
+  /** Takes a linked Ethereum or Solana wallet off the profile; absent, no Disconnect. */
+  onRemove?: (row: WalletRow) => void;
+  /** What the last Disconnect did, or why it didn't. */
+  removed?: string | null;
   /** Each chain's logo, on its button. */
   logos?: WalletLogos;
 }) {
@@ -69,11 +77,17 @@ export function Wallets({
                   </span>
                   <Badge>{w.chain}</Badge>
                   <Badge>{profilePageWords.proven}</Badge>
+                  {onRemove && w.caip10 && (
+                    <Button variant="quiet" onClick={() => onRemove(w)}>
+                      {profilePageWords.disconnect}
+                    </Button>
+                  )}
                 </div>
                 <span className="type-caption text-muted">{w.when}</span>
               </li>
             ))}
           </ul>
+          {removed && <p className="my-0 type-body">{removed}</p>}
           <p className="my-0 type-caption text-muted">{profilePageWords.walletsNote}</p>
         </>
       )}

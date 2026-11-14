@@ -650,6 +650,13 @@ export function tables(db: Db) {
         db.get<WalletBindingRow>('SELECT * FROM wallet_binding WHERE caip10_hash = ?', hash),
       ofPerson: (person: string) =>
         db.all<WalletBindingRow>('SELECT * FROM wallet_binding WHERE person = ?', person),
+      /** Takes this person's wallet off them; false when it isn't theirs. */
+      unbind: async (person: string, hash: string) =>
+        (await db.run(
+          'DELETE FROM wallet_binding WHERE person = ? AND caip10_hash = ?',
+          person,
+          hash,
+        )) === 1,
     },
 
     session: {
