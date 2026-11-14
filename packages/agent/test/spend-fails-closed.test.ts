@@ -9,7 +9,7 @@ import { type Budget, DEFAULT_BUDGET, type LlmClient, type LlmCompletion } from 
 import { LlmCallError } from '../src/near-ai.ts';
 import { HAND_TRANSCRIPT, recordedClient } from '../src/recorded.ts';
 import { createAgentRoutes } from '../src/routes.ts';
-import { LEDGER_DOWN, SKILL_HINT, startRun } from '../src/run.ts';
+import { LEDGER_DOWN, STOPPED_AT, startRun } from '../src/run.ts';
 import { fileRunStore } from '../src/runs.ts';
 import {
   collect,
@@ -63,7 +63,7 @@ describe('the ledger fails closed', () => {
     // the operator gets the cause; the person gets the plain words
     expect(vi.mocked(console.error).mock.calls.flat().join()).toMatch(/disk I\/O error/);
     expect(names(es)).toEqual(['run', 'stage', 'error', 'done']);
-    expect(errors(es)).toEqual([{ code: 'internal', message: LEDGER_DOWN, hint: SKILL_HINT }]);
+    expect(errors(es)).toEqual([{ code: 'internal', message: LEDGER_DOWN }]);
     expect(JSON.stringify(es)).not.toMatch(/disk I\/O/);
     expect(es.at(-1)).toMatchObject({ event: 'done', data: { turns: 0, cost_usd: 0 } });
   });
@@ -200,7 +200,7 @@ describe('reserve then settle', () => {
         }),
     };
     const es = await chat(llm, ledger, { wallSeconds: 0.01 });
-    expect(errors(es)[0]?.message).toMatch(/ran past/);
+    expect(errors(es)[0]?.message).toBe(STOPPED_AT.time);
     expect(await ledger.spentToday()).toBeCloseTo(DEFAULT_BUDGET.usdPerChat, 9);
     answer({
       model: 'm',

@@ -138,6 +138,14 @@ export const MAX_TOOL_CALLS_PER_ROUND = 8;
 export const SKILL_HINT =
   "Bring your own agent: this site's /skill.md says how, and /docs/connect-your-agent has the prompt to paste. Then ask it the same question.";
 
+/** When a chat stops at one of its limits: what happened, in plain words, and the conversation goes on. */
+export const STOPPED_AT = {
+  time: 'That took longer than one answer can, so I stopped here. Ask again and I’ll go on from what the map already holds.',
+  rounds:
+    'I used all the steps one answer can take, so I stopped here. Ask again and I’ll go on from what I found.',
+  spend: 'This answer used what one chat can spend, so I stopped here. Ask again to go on.',
+};
+
 /** The contract signature (packages.md). */
 export function runAgent(input: RunInput, deps: RunDeps): AsyncIterable<AgentEvent> {
   return startRun(input, deps);
@@ -653,7 +661,7 @@ async function loop(
             why?.code ?? 'budget_exhausted',
             why?.message ??
               `Petals' agent has used today's budget ($${budget.usdPerDay}); it starts again tomorrow (UTC).`,
-            why?.hint ?? SKILL_HINT,
+            why?.hint,
           );
           break;
         }
@@ -783,7 +791,7 @@ async function loop(
         break;
       }
       if (last) {
-        fail('budget_exhausted', `The chat used its ${budget.toolRounds} tool rounds.`, SKILL_HINT);
+        fail('budget_exhausted', STOPPED_AT.rounds);
         break;
       }
       rounds++;
@@ -813,7 +821,7 @@ async function loop(
         call.name === NAME_CONVERSATION || (call.name === ANNOTATE && !isToolError(outs[i]));
       if (text && calls.every(quiet)) break;
       if (totals.usd >= budget.usdPerChat) {
-        fail('budget_exhausted', `The chat used its $${budget.usdPerChat} budget.`, SKILL_HINT);
+        fail('budget_exhausted', STOPPED_AT.spend);
         break;
       }
     }
@@ -822,13 +830,13 @@ async function loop(
     if (signal?.aborted) {
       fail('stopped', STOPPED);
     } else if (e instanceof Timeout) {
-      fail('budget_exhausted', `The chat ran past its ${budget.wallSeconds} s.`, SKILL_HINT);
+      fail('budget_exhausted', STOPPED_AT.time);
     } else if (e instanceof LlmCallError) {
       fail(e.code, e.message, e.hint, e.retryAfterS);
     } else {
       fail('source_failed', `The model call failed: ${(e as Error)?.message ?? String(e)}`);
     }
   }
-  if (ledgerDown) fail('internal', LEDGER_DOWN, SKILL_HINT);
+  if (ledgerDown) fail('internal', LEDGER_DOWN);
   if (!stopped()) await finish();
 }

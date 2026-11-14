@@ -8,7 +8,7 @@ import { DEFAULT_BUDGET, type LlmClient, type LlmMessage } from '../src/llm.ts';
 import { DEFAULT_MODEL } from '../src/near-ai.ts';
 import { HAND_TRANSCRIPT, recordedClient } from '../src/recorded.ts';
 import { createAgentRoutes } from '../src/routes.ts';
-import { startRun } from '../src/run.ts';
+import { STOPPED_AT, startRun } from '../src/run.ts';
 import { fileRunStore } from '../src/runs.ts';
 import {
   COMPACT_TO,
@@ -515,8 +515,7 @@ describe('the chat cap, unchanged (5¢)', () => {
     expect(es.filter((e) => e.event === 'flower')).toEqual([]);
     expect(es.find((e) => e.event === 'error')?.data).toMatchObject({
       code: 'budget_exhausted',
-      message: 'The chat used its $0.05 budget.',
-      hint: expect.stringMatching(/Bring your own agent/),
+      message: STOPPED_AT.spend,
     });
     expect(es.at(-1)?.event).toBe('done');
     expect(es.filter((e) => e.event === 'message')).toEqual([]);

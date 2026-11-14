@@ -8,7 +8,7 @@ import { describe, expect, test, vi } from 'vitest';
 import { buildPetalApp, llmHealth } from '../src/app.ts';
 import { petalApp } from '../src/index.ts';
 import { HAND_TRANSCRIPT, recordedClient } from '../src/recorded.ts';
-import { LEDGER_DOWN, SKILL_HINT } from '../src/run.ts';
+import { LEDGER_DOWN } from '../src/run.ts';
 import { fileRunStore } from '../src/runs.ts';
 import { configFromEnv } from '../src/serve.ts';
 import { agreed, bodyOf, fakeNearAi, inOrder, parseSse, runIdOf, tmpRoot } from './helpers.ts';
@@ -146,7 +146,7 @@ describe('petalApp', () => {
     const es = parseSse(await (await chat(app)).text());
     expect(fake.log).toEqual([]);
     expect(es.filter((e) => e.event === 'error').map((e) => e.data)).toEqual([
-      { code: 'internal', message: LEDGER_DOWN, hint: SKILL_HINT },
+      { code: 'internal', message: LEDGER_DOWN },
     ]);
     expect(es.at(-1)?.event).toBe('done');
     expect(error.mock.calls.flat().join()).toMatch(/spend ledger failed/);
