@@ -186,6 +186,37 @@ describe('the map', () => {
     expect(link.status).toBe(302);
   });
 
+  test('a reading published of a map Petals reads is that map at another moment: never drawn, on its card as dated', async () => {
+    await drawnView('Founders Guild v1', 'mapping.petals.near');
+    // the same DAO a month later, published by a person: a moment of a series, for the Play
+    const s = await loadSnapshot(r.ctx, MOLOCH);
+    const later = { ...s, snapshot: { ...s.snapshot, as_of: '2030-01-01T00:00:00Z' } };
+    const kept = (await r.ctx.store.put(later as never)).sha256;
+    const proposed = await run('propose_spec', { network: 'moloch-v1', sha256: kept });
+    const drawn = await run('render_flower', { spec: proposed.spec });
+    await privateStore(r.ctx.config).draft.label(drawn.spec_sha256, {
+      name: null,
+      made_by: 'near:mainnet:alice.near',
+    });
+    const app = new Hono();
+    app.route(
+      '/',
+      httpApp(r.ctx, { gate: { subjectOf: async () => null, refuseForeign: () => null } }),
+    );
+    const map = (await (await app.request('/api/v1/map')).json()) as Out;
+    expect(map.views.map((v: Out) => v.snapshot)).toEqual([MOLOCH]);
+    expect(map.groups.map((g: Out) => g.snapshot_sha256)).not.toContain(kept);
+    const listed = (await (await app.request('/api/v1/map/views')).json()) as Out;
+    expect(listed.views.map((v: Out) => v.snapshot)).toEqual([MOLOCH]);
+    // the card draws the main reading and lists both, the published one as dated
+    const [card] = mapsOf(await mapViews(r.ctx));
+    expect(card?.title).toBe(map.views[0].title);
+    expect(card?.readings.map((x) => [x.snapshot, x.dated])).toEqual([
+      [kept, true],
+      [MOLOCH, false],
+    ]);
+  });
+
   test('GET /api/v1/map/views lists the same views with their pictures, without readings', async () => {
     const sha = await drawnView('Founders Guild v1', 'mapping.petals.near');
     const app = new Hono();
