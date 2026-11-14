@@ -4,7 +4,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, test } from 'vitest';
 import { TextLink } from '../components/ui/TextLink.tsx';
 import { DeclaredLink } from '../components/workspace/DeclaredLink.tsx';
-import { isOutside, linkHref, outside } from '../lib/outside.ts';
+import { isOutside, linkHref, linkText, outside } from '../lib/outside.ts';
 
 /** TextLink's props with its children given as createElement's own argument. */
 const linkTo = (href: string) => ({ href }) as ComponentProps<typeof TextLink>;
@@ -59,6 +59,11 @@ describe('a profile’s declared links', () => {
     expect(linkHref('website', 'elcocoel')).toBeNull();
     expect(linkHref('discord', 'elco#1234')).toBeNull();
     expect(linkHref('website', '')).toBeNull();
+  });
+
+  test('a link shows as its address, without the scheme or a trailing slash', () => {
+    expect(linkText('https://github.com/elcocoel/')).toBe('github.com/elcocoel');
+    expect(linkText('https://www.elementarycomplexity.com/')).toBe('www.elementarycomplexity.com');
   });
 
   test('a row: a link in a new tab, or the text as kept', () => {

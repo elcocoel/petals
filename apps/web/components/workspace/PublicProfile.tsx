@@ -44,11 +44,15 @@ export function PublicProfile({
   const links = Object.entries(profile?.links ?? {});
   return (
     <article className="flex max-w-content-width flex-col gap-space-32">
-      <header className="flex items-center gap-block-gap">
+      {/* on a phone the picture sits above, so the name keeps the width */}
+      <header className="flex flex-col items-start gap-block-gap sm:flex-row sm:items-center">
         <Avatar src={profile?.avatar ?? null} size="large" />
         <div className="flex min-w-0 flex-1 flex-col gap-space-8">
-          <Mono tone="primary">{eyebrow}</Mono>
-          <h1 title={account} className="m-0 type-title wrap-anywhere md:type-display-compact">
+          <p className="my-0 type-mono whitespace-nowrap">{eyebrow}</p>
+          <h1
+            title={account}
+            className={`m-0 type-title md:type-display-compact ${profile?.name ? 'wrap-anywhere' : 'whitespace-nowrap'}`}
+          >
             {profile?.name ?? shortId(account)}
           </h1>
           {profile?.name && (

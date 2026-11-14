@@ -129,10 +129,10 @@ export function tokenChoices(
     : rest;
 }
 
-/** Dollars as typed: a number above 0 and at most 1,000, as the server takes, or null. */
+/** Dollars as typed: a number above 0, as the server takes (the quote says what it costs), or null. */
 export function dollarsOf(typed: string): number | null {
   const n = Number(typed.replace(/[$,\s]/g, ''));
-  return Number.isFinite(n) && n > 0 && n <= 1000 ? Math.round(n * 100) / 100 : null;
+  return Number.isFinite(n) && n > 0 ? Math.round(n * 100) / 100 : null;
 }
 
 /** When to send it by, as a time of day where the person is. */
@@ -154,7 +154,7 @@ export const intentWords = {
   refund: (chain: string) => `Your address on ${chain}, where anything not swapped goes back`,
   get: 'Get the address to send to',
   getting: 'Getting the address…',
-  badUsd: 'Dollars above 0, up to 1,000.',
+  badUsd: 'Dollars above 0.',
   noRefund: 'Your address on that chain, for anything not swapped.',
   send: (amount: string, symbol: string, chain: string) =>
     `Send exactly ${amount} ${symbol} on ${chain}, in one transfer from any wallet, to:`,
