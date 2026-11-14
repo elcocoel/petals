@@ -25,7 +25,7 @@ Signing in moves no funds and costs nothing. Payments are separate, and Petals n
 
 Petals’ agent runs on NEAR AI, and each answer is paid as it goes, in dollars with NEAR beside. A flower costs a few cents. You add credit in your lobby, under **Balance**: **Add funds** opens a row starting at 1 in **Dollars to add**:
 
-- **Add**, with the dollars and the NEAR they come to beside them (such as **Add $1.00 · 0.29 NEAR**): your wallet asks you to approve one plain transfer of that NEAR. This needs NEAR in the wallet. A NEAR wallet that isn’t on your account yet first signs once to join it, spending nothing.
+- **Add**, with the dollars and the NEAR they come to beside them (such as **Add $1.00 · 0.29 NEAR**): your wallet asks you to approve one deposit of that NEAR into Petals’ credit contract. This needs NEAR in the wallet. A NEAR wallet that isn’t on your account yet first signs once to join it, spending nothing.
 - **Pay with another token,** with no NEAR needed. Pick the token and its chain, and an address on that chain, where anything not swapped goes back; the dollars are the row’s. Then press **Get the address to send to**. Send exactly the amount shown, in one transfer from any wallet, to that address, with the memo if one is shown, before the time shown. The row says when the credit is added. This goes through NEAR Intents.
 
 When your credit runs out in a conversation, the chat says so, with **Add credit**, which leads to your lobby’s Balance.

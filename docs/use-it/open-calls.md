@@ -24,7 +24,7 @@ Every source answers without a key:
 
 ## Reading a call
 
-- **Its status is kept as said, beside its deadline.** A call can still say “accepting submissions” after its deadline has passed: the feed gives both, and never corrects one with the other.
+- **Its status is kept as said, beside its deadline.** A call whose deadline has passed leaves the feed, whatever its status still says.
 - **Its budget is as said,** in the call’s own words and currency.
 - **Who offers it:** the DAO or the program by name, and its address on the Power Map when the chain ties the two.
 - **How fresh:** each call carries when Petals last read its source.
