@@ -4,7 +4,7 @@
 // scripted model.
 import { fileURLToPath } from 'node:url';
 import type { AgentEvent } from '@petal/core/types';
-import { callTool, createContext, type ToolContext } from '@petal/tools';
+import { callTool, createContext, privateStore, type ToolContext } from '@petal/tools';
 import { describe, expect, test } from 'vitest';
 import { DEFAULT_BUDGET, type LlmMessage } from '../src/llm.ts';
 import { startRun } from '../src/run.ts';
@@ -24,7 +24,12 @@ async function withAMap(): Promise<ToolContext> {
     { network: 'near-validators', sha256: VALIDATORS },
     ctx,
   )) as Out;
-  await callTool('render_flower', { spec: proposed.spec }, ctx);
+  const drawn = (await callTool('render_flower', { spec: proposed.spec }, ctx)) as Out;
+  // on the Power Map, as Petals' loads put a view there
+  await privateStore(ctx.config).draft.label(drawn.spec_sha256, {
+    name: null,
+    made_by: 'mapping.petals.near',
+  });
   return ctx;
 }
 
