@@ -192,6 +192,7 @@ export {
   type MarkPicture,
   type MarkTarget,
   NETWORK_MARKS,
+  picture,
   pictureType,
   type ReadMark,
   readMark,

@@ -2,7 +2,7 @@
 // its address read with @petal/inputs' readMark, its mark/v1 kept by the map's address, its logo as a picture
 // in media. Read again, a map's mark is replaced. scripts/map-marks.ts runs it where the server runs.
 import { MARK_VERSION, validateMark } from '@petal/core';
-import { type Fetch, listReader, readMark, readTypes } from '@petal/inputs';
+import { type Fetch, listReader, picture, readMark, readTypes } from '@petal/inputs';
 import { privateStore } from './drafts.ts';
 import { mapsOf, mapViews, typeWords } from './map.ts';
 import type { ToolContext } from './types.ts';
@@ -214,5 +214,87 @@ export async function logoMaps(ctx: ToolContext, o: MarkRun = {}): Promise<LogoR
     out.saved++;
   }
   out.failed_lists = [...lists.failed];
+  return out;
+}
+
+/** A logo given from outside: the map, its picture's address, and how it's known (mark/v2's logo status and source). */
+export interface GivenLogo {
+  about: string;
+  url: string;
+  status: 'self-declared' | 'verified' | 'inferred';
+  source: string;
+}
+
+export interface GivenLogoResult {
+  given: number;
+  saved: number;
+  /** each left as it was, and why */
+  left: { about: string; why: string }[];
+}
+
+/**
+ * Logos given from outside (a mapping run's checked list): each is added to its map's kept mark when that mark
+ * has no logo yet, with its picture in media, as the logos pass adds one. Its name, symbol and types stay as they
+ * were; a map with no mark kept, one with a logo already, or a picture that isn't a PNG, JPEG or WebP is left,
+ * and says why.
+ */
+export async function logosGiven(
+  ctx: ToolContext,
+  given: readonly GivenLogo[],
+  o: MarkRun = {},
+): Promise<GivenLogoResult> {
+  const store = privateStore(ctx.config);
+  const fetchImpl = o.fetch ?? ((...a: Parameters<Fetch>) => globalThis.fetch(...a));
+  const log = o.log ?? (() => {});
+  const at = (o.now ?? (() => new Date()))().toISOString();
+  const out: GivenLogoResult = { given: given.length, saved: 0, left: [] };
+  const leave = (about: string, why: string) => {
+    out.left.push({ about, why });
+    log(`${about}: left, ${why}`);
+  };
+  for (const g of given) {
+    const keptRow = await store.mark.get(g.about);
+    if (!keptRow) {
+      leave(g.about, 'no mark kept for this map');
+      continue;
+    }
+    const kept = JSON.parse(keptRow.body) as Record<string, unknown>;
+    if (kept.logo) {
+      leave(g.about, 'its mark has a logo already');
+      continue;
+    }
+    const p = await picture(fetchImpl, g.url);
+    if (!p) {
+      leave(g.about, `no PNG, JPEG or WebP at ${g.url}`);
+      continue;
+    }
+    const next = {
+      ...kept,
+      logo: {
+        sha256: p.sha256,
+        media_type: p.media_type,
+        status: g.status,
+        source: g.source,
+        ref: g.url,
+        at,
+      },
+    };
+    const checked = validateMark(next);
+    if (!checked.ok) {
+      leave(g.about, checked.errors.map((e) => `${e.path} ${e.message}`).join('; '));
+      continue;
+    }
+    log(`${g.about}: logo from ${g.source} (${g.status}), ${p.bytes.length} bytes`);
+    if (o.save === false) continue;
+    await store.media.put({
+      sha256: p.sha256,
+      type: p.media_type,
+      body: Buffer.from(p.bytes).toString('base64'),
+      person: null,
+      created_at: at,
+    });
+    await store.mark.put({ about: g.about, body: JSON.stringify(next), read_at: keptRow.read_at });
+    out.saved++;
+  }
   return out;
 }

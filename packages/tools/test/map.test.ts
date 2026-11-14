@@ -19,7 +19,7 @@ import { privateStore } from '../src/drafts.ts';
 import { httpApp } from '../src/http/app.ts';
 import { type MapView, mapsOf, mapViews, searchMap } from '../src/map.ts';
 import { MAPPING } from '../src/mapping-claims.ts';
-import { logoMaps, markMaps, typeMaps } from '../src/marks.ts';
+import { logoMaps, logosGiven, markMaps, typeMaps } from '../src/marks.ts';
 import { proposalMaps } from '../src/proposals.ts';
 import { callTool } from '../src/registry.ts';
 import { loadSnapshot } from '../src/tools/shared.ts';
@@ -460,6 +460,74 @@ describe('one map per address', () => {
     expect(Buffer.from(picture?.body ?? '', 'base64')).toEqual(Buffer.from(PNG));
     // a mark with a logo is left as it is
     expect(await logoMaps(r.ctx, { fetch: fetchImpl })).toMatchObject({ without: 0, found: 0 });
+  });
+
+  test('logos given from outside: added only to a kept mark without one, its picture in media; the rest left, saying why', async () => {
+    const store = privateStore(r.ctx.config);
+    const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 9, 9]);
+    const SVG = new TextEncoder().encode('<svg xmlns="http://www.w3.org/2000/svg"/>');
+    const fetchImpl = (async (input: string | URL | Request) => {
+      const url = String(input);
+      if (url === 'https://site.example/logo.png') return new Response(PNG);
+      if (url === 'https://site.example/logo.svg') return new Response(SVG);
+      return new Response('not found', { status: 404 });
+    }) as typeof fetch;
+    const at = '2026-11-11T18:00:00.000Z';
+    const mark = (about: string, logo: unknown = null) => ({
+      petal: 'mark/v1',
+      about,
+      name: { value: 'A DAO', status: 'self-declared', source: 'daohaus', ref: 'a wave', at },
+      symbol: null,
+      logo,
+      read_at: at,
+    });
+    const bare = mark('eip155:1:0xbare');
+    const svg = mark('eip155:1:0xsvg');
+    await store.mark.put({ about: bare.about, body: JSON.stringify(bare), read_at: at });
+    await store.mark.put({ about: svg.about, body: JSON.stringify(svg), read_at: at });
+    const given = [
+      {
+        about: bare.about,
+        url: 'https://site.example/logo.png',
+        status: 'self-declared' as const,
+        source: 'website',
+      },
+      {
+        about: svg.about,
+        url: 'https://site.example/logo.svg',
+        status: 'self-declared' as const,
+        source: 'website',
+      },
+      {
+        about: 'eip155:1:0xnone',
+        url: 'https://site.example/logo.png',
+        status: 'self-declared' as const,
+        source: 'website',
+      },
+    ];
+    const now = () => new Date('2026-11-14T03:00:00Z');
+    expect(await logosGiven(r.ctx, given, { fetch: fetchImpl, save: false, now })).toMatchObject({
+      given: 3,
+      saved: 0,
+    });
+    expect(JSON.parse((await store.mark.get(bare.about))?.body ?? '{}').logo).toBeNull();
+
+    const done = await logosGiven(r.ctx, given, { fetch: fetchImpl, now });
+    expect(done.saved).toBe(1);
+    expect(done.left.map((l) => l.about)).toEqual([svg.about, 'eip155:1:0xnone']);
+    const kept = JSON.parse((await store.mark.get(bare.about))?.body ?? '{}');
+    expect(kept).toMatchObject({ name: bare.name, symbol: null });
+    expect(kept.logo).toMatchObject({
+      media_type: 'image/png',
+      status: 'self-declared',
+      source: 'website',
+      ref: 'https://site.example/logo.png',
+      at: '2026-11-14T03:00:00.000Z',
+    });
+    const pic = await store.media.get(kept.logo.sha256);
+    expect(Buffer.from(pic?.body ?? '', 'base64')).toEqual(Buffer.from(PNG));
+    // a logo kept is left as it is
+    expect((await logosGiven(r.ctx, given.slice(0, 1), { fetch: fetchImpl, now })).saved).toBe(0);
   });
 
   test("the types pass adds each kept mark's types and keeps its words; --dry keeps nothing", async () => {
