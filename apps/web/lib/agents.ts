@@ -1,6 +1,7 @@
 // The person's own agents, connected to their whole account with one prompt. Each waits for its next job
 // and is shown as waiting while it does. GET /api/v1/agents lists them; each copy of the prompt carries a
 // new agent link of its own, and older ones keep working until revoked. Pure.
+import { shortWhen } from './conversation-list.ts';
 
 /**
  * An agent's worker as GET /api/v1/agents lists it (one entry per worker): the name
@@ -58,10 +59,12 @@ export interface AgentRow {
   label: string;
   status: string;
   here: boolean;
-  /** What it's doing, for the panel's few characters: on a job, working in a conversation, waiting, or not connected. */
-  state: 'busy' | 'working' | 'waiting' | 'away';
+  /** What it's doing, for the panel's few characters: on a job, waiting for one, or not connected. */
+  state: 'busy' | 'waiting' | 'away';
   /** Where it works, for an agent in one of the person's conversations: that conversation. */
   href?: string;
+  /** For an agent in one of the person's conversations: when it was last seen there, short (now, 12m, 3h). */
+  when?: string;
 }
 
 /**
@@ -74,7 +77,7 @@ export const workerName = (name: string, n?: number | null) =>
 /** Where Connect an agent was pressed, so its Copied shows there alone. */
 export type CopiedAt = 'top';
 
-const BUSIEST: readonly AgentRow['state'][] = ['busy', 'working', 'waiting', 'away'];
+const BUSIEST: readonly AgentRow['state'][] = ['busy', 'waiting', 'away'];
 
 /**
  * What the panel's top says of the agents: each agent once, however many
@@ -93,7 +96,7 @@ export function agentsAtTop(
   };
 }
 
-export function agentRows(agents: readonly ConnectedAgent[]): AgentRow[] {
+export function agentRows(agents: readonly ConnectedAgent[], now = new Date()): AgentRow[] {
   return agents.map((a) =>
     a.conversation
       ? {
@@ -102,9 +105,11 @@ export function agentRows(agents: readonly ConnectedAgent[]): AgentRow[] {
           agent: readableAgent(a.name),
           label: readableAgent(a.name),
           status: agentWords.in(a.conversation.title),
-          here: true,
-          state: 'working' as const,
+          here: false,
+          state: 'away' as const,
           href: `/make?elsewhere=${encodeURIComponent(a.conversation.id)}`,
+          // seen there, not 'working': the server remembers the last call, however long ago
+          when: a.last_seen ? shortWhen(a.last_seen, now) : '',
         }
       : {
           key: `${a.name}:${a.n ?? 1}`,

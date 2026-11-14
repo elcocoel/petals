@@ -356,7 +356,8 @@ export function WorkMenu({
                   icon="agent"
                   label={a.label}
                   title={`${a.label}\n${a.status}`}
-                  trail={panelWords.state[a.state]}
+                  trail={a.when}
+                  muted
                 />
               ) : (
                 <NavItem
