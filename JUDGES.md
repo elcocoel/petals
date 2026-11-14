@@ -192,7 +192,9 @@ Needs Node 24 and pnpm 10.33.0 (pinned in `.nvmrc` and `package.json`). Run from
 ## Known limits
 
 - Withdrawal and the charge limits are enforced by the deployed contract (its code hash is checkable in step 6).
-  `petals.near` can upgrade it during the hackathon, so that holds for the code deployed, not forever.
+  `petals-credit.near` itself holds a full-access key, the same key as `petals.near`'s, and v3 was deployed with that
+  key rather than through `upgrade()`. So the guarantees hold for the deployed code while that key exists, and
+  `petals.near` can upgrade the contract during the hackathon.
   `petals-charger.near` and `petals-writer.near` each hold a restricted key (`charge` on the credit contract;
   `__fastdata_kv` on `petals.near`) and also the owner's full-access key.
 - Readers cover specific systems on NEAR, Ethereum, Base, Arbitrum, Gnosis and Solana; other chains aren't read.
