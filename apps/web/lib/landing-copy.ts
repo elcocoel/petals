@@ -10,6 +10,8 @@ import { withEdits } from './copy-edits.ts';
 import edits from './landing-copy.edits.json' with { type: 'json' };
 
 const written = {
+  /** The tooltip on a destination that isn't built yet. */
+  soon: 'Coming after the hackathon',
   nav: {
     howItWorks: 'How it works',
     gallery: 'Power Map',
