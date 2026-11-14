@@ -4,7 +4,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, test } from 'vitest';
-import { applyPolicy, inferredName, makeClaim, validateClaim } from '../src/claims/index.ts';
+import { applyPolicy, makeClaim, validateClaim } from '../src/claims/index.ts';
 import { namePieces } from '../src/seam.ts';
 import type { Claim, ClaimDraft, ClaimEvidence, Snapshot } from '../src/types/index.ts';
 
@@ -228,7 +228,7 @@ describe('a published link or note, as a public source states it (people.ts)', (
     ).toBe(true);
   });
 
-  test("a note worked out from traces, or the claimer's own evidence note naming someone, stays private", () => {
+  test("a note worked out from traces publishes marked inferred, and so does the claimer's own evidence note naming someone", () => {
     const worked = claim({
       verb: 'noted',
       object: { value: 'Probably Dekan Smith, by timing' },
@@ -236,9 +236,8 @@ describe('a published link or note, as a public source states it (people.ts)', (
       method: 'codex/research@2026-11-10',
       qualifiers: { grounds: 'research' },
     });
-    expect(ok(worked).ok).toBe(false);
-    expect(ok(worked, { private: true }).ok).toBe(true);
-    expect(ok(claim({ evidence: [{ ...post, note: 'Also Jane Doe' }] })).ok).toBe(false);
+    expect(ok(worked).ok).toBe(true);
+    expect(ok(claim({ evidence: [{ ...post, note: 'Also Jane Doe' }] })).ok).toBe(true);
   });
 });
 
@@ -298,16 +297,14 @@ describe('a published name, as a public source states it (people.ts)', () => {
     expect(ok(named([page])).ok).toBe(true);
   });
 
-  test("a source not quoted, or a note that names someone, stays in a person's own project", () => {
+  test('a source not quoted, or a note that names someone, publishes too: the qualifier rates it', () => {
     const { quote: _q, ...unquoted } = proposal;
-    expect(ok(named([unquoted])).ok).toBe(false);
-    const bare = named([{ type: 'page', url: 'https://example.org/', ...found }]);
-    expect(ok(bare).ok).toBe(false);
-    expect(ok(bare, { private: true }).ok).toBe(true);
-    expect(ok(named([{ ...proposal, note: 'Also Jane Doe in #245' }])).ok).toBe(false);
+    expect(ok(named([unquoted])).ok).toBe(true);
+    expect(ok(named([{ type: 'page', url: 'https://example.org/', ...found }])).ok).toBe(true);
+    expect(ok(named([{ ...proposal, note: 'Also Jane Doe in #245' }])).ok).toBe(true);
   });
 
-  test('a name worked out from traces publishes as an inferred claim, with its method and its public evidence', () => {
+  test('a name worked out from traces publishes as an inferred claim, whatever its words or evidence', () => {
     const worked = (evidence: ClaimEvidence[]) =>
       v3({
         subject: ADA,
@@ -326,15 +323,12 @@ describe('a published name, as a public source states it (people.ts)', () => {
       platform: 'x',
       ...found,
     };
-    const c = worked([{ ...xpost, quote: 'Dekan Smith here, gm' }]);
-    expect(inferredName(c)).toBe(true);
-    expect(ok(c).ok).toBe(true);
-    // nothing public it rests on: it stays in the person's own project
-    const unsourced = worked([{ type: 'note', note: 'by timing', ...found }]);
-    expect(ok(unsourced).ok).toBe(false);
-    expect(ok(unsourced, { private: true }).ok).toBe(true);
-    // the vocabulary and the claimer's own notes are checked as for any published claim
-    expect(ok(worked([{ ...xpost, quote: 'a known scammer' }])).ok).toBe(false);
-    expect(ok(worked([{ ...xpost, note: 'Also Jane Doe' }])).ok).toBe(false);
+    expect(ok(worked([{ ...xpost, quote: 'Dekan Smith here, gm' }])).ok).toBe(true);
+    expect(ok(worked([{ type: 'note', note: 'by timing', ...found }])).ok).toBe(true);
+    // no word or name net reads it: the qualifier rates it
+    expect(ok(worked([{ ...xpost, quote: 'a known scammer' }])).ok).toBe(true);
+    expect(ok(worked([{ ...xpost, note: 'Also Jane Doe' }])).ok).toBe(true);
+    // a sourced claim keeps the word list
+    expect(ok(named([{ ...proposal, note: 'a known scammer' }])).ok).toBe(false);
   });
 });
