@@ -14,7 +14,6 @@ export const profilePageWords = {
   proven: 'Proven',
   /** Under a wallet: when it signed. */
   provedOn: (date: string) => `Signed in on ${date}`,
-  walletsNote: 'Each one signed a message with its own key, so it’s proven yours.',
   /** On an Ethereum or Solana wallet's row: takes it off the profile (the NEAR account is the profile). */
   disconnect: 'Disconnect',
   /** Once it's off. */

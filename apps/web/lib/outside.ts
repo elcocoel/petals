@@ -20,6 +20,9 @@ export function isOutside(href: string): boolean {
 export const outside = (href: string): { target?: '_blank'; rel?: 'noopener noreferrer' } =>
   isOutside(href) ? { target: '_blank', rel: 'noopener noreferrer' } : {};
 
+/** An address as a link shows it: no scheme, no trailing slash ('github.com/elcocoel'). */
+export const linkText = (href: string) => href.replace(/^https?:\/\//i, '').replace(/\/+$/, '');
+
 /** A handle as people type it: an @ or a trailing slash dropped. */
 const handleOf = (v: string) => v.trim().replace(/^@+/, '').replace(/\/+$/, '');
 

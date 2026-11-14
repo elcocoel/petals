@@ -1,5 +1,6 @@
 // The lobby (specs/004-workspace, W3): where a person's work sits when they come back. A skeleton. Pure: its
 // words and where each thing goes are decided here, and the view only lays them out.
+import { shortId } from './flower-view.ts';
 import type { ProfileDraft, SocialProfile } from './near-social.ts';
 import { type Credit, type Money, money, moneyWords, type PayAction, payWords } from './pay.ts';
 
@@ -233,10 +234,8 @@ export type SocialState =
  * shortened to its first six and last four, as /make does; a named account as it is.
  */
 export function shownAccount(account: string): { shown: string; full: string } {
-  return {
-    shown: account.replace(/^([0-9a-f]{6})[0-9a-f]{54}([0-9a-f]{4})$/, '$1…$2'),
-    full: account,
-  };
+  // the one shortening every address gets
+  return { shown: shortId(account), full: account };
 }
 
 /** The credit as GET and POST /api/v1/pay answer it with the contract: with what it holds, in yoctoNEAR. */
