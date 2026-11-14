@@ -42,6 +42,11 @@ describe('one press over many maps', () => {
     expect(html).toContain('Nothing new since your last version.');
   });
 
+  test('says beforehand when the wallet signs in first, a new QR by phone', () => {
+    expect(pressAllView(READ, 'ready', null, true)?.sign).toBe(publishWords.signInFirst);
+    expect(pressAllView(READ, 'ready', null)?.sign).toBe(publishWords.sign);
+  });
+
   test('while the wallet signs, and once it landed', () => {
     expect(pressAllView(READ, 'signing', null)?.press).toBe(publishWords.signing);
     const done = pressAllView(READ, 'published', pressAllWords.published(2));

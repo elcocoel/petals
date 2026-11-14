@@ -117,7 +117,7 @@ Locally `pnpm api` (or `petal api`) runs `petalApp` under Node on `http://localh
 
 ## Agent chat (SSE)
 
-`POST /api/v1/agent/chat`, body `{ "messages": [{ "role": "user" | "assistant", "content": string }], "draft"?: { "spec"?, "entry"? }, "run_id"?: string }`, response `text/event-stream`. With `run_id`, the chat continues a stored run (its messages and draft are loaded).
+`POST /api/v1/agent/chat`, body `{ "messages": [{ "role": "user" | "assistant", "content": string }], "draft"?: { "spec"?, "entry"? }, "run_id"?: string, "in_front"?: { "map": string | null, "flower"?: sha256, "at"?: string, "layers"?: [sha256], "selected"?: MapShow } }`, response `text/event-stream`. With `run_id`, the chat continues a stored run (its messages and draft are loaded). `in_front` is what the canvas beside the chat has open as the person asks, sent with every turn (never stored with the run): the map entered (null for the whole Power Map), a flower drawn apart from it (its spec_sha256), the moment shown, the layers still on, and what's chosen (the `show` event's shape). The system notes name it, so "this" means it; Petals' agent moves the map with its `show` tool, which the run sends as a `show` event.
 
 **Runs you can leave and come back to.** Every chat is a run, stored by `RunStore` (`.petal/private.db`), and a job in the one server process. The SSE stream only observes it, so a viewer coming or going changes nothing. `GET /api/v1/agent/runs/:id` returns it, finished or not.
 

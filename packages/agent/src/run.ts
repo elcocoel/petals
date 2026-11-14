@@ -52,7 +52,7 @@ import { NAME_CONVERSATION, nameNotes, type RunName } from './name-conversation.
 import { LlmCallError } from './near-ai.ts';
 import { agentNotes, SYSTEM_PROMPT } from './prompt.ts';
 import { newRunId } from './runs.ts';
-import { nextOf, showKey, showOf } from './show.ts';
+import { type Front, frontNotes, nextOf, showKey, showOf } from './show.ts';
 import { storedRead } from './stored-read.ts';
 import { draftLink, forModel, isToolError, summarize } from './summary.ts';
 import {
@@ -83,6 +83,8 @@ export interface RunInput {
   name?: RunName;
   /** additive (10 Nov): what the shared map holds, which it draws without a yes (approval.ts) */
   onMap?: OnTheMap;
+  /** additive: what the canvas beside the chat has open as the person asks, with the map's name */
+  front?: Front;
 }
 
 export interface RunDeps {
@@ -383,6 +385,7 @@ async function loop(
     ...(input.jobs?.length ? [jobNotes(input.jobs)] : []),
     ...(input.agents?.length ? [connectedNotes(input.agents)] : []),
     ...(input.name ? [nameNotes(input.name)] : []),
+    ...(input.front ? [frontNotes(input.front)] : []),
     ...(registry.some((t) => t.name === ANNOTATE) ? [annotateNotes()] : []),
   ].join('\n\n');
   const messages: LlmMessage[] = [{ role: 'system', content: system }, ...conversation];

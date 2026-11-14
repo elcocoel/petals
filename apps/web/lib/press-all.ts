@@ -48,6 +48,8 @@ export function pressAllView(
   read: PressAll | null,
   phase: PublishPhase,
   said: string | null,
+  /** the press asks the wallet to sign in first (lib/publication-sign.ts asksSignIn) */
+  signsIn = false,
 ): (PublishPressView & { across: string }) | null {
   if (phase === 'published')
     return {
@@ -63,7 +65,7 @@ export function pressAllView(
   return {
     across: pressAllWords.across(read.maps.length),
     press: phase === 'signing' ? publishWords.signing : pressAllWords.press,
-    sign: publishWords.sign,
+    sign: signsIn ? publishWords.signInFirst : publishWords.sign,
     why: read.left.length
       ? { label: pressAllWords.why, lines: read.left.map((l) => `${shortId(l.about)}: ${l.why}`) }
       : null,
