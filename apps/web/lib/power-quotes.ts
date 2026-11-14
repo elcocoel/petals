@@ -9,6 +9,9 @@ export interface PowerQuoteItem {
   image: string;
 }
 
+/** The quote's one control: the next quote in the list, round again after the last. */
+export const quoteWords = { next: 'Another quote' } as const;
+
 export const POWER_QUOTES: readonly PowerQuoteItem[] = [
   {
     id: '01-sunlight',
