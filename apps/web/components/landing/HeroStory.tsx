@@ -45,6 +45,7 @@ import { IconButton } from '../ui/IconButton.tsx';
 import { Mono } from '../ui/Mono.tsx';
 import { Section } from '../ui/Section.tsx';
 import { SectionHead } from '../ui/SectionHead.tsx';
+import { Soon } from '../ui/Soon.tsx';
 import { Glass } from './HeroGlass.tsx';
 import { HeroTools } from './HeroTools.tsx';
 import { StoryFlower } from './StoryFlower.tsx';
@@ -170,7 +171,7 @@ const Intro = memo(function Intro() {
           </Button>
         </div>
         {/* Under them, the socials, kept subtle: just their icons, grey, no fill; a social with no address yet
-            does nothing. */}
+            shows greyed, with when it comes (Soon). */}
         <div className="mt-space-16 -ml-space-8 flex items-center">
           {SOCIALS.map((s) =>
             siteLinks.socials[s] ? (
@@ -182,7 +183,12 @@ const Intro = memo(function Intro() {
                 tip="right"
               />
             ) : (
-              <IconButton key={s} icon={s} label={hero.socials[s]} onClick={() => {}} tip="right" />
+              <Soon key={s} side="right">
+                <span className="inline-flex size-row-height items-center justify-center">
+                  <Icon name={s} small />
+                  <span className="sr-only">{hero.socials[s]}</span>
+                </span>
+              </Soon>
             ),
           )}
         </div>

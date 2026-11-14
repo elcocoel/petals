@@ -8,6 +8,7 @@ import type { ReactNode } from 'react';
 import { landingCopy } from '../../lib/landing-copy.ts';
 import { siteLinks } from '../../lib/site-links.ts';
 import { Mono } from './Mono.tsx';
+import { Soon } from './Soon.tsx';
 import { TextLink } from './TextLink.tsx';
 import { Wordmark } from './Wordmark.tsx';
 
@@ -23,9 +24,9 @@ function Group({ name, links }: { name: string; links: Destination[] }): ReactNo
             {link.name}
           </TextLink>
         ) : (
-          <span key={link.name} className="type-label text-muted">
-            {link.name}
-          </span>
+          <Soon key={link.name} side="left">
+            <span className="type-label">{link.name}</span>
+          </Soon>
         ),
       )}
     </nav>

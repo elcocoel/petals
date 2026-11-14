@@ -8,6 +8,7 @@ import { Icon } from '../ui/Icon.tsx';
 import { PlateLink } from '../ui/PlateLink.tsx';
 import { Section } from '../ui/Section.tsx';
 import { SectionName } from '../ui/SectionName.tsx';
+import { Soon } from '../ui/Soon.tsx';
 
 const copy = landingCopy.backIt;
 
@@ -37,7 +38,13 @@ export function BackIt() {
             <li key={way.title} className="min-w-0">
               <PlateLink href={href}>
                 <span className="flex min-h-drawing-144 items-end justify-between gap-block-gap">
-                  <span className={`type-heading ${href ? '' : 'text-muted'}`}>{way.title}</span>
+                  {href ? (
+                    <span className="type-heading">{way.title}</span>
+                  ) : (
+                    <Soon side="left">
+                      <span className="type-heading">{way.title}</span>
+                    </Soon>
+                  )}
                   {href && <Icon name="arrow" />}
                 </span>
               </PlateLink>
