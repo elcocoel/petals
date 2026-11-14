@@ -43,7 +43,7 @@ export const CASES: Case[] = [
       'goddamit - this stupid module, Raidguild is a Moloch V3',
       'yes',
     ],
-    want: "The same chat, carried on past Elco's words with a yes: it draws RaidGuild's real shares, says what share of them it read, and doesn't present a partial read as the whole DAO.",
+    want: "The same chat, carried on past the person's words with a yes: it draws RaidGuild's real shares, says what share of them it read, and doesn't present a partial read as the whole DAO.",
   },
   {
     id: 'moloch-test',

@@ -18,7 +18,7 @@ Agents never read raw snapshot bodies; they use `describe_snapshot` and `compute
 | `lab/` | The petal look bench's own flower (`/lab/petal`): RaidGuild's RG delegates on Gnosis at block 49,181,976 (2026-11-09), the flower the look's art direction was drawn on. `<sha256>.json.gz` is the snapshot, content-addressed like `snapshots/`, and `<sha256>.spec.json` the spec the site proposes for it, both taken from the live site by `apps/web/scripts/lab-petal-data.ts`. Outside the store's lookup path, so nothing else reads it. | W6 |
 | `landscape/` | The map bench's data (`specs/006-the-map`, `/lab/map`): `night-2026-11-09.json.gz`, the night's 203 saved views with their readings and the relations index's groups and pairs, copied once by `apps/web/scripts/landscape-data.ts` (read-only, from the live site); `logos/`, tokens' logos copied once from Trust Wallet's public list by `apps/web/scripts/landscape-logos.ts`, named by a hash of chain and address. The logos are the projects' own marks, used to identify them. | W6 |
 
-Nothing under `../research/`, `../design/`, `../submission/` or `../.secrets/` is ever copied here. Fixtures are produced by scripts (`scripts/import-spike-data.ts`) that transform public data, so they can be rebuilt.
+Nothing from the private folders beside the repo, or from the keys folder, is ever copied here. Fixtures are produced by scripts (`scripts/import-spike-data.ts`) that transform public data, so they can be rebuilt.
 
 ## What is here (M0)
 

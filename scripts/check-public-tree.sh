@@ -5,13 +5,9 @@
 set -uo pipefail
 cd "$(dirname "$0")/.." || exit 1
 
-# Frozen byte for byte by the system-v1.5 tag (packages/tokens/test/versions.test.ts), so its text can't change.
-frozen=(packages/tokens/source.ts)
-skip=()
-for p in "${frozen[@]}"; do skip+=(":(exclude)$p"); done
-
-pattern='Elco[,:]? +(on +)?[0-9]{1,2} (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)'
-hits=$(git ls-files --cached --others --exclude-standard -z -- . "${skip[@]}" 2>/dev/null |
+# [E] keeps the owner's name itself out of this file.
+pattern='[E]lco[,:]? +(on +)?[0-9]{1,2} (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)'
+hits=$(git ls-files --cached --others --exclude-standard -z 2>/dev/null |
   xargs -0 grep -InE "$pattern" -- 2>/dev/null | cut -d: -f1,2)
 if [[ -n "$hits" ]]; then
   echo "$hits"
