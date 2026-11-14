@@ -236,3 +236,20 @@ describe('one amount for both ways of paying', () => {
     expect(row(null)).toContain('id="topup-usd"');
   });
 });
+
+describe('an account starts with NEAR', () => {
+  test('the door: NEAR’s Connect first; a linked Ethereum or Solana wallet’s way in after it, quieter', () => {
+    const html = renderToStaticMarkup(
+      createElement(ConnectWallet, {
+        question: '',
+        busy: false,
+        failed: null,
+        onConnect: () => {},
+        onConnectEvm: () => {},
+        onConnectSolana: () => {},
+      }),
+    );
+    expect(html.indexOf(notSignedInWords.near)).toBeLessThan(html.indexOf(notSignedInWords.linked));
+    expect(html).toContain('data-kind="quiet"');
+  });
+});

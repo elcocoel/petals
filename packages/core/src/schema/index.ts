@@ -13,6 +13,7 @@ import claimV4Schema from '../../schema/claim-v4.schema.json' with { type: 'json
 import creditSchema from '../../schema/credit.schema.json' with { type: 'json' };
 import flowerSchema from '../../schema/flower.schema.json' with { type: 'json' };
 import layerSchema from '../../schema/layer.schema.json' with { type: 'json' };
+import manifestSchema from '../../schema/manifest.schema.json' with { type: 'json' };
 import markSchema from '../../schema/mark.schema.json' with { type: 'json' };
 import markV2Schema from '../../schema/mark-v2.schema.json' with { type: 'json' };
 import payoutsSchema from '../../schema/payouts.schema.json' with { type: 'json' };
@@ -103,6 +104,8 @@ export const schemas: {
   publication: object;
   /** one author's credit and points, computed from the record alone (13 Nov) */
   credit: object;
+  /** one press over many publications: the hashes one signature covers (composition.md, section 2b) */
+  manifest: object;
 } = {
   snapshot: snapshotSchema,
   spec: view('spec'),
@@ -136,6 +139,7 @@ export const schemas: {
   vesting: vestingSchema,
   publication: publicationSchema,
   credit: creditSchema,
+  manifest: manifestSchema,
 };
 
 /** The two source documents, unchanged. */

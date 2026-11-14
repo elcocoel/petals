@@ -75,20 +75,26 @@ export {
   type PressLayer,
   type PressProof,
   type Publishable,
+  preparePress,
   preparePublication,
   publishable,
+  publishPrepared,
+  publishPress,
   publishPublication,
   type SignatureCheck,
 } from './publish-data.ts';
 export {
+  appendPress,
   appendPublication,
   authorsOn,
   compositionOf,
   creditFor,
   layersOf,
+  manifestOf,
+  mapHistory,
   recordOf,
 } from './record.ts';
-export { type ImportReport, importRecord } from './record-import.ts';
+export { type Holding, type ImportReport, importRecord, petalsHoldings } from './record-import.ts';
 export { callTool, describeTool, findTool, registry } from './registry.ts';
 export {
   type Findable,
@@ -119,7 +125,7 @@ export {
   touched,
 } from './tools/explorations.ts';
 export { workerPlace } from './tools/jobs.ts';
-export { mapIdOf, nextSteps, whereItLands } from './tools/maps.ts';
+export { mapIdOf, mapIndex, nextSteps, whereItLands } from './tools/maps.ts';
 export { makeReadPage } from './tools/read-page.ts';
 export {
   DEFAULT_KINDS,

@@ -3,8 +3,9 @@
 // extension. One client for the site, on its Reown project (a public client id, locked to the site's own
 // address), loaded only when it's first asked for. It opens a session for one chain by a QR code, keeps it, and
 // asks the phone for one signature at a time: a personal_sign of an Ethereum text, a solana_signMessage of a
-// Solana one; nothing else, so no transaction and no spend. NEAR's own phone wallets (NEAR Mobile, Meteor) show
-// their QR codes in NEAR's picker, which gets the same client for any other phone wallet (lib/wallet.ts).
+// Solana one; nothing else, so no transaction and no spend. NEAR's phone wallets (NEAR Mobile, Meteor, HOT) show
+// their own QR codes in NEAR's picker, each opening its own app; NEAR's picker doesn't get this client, since a
+// WalletConnect link opens the phone's default wallet, often one that can't sign for NEAR (lib/wallet.ts).
 // Pure of React; viewmodels call it.
 import type SignClient from '@walletconnect/sign-client';
 

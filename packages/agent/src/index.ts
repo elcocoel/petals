@@ -22,6 +22,7 @@ export {
   logoMaps,
   markMaps,
   payoutMaps,
+  preparePress,
   proposalMaps,
   readCalls,
   snapshotTexts,

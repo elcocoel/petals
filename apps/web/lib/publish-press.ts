@@ -12,6 +12,9 @@ export type PublishPhase = 'ready' | 'signing' | 'published' | 'failed';
 export const publishWords = {
   press: 'Publish in your name',
   sign: 'Your wallet signs once. Nothing is spent.',
+  /** when the wallet isn't connected on this page as the author: it signs in first, a new QR by phone */
+  signInFirst:
+    'Your wallet asks you to sign in, then signs once. By phone, that’s one more scan. Nothing is spent.',
   signing: 'Waiting for your wallet…',
   published: (line: string | null) =>
     line ? `On the shared map in your name: ${line}.` : 'On the shared map in your name.',
@@ -40,6 +43,29 @@ export interface Signer {
 
 export function signerOf(wallets: readonly ProvenWallet[]): Signer | null {
   const wallet = wallets.find((w) => w.author);
+  if (!wallet?.author) return null;
+  return {
+    wallet,
+    author: wallet.author,
+    shown: walletRows([wallet])[0]?.shown ?? wallet.account_id,
+  };
+}
+
+const isNear = (w: ProvenWallet) => w.network === 'mainnet' || w.network === 'testnet';
+
+/**
+ * The wallet a press over many maps is signed by: the profile's master key, NEAR. The NEAR wallet this session
+ * signed in with, else (signed in with a linked Ethereum or Solana wallet) the person's first NEAR wallet. The same
+ * author goes to the read and to the prepare, so what's listed is what goes, in that name.
+ */
+export function nearSigner(me: {
+  network: string;
+  account: string | null;
+  wallets: readonly ProvenWallet[];
+}): Signer | null {
+  const near = me.wallets.filter((w) => isNear(w) && w.author);
+  const wallet =
+    near.find((w) => w.network === me.network && w.account_id === me.account) ?? near[0];
   if (!wallet?.author) return null;
   return {
     wallet,
@@ -82,6 +108,8 @@ export function publishPressView(
   phase: PublishPhase,
   said: string | null,
   signer: Signer | null,
+  /** the press asks the wallet to sign in first (lib/publication-sign.ts asksSignIn) */
+  signsIn = false,
 ): PublishPressView | null {
   if (!data) return null;
   if (phase === 'published')
@@ -107,7 +135,7 @@ export function publishPressView(
   }));
   return {
     press: phase === 'signing' ? publishWords.signing : publishWords.press,
-    sign: publishWords.sign,
+    sign: signsIn ? publishWords.signInFirst : publishWords.sign,
     // with the list, the private ones are in it, each with why; without it, folded under one line
     why:
       staying.length > 0 && going.length === 0

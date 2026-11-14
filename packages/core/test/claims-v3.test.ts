@@ -195,7 +195,7 @@ describe('claims about claims: a correction, Tae → Sasquatch', () => {
   });
 });
 
-describe("a published name, as the system's own records declare it (people.ts, 12 Nov)", () => {
+describe('a published name, as a public source states it (people.ts)', () => {
   const named = (evidence: ClaimEvidence[]) =>
     v3({
       subject: ADA,
@@ -232,14 +232,46 @@ describe("a published name, as the system's own records declare it (people.ts, 1
     ).toBe(true);
   });
 
-  test("a name a page says, or a record not quoted, stays in a person's own project; a note still names no one", () => {
-    const page = named([
-      { type: 'page', url: 'https://example.org/', quote: 'Dekan Smith', ...found },
-    ]);
-    expect(ok(page).ok).toBe(false);
-    expect(ok(page, { private: true }).ok).toBe(true);
+  test('a public page or post with the words that tie the name to the account: it publishes, quoted as written', () => {
+    const post = {
+      type: 'post' as const,
+      url: 'https://x.com/dekan/status/1',
+      platform: 'x',
+      archive_url: 'https://web.archive.org/web/2026/https://x.com/dekan/status/1',
+      quote: 'Dekan Smith here: my Gnosis address is 0x1111…1111',
+      ...found,
+    };
+    expect(ok(named([post])).ok).toBe(true);
+    const page = {
+      type: 'page' as const,
+      url: 'https://example.org/team',
+      quote: 'Treasury: Dekan Smith, 0x1111…1111',
+      ...found,
+    };
+    expect(ok(named([page])).ok).toBe(true);
+  });
+
+  test("a source not quoted, a name worked out from traces, or a note that names someone stays in a person's own project", () => {
     const { quote: _q, ...unquoted } = proposal;
     expect(ok(named([unquoted])).ok).toBe(false);
+    const bare = named([{ type: 'page', url: 'https://example.org/', ...found }]);
+    expect(ok(bare).ok).toBe(false);
+    expect(ok(bare, { private: true }).ok).toBe(true);
+    const worked = v3({
+      subject: ADA,
+      verb: 'named',
+      object: { value: 'Dekan' },
+      issued_at: WHEN,
+      kind: 'inferred',
+      method: 'codex/research@2026-11-10',
+      qualifiers: { grounds: 'research' },
+      evidence: [
+        { type: 'post', url: 'https://x.com/dekan/status/1', platform: 'x', quote: 'gm', ...found },
+      ],
+      by: PERSON,
+    });
+    expect(ok(worked).ok).toBe(false);
+    expect(ok(worked, { private: true }).ok).toBe(true);
     expect(ok(named([{ ...proposal, note: 'Also Jane Doe in #245' }])).ok).toBe(false);
   });
 });

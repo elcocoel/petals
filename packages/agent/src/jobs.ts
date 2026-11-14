@@ -28,6 +28,7 @@ import { nameConversationTool, nameOfRun } from './name-conversation.ts';
 import { chargeBase, PRICE } from './price.ts';
 import { type RunDeps, type RunOptions, startRun } from './run.ts';
 import type { RunStore } from './runs.ts';
+import { frontOf, showTool } from './show.ts';
 import type { EarlierFlower } from './thread.ts';
 import { keepUsage, reconcile } from './usage.ts';
 
@@ -132,6 +133,8 @@ export function runJobs(
           // and what the shared map holds, which it draws without a yes: drawing it reads nothing new
           const map = await mapViews(deps.tools);
           const onMap = { specs: map.map((v) => v.sha), snapshots: map.map((v) => v.snapshot) };
+          // and what the canvas beside the chat has open as they ask, named as the Power Map names it
+          const front = input.in_front ? await frontOf(deps.tools, input.in_front) : null;
           const events = startRun(
             {
               messages: input.messages,
@@ -141,6 +144,7 @@ export function runJobs(
               ...(agentsNow.length ? { agents: agentsNow } : {}),
               ...(nameNow ? { name: nameNow } : {}),
               onMap,
+              ...(front ? { front } : {}),
             },
             { tools, llm: deps.llm, budget },
             {
@@ -155,6 +159,7 @@ export function runJobs(
                 retryJobTool(deps.tools, runId, o.bell),
                 stopJobTool(deps.tools, runId),
                 nameConversationTool(deps.tools, runId),
+                showTool(deps.tools),
                 annotateTool(deps.tools, runId, o.accountOf),
               ],
               ...(o.heartbeatMs ? { heartbeatMs: o.heartbeatMs } : {}),

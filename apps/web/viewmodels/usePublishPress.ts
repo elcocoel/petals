@@ -2,7 +2,7 @@
 // the one press. It prepares the publication in the name of their first wallet, has that wallet sign its two
 // lines, and sends the proof. When it lands, `joined` says which publication joined which map, so the map
 // and Information read the map again and mark it.
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   type PublishableData,
   preparePublication,
@@ -12,7 +12,7 @@ import {
 } from '../lib/agent-client.ts';
 import { casesLine, countsOf, type Joined, joinedOf } from '../lib/mapping.ts';
 import type { ProvenWallet } from '../lib/profile-view.ts';
-import { signPublication } from '../lib/publication-sign.ts';
+import { asksSignIn, signPublication } from '../lib/publication-sign.ts';
 import {
   type PublishPhase,
   publishPressView,
@@ -26,6 +26,8 @@ export function usePublishPress(map: string | null) {
   const [phase, setPhase] = useState<PublishPhase>('ready');
   const [said, setSaid] = useState<string | null>(null);
   const [joined, setJoined] = useState<Joined | null>(null);
+  /** the press asks the wallet to sign in first: said beforehand, since by phone it means a new QR */
+  const [signsIn, setSignsIn] = useState(false);
   useEffect(() => {
     let gone = false;
     void readWallets()
@@ -53,7 +55,20 @@ export function usePublishPress(map: string | null) {
       gone = true;
     };
   }, [map]);
-  const signer = signerOf(wallets);
+  const signer = useMemo(() => signerOf(wallets), [wallets]);
+  const pressable = Boolean(map && signer && data?.layers?.length);
+  useEffect(() => {
+    if (!(pressable && signer) || phase === 'signing') return;
+    let gone = false;
+    void asksSignIn(signer.wallet)
+      .then((asks) => {
+        if (!gone) setSignsIn(asks);
+      })
+      .catch(() => {});
+    return () => {
+      gone = true;
+    };
+  }, [pressable, signer, phase]);
   const publish = useCallback(async () => {
     if (!map || !signer || !data?.layers?.length) return;
     const layers = data.layers;
@@ -75,5 +90,5 @@ export function usePublishPress(map: string | null) {
       setPhase('failed');
     }
   }, [map, signer, data]);
-  return { data, view: publishPressView(data, phase, said, signer), publish, joined };
+  return { data, view: publishPressView(data, phase, said, signer, signsIn), publish, joined };
 }

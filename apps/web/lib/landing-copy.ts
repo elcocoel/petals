@@ -182,6 +182,20 @@ const written = {
   gallery: {
     title: 'Start with a network you know',
     open: 'Explore the Power Map',
+    /**
+     * A small card over the map for each move of its tour (lib/landing-tour.ts), held with the move. The map fills
+     * in {shared}, how many wallets a line's two DAOs share, and {top}, the biggest share in the shown flower.
+     */
+    cards: {
+      ref: 'Ref Finance, a DAO on NEAR. Each petal is a member, sized by their share.',
+      proposal:
+        'Proposal 257: move 100,000 REF into liquidity on Pembrock. It passed; the lit petals voted on it.',
+      refShared: '{shared} wallets sit in both Ref Finance and its community board.',
+      wallet: 'alejandro.near: one wallet, lit in the three NEAR DAOs it belongs to.',
+      trump: 'OFFICIAL TRUMP on Solana: one wallet holds {top}.',
+      trumpShared: '{shared} wallets hold both TRUMP and Render.',
+      raidguild: 'RaidGuild, a DAO on Gnosis: its members, sized by their shares.',
+    },
   },
   questions: {
     title: 'FAQ',

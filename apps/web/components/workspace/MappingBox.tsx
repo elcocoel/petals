@@ -13,10 +13,13 @@ export function MappingBox({
   press,
   onPublish,
   wallet,
+  all,
 }: {
   view: MappingView;
   press: PublishPressView | null;
   onPublish: () => void;
+  /** with no single map in front: everything the person kept on maps across the Power Map, in one press */
+  all?: { view: PublishPressView & { across: string }; onPublish: () => void } | null | undefined;
   /** the wallet chosen on the map: what can be added about it (a note or a name, or having it mapped) */
   wallet?: { heading: string; body: ReactNode } | undefined;
 }) {
@@ -50,6 +53,12 @@ export function MappingBox({
         </ul>
       )}
       {view.empty && <p className="m-0 type-ui text-muted">{view.empty}</p>}
+      {all && (
+        <section className="flex flex-col gap-text-gap border-t border-hairline pt-text-gap">
+          {all.view.across && <p className="m-0 type-ui">{all.view.across}</p>}
+          <PublishPress view={all.view} onPublish={all.onPublish} />
+        </section>
+      )}
       {press && <PublishPress view={press} onPublish={onPublish} />}
     </div>
   );

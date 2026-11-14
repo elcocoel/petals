@@ -31,6 +31,7 @@ import { type Earlier, type Observed, runJobs } from './jobs.ts';
 import type { Budget, LlmClient } from './llm.ts';
 import { RECORDED_ATTESTATIONS } from './recorded.ts';
 import { RUN_ID, type RunStore } from './runs.ts';
+import { parseInFront } from './show.ts';
 import { attestationStore } from './signature.ts';
 import { flowersOf } from './thread.ts';
 import type { AnyTool } from './tool-defs.ts';
@@ -164,6 +165,12 @@ export function parseChat(body: unknown): ChatInput | string {
   if (b.run_id !== undefined) {
     if (typeof b.run_id !== 'string' || !RUN_ID.test(b.run_id)) return 'run_id is not a run id';
     input.run_id = b.run_id;
+  }
+  // additive: what the canvas beside the chat has open, so 'this' means what the person is looking at
+  if (b.in_front !== undefined && b.in_front !== null) {
+    const f = parseInFront(b.in_front);
+    if (typeof f === 'string') return f;
+    input.in_front = f;
   }
   return input;
 }
@@ -387,6 +394,8 @@ export function createAgentRoutes(deps: AgentRouteDeps, o: AgentRouteOptions = {
           messages: merge(stored.messages, parsed.messages),
           ...(draft ? { draft } : {}),
           run_id: id,
+          // what's in front of the person is this turn's, never the run's: it goes as sent
+          ...(parsed.in_front ? { in_front: parsed.in_front } : {}),
         };
         const said = await deps.runs.thread?.(id);
         const fresh = input.messages.slice(stored.messages.length);

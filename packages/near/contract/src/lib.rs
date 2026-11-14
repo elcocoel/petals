@@ -12,6 +12,9 @@
 //! The server's key is a function-call key on the charger account that can call `charge` on this contract
 //! and nothing else, and can't attach NEAR. Whoever held it could only move people's balances into what
 //! Petals has earned, where the owner can see and give it back; never to themselves.
+//!
+//! During Petals' first wave the contract's account keeps the owner's own wallet key, so the owner can deploy a
+//! new build over it (upgradable by Petals); every build keeps `withdraw`, and people can always withdraw.
 use near_sdk::json_types::U128;
 use near_sdk::store::LookupMap;
 use near_sdk::{

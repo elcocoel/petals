@@ -60,6 +60,11 @@ describe('the publish press', () => {
     });
   });
 
+  test('says beforehand when the wallet signs in first, a new QR by phone', () => {
+    expect(publishPressView(data, 'ready', null, one, true)?.sign).toBe(publishWords.signInFirst);
+    expect(publishPressView(data, 'ready', null, one, false)?.sign).toBe(publishWords.sign);
+  });
+
   test('is not there with no layers to publish, or no wallet to sign', () => {
     expect(publishPressView({ ...data, layers: [] }, 'ready', null, one)).toBeNull();
     expect(publishPressView(data, 'ready', null, null)).toBeNull();

@@ -72,6 +72,7 @@ import { ToMapLines } from '../components/ToMapLines.tsx';
 import { ActionRow } from '../components/ui/ActionRow.tsx';
 import { AskBlock } from '../components/ui/AskBlock.tsx';
 import { AskBox } from '../components/ui/AskBox.tsx';
+import { Avatar } from '../components/ui/Avatar.tsx';
 import { Badge } from '../components/ui/Badge.tsx';
 import { BarBox } from '../components/ui/BarBox.tsx';
 import { Button } from '../components/ui/Button.tsx';
@@ -121,7 +122,7 @@ import { Conversations } from '../components/workspace/Conversations.tsx';
 import { FlowerShelf } from '../components/workspace/FlowerShelf.tsx';
 import { Funds } from '../components/workspace/Funds.tsx';
 import { MappingBox } from '../components/workspace/MappingBox.tsx';
-import { NotSignedIn } from '../components/workspace/NotSignedIn.tsx';
+import { LinkedWays, NotSignedIn } from '../components/workspace/NotSignedIn.tsx';
 import { Profile } from '../components/workspace/Profile.tsx';
 import { ProfileEditor } from '../components/workspace/ProfileEditor.tsx';
 import { ProfileHead } from '../components/workspace/ProfileHead.tsx';
@@ -137,7 +138,7 @@ import { FlowerPanel } from '../flower/FlowerPanel.tsx';
 import type { PublishableData } from '../lib/agent-client.ts';
 import { ceremonyView } from '../lib/ceremony.ts';
 import type { AnnotationRow } from '../lib/claim-lines.ts';
-import { contributionView } from '../lib/contribution-view.ts';
+import { contributionView, publicContributionWords } from '../lib/contribution-view.ts';
 import type { DrawingKind } from '../lib/figures.ts';
 import { keysOf, oneKey, readingKey, svgImage } from '../lib/flower-view.ts';
 import { settledMs } from '../lib/hero-story.ts';
@@ -155,6 +156,7 @@ import { flowerPanelView, type PanelFlower, shelfView } from '../lib/panel-view.
 import { payWords } from '../lib/pay.ts';
 import { viewChoices } from '../lib/person-view.ts';
 import { POWER_QUOTES } from '../lib/power-quotes.ts';
+import { pressAllView } from '../lib/press-all.ts';
 import { claimsView, usageView, walletRows } from '../lib/profile-view.ts';
 import { publishPressView, publishWords, signerOf } from '../lib/publish-press.ts';
 import type { Done } from '../lib/thread.ts';
@@ -701,7 +703,6 @@ const LAB_CREDIT: Credit = {
 const editorView = (over: Partial<ProfileEditorView>): ProfileEditorView => ({
   creating: false,
   account: { shown: 'a-name.near', full: 'a-name.near' },
-  needsNearWallet: false,
   onSocial: true,
   draft: {
     name: 'A name on NEAR Social',
@@ -1883,6 +1884,33 @@ export const registry: LabEntry[] = [
     ],
   },
   {
+    id: 'Avatar',
+    group: 'The workspace',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/ui/Avatar.tsx',
+    states: [
+      {
+        name: 'a picture, large, at the head of the lobby and the public page',
+        render: () => <Avatar src="/quotes/01-sunlight.webp" size="large" />,
+      },
+      {
+        name: 'the empty place for one',
+        render: () => <Avatar src={null} size="large" />,
+      },
+      {
+        name: "in the editor, and at an icon's size in the account menu",
+        render: () => (
+          <div className="flex items-center gap-block-gap">
+            <Avatar src="/quotes/01-sunlight.webp" size="medium" />
+            <Avatar src="/quotes/01-sunlight.webp" size="small" />
+            <Avatar src="/quotes/01-sunlight.webp" size="icon" />
+          </div>
+        ),
+      },
+    ],
+  },
+  {
     id: 'Logo',
     group: 'The workspace',
     figmaName: null,
@@ -2610,6 +2638,21 @@ export const registry: LabEntry[] = [
     ],
   },
   {
+    id: 'LinkedWays',
+    group: 'The conversation',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/workspace/NotSignedIn.tsx',
+    states: [
+      {
+        name: 'a linked wallet signs in too',
+        render: () => (
+          <LinkedWays busy={false} onConnectEvm={() => {}} onConnectSolana={() => {}} />
+        ),
+      },
+    ],
+  },
+  {
     id: 'WalletAsk',
     group: 'The conversation',
     figmaName: null,
@@ -2832,18 +2875,6 @@ export const registry: LabEntry[] = [
       {
         name: 'saving',
         render: () => <ProfileEditor view={editorView({ phase: 'saving' })} />,
-      },
-      {
-        name: 'signed in with an Ethereum wallet, no NEAR wallet yet',
-        render: () => (
-          <ProfileEditor
-            view={editorView({
-              account: { shown: '0x3f…f0be', full: '0x3f5ce5fbfe3e9af3971dd833d26ba9b5c936f0be' },
-              needsNearWallet: true,
-              onSocial: false,
-            })}
-          />
-        ),
       },
       {
         name: "NEAR Social didn't take it",
@@ -3284,6 +3315,20 @@ export const registry: LabEntry[] = [
         ),
       },
       {
+        name: 'with their contribution',
+        render: () => (
+          <PublicProfile
+            answer={{
+              account: 'a-name.near',
+              chain: 'near',
+              source: 'near-social',
+              profile: { name: 'A name', about: 'Maps who holds power.', avatar: null, links: {} },
+            }}
+            contribution={contributionView(LAB_CREDIT, publicContributionWords)}
+          />
+        ),
+      },
+      {
         name: 'none',
         render: () => (
           <PublicProfile
@@ -3433,6 +3478,44 @@ export const registry: LabEntry[] = [
         render: () => (
           <MappingBox view={mappingView(null, null, null)} press={null} onPublish={() => {}} />
         ),
+      },
+      {
+        name: 'no map in front: everything kept on many maps, in one press',
+        render: () => {
+          const all = pressAllView(
+            {
+              author: 'near:mainnet:petals.near',
+              maps: [
+                {
+                  about: 'eip155:100:0x372fc5a6b0b12ae174f09f6fc849a83de6b503b6',
+                  name: 'RaidGuild',
+                  layers: 3,
+                },
+                {
+                  about: 'near:mainnet:marketing.sputnik-dao.near',
+                  name: 'marketing DAO',
+                  layers: 1,
+                },
+              ],
+              left: [
+                {
+                  about: 'near:mainnet:old.sputnik-dao.near',
+                  why: 'Nothing new since your last version.',
+                },
+              ],
+            },
+            'ready',
+            null,
+          );
+          return (
+            <MappingBox
+              view={mappingView(null, null, null)}
+              press={null}
+              onPublish={() => {}}
+              all={all && { view: all, onPublish: () => {} }}
+            />
+          );
+        },
       },
     ],
   },
@@ -3998,7 +4081,7 @@ export const registry: LabEntry[] = [
                   covers: 'Gnosis block 37,912,004 · 9 Nov 2026',
                   authors: [{ name: "Petals' mapping", signed: false, published: '9 Nov' }],
                   read: '9 Nov 2026',
-                  builtOn: 0,
+                  from: [],
                 },
                 {
                   id: 'a2',
@@ -4008,7 +4091,7 @@ export const registry: LabEntry[] = [
                   covers: '3 Feb 2021 to 11 Nov 2026',
                   authors: [{ name: "Petals' mapping", signed: false, published: '11 Nov' }],
                   read: '11 Nov 2026',
-                  builtOn: 0,
+                  from: [],
                 },
                 {
                   id: 'a3',
@@ -4021,12 +4104,55 @@ export const registry: LabEntry[] = [
                     { name: 'raid.near', signed: true, published: '13 Nov' },
                   ],
                   read: '12 Nov 2026',
-                  builtOn: 1,
+                  from: [{ id: 'a1', title: 'RaidGuild members and their shares' }],
                 },
               ]}
               on={new Set(['a1', 'a2', 'a3'])}
               onToggle={() => undefined}
               joined={new Set(['a3'])}
+              version={{
+                rule: 'compose/v1',
+                from: [
+                  '9ba270a1ef913d93479444c7c0654f5c0a9e19fc5dce39f4ffbc82881efa146a',
+                  '3c51f0e2a8b94d7c11e05a6f2d93b8e4c7a1f0d2e5b8c9a3f6e1d4b7a0c3e9f2',
+                ],
+              }}
+              history={[
+                {
+                  hash: '3c51f0e2a8b94d7c11e05a6f2d93b8e4c7a1f0d2e5b8c9a3f6e1d4b7a0c3e9f2',
+                  seq: 2,
+                  by: 'elco.near',
+                  signed: true,
+                  day: '12 Nov 2026',
+                  added: [{ id: 'a3', title: 'Names for 14 members, from the DAO’s own records' }],
+                  dropped: [],
+                  after: {
+                    hash: '9ba270a1ef913d93479444c7c0654f5c0a9e19fc5dce39f4ffbc82881efa146a',
+                    seq: 1,
+                  },
+                  proof: {
+                    standard: 'nep413',
+                    message: 'petals publication 3c51f0e2…c3e9f2 for gnosis:raidguild',
+                    public_key: 'ed25519:7xCk2y…Qa9',
+                    signature: 'kQ3v…9w==',
+                    recipient: 'petals.near',
+                  },
+                },
+                {
+                  hash: '9ba270a1ef913d93479444c7c0654f5c0a9e19fc5dce39f4ffbc82881efa146a',
+                  seq: 1,
+                  by: "Petals' own mapping",
+                  signed: false,
+                  day: '11 Nov 2026',
+                  added: [
+                    { id: 'a1', title: 'RaidGuild members and their shares' },
+                    { id: 'a2', title: 'RaidGuild proposals and how each member voted' },
+                  ],
+                  dropped: [],
+                  after: null,
+                  proof: null,
+                },
+              ]}
             />
           </div>
         ),
@@ -4045,7 +4171,7 @@ export const registry: LabEntry[] = [
                   covers: 'Gnosis block 37,912,004 · 9 Nov 2026',
                   authors: [{ name: "Petals' mapping", signed: false, published: '9 Nov' }],
                   read: '9 Nov 2026',
-                  builtOn: 0,
+                  from: [],
                 },
                 {
                   id: 'a2',
@@ -4055,7 +4181,7 @@ export const registry: LabEntry[] = [
                   covers: '3 Feb 2021 to 11 Nov 2026',
                   authors: [{ name: "Petals' mapping", signed: false, published: '11 Nov' }],
                   read: '11 Nov 2026',
-                  builtOn: 0,
+                  from: [],
                 },
                 {
                   id: 'a3',
@@ -4068,7 +4194,7 @@ export const registry: LabEntry[] = [
                     { name: 'raid.near', signed: true, published: '13 Nov' },
                   ],
                   read: '12 Nov 2026',
-                  builtOn: 1,
+                  from: [{ id: 'a1', title: 'RaidGuild members and their shares' }],
                 },
               ]}
               on={new Set(['a1', 'a3'])}

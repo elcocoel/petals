@@ -18,7 +18,7 @@ Petals ({site}) maps who holds power in on-chain networks, such as a DAO, a stak
 
 Petals reads systems on NEAR, Ethereum, Base, Arbitrum, Gnosis and Solana. Its readings come from the chain, with their sources and the block or date they describe. What Petals' agent infers is labelled apart from what it read.
 
-Browsing the Power Map ({site}/map) is free and needs nothing. Talking with Petals' agent, which reads networks and draws flowers with you, needs two things: a wallet to sign in with (NEAR, Ethereum or Solana), and a little credit, paid as you go.
+Browsing the Power Map ({site}/map) is free and needs nothing. Talking with Petals' agent, which reads networks and draws flowers with you, needs two things: a NEAR wallet to sign up with, and a little credit, paid as you go.
 
 ## The steps
 
@@ -33,17 +33,17 @@ There are four steps, and a fifth for later. Take them one at a time, and skip a
 ### 2. Sign in on Petals
 
 - Open {site} and press **Connect**. Pick the wallet and approve the sign-in it shows.
-- Connect lists NEAR wallets. To sign in with an Ethereum or Solana wallet in the browser, open {site}/make, which offers **Connect an Ethereum wallet** and **Connect a Solana wallet** beside **Connect a NEAR wallet**.
-- More wallets join the same account from **Wallets** in the lobby, each with one signature that proves it's the person's.
+- A new account is made with a NEAR wallet. Ethereum and Solana wallets join it afterwards, from **Wallets** in the lobby, each with one signature that proves it's the person's: to pay from their networks through NEAR Intents, and to have work on those networks credited to the person. Once joined, such a wallet signs in too.
 - Signing in is a signature, not a payment. It moves no funds and costs nothing.
 - Petals then opens the person's own space, where their conversations and maps are kept, private to them.
 
 ### 3. Credit for Petals' agent
 
 - Petals' agent runs on NEAR AI, and each answer is paid as it goes, in dollars with NEAR beside. A flower costs a few cents.
-- Until there's credit, the chat shows a row to add some, starting at 1 in **Dollars to add**:
-  - **Add**, with the dollars and the NEAR they come to beside them (such as **Add $1.00 · 0.29 NEAR**): the wallet asks to approve one plain transfer of that NEAR. This needs NEAR in the wallet. Signed in with Ethereum or Solana, a NEAR wallet first signs once to join the account, spending nothing, then approves the transfer.
-  - **Pay with another token**, with no NEAR needed. Pick the token and its chain, and an address on that chain, where anything not swapped goes back; the dollars are the row's. Then press **Get the address to send to**. Send exactly the amount shown, in one transfer from any wallet, to that address, with the memo if one is shown, before the time shown. The chat says when the credit is added. This goes through NEAR Intents.
+- Credit is added in the lobby, under **Balance**: **Add funds** opens a row starting at 1 in **Dollars to add**:
+  - **Add**, with the dollars and the NEAR they come to beside them (such as **Add $1.00 · 0.29 NEAR**): the wallet asks to approve one plain transfer of that NEAR. This needs NEAR in the wallet. A NEAR wallet that isn't on the account yet first signs once to join it, spending nothing.
+  - **Pay with another token**, with no NEAR needed. Pick the token and its chain, and an address on that chain, where anything not swapped goes back; the dollars are the row's. Then press **Get the address to send to**. Send exactly the amount shown, in one transfer from any wallet, to that address, with the memo if one is shown, before the time shown. The row says when the credit is added. This goes through NEAR Intents.
+- When credit runs out in a conversation, the chat says so, with **Add credit**, which leads to the lobby's Balance.
 - To have NEAR in the wallet: buy it on an exchange that lists NEAR and withdraw it to the wallet's address.
 
 ### 4. A first conversation

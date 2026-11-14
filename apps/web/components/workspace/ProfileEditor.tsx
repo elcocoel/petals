@@ -1,10 +1,9 @@
-// The profile's editor (people create and edit their profile inside Petals, in NEAR Social's shape, with
-// a publish button; the Figma frame "Lobby · editing the public profile"): the picture, the name, the bio
-// and the links on the left, each link's service picked by name (X, GitHub, …) so what's picked is what
-// shows; on the right a preview. Then Save, the one main action, Cancel, and Publish as its own button, off
-// until it's set up on mainnet, and under them the one line on where it's kept, said once; for someone
-// signed in with an Ethereum or Solana wallet and no NEAR wallet yet, that line says publishing needs one
-// and leads to Wallets. The Profile card opens into this.
+// The profile's editor (people create and edit their profile inside Petals, in NEAR Social's shape; the
+// Figma frame "Lobby · editing the public profile"): the picture, the name, the bio and the links on the
+// left, each link's service picked by name (X, GitHub, …) so what's picked is what shows; on the right a
+// preview. Then Save, the one main action, which puts it on NEAR Social with the person's NEAR wallet (every
+// account starts with one), and Cancel; under them the one line on where it goes, said once. The Profile
+// card opens into this.
 // Props only: viewmodels/useProfileEditor.ts holds it. Words from lib/lobby-view.ts.
 import {
   busyPhase,
@@ -13,13 +12,13 @@ import {
   type ProfileEditorView,
 } from '../../lib/lobby-view.ts';
 import { PROFILE_LIMITS, SERVICES, serviceName } from '../../lib/near-social.ts';
+import { Avatar } from '../ui/Avatar.tsx';
 import { Badge } from '../ui/Badge.tsx';
 import { Button } from '../ui/Button.tsx';
 import { Card } from '../ui/Card.tsx';
 import { ChooseFile } from '../ui/ChooseFile.tsx';
 import { Field } from '../ui/Field.tsx';
 import { Mono } from '../ui/Mono.tsx';
-import { TextLink } from '../ui/TextLink.tsx';
 
 /** Publish's words while it works, step by step. */
 const PUBLISHING: Partial<Record<EditPhase, string>> = {
@@ -163,16 +162,7 @@ export function ProfileEditor({ view }: { view: ProfileEditorView }) {
           </span>
         )}
       </div>
-      {view.needsNearWallet ? (
-        <p className="my-0 flex flex-wrap items-center gap-text-gap">
-          <span className="type-caption">{editorWords.needsNear}</span>
-          <TextLink variant="quiet" href="#profile-wallets">
-            {editorWords.goToWallets}
-          </TextLink>
-        </p>
-      ) : (
-        view.onSocial && <p className="my-0 type-caption text-muted">{editorWords.socialNote}</p>
-      )}
+      {view.onSocial && <p className="my-0 type-caption text-muted">{editorWords.socialNote}</p>}
     </Card>
   );
 }
@@ -186,14 +176,5 @@ const servicesFor = (current: string) => [
 ];
 
 function Picture({ src, size }: { src: string | null; size: '48' | '72' }) {
-  const box = size === '72' ? 'size-drawing-72' : 'size-drawing-48';
-  return src ? (
-    // biome-ignore lint/performance/noImgElement: the person's own picture, from NEAR Social or just chosen
-    <img className={`block ${box} shrink-0 border border-hairline object-cover`} src={src} alt="" />
-  ) : (
-    <span
-      aria-hidden="true"
-      className={`block ${box} shrink-0 border border-dashed border-hairline`}
-    />
-  );
+  return <Avatar src={src} size={size === '72' ? 'medium' : 'small'} />;
 }

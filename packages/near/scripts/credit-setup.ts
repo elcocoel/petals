@@ -12,8 +12,9 @@
 // machine. Wallets refuse to give a site a full-access key (Meteor does), and nobody has checked whether
 // they sign a contract deploy for one, so the deploy happens here. From that account the script:
 //   1. makes the contract's account and the charger's, through NEAR's own name registrar;
-//   2. deploys the contract (packages/near/contract), sets it up (owner, charger), and deletes its last
-//      key: nobody can change it after, and people can always withdraw;
+//   2. deploys the contract (packages/near/contract), sets it up (owner, charger), gives its account the
+//      owner's own wallet key and deletes its own: upgradable by the owner during this first wave (a new
+//      build deployed with that key), and people can always withdraw;
 //   3. gives the charger one key that can call `charge` and nothing else (written to PETAL_KEYS_DIR, never
 //      printed), and the owner's own wallet key, then deletes its own;
 //   4. makes the shared map's writer, and gives it one key that can call `__fastdata_kv` on the owner's account
@@ -242,14 +243,21 @@ async function finish(ownerKey: string): Promise<string> {
     }
   }
   if (!(await hasCode(CREDIT))) {
-    console.log(`credit-setup: deploying the contract to ${CREDIT} and locking it`);
+    console.log(
+      `credit-setup: deploying the contract to ${CREDIT}, upgradable with ${owner}'s wallet key`,
+    );
     await send(as(CREDIT, tempCredit), CREDIT, [
       actions.deployContract(new Uint8Array(wasm)),
       actions.functionCall('new', { owner, charger: CHARGER }, 30_000_000_000_000n, 0n),
+      actions.addFullAccessKey(PublicKey.fromString(ownerKey)),
       actions.deleteKey(tempCredit.getPublicKey()),
     ]);
   } else if (await hasKey(CREDIT, tempCredit)) {
-    await send(as(CREDIT, tempCredit), CREDIT, [actions.deleteKey(tempCredit.getPublicKey())]);
+    // a run that stopped after the deploy: the owner's key on, then this script's off
+    const list = [actions.deleteKey(tempCredit.getPublicKey())];
+    if (!(await keysOf(CREDIT)).some((k) => k.public_key === ownerKey))
+      list.unshift(actions.addFullAccessKey(PublicKey.fromString(ownerKey)));
+    await send(as(CREDIT, tempCredit), CREDIT, list);
   }
   if (!existsSync(keyOut)) {
     writeFileSync(
@@ -323,9 +331,13 @@ async function finish(ownerKey: string): Promise<string> {
   const ownerHolds = chargerKeys.some(
     (k) => k.public_key === ownerKey && k.access_key.permission === 'FullAccess',
   );
+  const ownerUpgrades =
+    creditKeys.length === 1 &&
+    creditKeys[0]?.public_key === ownerKey &&
+    creditKeys[0]?.access_key.permission === 'FullAccess';
   return [
     `Done on ${network}.`,
-    `${CREDIT}: the contract (sha256 ${sha}), config ${JSON.stringify(config)}, keys: ${creditKeys.length === 0 ? 'none (locked)' : creditKeys.map((k) => k.public_key).join(', ')}`,
+    `${CREDIT}: the contract (sha256 ${sha}), config ${JSON.stringify(config)}, keys: ${ownerUpgrades ? `${owner}'s wallet key only (upgradable by ${owner}; people can always withdraw)` : `NOT ${owner}'s alone: ${creditKeys.map((k) => k.public_key).join(', ') || 'none'}`}`,
     `${CHARGER}: ${chargerKeys.length} keys: ${ownerHolds ? `${owner}'s wallet key` : `NOT ${owner}'s`}, and one that ${chargeKey ? `can only call ${JSON.stringify(chargeKey.access_key.permission)}` : 'IS MISSING'}`,
     `${WRITER}: ${writerKeys.length} keys: ${ownerWrites ? `${owner}'s wallet key` : `NOT ${owner}'s`}, and one that ${writeKey ? `can only call ${JSON.stringify(writeKey.access_key.permission)}` : 'IS MISSING'}`,
     `${FUNDER}: ${(await balanceOf(FUNDER)) === null ? `deleted, what was left back to ${owner}` : 'STILL THERE'}`,
@@ -373,7 +385,7 @@ const PAGE = `<!doctype html>
 button{font:inherit;padding:8px 16px}pre{white-space:pre-wrap;background:#f4f4f4;padding:12px}</style></head>
 <body><h1>Petals' credit contract</h1>
 <p>Connect <b>${owner}</b>'s wallet. It asks you to approve one plain transfer: <b>${nearOf(SENT)} NEAR</b> to <code>${FUNDER.slice(0, 6)}…${FUNDER.slice(-4)}</code>, a new account this setup made on your computer. Nothing else is asked of your wallet.</p>
-<p>From that account, the script in your terminal makes <b>${CREDIT}</b> (the contract, with no key, so nobody can change it) and <b>${CHARGER}</b> (Petals' server's account, with your wallet's key and one key that can only charge). Then it deletes that account, and what's left comes back to ${owner}.</p>
+<p>From that account, the script in your terminal makes <b>${CREDIT}</b> (the contract, with your wallet's key only: upgradable by you during this first wave, and people can always withdraw) and <b>${CHARGER}</b> (Petals' server's account, with your wallet's key and one key that can only charge). Then it deletes that account, and what's left comes back to ${owner}.</p>
 <button id="go">Connect ${owner}</button>
 <pre id="log"></pre>
 <script type="module">

@@ -1,6 +1,6 @@
 // Annotations: what a person or an agent adds about an account, beside what the chain says, as much as their
 // research finds. Each is a claim/v3 (a name, a note, a link, anything a claim can say), kept privately under the
-// project's owner, with the project it was added in. Names are allowed here and nowhere published (people.ts).
+// project's owner, with the project it was added in. Names are allowed here; one a public source states publishes with the press, the rest stay here (people.ts).
 //   add_annotation    one or many, all or none; Petals fills each one's id and who answers for it
 //   list_annotations  a project's, or everything the owner holds about one account
 // Who answers for one (`by`) comes from the door, never from the writer: the signed-in person's account for

@@ -25,13 +25,23 @@ class FakeConnector {
       }
     }
   });
-  // What Meteor does when it is already connected: the stale mainnet account, ignoring the network.
-  signMessage = vi.fn(async () => ({
-    accountId: 'petals.near',
+  // What Meteor does when it is already connected: the account it last signed in, ignoring the network.
+  signedAs = 'petals.near';
+  signMessage = vi.fn(async (_: unknown) => ({
+    accountId: this.signedAs,
     publicKey: 'ed25519:stale',
     signature: 'sig-stale',
   }));
   getConnectedWallet = vi.fn(async () => ({ wallet: { signMessage: this.signMessage } }));
+  /** the accounts the connected wallet names; none means no wallet is connected on this page */
+  accounts: string[] = [];
+  wallet = vi.fn(async () => {
+    if (this.accounts.length === 0) throw new Error('No accounts found');
+    return {
+      getAccounts: async () => this.accounts.map((accountId) => ({ accountId })),
+      signMessage: this.signMessage,
+    };
+  });
   reply: 'signed' | 'cancel' | 'silent' = 'signed';
   options: { network: string; excludedWallets?: string[] };
   constructor(options: { network: string; excludedWallets?: string[] }) {
@@ -118,5 +128,72 @@ describe('signPrepared', () => {
     await signPrepared(prepared, 'testnet');
     (made[0] as FakeConnector).reply = 'silent';
     await expect(signPrepared(prepared, 'testnet')).rejects.toThrow('no signed message');
+  });
+});
+
+describe('signAs', () => {
+  beforeEach(() => {
+    made.length = 0;
+  });
+
+  async function connected(network: 'testnet' | 'mainnet', accounts: string[]) {
+    const w = await load();
+    // the connector for the network is made on first use; make it, then say what it holds
+    await w.signsInFirst(network, 'nobody');
+    const c = made.find((m) => m.options.network === network) as FakeConnector;
+    c.accounts = accounts;
+    return { w, c };
+  }
+
+  test('the wallet connected as that account signs, with no new sign-in', async () => {
+    const { w, c } = await connected('mainnet', ['petals.near']);
+    const s = await w.signAs(prepared, 'mainnet', 'petals.near');
+    expect(s).toEqual({
+      accountId: 'petals.near',
+      publicKey: 'ed25519:stale',
+      signature: 'sig-stale',
+    });
+    expect(c.connect).not.toHaveBeenCalled();
+    expect(c.signMessage.mock.calls[0]?.[0]).toEqual({
+      message: prepared.message,
+      recipient: prepared.recipient,
+      nonce: expect.any(Uint8Array),
+      network: 'mainnet',
+      signerId: 'petals.near',
+    });
+  });
+
+  test('with no wallet connected on this page, it signs in and signs together', async () => {
+    const { w, c } = await connected('testnet', []);
+    const s = await w.signAs(prepared, 'testnet', 'elco.testnet');
+    expect(s.accountId).toBe('elco.testnet');
+    expect(c.signMessage).not.toHaveBeenCalled();
+    expect(c.connect).toHaveBeenCalledTimes(1);
+  });
+
+  test('a wallet connected as another account signs in again', async () => {
+    const { w, c } = await connected('testnet', ['someone.testnet']);
+    await w.signAs(prepared, 'testnet', 'elco.testnet');
+    expect(c.signMessage).not.toHaveBeenCalled();
+    expect(c.connect).toHaveBeenCalledTimes(1);
+  });
+
+  test('a wallet that signs as another account than asked falls back to signing in', async () => {
+    const { w, c } = await connected('testnet', ['elco.testnet', 'petals.testnet']);
+    c.signedAs = 'petals.testnet';
+    const s = await w.signAs(prepared, 'testnet', 'elco.testnet');
+    expect(c.signMessage).toHaveBeenCalledTimes(1);
+    expect(c.connect).toHaveBeenCalledTimes(1);
+    expect(s.accountId).toBe('elco.testnet');
+  });
+
+  test('signsInFirst says whether a sign-in comes before the signature', async () => {
+    const { w, c } = await connected('mainnet', ['petals.near']);
+    expect(await w.signsInFirst('mainnet', 'petals.near')).toBe(false);
+    expect(await w.signsInFirst('mainnet', 'elcocoel.near')).toBe(true);
+    c.accounts = [];
+    expect(await w.signsInFirst('mainnet', 'petals.near')).toBe(true);
+    expect(c.connect).not.toHaveBeenCalled();
+    expect(c.signMessage).not.toHaveBeenCalled();
   });
 });

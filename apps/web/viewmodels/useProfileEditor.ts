@@ -147,7 +147,6 @@ export function useProfileEditor(
   saved: boolean;
   published: boolean;
   /** Reads the person's wallets again: Wallets calls it when it adds one. */
-  readNear: () => void;
 } {
   const profile = social.kind === 'profile' ? social.profile : null;
   const [editing, setEditing] = useState(false);
@@ -164,10 +163,7 @@ export function useProfileEditor(
   /** The NEAR account it publishes as: undefined while it's read, null when the person has none. */
   const [near, setNear] = useState<string | null | undefined>(undefined);
 
-  /**
-   * Reads which NEAR account it publishes as: when the editor opens, and again whenever a wallet is added
-   * while it's open, so a NEAR wallet added in Wallets reaches the open editor.
-   */
+  /** Reads which NEAR account it publishes as, when the editor opens: every account starts with one. */
   const readNear = useCallback(() => {
     void Promise.all([readSignedIn(), readWallets()]).then(
       ([me, wallets]) => setNear(nearAccountOf(me, wallets ?? [])),
@@ -186,21 +182,6 @@ export function useProfileEditor(
     setNear(undefined);
     readNear();
   }, [profile, readNear]);
-
-  // While Publish waits for a NEAR wallet, coming back to the page reads the wallets again, so one added
-  // elsewhere (another tab, an agent) reaches the open editor too.
-  useEffect(() => {
-    if (!editing || near !== null) return;
-    const again = () => {
-      if (document.visibilityState === 'visible') readNear();
-    };
-    window.addEventListener('focus', again);
-    document.addEventListener('visibilitychange', again);
-    return () => {
-      window.removeEventListener('focus', again);
-      document.removeEventListener('visibilitychange', again);
-    };
-  }, [editing, near, readNear]);
 
   const save = useCallback(async () => {
     setProblem(null);
@@ -273,7 +254,6 @@ export function useProfileEditor(
       ? {
           creating: !profile,
           account: shownAccount(near ?? account),
-          needsNearWallet: PUBLISH_TO_NEAR_SOCIAL && near === null,
           draft,
           picture: picture.src,
           phase,
@@ -309,5 +289,5 @@ export function useProfileEditor(
 
   // Opening needs an account whose profile has been read: a profile, or none there yet.
   const canOpen = account && (social.kind === 'profile' || social.kind === 'none');
-  return { open: canOpen ? open : undefined, view, saved, published, readNear };
+  return { open: canOpen ? open : undefined, view, saved, published };
 }

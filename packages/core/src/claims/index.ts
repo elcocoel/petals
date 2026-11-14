@@ -10,11 +10,11 @@ export {
   type SnapshotRead,
 } from './observed.ts';
 export {
-  declaredName,
   FORBIDDEN_WORDS,
   PERSON_NAMESPACES,
   type PeopleScope,
   peopleRuleIssues,
+  sourcedName,
 } from './people.ts';
 export { applyPolicy, DEFAULT_LENS } from './policy.ts';
 export {

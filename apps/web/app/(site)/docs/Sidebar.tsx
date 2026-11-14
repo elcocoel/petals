@@ -110,7 +110,7 @@ export function Sidebar({ pages, current }: { pages: DocPage[]; current: DocPage
           pages
             .filter((p) => p.overview)
             .map((section) => (
-              <details key={section.slug} open={current.section === section.section}>
+              <details key={section.slug} open>
                 <summary>{section.title}</summary>
                 {(['guide', 'reference'] as const).flatMap((kind) =>
                   byDepartment(
@@ -121,10 +121,12 @@ export function Sidebar({ pages, current }: { pages: DocPage[]; current: DocPage
                       key={`${kind}:${group.department ?? ''}`}
                       data-kind={kind}
                     >
-                      <p className={styles.navGroupTitle}>
-                        <Icon name={kind === 'guide' ? 'petals' : 'project'} small />
-                        {group.title ?? (kind === 'guide' ? 'Guides' : 'System reference')}
-                      </p>
+                      {(kind === 'reference' || group.title) && (
+                        <p className={styles.navGroupTitle}>
+                          {kind === 'reference' && <Icon name="project" small />}
+                          {group.title ?? 'System reference'}
+                        </p>
+                      )}
                       {group.pages.map((p) => (
                         <a
                           key={p.slug}

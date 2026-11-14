@@ -31,7 +31,14 @@ import { mapClaims } from '../mapping-claims.ts';
 import { mcpHttpHandler } from '../mcp/server.ts';
 import { payoutsOf } from '../payouts.ts';
 import { cardProposals, proposalsOf } from '../proposals.ts';
-import { authorOf, compositionOf, creditFor, mapRecord, readingCredit } from '../record.ts';
+import {
+  authorOf,
+  compositionOf,
+  creditFor,
+  mapHistory,
+  mapRecord,
+  readingCredit,
+} from '../record.ts';
 import { findTool } from '../registry.ts';
 import { brainOf } from '../tools/brain.ts';
 import { base, findSnapshot } from '../tools/shared.ts';
@@ -632,6 +639,11 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
           : { pieces: {}, petals: {}, publications: {}, authors: {} },
     });
   });
+  // A map's record (composition.md, sections 2 and 2b): every publication about it in the record's own order, its
+  // author, version and proof, with the manifest a press's proof names, so anyone can check each one.
+  app.get('/api/v1/maps/:id/record', async (c) =>
+    respond(c, await mapHistory(ctx, aboutKey(c.req.param('id')))),
+  );
   // An author's credit (credit/v1): computed from the whole record, with its hash, so anyone can check it.
   app.get('/api/v1/credit/:account', async (c) =>
     respond(c, await creditFor(ctx, authorOf(c.req.param('account')))),

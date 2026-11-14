@@ -23,7 +23,7 @@ import { Icon } from '../components/ui/Icon.tsx';
 import { Quote } from '../components/ui/Quote.tsx';
 import { MappingBox } from '../components/workspace/MappingBox.tsx';
 import { WalletAsk } from '../components/workspace/WalletAsk.tsx';
-import { LandscapeCanvas, PANEL_W } from '../landscape/LandscapeCanvas.tsx';
+import { LandscapeCanvas, type MapLooking, PANEL_W } from '../landscape/LandscapeCanvas.tsx';
 import { ceremonyWords } from '../lib/ceremony.ts';
 import type { Catalogue } from '../lib/composer-options.ts';
 import {
@@ -36,6 +36,7 @@ import {
   type Size,
 } from '../lib/float-box.ts';
 import { networkLabel, populationWords, shortId } from '../lib/flower-view.ts';
+import { inFrontOf } from '../lib/in-front.ts';
 import { mappingView, modeWords } from '../lib/mapping.ts';
 import type { MapCard } from '../lib/maps.ts';
 import { groundWords } from '../lib/opening.ts';
@@ -44,6 +45,7 @@ import type { Opened } from '../lib/thread.ts';
 import { useFloatBoxes } from '../viewmodels/useFloatBoxes.ts';
 import { useGroundMap } from '../viewmodels/useGroundMap.ts';
 import { usePowerQuote } from '../viewmodels/usePowerQuote.ts';
+import { usePressAll } from '../viewmodels/usePressAll.ts';
 import { usePublishPress } from '../viewmodels/usePublishPress.ts';
 import { useWorkspace } from '../viewmodels/useWorkspace.ts';
 import type { Clear } from './camera.ts';
@@ -219,6 +221,8 @@ export function InteractionSurface({
   const [inMap, setInMap] = useState<string | null>(null);
   const publishMap = inMap ?? flowerMap ?? state.mapAt?.map ?? madeMap;
   const publishing = usePublishPress(publishMap);
+  // with no single map in front, everything kept on maps across the Power Map goes in one press
+  const pressAll = usePressAll(state.mode === 'mapping' && !publishMap, rereadMap);
   // a power quote wherever /make has nothing to show yet, on the background: the map on its way, or a canvas
   // with nothing drawn on it
   const openingQuote = usePowerQuote(0);
@@ -243,6 +247,25 @@ export function InteractionSurface({
   // where it starts is measured (what the conversation covers), so it's painted as the boxes are
   const mapArea = useRef<HTMLDivElement>(null);
   const shown = Boolean(ground && (land || mapOpening));
+  // What's in front of the person, sent with the next turn so "this" means it: the map they're inside (or the
+  // whole map), else the conversation's flower drawn on its own; the layers on and what's chosen on the map.
+  const [looking, setLooking] = useState<MapLooking | null>(null);
+  const onMap = Boolean(ground && land);
+  const frontFlower = onCanvas?.reading ? onCanvas.key : null;
+  const inFront = useMemo(
+    () =>
+      inFrontOf({
+        onMap,
+        entered: inMap,
+        flower: frontFlower,
+        layers: looking?.layers ?? null,
+        wallet: chosen ? { id: chosen.id, chain: chosen.chain } : null,
+        proposal: looking?.proposal ?? null,
+      }),
+    [onMap, inMap, frontFlower, looking, chosen],
+  );
+  const tellFront = actions.inFront;
+  useEffect(() => tellFront(inFront), [tellFront, inFront]);
   useLayoutEffect(() => {
     if (!shown || !mapArea.current) return;
     mapArea.current.style.left = `${clear?.left ?? 0}px`;
@@ -288,6 +311,8 @@ export function InteractionSurface({
                   onWallet={actions.chooseMapWallet}
                   // the map in front, for the mapping state: the flower the person is inside
                   onEnter={setInMap}
+                  // and what they look at inside it, for the next turn
+                  onLooking={setLooking}
                   // the room beside the conversation is narrow: the map keeps clear of its own chains
                   clearOfChains
                   // the same map as /map's, from the same code, so there's one thing to edit: its
@@ -429,6 +454,7 @@ export function InteractionSurface({
             view={mapping}
             press={publishing.view}
             onPublish={() => void publishing.publish()}
+            all={pressAll.view && { view: pressAll.view, onPublish: () => void pressAll.publish() }}
             wallet={
               chosen && chosenAccount
                 ? {

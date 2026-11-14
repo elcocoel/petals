@@ -1,7 +1,7 @@
 // Publishing to the shared map (a signed version, specs/005-mapping-brain/composition.md): what a signed-in
 // person kept about a map goes to everyone's Power Map with one press, as a publication/v1 in the record signed
-// by one of their wallets (NEP-413, EIP-191 or ed25519), at once, credited to it; a name goes only as the DAO's
-// own records declare it (people.ts). Through petalApp, signed in with test wallets, on the real NEAR validators
+// by one of their wallets (NEP-413, EIP-191 or ed25519), at once, credited to it; a name goes as a public
+// source states it, quoted (people.ts). Through petalApp, signed in with test wallets, on the real NEAR validators
 // fixture. No model is called.
 import { fileURLToPath } from 'node:url';
 import {
@@ -109,7 +109,7 @@ const layerAbout = (about: string, from: string[] = [], value = '3'): Layer =>
     standing: 'verified',
   }) as unknown as Layer;
 
-/** A name the DAO's own records tie to the pool, and one only a page says. */
+/** A name the DAO's own records tie to the pool, and one worked out from traces. */
 const DECLARED = {
   subject: POOL,
   verb: 'named',
@@ -124,11 +124,13 @@ const DECLARED = {
     },
   ],
 };
-const PAGE_ONLY = {
+const WORKED_OUT = {
   subject: POOL,
   verb: 'named',
   object: { value: 'Astro Stakers' },
-  kind: 'sourced',
+  kind: 'inferred',
+  method: 'codex/research@2026-11-10',
+  qualifiers: { grounds: 'research' },
   evidence: [{ type: 'page', url: 'https://astrostakers.com/', quote: 'Astro Stakers' }],
 };
 
@@ -155,7 +157,7 @@ describe('the press: a signed version on the shared map', () => {
     expect((await w.request(mapQ(w.map))).status).toBe(401);
     await w.signIn();
     const kept = await w.request('/api/v1/me/annotations', 'POST', {
-      annotations: [DECLARED, PAGE_ONLY],
+      annotations: [DECLARED, WORKED_OUT],
     });
     expect(kept.body, JSON.stringify(kept.body)).toMatchObject({ added: 2 });
 
@@ -200,7 +202,7 @@ describe('the press: a signed version on the shared map', () => {
       expect.objectContaining({
         subject: POOL,
         name: 'Astro Stakers',
-        why: expect.stringMatching(/the system's own records/),
+        why: expect.stringMatching(/worked out from traces/),
       }),
     ]);
     // each layer the press would publish, and what it adds to the map in front (composition.md, section 9)

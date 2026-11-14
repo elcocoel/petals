@@ -30,6 +30,8 @@ export interface Proof {
   public_key?: string;
   nonce?: string;
   recipient?: string;
+  /** one press over several publications: the hash of the manifest/v1 the text names, which lists this one */
+  manifest?: string;
 }
 
 export interface Publication {
@@ -95,6 +97,102 @@ export function signedText(p: Omit<Publication, 'proof'>, name: string): string 
 /** Does this text name this publication (its last line), as signedText writes it? */
 export const textNames = (text: string, p: Publication) =>
   text.trimEnd().split('\n').at(-1) === `Publication ${unsignedHash(p)}`;
+
+export const MANIFEST_VERSION = 'manifest/v1';
+
+/**
+ * One press over many publications (composition.md, section 2b): the author, each publication's unsigned hash in
+ * the order they are appended, and when the server prepared the press. The wallet signs one text naming its hash.
+ */
+export interface Manifest {
+  petal: typeof MANIFEST_VERSION;
+  author: string;
+  publications: string[];
+  published_at: string;
+}
+
+let compiledManifest: ReturnType<ReturnType<typeof createAjv>['getSchema']> | undefined;
+
+/** The manifest, typed, or every reason it isn't one. */
+export function validateManifest(x: unknown): Result<Manifest> {
+  compiledManifest ??= createAjv().getSchema(schemaId('manifest'));
+  if (!compiledManifest) throw new Error('manifest schema not registered');
+  if (compiledManifest(x)) return { ok: true, value: x as Manifest };
+  return {
+    ok: false,
+    errors: (compiledManifest.errors ?? []).map(
+      (e): ValidationIssue => ({
+        path: e.instancePath,
+        rule: 'schema',
+        message: e.message ?? 'invalid',
+      }),
+    ),
+  };
+}
+
+/** A manifest's name: the hash of its canonical JSON. */
+export const manifestHash = (m: Manifest) => sha256Hex(canonicalJson(m));
+
+/** The text the author's wallet signs for one press over many publications: one line in words, then the manifest's hash. */
+export function manifestText(m: Manifest): string {
+  const n = m.publications.length;
+  return `Petals: publish ${n} version${n === 1 ? '' : 's'} in your name.\nManifest ${manifestHash(m)}`;
+}
+
+/** Does this text name this manifest (its last line), as manifestText writes it? */
+export const textNamesManifest = (text: string, m: Manifest) =>
+  text.trimEnd().split('\n').at(-1) === `Manifest ${manifestHash(m)}`;
+
+/**
+ * The check of a publication signed with a manifest, but for the signature itself (composition.md, section 2b):
+ * the manifest hashes to the proof's `manifest`; its author is the publication's and it lists the publication's
+ * unsigned hash; and the signed text names it. What's left is the chain's: the signature over `proof.message`, for
+ * the author, as for one publication signed alone.
+ */
+export function pressedWith(
+  p: Publication,
+  m: Manifest,
+): { ok: true } | { ok: false; reason: string } {
+  const no = (reason: string) => ({ ok: false as const, reason });
+  if (!p.proof?.manifest) return no('it was signed alone, with no manifest');
+  if (manifestHash(m) !== p.proof.manifest) return no("the manifest isn't the one its proof names");
+  if (m.author !== p.author) return no("the manifest is another author's");
+  if (!m.publications.includes(unsignedHash(p))) return no("the manifest doesn't list it");
+  if (!textNamesManifest(p.proof.message, m)) return no('the signed text names another manifest');
+  return { ok: true };
+}
+
+/** Petals' own account. The import's author, mapping.petals.near, is a name under it. */
+export const PETALS_AUTHOR = 'near:mainnet:petals.near';
+
+/**
+ * The record as its authors stand (composition.md, section 2b): the import's label and petals.near are one author,
+ * Petals', on a map once petals.near signs a version there whose parent is one of the import's entries. From then,
+ * the import's entries on that map read as petals.near's earlier versions: its signed version is Petals' latest
+ * there, its first facts keep the import's place in the record, and it never confirms or reuses its own import.
+ * On every other map the record reads as it was appended.
+ */
+export function asAuthored(record: readonly Entry[]): Entry[] {
+  const imported = new Map<string, Set<string>>();
+  for (const e of record)
+    if (e.publication.author === IMPORTED_AUTHOR) {
+      const key = aboutKey(e.publication.about);
+      imported.set(key, (imported.get(key) ?? new Set()).add(e.hash));
+    }
+  const taken = new Set<string>();
+  for (const e of record) {
+    const key = aboutKey(e.publication.about);
+    const parent = e.publication.parent;
+    if (e.publication.author === PETALS_AUTHOR && parent && imported.get(key)?.has(parent))
+      taken.add(key);
+  }
+  if (!taken.size) return [...record];
+  return record.map((e) =>
+    e.publication.author === IMPORTED_AUTHOR && taken.has(aboutKey(e.publication.about))
+      ? { ...e, publication: { ...e.publication, author: PETALS_AUTHOR } }
+      : e,
+  );
+}
 
 export interface Credited {
   author: string;
@@ -171,7 +269,7 @@ export function compose(
   record: readonly Entry[],
   docs: ReadonlyMap<string, unknown>,
 ): Composition {
-  const entries = entriesAbout(record, about);
+  const entries = entriesAbout(asAuthored(record), about);
   const latest = latestOf(entries);
   // when each author first stated each fact (slot and value), over all their publications about the map
   const firstStated = new Map<string, Credited>();

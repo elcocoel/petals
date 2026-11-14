@@ -42,6 +42,7 @@ import { SHAPE } from '../flower/ring.ts';
 import { type BlocSpan, blocChoices, periodWords } from '../lib/bloc-words.ts';
 import type { Rect, Size } from '../lib/float-box.ts';
 import { mapClaimGroups, mapClaimWords } from '../lib/map-claims.ts';
+import { historyOf } from '../lib/map-history.ts';
 import { layerWords, mapLayers } from '../lib/map-layers.ts';
 import { MAP_SEARCH_ID, mapSearchWords, type SearchRow, searchRows } from '../lib/map-search.ts';
 import { authorSwatches, strataOf, strataWords } from '../lib/map-strata.ts';
@@ -57,6 +58,7 @@ import { useLegendEdit } from '../viewmodels/useLegendEdit.ts';
 import { useMapBlocs } from '../viewmodels/useMapBlocs.ts';
 import { useMapCard } from '../viewmodels/useMapCard.ts';
 import { useMapClaims } from '../viewmodels/useMapClaims.ts';
+import { useMapRecord } from '../viewmodels/useMapRecord.ts';
 import { useMapSearch } from '../viewmodels/useMapSearch.ts';
 import { usePersonView } from '../viewmodels/usePersonView.ts';
 import {
@@ -275,6 +277,12 @@ function withLanded<D extends { flowers: CanvasFlower[]; chains: CanvasChain[] }
   return { ...data, flowers: [...data.flowers, flower] };
 }
 
+/** What the person looks at inside the map they're in, besides the map itself (onLooking). */
+export interface MapLooking {
+  layers: { map: string; on: readonly string[] } | null;
+  proposal: { map: string; id: string } | null;
+}
+
 export interface MapWallet {
   id: string;
   chain: string;
@@ -466,6 +474,7 @@ export function LandscapeCanvas({
   panelEdge,
   onWallet,
   onEnter,
+  onLooking,
   information,
   ownBox = false,
   show,
@@ -517,6 +526,11 @@ export function LandscapeCanvas({
   onWallet?: ((wallet: MapWallet | null) => void) | undefined;
   /** Told the map of the flower the person goes into, and null when they come out (/make's mapping state). */
   onEnter?: ((map: string | null) => void) | undefined;
+  /**
+   * Told what else the person looks at inside the map they're in, as it changes (/make sends it with every turn):
+   * the layers still on where some are switched off (null when all are on), and the proposal pinned on its ring.
+   */
+  onLooking?: ((looking: MapLooking) => void) | undefined;
   /**
    * What the page's conversation is about (on /make the map is always there, and an answer moves it): a DAO by its
    * map, flown to and entered; a wallet, lit everywhere it sits on its chain (the chosen chain, else the one on
@@ -864,6 +878,19 @@ export function LandscapeCanvas({
   useEffect(() => {
     toldEnter.current?.(enteredMap);
   }, [enteredMap]);
+  // the map gone from the page: nobody is inside it any more
+  useEffect(() => () => toldEnter.current?.(null), []);
+  // what else the person is looking at inside it, for a page that asks (/make sends it with every turn): the
+  // layers still on where some are off, and the proposal pinned on its ring
+  const toldLooking = useRef(onLooking);
+  toldLooking.current = onLooking;
+  const pinnedId = pinned?.id ?? null;
+  useEffect(() => {
+    toldLooking.current?.({
+      layers: strata && layersOn ? { map: strata.map, on: layersOn } : null,
+      proposal: pinnedId && enteredMap ? { map: enteredMap, id: pinnedId } : null,
+    });
+  }, [strata, layersOn, pinnedId, enteredMap]);
   // the wallet chosen, with the flower it was chosen in, for the page
   const toldWallet = useRef(onWallet);
   toldWallet.current = onWallet;
@@ -907,12 +934,23 @@ export function LandscapeCanvas({
   useEffect(() => {
     if (joined && joined.map === strataMap) setClaimsOpen(true);
   }, [joined, strataMap]);
-  // where authors differ, the map's credit says who stated which value: read once, all layers on
-  const creditRead = useComposed(
-    card?.differs ? strataMap : null,
-    card?.differs && strata ? strata.ids : null,
+  // the whole map, all layers on, read once: the version you're seeing (its rule and the publications it was
+  // composed from) and, where authors differ, who stated which value
+  const wholeRead = useComposed(
+    strata ? strataMap : null,
+    strata ? strata.ids : null,
     person.hash,
     version,
+  );
+  const creditRead = card?.differs ? wholeRead : null;
+  // the map's versions, newest first, each layer named as its row is
+  const record = useMapRecord(strata ? strataMap : null, version);
+  const history = useMemo(
+    () =>
+      record && strataLayers
+        ? historyOf(record, new Map(strataLayers.map((l) => [l.id, l.title] as const)))
+        : undefined,
+    [record, strataLayers],
   );
   const joinedHere = useMemo(
     () => new Set(joined && joined.map === strataMap ? joined.documents.map((d) => d.sha256) : []),
@@ -1282,6 +1320,12 @@ export function LandscapeCanvas({
                         }
                         joined={joinedHere}
                         swatches={swatches}
+                        version={
+                          wholeRead?.rule && wholeRead.composed_from
+                            ? { rule: wholeRead.rule, from: wholeRead.composed_from }
+                            : undefined
+                        }
+                        history={history}
                       />
                       {card?.differs ? (
                         <p className="my-0 pt-space-8 type-ui text-muted">

@@ -4,6 +4,7 @@
 // short list under it: the way to the profile's editor, and Disconnect, the one way out of the account. It holds no state: whether it's open is its ViewModel's, and the list (ui/Menu) says when
 // to close. Props only: viewmodels/useLobby.ts holds it. Words from lib/lobby-view.ts.
 import { lobbyWords } from '../../lib/lobby-view.ts';
+import { Avatar } from '../ui/Avatar.tsx';
 import { Button } from '../ui/Button.tsx';
 import { Icon } from '../ui/Icon.tsx';
 import { Menu, type MenuItem } from '../ui/Menu.tsx';
@@ -40,16 +41,7 @@ export function AccountMenu({
   return (
     <div className="relative">
       <Button variant="done" expanded={open} label={lobbyWords.account} onClick={onToggle}>
-        {avatar ? (
-          // biome-ignore lint/performance/noImgElement: a picture the account chose, from its own storage
-          <img
-            className="block size-icon-size border border-hairline object-cover"
-            src={avatar}
-            alt=""
-          />
-        ) : (
-          <Icon name="profile" />
-        )}
+        {avatar ? <Avatar src={avatar} size="icon" /> : <Icon name="profile" />}
         <span title={full} className="max-w-tile-width truncate">
           {name}
         </span>

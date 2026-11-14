@@ -3,15 +3,22 @@
 // signed by one of their wallets, at once and credited to it (@petal/tools publish-data.ts holds the what;
 // this holds who and the signature).
 //
+//   GET  /api/v1/publish/data?maps=all     { author, maps: [{ about, name, layers }], left }: the maps where one press
+//                                          over many would publish something (&author=, default the wallet signed
+//                                          in), from the press's own dry run: no nonce, no draft
 //   GET  /api/v1/publish/data?map=<id>     { about, name, ready, claims, readings, private, published, adds,
 //                                          layers: [{ sha256, petal, title, cases }], totals }: what one press
 //                                          would publish, what each layer adds to the map, and what stays back
 //   POST /api/v1/publish/data/prepare      { map, author } → { publication, sha256, text, recipient?, nonce? }:
 //                                          the unsigned publication in the name of one of their wallets (CAIP-10,
 //                                          GET /api/v1/me's wallets[].author), and the text it signs
+//                                          { maps: [...] | 'all', author } → { manifest, sha256, text, publications,
+//                                          left, recipient?, nonce? }: one press over many maps (manifest/v1,
+//                                          composition.md section 2b), each map's version, and the one text
 //   POST /api/v1/publish/data              { sha256, proof: { standard, signature, public_key?, nonce? } } →
-//                                          { publication, layers, totals }: NEP-413 on the author's network,
-//                                          EIP-191 or ed25519, checked, then in the record and on the map at once
+//                                          { publication, layers, totals }, or for a press over many maps
+//                                          { manifest, publications }: NEP-413 on the author's network, EIP-191 or
+//                                          ed25519, checked once, then in the record (all or none) and on the map
 import { TOOLS_VERSION } from '@petal/core';
 import {
   eip191Signer,
@@ -26,9 +33,10 @@ import {
   fromThrown,
   mapIdOf,
   type PressProof,
+  preparePress,
   preparePublication,
   publishable,
-  publishPublication,
+  publishPrepared,
   type SignatureCheck,
   type ToolContext,
 } from '@petal/tools';
@@ -77,6 +85,32 @@ export function publishRoutes(d: PublishDeps): Hono {
   app.get('/api/v1/publish/data', async (c) => {
     const who = await whoOf(c);
     if (!who) return signIn(c);
+    // the maps where one press would publish something, before any press: the press's own dry run, kept nowhere
+    if (c.req.query('maps') === 'all') {
+      const author = c.req.query('author') || who.by;
+      try {
+        const authors = await d.gate.authorsOf(who.owner);
+        const dry = await preparePress(
+          d.tools,
+          { owner: who.owner, authors },
+          'all',
+          author,
+          d.site.hostname,
+          { dry: true },
+        );
+        return ok(c, {
+          author: dry.manifest?.author ?? author,
+          maps: dry.publications.map((p) => ({
+            about: p.about,
+            name: p.name,
+            layers: p.publication.layers.length,
+          })),
+          left: dry.left,
+        });
+      } catch (e) {
+        return failed(c, e);
+      }
+    }
     const map = mapIdOf(c.req.query('map') ?? '');
     if (!map) return fail(c, 'bad_input', 'map is the map’s address');
     try {
@@ -117,10 +151,23 @@ export function publishRoutes(d: PublishDeps): Hono {
     if (!who) return signIn(c);
     const body = (await c.req.json().catch(() => null)) as {
       map?: unknown;
+      maps?: unknown;
       author?: unknown;
     } | null;
+    // one map, or a press over many: the maps by address, or 'all' where the author has something to publish
+    const many =
+      body?.maps === 'all'
+        ? ('all' as const)
+        : Array.isArray(body?.maps)
+          ? body.maps.map((m) => (typeof m === 'string' ? mapIdOf(m) : ''))
+          : null;
     const map = typeof body?.map === 'string' ? mapIdOf(body.map) : '';
-    if (!map) return fail(c, 'bad_input', 'map is the map’s address');
+    if (many ? many !== 'all' && (!many.length || many.some((m) => !m)) : !map)
+      return fail(
+        c,
+        'bad_input',
+        'map is the map’s address; for one press over many maps, maps is their addresses, or "all"',
+      );
     if (typeof body?.author !== 'string' || !body.author)
       return fail(
         c,
@@ -129,15 +176,12 @@ export function publishRoutes(d: PublishDeps): Hono {
       );
     try {
       const authors = await d.gate.authorsOf(who.owner);
+      const signer = { owner: who.owner, authors };
       return ok(
         c,
-        await preparePublication(
-          d.tools,
-          { owner: who.owner, authors },
-          map,
-          body.author,
-          d.site.hostname,
-        ),
+        many
+          ? await preparePress(d.tools, signer, many, body.author, d.site.hostname)
+          : await preparePublication(d.tools, signer, map, body.author, d.site.hostname),
       );
     } catch (e) {
       return failed(c, e);
@@ -192,7 +236,7 @@ export function publishRoutes(d: PublishDeps): Hono {
         'send { sha256, proof }: proof is { standard, signature, public_key?, nonce? }, the wallet’s signature of the text',
       );
     try {
-      return ok(c, await publishPublication(d.tools, who, body.sha256, body.proof, check));
+      return ok(c, await publishPrepared(d.tools, who, body.sha256, body.proof, check));
     } catch (e) {
       return failed(c, e);
     }

@@ -4,12 +4,6 @@
 // near-connect touches window, localStorage and IndexedDB, so it is imported only when used.
 import type { EventMap, NearConnector } from '@hot-labs/near-connect';
 import type { PayAction } from './pay.ts';
-import { walletConnectClient } from './phone-wallet.ts';
-
-/** The WalletConnect client near-connect takes, as its options name it. */
-type NearConnectorWalletConnect = NonNullable<
-  ConstructorParameters<typeof NearConnector>[0]
->['walletConnect'];
 
 import { base64ToBytes, type Prepared, type WalletSignature } from './publish.ts';
 
@@ -33,8 +27,8 @@ async function connectorFor(network: Network): Promise<NearConnector> {
     connector = new lib.NearConnector({
       network,
       excludedWallets: ['mynearwallet'],
-      // the site's one WalletConnect client: any NEAR phone wallet that connects by a QR code shows too
-      walletConnect: walletConnectClient() as unknown as NearConnectorWalletConnect,
+      // no WalletConnect here: its link opens the phone's default wallet, often an Ethereum one, which can't
+      // sign for NEAR; NEAR's phone wallets (NEAR Mobile, Meteor, HOT) show QR codes that open their own app
     });
     connectors.set(network, connector);
   }
@@ -78,6 +72,49 @@ export async function signPrepared(
   }
   if (!signed) throw new Error('The wallet signed in but returned no signed message.');
   return signed;
+}
+
+/** The wallet connected on `network` when it names `accountId`, asking nothing; else null. */
+async function connectedAs(network: Network, accountId: string) {
+  const connector = await connectorFor(network);
+  const known = await connector.wallet().catch(() => null);
+  const accounts = known ? await known.getAccounts({ network }).catch(() => []) : [];
+  return known && accounts.some((a) => a.accountId === accountId) ? known : null;
+}
+
+/**
+ * Signs a prepared message as `accountId` on `network`. When the wallet connected on this page already names that
+ * account, that wallet signs with no new sign-in: a phone wallet gets the request on the phone it is paired with
+ * (Meteor pushes a request on a signed-in account to its paired phone; a sign-in always opens a fresh QR). Else, or
+ * when the wallet signs as another account (Meteor signs with the account it last signed in), it signs in and signs
+ * together, as signPrepared does.
+ */
+export async function signAs(
+  p: Prepared,
+  network: Network,
+  accountId: string,
+): Promise<WalletSignature> {
+  const known = await connectedAs(network, accountId);
+  if (known) {
+    const s = await known.signMessage({
+      message: p.message,
+      recipient: p.recipient,
+      nonce: base64ToBytes(p.nonce),
+      network,
+      signerId: accountId,
+    });
+    if (s.accountId === accountId)
+      return { accountId: s.accountId, publicKey: s.publicKey, signature: s.signature };
+  }
+  return signPrepared(p, network);
+}
+
+/**
+ * Whether signing as `accountId` on `network` asks the wallet to sign in first (no wallet connected on this page
+ * names that account), which by phone means one more QR to scan. Loads the connected wallet, asking nothing.
+ */
+export async function signsInFirst(network: Network, accountId: string): Promise<boolean> {
+  return (await connectedAs(network, accountId)) === null;
 }
 
 /**

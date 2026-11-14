@@ -4,7 +4,7 @@
 // open, keeps the address in step and hears Escape.
 import { accountRef } from '@petal/core';
 import type { Spec } from '@petal/core/types';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { MapWallet } from '../landscape/LandscapeCanvas.tsx';
 import { readDrawingSpec, readMapDrawing, saveSettings } from '../lib/agent-client.ts';
 import { aboutLine } from '../lib/ask-about.ts';
@@ -20,6 +20,7 @@ import { decodeDraft } from '../lib/draft.ts';
 import { drawingLink, mapLink } from '../lib/drawing-link.ts';
 import { elsewhereFlower, elsewhereRows, whereOf } from '../lib/elsewhere.ts';
 import { populationWords, svgImage } from '../lib/flower-view.ts';
+import type { InFront } from '../lib/in-front.ts';
 import type { Mode } from '../lib/mapping.ts';
 import type { MapCard } from '../lib/maps.ts';
 import {
@@ -264,6 +265,12 @@ export function useWorkspace(props: {
   const [mapAt, setMapAt] = useState<{ map: string | null } | null>(null);
   // a wallet chosen on the map on the canvas (the map's wallet level): the question is about it
   const [mapWallet, setMapWallet] = useState<MapWallet | null>(null);
+  // what the canvas has open (the map entered, the flower drawn apart, the layers on, what's chosen), told by the
+  // surface as it changes and sent with every turn, so "this" means it; read at the send, it draws nothing
+  const front = useRef<InFront | null>(null);
+  const tellFront = useCallback((f: InFront) => {
+    front.current = f;
+  }, []);
   // the services under a map's next steps, folded until pressed (one list at a time: the last turn's)
   const [nextMore, setNextMore] = useState(false);
   // exploring what's there, or mapping: what the person would add, in their name (lib/mapping.ts)
@@ -461,7 +468,12 @@ export function useWorkspace(props: {
     actions: {
       setQuestion: chatActions.setQuestion,
       send: () =>
-        chatActions.send(questionPrefix(mapAt ? null : panelFlower, target), picked ?? undefined),
+        chatActions.send(
+          questionPrefix(mapAt ? null : panelFlower, target),
+          picked ?? undefined,
+          undefined,
+          front.current ?? undefined,
+        ),
       /**
        * A wallet's "Population not mapped", pressed: Petals' agent is asked to map it, about that wallet, and the
        * box steps aside so the conversation shows the ask running (the box covers the thread).
@@ -472,6 +484,7 @@ export function useWorkspace(props: {
           questionPrefix(mapAt ? null : panelFlower, target),
           picked ?? undefined,
           populationWords.ask,
+          front.current ?? undefined,
         );
       },
       toggleModels: () => setModelsOpen(!modelsOpen),
@@ -544,17 +557,24 @@ export function useWorkspace(props: {
           refs.box.current?.focus();
           return;
         }
-        void chatActions.send(undefined, picked ?? undefined, s.ask);
+        void chatActions.send(undefined, picked ?? undefined, s.ask, front.current ?? undefined);
       },
       toggleNextMore: () => setNextMore((open) => !open),
       setMode,
       /** A new map's ceremony, pressed: Petals' agent hears a plain yes, and its read starts (lib/ceremony.ts). */
       mapIt: () => {
         setMode('mapping');
-        void chatActions.send(undefined, picked ?? undefined, ceremonyWords.yes);
+        void chatActions.send(
+          undefined,
+          picked ?? undefined,
+          ceremonyWords.yes,
+          front.current ?? undefined,
+        );
       },
       /** the map on the canvas says which wallet is chosen on it, or none */
       chooseMapWallet: setMapWallet,
+      /** the surface says what the canvas has open, for the next turn (lib/in-front.ts) */
+      inFront: tellFront,
       closeDetail: () => dispatch({ type: 'select', petal: null }),
       setSection: (next: PanelSection) => dispatch({ type: 'section', section: next }),
       startFrom: (text: string) => {
