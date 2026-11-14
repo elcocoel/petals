@@ -1363,6 +1363,33 @@ describe('EVM and Solana wallets (multi-chain wallet connection)', () => {
     expect((await prove(near, 'eip155', '/api/v1/me/wallets')).res.status).toBe(200);
   });
 
+  test('Disconnect takes a second NEAR wallet off too; the profile’s own NEAR account stays', async () => {
+    const second = testSigner('second.testnet');
+    const { app } = setup({ rpc: [maker, second] });
+    const near = new Browser(app);
+    await near.signIn();
+    const ch = (await (await near.post('/api/v1/auth/challenge')).json()) as Challenge;
+    const proof = second.sign({ message: ch.message, nonce: ch.nonce, recipient: ch.recipient });
+    expect((await near.post('/api/v1/me/wallets', { network: 'testnet', proof })).status).toBe(200);
+    // a session the second wallet opened
+    const viaSecond = new Browser(app);
+    await viaSecond.signIn(second);
+    expect((await viaSecond.get('/api/v1/me')).status).toBe(200);
+    const del = (caip10: string) =>
+      near.request(`/api/v1/me/wallets/${encodeURIComponent(caip10)}`, {
+        method: 'DELETE',
+        headers: { origin: SITE },
+      });
+    const first = await del('near:testnet:maker.testnet');
+    expect(first.status).toBe(400);
+    const off = await del('near:testnet:second.testnet');
+    expect(off.status).toBe(200);
+    const { wallets } = (await off.json()) as { wallets: { account_id: string }[] };
+    expect(wallets.map((w) => w.account_id)).toEqual(['maker.testnet']);
+    // the session it opened has ended
+    expect((await viaSecond.get('/api/v1/me')).status).toBe(401);
+  });
+
   test("a NEAR person adds an EVM wallet and a Solana one; another person can't take them", async () => {
     const otherNear = testSigner('other.testnet');
     const { app } = setup({ rpc: [maker, otherNear] });

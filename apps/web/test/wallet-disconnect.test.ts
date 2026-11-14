@@ -24,6 +24,25 @@ const card = (props: Partial<ComponentProps<typeof Wallets>>) =>
   renderToStaticMarkup(createElement(Wallets, { wallets: rows, onRemove: () => {}, ...props }));
 
 describe('Disconnect a linked wallet', () => {
+  test('a second NEAR wallet can go too; the profile’s own (its mainnet one, else its first) has no Disconnect', () => {
+    const two = walletRows([
+      {
+        network: 'testnet',
+        account_id: 'early.testnet',
+        proved_at: '2026-11-12T10:00:00Z',
+        author: 'near:testnet:early.testnet',
+      },
+      {
+        network: 'mainnet',
+        account_id: 'elcocoel.near',
+        proved_at: '2026-11-13T10:00:00Z',
+        author: 'near:mainnet:elcocoel.near',
+      },
+    ]);
+    expect(two[0]?.caip10).toBe('near:testnet:early.testnet');
+    expect(two[1]?.caip10).toBeUndefined();
+  });
+
   test('an Ethereum or Solana row carries its CAIP-10; the NEAR account none', () => {
     expect(rows[0]?.caip10).toBeUndefined();
     expect(rows[1]?.caip10).toBe('eip155:1:0x18801a3997b2aba637dcd6a704a81bc081604c74');
