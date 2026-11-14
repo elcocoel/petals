@@ -195,6 +195,53 @@ describe('claims about claims: a correction, Tae → Sasquatch', () => {
   });
 });
 
+describe('a published link or note, as a public source states it (people.ts)', () => {
+  const found = { found_by: CODEX, found_at: WHEN };
+  const post = {
+    type: 'post' as const,
+    url: 'https://x.com/dekan/status/2',
+    platform: 'x',
+    quote: '@dekan_eth: my delegate statement is at forum.example.org/u/dekan',
+    ...found,
+  };
+  const claim = (o: Partial<ClaimDraft>) =>
+    v3({
+      subject: ADA,
+      verb: 'linked',
+      object: { value: 'https://forum.example.org/u/dekan' },
+      issued_at: WHEN,
+      kind: 'sourced',
+      evidence: [post],
+      by: PERSON,
+      ...o,
+    });
+
+  test('a sourced link or note keeps its source quoted as written, handles and names included', () => {
+    expect(ok(claim({})).ok).toBe(true);
+    expect(
+      ok(
+        claim({
+          verb: 'noted',
+          object: { value: 'Worked with the Uniswap Grants Program and Mango Markets' },
+        }),
+      ).ok,
+    ).toBe(true);
+  });
+
+  test("a note worked out from traces, or the claimer's own evidence note naming someone, stays private", () => {
+    const worked = claim({
+      verb: 'noted',
+      object: { value: 'Probably Dekan Smith, by timing' },
+      kind: 'inferred',
+      method: 'codex/research@2026-11-10',
+      qualifiers: { grounds: 'research' },
+    });
+    expect(ok(worked).ok).toBe(false);
+    expect(ok(worked, { private: true }).ok).toBe(true);
+    expect(ok(claim({ evidence: [{ ...post, note: 'Also Jane Doe' }] })).ok).toBe(false);
+  });
+});
+
 describe('a published name, as a public source states it (people.ts)', () => {
   const named = (evidence: ClaimEvidence[]) =>
     v3({

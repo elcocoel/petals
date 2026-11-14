@@ -14,6 +14,7 @@ export {
   PERSON_NAMESPACES,
   type PeopleScope,
   peopleRuleIssues,
+  publiclySourced,
   sourcedName,
 } from './people.ts';
 export { applyPolicy, DEFAULT_LENS } from './policy.ts';

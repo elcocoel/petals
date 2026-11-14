@@ -38,6 +38,7 @@ export {
   observedClaims,
   parseRef,
   proposalRef,
+  publiclySourced,
   readSnapshot,
   SNAPSHOT_READER,
   sourcedName,
