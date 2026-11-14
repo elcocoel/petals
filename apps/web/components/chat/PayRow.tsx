@@ -79,7 +79,7 @@ export function PayRow({
       <ActionRow gap="tight">
         {amount && bare && (
           // the dollars, dragged, beside the press that adds them
-          <span className="min-w-0 basis-full sm:flex-1 sm:basis-auto">
+          <span className="min-w-0 basis-full sm:basis-2/5">
             <Range
               label={amount.label}
               min={1}

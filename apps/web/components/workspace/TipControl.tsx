@@ -41,19 +41,24 @@ export function TipControl({
     return (
       <div className="flex w-full flex-col gap-space-4">
         <span className="type-label">{tipWords.onTop}</span>
-        <Range
-          label={tipWords.slider}
-          min={scale.min}
-          max={scale.max}
-          step={scale.step}
-          value={percent}
-          shown={tipWords.percent(percent)}
-          onChange={onSlide}
-          onSet={onSet}
-        />
-        <Mono as="p" tone="muted">
-          {line}
-        </Mono>
+        {/* as wide as the dollars' slider: one kind of control */}
+        <span className="w-full min-w-0 sm:w-2/5">
+          <Range
+            label={tipWords.slider}
+            min={scale.min}
+            max={scale.max}
+            step={scale.step}
+            value={percent}
+            shown={tipWords.percent(percent)}
+            onChange={onSlide}
+            onSet={onSet}
+          />
+        </span>
+        {percent > 0 && (
+          <Mono as="p" tone="muted">
+            {line}
+          </Mono>
+        )}
         {failed && <p className="my-0 type-ui text-muted">{panelWords.settings.failed(failed)}</p>}
       </div>
     );

@@ -7,6 +7,7 @@
 // credit and holds the withdrawal, viewmodels/usePay.ts and useTopUp.ts the payment (in `add`),
 // viewmodels/useTip.ts the tip. Words from lib/lobby-view.ts, lib/pay.ts and lib/tip.ts.
 import type { ReactNode } from 'react';
+import { shortId } from '../../lib/flower-view.ts';
 import { fundsWords, type WithdrawPhase, type WithdrawView } from '../../lib/lobby-view.ts';
 import { type Money, payWords } from '../../lib/pay.ts';
 import { Button } from '../ui/Button.tsx';
@@ -60,9 +61,10 @@ export function Funds({
       {/* right under the balance: the dollars to add, dragged, with the press that adds them */}
       {add}
       {signer && (
-        <p className="my-0 min-w-0 wrap-anywhere">
+        // as every address is shortened, whole on hover
+        <p className="my-0" title={signer}>
           <Mono as="span" tone="muted">
-            {payWords.signsAs(signer)}
+            {payWords.signsAs(shortId(signer))}
           </Mono>
         </p>
       )}
@@ -73,11 +75,8 @@ export function Funds({
             disabled={!withdrawal.enabled || phase === 'withdrawing'}
             onClick={onWithdraw}
           >
-            {phase === 'withdrawing' ? fundsWords.waiting : fundsWords.withdraw}
+            {phase === 'withdrawing' ? fundsWords.waiting : withdrawal.label}
           </Button>
-          <Mono as="p" tone="muted">
-            {withdrawal.can}
-          </Mono>
           {withdrawal.cannot && (
             <Mono as="p" tone="muted">
               {withdrawal.cannot}

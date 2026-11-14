@@ -35,9 +35,8 @@ export const fundsWords = {
   unread: 'Your balance can’t be read right now.',
   withdraw: 'Withdraw',
   /** Beside Withdraw: what it takes out, which is everything the person holds in the contract. */
-  canWithdraw: (m: Money) => `Withdraw sends ${moneyWords(m)} back to your wallet.`,
-  /** Beside Withdraw while the contract holds nothing for the person. */
-  nothingToWithdraw: 'Nothing to withdraw yet.',
+  /** Withdraw's own words while the contract holds something: what it takes out, as Add says what it adds. */
+  withdrawAmount: (m: Money) => `Withdraw ${moneyWords(m)}`,
   /** The rest of the balance, which isn't in the contract, and why. */
   cannotWithdraw: (m: Money) =>
     `${moneyWords(m)} from before the contract or an invite can’t be withdrawn; chats spend it first.`,
@@ -269,8 +268,8 @@ const usdOfYocto = (yocto: string, nearUsd: number) =>
 
 /** Withdraw in the Balance band: always there with the contract, and saying what it can and can't take out. */
 export interface WithdrawView {
-  /** what Withdraw takes out: what the contract holds for the person */
-  can: string;
+  /** the press's words: what it takes out (what the contract holds for the person), or just Withdraw */
+  label: string;
   /** the rest of the balance, which isn't in the contract, and why; null when there's none */
   cannot: string | null;
   /** false while the contract holds nothing */
@@ -290,9 +289,9 @@ export function withdrawView(
   const heldUsd = usdOfYocto(held, nearUsd);
   const kept = balanceUsd - heldUsd;
   return {
-    can: canWithdraw(held)
-      ? fundsWords.canWithdraw(money(heldUsd, nearUsd))
-      : fundsWords.nothingToWithdraw,
+    label: canWithdraw(held)
+      ? fundsWords.withdrawAmount(money(heldUsd, nearUsd))
+      : fundsWords.withdraw,
     // under half a cent is rounding, not credit
     cannot: kept >= 0.005 ? fundsWords.cannotWithdraw(money(kept, nearUsd)) : null,
     enabled: canWithdraw(held),
