@@ -26,6 +26,7 @@
     "relations:rebuild": "node scripts/relations-rebuild.ts",
     "check": "bash scripts/check.sh",
     "verify:live": "node scripts/verify-live.ts",
+    "demo": "node --disable-warning=ExperimentalWarning scripts/demo.ts",
     "prepare": "git config core.hooksPath scripts/git-hooks 2>/dev/null || true"
   },
   "dependencies": {
