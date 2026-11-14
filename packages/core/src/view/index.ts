@@ -78,6 +78,7 @@ export const ACTIVITY: readonly Piece[] = [
   { name: 'votes_cast', kind: 'count' },
   { name: 'last_active', kind: 'date' },
   { name: 'voted', kind: 'category' },
+  { name: 'votes_alike', kind: 'relation' },
 ];
 
 /**
@@ -143,11 +144,11 @@ export function latestView(view: View): ViewV2 | ViewV3 {
 export const DEFAULT_VIEW_V2_0 = latestView(DEFAULT_VIEW_V1) as ViewV2;
 
 /**
- * The default since 11 Nov, the art direction's (V1): heights straight, so twice as much is twice as tall,
- * everyone else too, with no minimum (the linear scale, reading/encodings.ts); every petal as wide. The rest
- * as before.
+ * The default from 11 Nov until 14 Nov, the art direction's (V1): heights straight, so twice as much is twice as
+ * tall, everyone else too, with no minimum (the linear scale, reading/encodings.ts); every petal as wide. The
+ * rest as before. Addresses made then carry its hash, and it draws as it did.
  */
-export const DEFAULT_VIEW: ViewV2 = {
+export const DEFAULT_VIEW_V2_1: ViewV2 = {
   petal: VIEW_VERSION,
   dimensions: {
     ...DEFAULT_VIEW_V2_0.dimensions,
@@ -156,11 +157,21 @@ export const DEFAULT_VIEW: ViewV2 = {
   },
 };
 
+/**
+ * The default since 14 Nov: as before, with the ties between petals that voted alike drawn in the middle wherever
+ * a flower has them (activity.ts's votes_alike); a flower without them draws as it did.
+ */
+export const DEFAULT_VIEW: ViewV2 = {
+  petal: VIEW_VERSION,
+  dimensions: { ...DEFAULT_VIEW_V2_1.dimensions, lines: { data: 'votes_alike' } },
+};
+
 /** A view's identity: the hash of its canonical JSON, as a spec's is. A v1 view keeps its own. */
 export const viewHash = (view: View): string => sha256Hex(canonicalJson(view));
 
 /** The defaults before this one, by hash: an address that carries one still draws as it did. */
 export const FORMER_DEFAULTS: ReadonlyMap<string, View> = new Map<string, View>([
+  [viewHash(DEFAULT_VIEW_V2_1), DEFAULT_VIEW_V2_1],
   [viewHash(DEFAULT_VIEW_V2_0), DEFAULT_VIEW_V2_0],
   [viewHash(DEFAULT_VIEW_V1), DEFAULT_VIEW_V1],
 ]);

@@ -53,6 +53,39 @@ const values = (pieces: ReturnType<typeof activityPieces>, name: string) =>
   );
 
 describe("each petal's activity in its map's proposals", () => {
+  test('votes alike: a line between two petals that voted alike, as the voting blocs find them, valued by agreement', () => {
+    // A and B vote the same way on six proposals, for on three and against on three; C votes the other way each time
+    const ps = [1, 2, 3, 4, 5, 6].map((n) => {
+      const way = n <= 3 ? 'for' : 'against';
+      const other = n <= 3 ? 'against' : 'for';
+      const v = (account: string, w: string) => ({ account, vote: w, as_said: w, at: null });
+      return {
+        ...proposal(String(n), `2026-11-0${n}T00:00:00Z`, []),
+        votes: [v(A, way), v(`eip155:100:${B}`, way), v(C, other)],
+      };
+    });
+    const pieces = activityPieces(
+      reading,
+      proposals(ps as unknown as ReturnType<typeof proposal>[]),
+    );
+    const alike = pieces.find((p) => p.name === 'votes_alike') as {
+      kind: string;
+      standing: string;
+      lines: { from: string; to: string; value: string }[];
+    };
+    expect(alike.kind).toBe('relation');
+    expect(alike.standing).toBe('verified');
+    // ids as the reading's petals carry them, however the vote named the account
+    expect(alike.lines).toEqual([{ from: A, to: B, value: '1' }]);
+    // no pair that agrees: no piece
+    expect(
+      activityPieces(
+        reading,
+        proposals([proposal('1', '2026-11-01T00:00:00Z', [vote(A, null)])]),
+      ).some((p) => p.name === 'votes_alike'),
+    ).toBe(false);
+  });
+
   test('votes cast, when it last voted, and voted or never, over the proposals read', () => {
     const pieces = activityPieces(
       reading,
@@ -106,11 +139,12 @@ describe("each petal's activity in its map's proposals", () => {
       'votes_cast',
       'last_active',
       'voted',
+      'votes_alike',
       'vesting',
       'next_unlock',
       'tranche',
     ]);
-    expect(ACTIVITY.map((p) => p.kind)).toEqual(['count', 'date', 'category']);
+    expect(ACTIVITY.map((p) => p.kind)).toEqual(['count', 'date', 'category', 'relation']);
     const names = (extra: ReturnType<typeof activityPieces>) =>
       piecesOf(reading, extra).map((p) => p.name);
     expect(names([])).not.toContain('votes_cast');

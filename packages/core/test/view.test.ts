@@ -18,6 +18,7 @@ import {
   DEFAULT_VIEW,
   DEFAULT_VIEW_V1,
   DEFAULT_VIEW_V2_0,
+  DEFAULT_VIEW_V2_1,
   DIMENSIONS,
   EVERY_FLOWER,
   FORMER_DEFAULTS,
@@ -142,6 +143,7 @@ describe('the fixtures', () => {
     expect(fixture('view.v2.json')).toEqual(DEFAULT_VIEW_V2_0);
     expect(DEFAULT_HASHES).toEqual([
       viewHash(DEFAULT_VIEW),
+      viewHash(DEFAULT_VIEW_V2_1),
       viewHash(DEFAULT_VIEW_V2_0),
       viewHash(DEFAULT_VIEW_V1),
     ]);
@@ -194,12 +196,21 @@ describe('a view/v1 still reads', () => {
 
 describe('the default', () => {
   test("since 11 Nov, the art direction's: straight heights, every petal as wide, the rest as before", () => {
-    expect(DEFAULT_VIEW.dimensions).toEqual({
+    expect(DEFAULT_VIEW_V2_1.dimensions).toEqual({
       ...DEFAULT_VIEW_V2_0.dimensions,
       height: { data: 'share', scale: 'linear' },
       width: null,
     });
+    expect(viewProblem(DEFAULT_VIEW_V2_1)).toBeNull();
+  });
+
+  test('since 14 Nov, the ties between petals that voted alike, wherever a flower has them', () => {
+    expect(DEFAULT_VIEW.dimensions).toEqual({
+      ...DEFAULT_VIEW_V2_1.dimensions,
+      lines: { data: 'votes_alike' },
+    });
     expect(viewProblem(DEFAULT_VIEW)).toBeNull();
+    expect(FORMER_DEFAULTS.get(viewHash(DEFAULT_VIEW_V2_1))).toBe(DEFAULT_VIEW_V2_1);
   });
 
   test("until then, default/v1's choices, written as a view", () => {
