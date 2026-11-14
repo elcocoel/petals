@@ -47,7 +47,7 @@ export function PayRow({
   /** laid out on its page, under what it adds to: no box and no first line, the amount a slider by the press */
   bare?: boolean;
 }) {
-  if (phase === 'added' && added) {
+  if (phase === 'added' && added && !bare) {
     return (
       <p className="my-0 type-ui">
         {addedWords
@@ -67,6 +67,9 @@ export function PayRow({
       className={`flex w-full flex-col gap-text-gap ${bare ? 'items-stretch' : 'items-start border border-hairline p-text-gap'}`}
     >
       {!bare && <p className="my-0 type-ui">{line ?? (first ? payWords.start : payWords.out)}</p>}
+      {bare && phase === 'added' && added && (
+        <p className="my-0 type-ui">{addedWords ? addedWords(added) : payWords.added(added)}</p>
+      )}
       {amount && !bare && (
         <Field
           id="pay-usd"
