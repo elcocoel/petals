@@ -1,5 +1,7 @@
 # Petals
 
+Judging or screening Petals? Start at [JUDGES.md](JUDGES.md).
+
 Petals helps people explore who holds power in on-chain networks. It reads accounts and governance data, draws them as flowers, and gives a person and their agents a shared place to investigate the sources.
 
 An account becomes a petal. Its dimensions can show different data: voting power, holdings, membership or the backers behind a pool. The person's view sets what the dimensions mean.
@@ -75,6 +77,28 @@ The full gate checks TypeScript, lint, unit tests, secret and publication bounda
 | NEAR integration   | Authentication, payments and NEAR-facing infrastructure                    | [packages/near/](packages/near/)                                       |
 
 The API is a separate process. The Next.js site forwards API requests to `PETAL_SERVER`. The same brain chapters appear in the docs and in agent setup; protocols and schemas are rendered from their canonical files, with examples from their fixtures.
+
+## Repo map
+
+| Path                  | What it holds                                                                                                  |
+| --------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `apps/web/`           | The site: the landing, the Power Map, flowers, `/make` with the agent, the lobby, the docs                     |
+| `apps/cli/`           | The `petal` command line: the tools in-process, JSON out                                                       |
+| `packages/core/`      | Schemas, types, canonical hashes, validation, counting and the SVG renderer; no network, no disk               |
+| `packages/inputs/`    | The readers for each supported system, a keyless RPC pool and the snapshot store                               |
+| `packages/tools/`     | One tool registry, served over HTTP and MCP                                                                    |
+| `packages/agent/`     | Petals' agent on NEAR AI Cloud, the API routes, jobs for connected agents, payments                            |
+| `packages/near/`      | NEAR: sign-in (NEP-413 and linked wallets), FastData publishing, 1Click payments, the credit contract          |
+| `packages/store/`     | Private data behind one interface (Postgres, or SQLite): people, sessions, runs, credit                        |
+| `packages/relations/` | A rebuildable index of relations between groups, public data only                                              |
+| `packages/tokens/`    | The design tokens, emitted as CSS and checked for contrast                                                     |
+| `brain/`              | The doctrine, chapters and reading recipes agents follow; the repo is their only source                        |
+| `skill/`              | `skill/petal`: the agent skill, sharing its rules with Petals' own agent; `skill/ironclaw` is an unbuilt shell |
+| `docs/`               | The documentation's own pages; the site renders them with the brain, the specs and the schemas                 |
+| `specs/`              | The specifications: core, system, target, workspace, mapping brain, the map, and the protocols                 |
+| `fixtures/`           | Recorded data, so tests and a clean clone run with no keys and no network                                      |
+| `tests/`              | End-to-end tests, including the clean-checkout check                                                           |
+| `scripts/`            | The gate (`check.sh`) and maintenance scripts                                                                  |
 
 ## Collective mapping
 

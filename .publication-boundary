@@ -23,6 +23,9 @@ specs/
 .specify/
 .claude/skills/speckit-*
 README.md
+AGENTS.md
+CLAUDE.md
+JUDGES.md
 LICENSE
 package.json
 pnpm-lock.yaml
