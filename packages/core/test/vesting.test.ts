@@ -191,5 +191,11 @@ describe('vestingAt: the vesting now, for an agent to say', () => {
       const sum = Number(a.unlocked) + Number(a.next_unlock?.amount ?? 0) + Number(a.later);
       expect(sum).toBeCloseTo(Number(a.total), 3);
     }
+    // what is still locked now holds the next unlock until it happens, and what comes later
+    for (const x of [at.totals, ...at.allocations]) {
+      const held = Number(x.next_unlock?.amount ?? 0) + Number(x.later);
+      expect(Number(x.locked)).toBeCloseTo(held, 3);
+      expect(Number(x.locked)).toBeCloseTo(Number(x.total) - Number(x.unlocked), 3);
+    }
   });
 });
