@@ -96,13 +96,16 @@ document.getElementById('go').onclick = async () => {
   try {
     const code = new Uint8Array(await (await fetch('/v2.wasm')).arrayBuffer());
     const connector = new NearConnector({ network: ${JSON.stringify(network)} });
+    // a remembered connection (petals.near shares the key) would pick the wrong account: start fresh
+    try { await connector.disconnect(); } catch {}
     await connector.connect();
     const wallet = await connector.wallet();
-    const [account] = await wallet.getAccounts();
-    if (account?.accountId !== ${JSON.stringify(CREDIT)}) throw new Error('connected as ' + account?.accountId + ', not ${CREDIT}');
+    const accounts = await wallet.getAccounts();
+    log('The wallet gave: ' + accounts.map((a) => a.accountId).join(', ') + '. Signing as ${CREDIT}; the chain refuses any other.');
     log('Approve the upgrade in your wallet.');
     const out = await wallet.signAndSendTransaction({
       network: ${JSON.stringify(network)},
+      signerId: ${JSON.stringify(CREDIT)},
       receiverId: ${JSON.stringify(CREDIT)},
       actions: [
         { type: 'DeployContract', params: { code } },
