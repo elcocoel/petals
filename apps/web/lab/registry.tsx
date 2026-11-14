@@ -89,6 +89,7 @@ import { Footer } from '../components/ui/Footer.tsx';
 import { GalleryCard } from '../components/ui/GalleryCard.tsx';
 import { Icon, type IconName } from '../components/ui/Icon.tsx';
 import { IconButton } from '../components/ui/IconButton.tsx';
+import { InlineText } from '../components/ui/InlineText.tsx';
 import { LineRow } from '../components/ui/LineRow.tsx';
 import { Logo } from '../components/ui/Logo.tsx';
 import { MetaRow } from '../components/ui/MetaRow.tsx';
@@ -125,7 +126,6 @@ import { Funds } from '../components/workspace/Funds.tsx';
 import { MappingBox } from '../components/workspace/MappingBox.tsx';
 import { LinkedWays, NotSignedIn } from '../components/workspace/NotSignedIn.tsx';
 import { Profile } from '../components/workspace/Profile.tsx';
-import { ProfileEditor } from '../components/workspace/ProfileEditor.tsx';
 import { ProfileHead } from '../components/workspace/ProfileHead.tsx';
 import { PublicProfile } from '../components/workspace/PublicProfile.tsx';
 import { Published } from '../components/workspace/Published.tsx';
@@ -2848,37 +2848,27 @@ export const registry: LabEntry[] = [
     ],
   },
   {
-    id: 'ProfileEditor',
-    group: 'The workspace',
+    id: 'InlineText',
+    group: 'Controls',
     figmaName: null,
     figmaNode: null,
-    source: 'apps/web/components/workspace/ProfileEditor.tsx',
+    source: 'apps/web/components/ui/InlineText.tsx',
     states: [
-      { name: 'editing a profile', render: () => <ProfileEditor view={editorView({})} /> },
       {
-        name: 'making the first one',
+        name: 'a name, at the title’s size',
         render: () => (
-          <ProfileEditor
-            view={editorView({
-              creating: true,
-              draft: { name: '', about: '', links: [{ service: '', value: '' }] },
-            })}
-          />
+          <InlineText label="Name" size="title" value="Elco Coel" onChange={() => {}} />
         ),
       },
       {
-        name: 'saving',
-        render: () => <ProfileEditor view={editorView({ phase: 'saving' })} />,
-      },
-      {
-        name: "NEAR Social didn't take it",
+        name: 'a bio, several lines at the lead’s size',
         render: () => (
-          <ProfileEditor
-            view={editorView({
-              phase: 'failed',
-              problem:
-                'NEAR Social didn’t take it, so nothing changed: profile/avatar: not a fastfs uri.',
-            })}
+          <InlineText
+            label="Bio"
+            size="lead"
+            multiline
+            value="Building Petals on Near, in a hurry."
+            onChange={() => {}}
           />
         ),
       },
@@ -2964,6 +2954,16 @@ export const registry: LabEntry[] = [
       {
         name: "NEAR Social didn't answer",
         render: () => <Profile social={{ kind: 'unread' }} />,
+      },
+      {
+        name: 'edited where it reads',
+        render: () => <Profile social={{ kind: 'none' }} editor={editorView({})} />,
+      },
+      {
+        name: 'edited in place, saving',
+        render: () => (
+          <Profile social={{ kind: 'none' }} editor={editorView({ phase: 'saving' })} />
+        ),
       },
     ],
   },

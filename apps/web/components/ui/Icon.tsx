@@ -24,6 +24,7 @@ import {
   List,
   MapTrifold,
   Pause,
+  PencilSimple,
   Play,
   Plug,
   Plus,
@@ -85,6 +86,8 @@ const GLYPHS = {
   unarchive: ArrowUUpLeft,
   /** Removing something for good. */
   remove: Trash,
+  /** Changing something in place: the profile card's pencil on hover. */
+  edit: PencilSimple,
   // a star given to Petals on GitHub, and the socials under the hero's buttons
   star: Star,
   github: GithubLogo,

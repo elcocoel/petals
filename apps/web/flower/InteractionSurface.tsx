@@ -37,7 +37,7 @@ import {
 } from '../lib/float-box.ts';
 import { networkLabel, populationWords, shortId } from '../lib/flower-view.ts';
 import { inFrontOf } from '../lib/in-front.ts';
-import { mappingView, modeWords } from '../lib/mapping.ts';
+import { mappingView } from '../lib/mapping.ts';
 import type { MapCard } from '../lib/maps.ts';
 import { groundWords } from '../lib/opening.ts';
 import type { PowerQuoteItem } from '../lib/power-quotes.ts';
@@ -52,7 +52,7 @@ import type { Clear } from './camera.ts';
 import { FlowerCanvas } from './FlowerCanvas.tsx';
 import { FlowerPanel } from './FlowerPanel.tsx';
 
-const BOXES = ['conversation', 'panel', 'options', 'mapping'] as const;
+const BOXES = ['conversation', 'panel', 'options'] as const;
 
 export function InteractionSurface({
   scatter,
@@ -98,7 +98,6 @@ export function InteractionSurface({
         ...placed,
         conversation,
         panel: overThread(conversation),
-        mapping: overThread(conversation),
       };
     },
     [from, edge, workspace.recorded],
@@ -132,11 +131,6 @@ export function InteractionSurface({
   useEffect(() => {
     if (state.boxOpen) raisePanel();
   }, [state.boxOpen, raisePanel]);
-  // the mapping state's box comes to the top when the person moves into it
-  const raiseMapping = hands.mapping.raise;
-  useEffect(() => {
-    if (state.mode === 'mapping') raiseMapping();
-  }, [state.mode, raiseMapping]);
   const raiseOptions = hands.options.raise;
   useEffect(() => {
     if (state.modelsOpen) raiseOptions();
@@ -345,8 +339,10 @@ export function InteractionSurface({
         )}
       </div>
       <FloatBox
-        label={state.heading}
-        title={state.heading}
+        // Mapping is this box's other state, chosen by the composer's switch: in the thread's place, not a sheet
+        // over it, so the press is an action under the conversation's own bar
+        label={state.mode === 'mapping' ? 'Mapping' : state.heading}
+        title={state.mode === 'mapping' ? mapping.heading : state.heading}
         surface={surface}
         hand={hands.conversation}
         // Work from another door goes on in its own app: its thread says so, and there's no base to send
@@ -415,43 +411,8 @@ export function InteractionSurface({
           )
         }
       >
-        {/* The thread; empty, where to start. */}
-        <ConversationThread
-          recorded={state.recorded}
-          rows={state.rows}
-          thumbs={state.thumbs}
-          threadRef={refs.thread}
-          className="px-block-gap pt-space-16 overscroll-none"
-          openWord=""
-          onOpenTurn={actions.openTurn}
-          onOpenStored={actions.openStored}
-          onRefollow={actions.refollow}
-          onLink={actions.followLink}
-          empty={
-            state.recorded ? undefined : (
-              <NewConversation starts={starts} onOpen={(href) => actions.followLink(href)} />
-            )
-          }
-          jobs={state.jobs}
-          jobControls={state.jobControls}
-          onMapIt={actions.mapIt}
-          next={{ onStep: actions.step, moreOpen: state.nextMore, onMore: actions.toggleNextMore }}
-        />
-      </FloatBox>
-      {/* the mapping state: what the person would add to the map in front, in their name */}
-      <FloatBox
-        label="Mapping"
-        title={mapping.heading}
-        surface={surface}
-        hand={hands.mapping}
-        closed={state.mode !== 'mapping'}
-        control={
-          <Button variant="link" onClick={() => actions.setMode('exploring')}>
-            {modeWords.exploring}
-          </Button>
-        }
-      >
-        {state.mode === 'mapping' && (
+        {state.mode === 'mapping' ? (
+          // the mapping state: the press first, then what the person would add to the map in front
           <MappingBox
             view={mapping}
             press={publishing.view}
@@ -476,6 +437,33 @@ export function InteractionSurface({
                   }
                 : undefined
             }
+          />
+        ) : (
+          /* The thread; empty, where to start. */
+          <ConversationThread
+            recorded={state.recorded}
+            rows={state.rows}
+            thumbs={state.thumbs}
+            threadRef={refs.thread}
+            className="px-block-gap pt-space-16 overscroll-none"
+            openWord=""
+            onOpenTurn={actions.openTurn}
+            onOpenStored={actions.openStored}
+            onRefollow={actions.refollow}
+            onLink={actions.followLink}
+            empty={
+              state.recorded ? undefined : (
+                <NewConversation starts={starts} onOpen={(href) => actions.followLink(href)} />
+              )
+            }
+            jobs={state.jobs}
+            jobControls={state.jobControls}
+            onMapIt={actions.mapIt}
+            next={{
+              onStep: actions.step,
+              moreOpen: state.nextMore,
+              onMore: actions.toggleNextMore,
+            }}
           />
         )}
       </FloatBox>
@@ -557,8 +545,12 @@ function EmptyGround({
     s.bottom = bottom === null ? '' : `${bottom}px`;
     s.paddingLeft = besideColumn ? `${PANEL_W + 2 * floatBox.inset}px` : '';
   }, [left, bottom, besideColumn]);
+  // a phone's width has no room beside the boxes: the quote would be squeezed to a letter a line, so it's left out
   return (
-    <div ref={el} className="pointer-events-none absolute inset-0 flex items-center justify-center">
+    <div
+      ref={el}
+      className="pointer-events-none absolute inset-0 hidden items-center justify-center md:flex"
+    >
       <div className="w-full max-w-tile-width">
         <Quote quote={quote} room="column" />
       </div>
