@@ -339,6 +339,19 @@ describe('the credit contract', () => {
     expect(bad.status).toBe(400);
   });
 
+  test('/api/v1/me reads the contract now: a balance moved on chain shows at once, with no chat and nothing written', async () => {
+    const w = setup({ 'alice.near': NEAR });
+    await w.signIn();
+    const left = async () =>
+      ((await (await w.call('GET', '/api/v1/me')).json()) as { credit: { left_usd: number } })
+        .credit.left_usd;
+    expect(await left()).toBeCloseTo(3.5, 9);
+    // a withdrawal or a charge elsewhere: the chain says less, and so does the balance shown
+    w.balances['alice.near'] = NEAR / 2n;
+    expect(await left()).toBeCloseTo(1.75, 9);
+    expect(w.charges.length).toBe(0);
+  });
+
   test('what is off the contract pays first, and the contract is charged only for the rest', async () => {
     const w = setup({ 'alice.near': NEAR });
     await w.signIn();

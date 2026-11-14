@@ -38,13 +38,14 @@ import {
   verifyNep413,
   verifyWalletProof,
 } from '@petal/near/auth';
+import { yoctoToUsd } from '@petal/near/pay';
 import type { SessionRow, Store } from '@petal/store';
 import { clientAddress, DATA_FULL, isLocalSite } from '@petal/tools';
 import { type Context, Hono } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
 import { getCookie, setCookie } from 'hono/cookie';
 import { closedLedger } from './budget.ts';
-import { type ChainChat, type CreditChain, chainChat } from './credit.ts';
+import { type ChainChat, type CreditChain, chainChat, owedOf } from './credit.ts';
 import {
   CONNECT_HINT,
   CREDIT_SPENT,
@@ -55,6 +56,7 @@ import {
   inviteRefusal,
   inviteState,
   NO_INVITE,
+  offchainOf,
   PAY_HINT,
   PAYMENT_NEEDED,
   personCredit,
@@ -597,7 +599,33 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
     if (!session || !isPerson(session.subject)) {
       return fail(c, 'unauthorised', 'Not signed in.');
     }
-    const credit = await personCredit(store, session.subject);
+    let credit = await personCredit(store, session.subject);
+    // on the credit contract, what it holds for their NEAR wallets, read now and written nowhere: the balance
+    // anyone is shown is the chain's, plus what's off the contract, less what's owed (as a chat reads it)
+    if (d.credit) {
+      const chain = d.credit;
+      const accounts = (await walletsOf(session.subject))
+        .filter((w) => w.network === chain.contract.network)
+        .map((w) => w.account_id);
+      const price = accounts.length ? await (d.nearUsd ?? (async () => null))() : null;
+      if (accounts.length && price !== null) {
+        const held = await Promise.all(accounts.map((a) => chain.balanceOf(a))).catch(() => null);
+        if (held) {
+          const left =
+            (await offchainOf(store, session.subject)) +
+            yoctoToUsd(
+              held.reduce((n, y) => n + y, 0n),
+              price,
+            ) -
+            Math.max(0, await owedOf(store, session.subject));
+          credit = {
+            funded_usd: credit?.funded_usd ?? 0,
+            spent_usd: credit?.spent_usd ?? 0,
+            left_usd: left > 1e-9 ? left : 0,
+          };
+        }
+      }
+    }
     // what's left on the invites a chat of theirs falls back on (admitOwner), so a person on an invite reads
     // what they can spend, not zero (13 Nov: judges chat on invites and never pay)
     let inviteLeft = 0;
