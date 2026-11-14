@@ -143,4 +143,5 @@ export {
 export type { Caller, Config, JSONSchema, Tool, ToolContext } from './types.ts';
 export { type CardValue, cardValue, valuesOf } from './value-store.ts';
 export { type ValueRun, type ValueRunResult, valueMaps } from './values.ts';
+export { verifyEntry } from './verify.ts';
 export { viewAsked, viewByHash, viewOfPerson } from './views.ts';
