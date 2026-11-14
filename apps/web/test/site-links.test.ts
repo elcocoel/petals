@@ -48,9 +48,11 @@ describe('the landing page', () => {
       else if (href.startsWith(`${siteLinks.docs}/`)) expect(docs, href).toContain(href);
       // off the site, only Petals' own code on GitHub, the maker's site and Petals' Telegram
       else if (href.startsWith('https://'))
-        expect([siteLinks.github, siteLinks.elementaryComplexity, siteLinks.socials.telegram]).toContain(
-          href,
-        );
+        expect([
+          siteLinks.github,
+          siteLinks.elementaryComplexity,
+          siteLinks.socials.telegram,
+        ]).toContain(href);
       else expect(routes[href.split(/[?#]/)[0] as string], href).toBeDefined();
     }
   });
