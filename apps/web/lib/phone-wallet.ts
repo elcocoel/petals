@@ -14,6 +14,9 @@ import type { AppKit } from '@reown/appkit/core';
 import type { AppKitNetwork } from '@reown/appkit/networks';
 import type SignClient from '@walletconnect/sign-client';
 
+/** The picture a phone wallet shows for the site: Petals' flower, as the docs serve it. */
+const ICON = '/docs/assets/icon-petals.png';
+
 /** The site's Reown project: a public id, which works only on the addresses the project allows. */
 export const WALLETCONNECT_PROJECT_ID = '7db52283bf5479c042d834df2f1f239c';
 
@@ -36,7 +39,7 @@ export function walletConnectClient(): Promise<SignClient> {
         name: 'Petals',
         description: 'See who holds power.',
         url: site,
-        icons: [`${site}/icon.png`],
+        icons: [`${site}${ICON}`],
       },
     });
   });
@@ -60,7 +63,7 @@ function popup(): Promise<AppKit> {
           name: 'Petals',
           description: 'See who holds power.',
           url: site,
-          icons: [`${site}/icon.png`],
+          icons: [`${site}${ICON}`],
         },
         features: { analytics: false, email: false, socials: false, swaps: false, onramp: false },
       });
