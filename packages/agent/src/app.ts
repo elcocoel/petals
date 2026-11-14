@@ -22,6 +22,7 @@ import { agentLinkRoutes, JobBell } from './agent-links.ts';
 import { agentAccess, createAuth, type Network, siteOf } from './auth-routes.ts';
 import { closedLedger, importLedgerFile, serverBudget, storeLedger } from './budget.ts';
 import { creditFrom } from './credit.ts';
+import { inviteSessionUsd } from './invites.ts';
 import { DEFAULT_BUDGET, type LlmClient, personUsdPerChat, runMaxSeconds } from './llm.ts';
 import { meRoutes } from './me-routes.ts';
 import { chosenModel, createNearAiClient, FALLBACK_MODELS, type NearAiOptions } from './near-ai.ts';
@@ -110,6 +111,7 @@ export function buildPetalApp(cfg: Config, o: PetalAppOptions = {}): Hono {
 
   const env = o.env ?? process.env;
   const usdPerOwnChat = personUsdPerChat(env);
+  const sessionUsd = inviteSessionUsd(env);
   // The credit contract, when PETAL_CREDIT_CONTRACT is set; none in fake mode.
   const credit =
     o.pay?.credit !== undefined
@@ -140,6 +142,7 @@ export function buildPetalApp(cfg: Config, o: PetalAppOptions = {}): Hono {
     ...(o.clock ? { clock: o.clock } : {}),
     full: () => overDataBudget(config, ctx.now()),
     personUsdPerChat: usdPerOwnChat,
+    ...(sessionUsd ? { inviteSessionUsd: sessionUsd } : {}),
     credit,
     nearUsd: priceNow,
   });

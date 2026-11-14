@@ -159,6 +159,8 @@ export interface AuthDeps {
   credit?: CreditChain | null;
   /** dollars per NEAR now, for the contract's balances */
   nearUsd?: () => Promise<number | null>;
+  /** what one session may spend of an invite (PETAL_INVITE_SESSION_USD); none: all of it */
+  inviteSessionUsd?: number;
 }
 
 /** What a chat may do: refused, or who owns its run and which budget it draws on. */
@@ -217,6 +219,8 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
   const limit = limiter(AUTH_POSTS_PER_MINUTE, 60_000, clock);
   const local = isLocalSite(site.origin ?? undefined);
   const usdPerOwnChat = d.personUsdPerChat ?? PERSON_USD_PER_CHAT;
+  const shareOf = (subject: string) =>
+    d.inviteSessionUsd ? { subject, usd: d.inviteSessionUsd } : undefined;
   const ok = (c: Context, body: Record<string, unknown>) =>
     c.json({ ...body, tools_version: TOOLS_VERSION });
 
@@ -778,7 +782,10 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
         // the invite their browser chats on, charged as a chat there is, with the day's cap
         for (const id of await store.session.invitesOf(subject, iso())) {
           if (inviteRefusal(await inviteBody(id))) continue;
-          return { subject, budget: { ...budget, ledger: inviteLedger(store, id, day, now) } };
+          return {
+            subject,
+            budget: { ...budget, ledger: inviteLedger(store, id, day, now, shareOf(subject)) },
+          };
         }
         return null;
       }
@@ -884,7 +891,7 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
       }
       return {
         subject: session.subject,
-        budget: { ...budget, ledger: inviteLedger(store, id, day, now) },
+        budget: { ...budget, ledger: inviteLedger(store, id, day, now, shareOf(session.subject)) },
       };
     },
   };
