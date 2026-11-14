@@ -141,7 +141,17 @@ Needs Node 24 and pnpm 10.33.0 (pinned in `.nvmrc` and `package.json`). Run from
 5. The live server's health: https://petals.elementarycomplexity.com/api/v1/health returns `"ok": true`,
    `"fake": false` and the deployed `"commit"`.
 
-6. Check the NEAR pieces on chain, read-only, with no install.
+6. Check the NEAR pieces on chain, read-only.
+
+   ```sh
+   pnpm verify:live
+   ```
+
+   Expect seven `PASS` lines, each with its explorer link, then `verify:live: all passed` (exit 0): the credit
+   contract's code hash and `config`, the FastData entry and the transaction that wrote it, the entry's hash and its
+   maker's NEP-413 signature, the signing key, and the live flower. Any `FAIL` exits 1.
+
+   By hand, with no install:
 
    ```sh
    # The credit contract: its code hash is Dy3xxsZTPsviKF6G4gFsAPnwHw5rJ4eGHNADZNdPshNx
