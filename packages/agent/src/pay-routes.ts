@@ -329,8 +329,8 @@ export function payRoutes(d: PayDeps): Hono {
         refund_to?: unknown;
       } | null;
       const { usd, origin_asset, refund_to } = body ?? {};
-      if (typeof usd !== 'number' || !(usd > 0) || usd > 1000) {
-        return fail(c, 'bad_input', 'usd is how many dollars to add, more than 0 and at most 1000');
+      if (typeof usd !== 'number' || !Number.isFinite(usd) || !(usd > 0)) {
+        return fail(c, 'bad_input', 'usd is how many dollars to add, a number above 0');
       }
       if (typeof origin_asset !== 'string' || !origin_asset) {
         return fail(
