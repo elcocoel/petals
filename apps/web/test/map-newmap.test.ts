@@ -32,7 +32,7 @@ test('the placeholder, the strip of work and the landed reading', () => {
   expect(canvas).toMatch(/landed\?: MapLanded \| null \| undefined;/);
   // a reading just made lands, and over it the reading composed from the layers on (useComposed)
   expect(canvas).toMatch(
-    /\(\) => dressedIn\(withLanded\(withLanded\(given, landed\), composedLanded\), person\.view\),/,
+    /dressedIn\(\s+withLanded\(withLanded\(withLanded\(given, landed\), composedLanded\), played\),\s+person\.view,/,
   );
   expect(canvas).toMatch(
     /const at = home \? spreadPlace\(pendingPlace, home, spreadOf\(gravity\)\) : pendingPlace;/,
