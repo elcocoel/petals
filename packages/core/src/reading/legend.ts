@@ -12,6 +12,7 @@ import type {
   SpecPrimitive,
 } from '../types/index.ts';
 import { usedEncodings } from '../validate/spec.ts';
+import { isStraight } from './encodings.ts';
 import { colourLabel, KIND_ORDER, pct } from './words.ts';
 
 export function legendOf(
@@ -54,10 +55,11 @@ export function legendOf(
     items.push(item);
   }
   const tail = petals.find((r) => r.tail);
+  // as the drawing has it (encodings.ts): on the straight scale the tail stands for all it holds, else its average member
   if (tail)
     items.push({
       primitive: 'tail',
-      meaning: `${tail.label}: ${tail.count ?? 0} more participants grouped into one hatched petal, ${pct(tail.share)} of the total; its height is their average`,
+      meaning: `${tail.label}: ${tail.count ?? 0} more participants grouped into one hatched petal, ${pct(tail.share)} of the total; its height is their ${isStraight(spec.encodings.height) ? 'total' : 'average'}`,
       sources: tailSources,
       keys: [{ key: 'tail', label: tail.label }],
     });
@@ -92,7 +94,7 @@ export function detailsOf(spec: Spec, petals: ReadingPetal[]): PetalDetail[] {
         values.push({
           primitive: p,
           value: round6(r.height),
-          explains: `${e.by.startsWith('m:') ? `${e.by.slice(2)}, relative to the largest petal` : (HEIGHT_EXPLAINS[e.scale ?? 'sqrt'] ?? e.meaning)}${r.tail ? ' (average member)' : ''}`,
+          explains: `${e.by.startsWith('m:') ? `${e.by.slice(2)}, relative to the largest petal` : (HEIGHT_EXPLAINS[e.scale ?? 'sqrt'] ?? e.meaning)}${r.tail ? (isStraight(e) ? ' (all members together)' : ' (average member)') : ''}`,
         });
       else if (p === 'colour')
         values.push(

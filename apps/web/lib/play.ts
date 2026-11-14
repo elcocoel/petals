@@ -3,19 +3,20 @@
 // main reading; only the Play shows the dated ones. Pure.
 import type { MapReading } from './maps.ts';
 
-/** One moment of a map: its reading, by snapshot, and when it holds. */
+/** One moment of a map: its reading, by snapshot, when it holds, and what it read (the reading's own title). */
 export interface PlayStep {
   snapshot: string;
   as_of: string;
+  title: string;
 }
 
 /** A map's moments to play: its dated readings, oldest first; none unless it has two. */
 export function playSteps(
-  readings: readonly Pick<MapReading, 'snapshot' | 'as_of' | 'dated'>[] | undefined,
+  readings: readonly Pick<MapReading, 'snapshot' | 'as_of' | 'dated' | 'title'>[] | undefined,
 ): PlayStep[] {
   const steps = (readings ?? [])
     .filter((r) => r.dated)
-    .map((r) => ({ snapshot: r.snapshot, as_of: r.as_of }))
+    .map((r) => ({ snapshot: r.snapshot, as_of: r.as_of, title: r.title }))
     .sort((a, b) => Date.parse(a.as_of) - Date.parse(b.as_of));
   return steps.length >= 2 ? steps : [];
 }

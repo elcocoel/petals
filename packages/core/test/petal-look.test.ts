@@ -189,6 +189,20 @@ describe('a reading with no minimum height', () => {
     expect(new Set(r.petals.map((p) => p.width))).toEqual(new Set([1]));
   });
 
+  test('straight, the tail is drawn as its total, and its legend and details say so', () => {
+    const r = readFlower(goldenSpec(c), c.snapshot(), straight);
+    expect(r.legend.find((i) => i.primitive === 'tail')?.meaning).toMatch(
+      /its height is their total$/,
+    );
+    const tail = r.petals.findIndex((p) => p.tail);
+    const height = r.details[tail]?.values.find((v) => v.primitive === 'height');
+    expect(height?.explains).toMatch(/\(all members together\)$/);
+    const avg = readFlower(goldenSpec(c), c.snapshot());
+    expect(avg.legend.find((i) => i.primitive === 'tail')?.meaning).toMatch(
+      /its height is their average$/,
+    );
+  });
+
   test('on the other scales the floor stays, the tail its average member, and the flower reads as it always has', () => {
     const r = readFlower(goldenSpec(c), c.snapshot());
     expect(Math.min(...r.petals.map((p) => p.height))).toBeGreaterThanOrEqual(HEIGHT_FLOOR);
