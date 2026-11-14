@@ -247,6 +247,30 @@ describe('links', () => {
     expect(packet.notes.map((n: Out) => n.text)).toEqual(['what I learned']);
   });
 
+  test("an agent key pasted into a note, or a step's note, is kept out of it", async () => {
+    const { id, made } = await owned();
+    const link = await made('continue');
+    const key = `petal_agent_${'A1b2_-'.repeat(7)}x`;
+    const said = `Take my open jobs: node ~/.petals/petal.mjs join ${key} --as codex`;
+    const noted = await run('add_note', { exploration: link.url, text: said }, as(null, 'mcp'));
+    expect(noted.note.text).toBe(
+      'Take my open jobs: node ~/.petals/petal.mjs join petal_agent_… --as codex',
+    );
+    const moved = await run('propose_spec', {
+      network: 'near-validators',
+      sha256: spec.snapshot.sha256,
+      parent: spec,
+      choices: { width: 'equal' },
+    });
+    await run(
+      'save_step',
+      { exploration: link.url, spec: moved.spec, note: said },
+      as(null, 'mcp'),
+    );
+    const packet = await run('get_exploration', { exploration: id }, as('prs_a'));
+    expect(JSON.stringify(packet)).not.toContain(key);
+  });
+
   test('a step named by the hash render_flower stored', async () => {
     const { made } = await owned();
     const { url } = await made('continue');

@@ -38,6 +38,8 @@ const QUESTION_MAX = 2000;
 const NOTE_MAX = 2000;
 /** A mirrored reply comes word for word, so the page gets all of it. */
 const NOTE_TEXT_MAX = 8000;
+/** An agent key a note carries (the person's words, mirrored, can hold the pasted connect prompt) is kept out of it. */
+const withoutKeys = (text: string) => text.replace(/petal_agent_[A-Za-z0-9_-]+/g, 'petal_agent_…');
 /** A conversation's name, sent with a note (3 to 6 plain words, the subject). */
 export const CONVERSATION_TITLE_MAX = 80;
 const TARGET_MAX = 300;
@@ -924,7 +926,7 @@ export const saveStep = defineTool<
       door: doorOf(ctx),
       author: authorOf(o),
       credential: credentialOf(ctx, o),
-      note: note ?? null,
+      note: note ? withoutKeys(note) : null,
       at: ctx.now().toISOString(),
     });
     touched(ctx, o.row.id, 'save_step');
@@ -973,7 +975,8 @@ export const addNote = defineTool<{ exploration: string; text: string; title?: s
     next: { type: 'string' },
   }),
   annotations: WRITES,
-  async run({ exploration, text, title: sent }, ctx) {
+  async run({ exploration, text: said, title: sent }, ctx) {
+    const text = withoutKeys(said);
     const store = lastingStore(ctx);
     const o = await open(ctx, exploration);
     writable(o);
