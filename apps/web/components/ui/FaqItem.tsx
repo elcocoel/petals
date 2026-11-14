@@ -2,21 +2,34 @@
 // so it needs no JavaScript. A numbered item lines its answer up under the question on one twelve-column grid.
 // An unnumbered item (the landing's) is calmer: the question at a lead's size, room under it and from the row's
 // edges, the answer in two short columns with roomier lines (row.answer) and its key concepts in a lighter bold,
-// written between ** in the copy. In version 2 it starts folded and opens by a click, one at a time:
+// written between ** in the copy; a bold phrase with an address in `links` is also a link to it. In version 2 it starts folded and opens by a click, one at a time:
 // apps/web/app/versions/peek.ts, `row.peek`.
 import type { ReactNode } from 'react';
 import type { GlyphKind } from '../../lib/figures.ts';
 import { landingCopy } from '../../lib/landing-copy.ts';
 import { Drawing } from './Drawing.tsx';
+import { TextLink } from './TextLink.tsx';
 
 /** An answer runs on as paragraphs, and a paragraph can be a list. */
 export type AnswerBlock = string | { readonly list: readonly string[] };
 
-/** A line's words, with what's between ** in bold. */
-function words(line: string): ReactNode[] {
-  return line
-    .split(/\*\*(.+?)\*\*/)
-    .map((part, i) => (i % 2 === 1 ? <strong key={part}>{part}</strong> : part));
+/** A line's words, with what's between ** in bold, and a bold phrase with an address a link to it. */
+function words(line: string, links: Readonly<Record<string, string>>): ReactNode[] {
+  return line.split(/\*\*(.+?)\*\*/).map((part, i) => {
+    if (i % 2 === 0) return part;
+    const href = links[part];
+    return (
+      <strong key={part}>
+        {href ? (
+          <TextLink href={href} variant="inline">
+            {part}
+          </TextLink>
+        ) : (
+          part
+        )}
+      </strong>
+    );
+  });
 }
 
 export function FaqItem({
@@ -25,6 +38,7 @@ export function FaqItem({
   question,
   answer,
   open = true,
+  links = {},
 }: {
   /** A small drawing beside the number, if the item has one. */
   glyph?: GlyphKind;
@@ -33,6 +47,8 @@ export function FaqItem({
   question: string;
   answer: readonly AnswerBlock[];
   open?: boolean;
+  /** Bold phrases that link somewhere, by their words. */
+  links?: Readonly<Record<string, string>>;
 }) {
   const sign = (
     <span data-sign={landingCopy.questions.sign} className="type-mono-code md:justify-self-end">
@@ -42,13 +58,13 @@ export function FaqItem({
   const blocks = answer.map((block) =>
     typeof block === 'string' ? (
       <p key={block} data-answer="" className="my-0 break-inside-avoid">
-        {words(block)}
+        {words(block, links)}
       </p>
     ) : (
       <ul key={block.list[0]} data-answer="" className="my-0 list-disc pl-block-gap">
         {block.list.map((line) => (
           <li key={line} className="break-inside-avoid">
-            {words(line)}
+            {words(line, links)}
           </li>
         ))}
       </ul>

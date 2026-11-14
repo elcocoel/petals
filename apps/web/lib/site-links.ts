@@ -39,7 +39,7 @@ export const siteLinks = {
   /** The merch drop (Petals Drop #1); an empty address is one still to come. */
   merch: '',
   /** The socials under the hero's buttons; an empty address is one still to come. */
-  socials: { github: '', telegram: '', twitter: '', youtube: '' },
+  socials: { github: '', telegram: 'https://t.me/+2NiRdSG28rtmOWM6', twitter: '', youtube: '' },
   liveShape: `/f/${LIVE_SHAPE}`,
   /** its picture, in the person's view */
   liveShapeImage: (view: View) => flowerImage(LIVE_SHAPE, view),
