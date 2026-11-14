@@ -12,6 +12,16 @@ export interface MapClaims {
   claims: Claim[];
 }
 
+/** A claim's score, 0 to 1: the confidence the map's claims give it; an unscored claim scores 0. */
+export const claimScore = (claim: Claim): number => {
+  const s = (claim as { confidence?: unknown }).confidence;
+  return typeof s === 'number' ? s : 0;
+};
+
+/** The claims scoring at or above `min`, as Tools' Confidence slider shows them. */
+export const atConfidence = (claims: readonly Claim[], min: number): Claim[] =>
+  claims.filter((c) => claimScore(c) >= min);
+
 /** One piece of what a claim rests on, in words. */
 export interface EvidenceLine {
   /** a reading, a transaction, a proposal, a page, a post, a claim, a note */
