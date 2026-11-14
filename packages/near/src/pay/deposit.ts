@@ -41,14 +41,17 @@ export interface DepositQuote {
 /** Wrapped NEAR, what NEAR Intents delivers for NEAR: the credit contract takes it and unwraps it. */
 export const NEAR_WNEAR = 'nep141:wrap.near';
 
-/** Dollars at NEAR's price as yoctoNEAR, rounded to a millionth of a NEAR. */
-const yoctoOfUsd = (usd: number, nearUsd: number) =>
-  (BigInt(Math.round((usd / nearUsd) * 1e6)) * 10n ** 18n).toString();
+/** How long an address for any amount waits for the transfer. */
+export const DEPOSIT_DAYS = 7;
 
 /** Where a top-up stands. Only SUCCESS is money in. */
 export interface SwapStatus {
   status: string;
+  /** what was sent, as 1Click read it, once it saw it */
+  amount_in_formatted: string | null;
+  amount_in_usd: string | null;
   amount_out: string | null;
+  amount_out_formatted: string | null;
   amount_out_usd: string | null;
   origin_tx: string[];
   destination_tx: string[];
@@ -84,8 +87,12 @@ export async function depositQuote(
     originAsset: string;
     refundTo: string;
     recipient: string;
-    /** the credit contract: NEAR for the dollars asked, delivered into it on the payer's own account */
-    into?: { contract: string; payer: string; nearUsd: number };
+    /**
+     * the credit contract: whatever is sent, as NEAR, delivered into it on the named balance. FLEX_INPUT: any amount
+     * at or above the reference less slippage is taken, so the person sends what they like; `amountIn` is the
+     * reference, in the origin token's smallest units, and the address waits for days.
+     */
+    into?: { contract: string; payer: string; nearUsd: number; amountIn: string };
   },
   deps: DepositDeps = {},
 ): Promise<DepositQuote> {
@@ -105,8 +112,10 @@ export async function depositQuote(
   const body = o.into
     ? {
         ...base,
+        swapType: 'FLEX_INPUT',
+        deadline: new Date(now.getTime() + DEPOSIT_DAYS * 24 * 60 * 60_000).toISOString(),
         destinationAsset: NEAR_WNEAR,
-        amount: yoctoOfUsd(o.usd, o.into.nearUsd),
+        amount: o.into.amountIn,
         recipient: o.into.contract,
         recipientType: 'DESTINATION_CHAIN',
         customRecipientMsg: o.into.payer,
@@ -162,7 +171,10 @@ export async function swapStatus(
       : [];
   return {
     status: str(answer.status) ?? 'UNKNOWN',
+    amount_in_formatted: str(d.amountInFormatted),
+    amount_in_usd: str(d.amountInUsd),
     amount_out: str(d.amountOut),
+    amount_out_formatted: str(d.amountOutFormatted),
     amount_out_usd: str(d.amountOutUsd),
     origin_tx: hashes(d.originChainTxHashes),
     destination_tx: hashes(d.destinationChainTxHashes),

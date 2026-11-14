@@ -71,6 +71,31 @@ export interface PayDeps {
 
 const NEAR_ACCOUNT = /^[a-z0-9._-]{2,64}$/;
 
+/** 1Click's EVM chains: an Ethereum wallet's address is the same on each. */
+const EVM_CHAINS = new Set(['eth', 'base', 'arb', 'op', 'pol', 'bsc', 'avax', 'gnosis', 'bera']);
+
+/**
+ * The person's own wallet on a 1Click chain, from their wallets in CAIP-10, as the address anything unswapped goes
+ * back to: an Ethereum wallet on an EVM chain, their Solana wallet on Solana, their NEAR account on NEAR; else none.
+ */
+export function walletOn(chain: string, wallets: readonly string[]): string | null {
+  const own = (prefix: string) =>
+    wallets
+      .find((w) => w.startsWith(prefix))
+      ?.split(':')
+      .at(-1) ?? null;
+  if (chain === 'near') return own('near:mainnet:');
+  if (chain === 'sol') return own('solana:');
+  return EVM_CHAINS.has(chain) ? own('eip155:') : null;
+}
+
+/** An amount of a token in its smallest units, at least one. */
+export function unitsOf(tokens: number, decimals: number): string {
+  const [whole = '0', frac = ''] = tokens.toFixed(Math.min(decimals, 20)).split('.');
+  const units = BigInt(whole + frac.padEnd(decimals, '0').slice(0, decimals));
+  return (units > 0n ? units : 1n).toString();
+}
+
 export function payRoutes(d: PayDeps): Hono {
   const read = d.readTransfer ?? ((network, hash, sender) => readTransfer(network, hash, sender));
   const readIntents =
@@ -330,7 +355,9 @@ export function payRoutes(d: PayDeps): Hono {
         refund_to?: unknown;
         account_id?: unknown;
       } | null;
-      const { usd, origin_asset, refund_to, account_id } = body ?? {};
+      const { usd: asked, origin_asset, refund_to: given, account_id } = body ?? {};
+      // with the contract any amount is taken: usd is only the address's reference, a dollar unless said
+      const usd = asked === undefined && d.credit ? 1 : asked;
       if (typeof usd !== 'number' || !Number.isFinite(usd) || !(usd > 0)) {
         return fail(c, 'bad_input', 'usd is how many dollars to add, a number above 0');
       }
@@ -341,6 +368,16 @@ export function payRoutes(d: PayDeps): Hono {
           'origin_asset is the token to pay with, as GET /api/v1/pay/tokens names it',
         );
       }
+      // where anything unswapped goes back: the address asked, else the person's own linked wallet on that chain
+      const token = d.credit
+        ? (await payTokens(d.oneClick).catch(() => [])).find((t) => t.asset === origin_asset)
+        : undefined;
+      const refund_to =
+        typeof given === 'string' && given
+          ? given
+          : token
+            ? walletOn(token.chain, await d.gate.authorsOf(me.person))
+            : null;
       if (typeof refund_to !== 'string' || !refund_to) {
         return fail(
           c,
@@ -349,7 +386,7 @@ export function payRoutes(d: PayDeps): Hono {
         );
       }
       // with the contract, the top-up lands there as NEAR, on the NEAR balance it names (anyone's), else the person's own
-      let into: { contract: string; payer: string; nearUsd: number } | undefined;
+      let into: { contract: string; payer: string; nearUsd: number; amountIn: string } | undefined;
       if (d.credit) {
         if (d.credit.contract.network !== 'mainnet')
           return fail(
@@ -376,7 +413,16 @@ export function payRoutes(d: PayDeps): Hono {
             'source_failed',
             "Couldn't read NEAR's price, so nothing changed. Try again.",
           );
-        into = { contract: d.credit.contract.contract, payer, nearUsd };
+        if (!token || !(token.usd > 0))
+          return fail(c, 'bad_input', 'origin_asset is a token GET /api/v1/pay/tokens lists');
+        // the reference in the token's own smallest units: what the address is quoted for; any amount at or above
+        // it less slippage is taken
+        into = {
+          contract: d.credit.contract.contract,
+          payer,
+          nearUsd,
+          amountIn: unitsOf(usd / token.usd, token.decimals),
+        };
       }
       let quote: Awaited<ReturnType<typeof depositQuote>>;
       try {
@@ -406,6 +452,40 @@ export function payRoutes(d: PayDeps): Hono {
       return ok(c, { top_up: { ...quote, usd, status: 'PENDING_DEPOSIT' } });
     },
   );
+
+  // The person's top-ups through NEAR Intents, newest first, each as 1Click sees it now: what was sent, what landed.
+  app.get('/api/v1/pay/intents', async (c) => {
+    c.header('Cache-Control', 'no-store');
+    const me = await d.gate.personOf(c);
+    if (!me) return fail(c, 'unauthorised', 'Sign in with your wallet first.');
+    const rows = await d.store.topUp.ofPerson(me.person, 20);
+    const top_ups = await Promise.all(
+      rows.map(async (row) => {
+        const q = JSON.parse(row.quote) as {
+          deposit_memo?: string | null;
+          origin_asset?: string;
+          deadline?: string | null;
+          into?: unknown;
+        };
+        const s = await swapStatus(row.deposit_address, q.deposit_memo ?? null, d.oneClick).catch(
+          () => null,
+        );
+        const landed = s?.status === 'SUCCESS';
+        return {
+          deposit_address: row.deposit_address,
+          created_at: row.created_at,
+          origin_asset: q.origin_asset ?? null,
+          deadline: q.deadline ?? null,
+          status: s?.status ?? row.status,
+          sent: s?.amount_in_formatted ?? null,
+          sent_usd: s?.amount_in_usd ?? null,
+          landed_near: landed && q.into ? s.amount_out_formatted : null,
+          landed_usd: landed ? s.amount_out_usd : null,
+        };
+      }),
+    );
+    return ok(c, { top_ups });
+  });
 
   app.get('/api/v1/pay/intents/:deposit', async (c) => {
     c.header('Cache-Control', 'no-store');
