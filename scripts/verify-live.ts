@@ -1,11 +1,16 @@
 // pnpm verify:live: read-only checks of what Petals runs on NEAR mainnet, with no keys, no wallet and no install
 // beyond this repo. Each line says PASS or FAIL with a link to look for yourself; any FAIL exits 1.
-//   - petals-credit.near runs the credit contract v3 (its code hash) with its configuration;
+//   - petals-credit.near runs the credit contract v3 (its code hash) with its configuration, and holds no key, so
+//     only the contract's own owner-only upgrade() can change its code;
 //   - the landing's flower is on FastData, written by petals-writer.near to petals.near in one transaction;
 //   - that flower's entry hash and its maker's NEP-413 signature check out, by the same code the site uses,
 //     and the key that signed it is a full-access key of petals.near;
-//   - the site serves that flower.
+//   - the site serves that flower;
+//   - one answer's NEAR AI attestation report (TEE quotes for the gateway and the model) is served by its hash;
+//   - Ref Finance's reading carries the ties between accounts that voted alike, and House of Stake has dated
+//     readings for the Play.
 
+import { createHash } from 'node:crypto';
 import type { Entry } from '@petal/core/types';
 import { verifyEntry } from '@petal/tools';
 
@@ -21,6 +26,10 @@ const RECEIVER = 'petals.near';
 const WRITER = 'petals-writer.near';
 const FLOWER = '62eaaefb9f5852c72d37a63c';
 const FLOWER_TX = '65guEPJJQCFwmKTSzMBSLEYpFU15mvZvZbaspEWt4qbm';
+/** the attestation report NEAR AI returned with one answer on the live site, kept by its own hash */
+const ATTESTATION = '85ac86fa84bb814a8f3bb2df8433006b283669c0c402a28ee422f01fcc64ee09';
+const REF = 'near:mainnet:ref-finance.sputnik-dao.near';
+const HOUSE_OF_STAKE = 'near:mainnet:venear.dao';
 
 async function rpc<T>(method: string, params: unknown): Promise<T> {
   const res = await fetch(RPC, {
@@ -67,6 +76,18 @@ await check(
     });
     const got = JSON.parse(new TextDecoder().decode(new Uint8Array(r.result)));
     return JSON.stringify(got) === JSON.stringify(CONFIG) || `it is ${JSON.stringify(got)}`;
+  },
+);
+
+await check(
+  `${CREDIT} holds no access key: only its owner-only upgrade() changes its code`,
+  `${EXPLORER}/address/${CREDIT}`,
+  async () => {
+    const r = await view<{ keys: { public_key: string }[] }>({
+      request_type: 'view_access_key_list',
+      account_id: CREDIT,
+    });
+    return r.keys.length === 0 || `it holds ${r.keys.map((k) => k.public_key).join(', ')}`;
   },
 );
 
@@ -147,6 +168,55 @@ await check(
 await check(`the site serves the flower`, `${SITE}/f/${FLOWER}`, async () => {
   const res = await fetch(`${SITE}/f/${FLOWER}`);
   return res.ok || `HTTP ${res.status}`;
+});
+
+await check(
+  `an answer's NEAR AI attestation report, served by its SHA-256`,
+  `${SITE}/api/v1/attestations/${ATTESTATION}`,
+  async () => {
+    const res = await fetch(`${SITE}/api/v1/attestations/${ATTESTATION}`);
+    if (!res.ok) return `HTTP ${res.status}`;
+    const bytes = Buffer.from(await res.arrayBuffer());
+    const sha = createHash('sha256').update(bytes).digest('hex');
+    if (sha !== ATTESTATION) return `its SHA-256 is ${sha}`;
+    const r = JSON.parse(bytes.toString('utf8')) as {
+      gateway_attestation?: { intel_quote?: string };
+      model_attestations?: { model_name?: string; intel_quote?: string }[];
+    };
+    const model = r.model_attestations?.[0];
+    if (!r.gateway_attestation?.intel_quote || !model?.intel_quote) return 'no TEE quote in it';
+    return true;
+  },
+);
+
+await check(
+  `Ref Finance's reading carries votes_alike ties`,
+  `${SITE}/api/v1/maps/${REF}/reading`,
+  async () => {
+    const res = await fetch(`${SITE}/api/v1/maps/${REF}/reading`);
+    if (!res.ok) return `HTTP ${res.status}`;
+    const found: { lines?: unknown[] }[] = [];
+    const walk = (x: unknown) => {
+      if (Array.isArray(x)) for (const y of x) walk(y);
+      else if (x && typeof x === 'object') {
+        if ((x as { name?: string }).name === 'votes_alike') found.push(x as { lines?: unknown[] });
+        for (const y of Object.values(x)) walk(y);
+      }
+    };
+    walk(await res.json());
+    const lines = found.reduce((n, p) => n + (p.lines?.length ?? 0), 0);
+    return lines > 0 || 'no votes_alike ties in it';
+  },
+);
+
+await check(`House of Stake has dated readings for the Play`, `${SITE}/api/v1/maps`, async () => {
+  const res = await fetch(`${SITE}/api/v1/maps`);
+  if (!res.ok) return `HTTP ${res.status}`;
+  const body = (await res.json()) as { maps?: { id: string; readings?: { dated?: boolean }[] }[] };
+  const map = body.maps?.find((m) => m.id === HOUSE_OF_STAKE);
+  if (!map) return `no map ${HOUSE_OF_STAKE}`;
+  const dated = (map.readings ?? []).filter((r) => r.dated).length;
+  return dated >= 2 || `${dated} dated readings`;
 });
 
 console.log(failed ? `\nverify:live: ${failed} failed` : '\nverify:live: all passed');
