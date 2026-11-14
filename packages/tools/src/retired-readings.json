@@ -1,6 +1,6 @@
 {
   "note": "Readings that mapping runs replaced, retired from every list of the map, never deleted: each stays in the store and its flower still opens by its hash; its map shows the reading that replaced it. Taking its line out brings it back. Each says what changed. Claims a mapping run reissued are retired the same way (claims): no map's list of the mapping's claims shows them, and search leaves them out.",
-  "decided": "Shared map curation, 11 Nov 2026: map identity repairs on Gnosis, Ethereum, Arbitrum and Base; 12 Nov 2026: the NEAR and Solana repairs, and the 1-day holder windows of 9 Nov read again whole; 14 Nov 2026: 43 claims a mapping run kept under a NEAR config binding its source did not declare, withheld from publishing",
+  "decided": "Shared map curation, 11 Nov 2026: map identity repairs on Gnosis, Ethereum, Arbitrum and Base; 12 Nov 2026: the NEAR and Solana repairs, and the 1-day holder windows of 9 Nov read again whole; 14 Nov 2026: 43 claims a mapping run kept under a NEAR config binding its source did not declare, withheld from publishing; 12 duplicate claims kept twice in one conversation, the later copy retired",
   "retired": [
     {
       "snapshot": "00a4ada1c64d9c7a93848fba523f4e290a635db84681ead51a830ecb72273345",
@@ -978,6 +978,66 @@
       "id": "05595b57fa371a6f3a86c12afc73fcb92f59096862d769c4f636fa943367e0dc",
       "replaced_by": "",
       "from": "withheld from publishing: kept by a mapping run under a NEAR config binding its source did not declare"
+    },
+    {
+      "id": "6952044eb40799a7a44fc91301899ace5e841d84ed3766361ab9006c40b627cb",
+      "replaced_by": "550a79b243942ef213786ab2a443c73596aa45ab4cdabe2bef79d65eedd1d64d",
+      "from": "duplicate: the same text kept twice in one conversation; the earlier copy publishes"
+    },
+    {
+      "id": "2c5d6eb64e43c3208ed5013c90e12f002a6e8aa828842c8460560cc565891d19",
+      "replaced_by": "618f1c9ee517c652d897e191748ae7c80855ad5428aa9520cc92c16f8b910baf",
+      "from": "duplicate: the same text kept twice in one conversation; the earlier copy publishes"
+    },
+    {
+      "id": "3c82e443055b488157d16dfcdc18987c27cfa2aead268640b1c7c45c98d561ff",
+      "replaced_by": "fa8ae2accb3ab4168a4426fa21bbe457cec9413ef17ebe8078a11ffef806a084",
+      "from": "duplicate: the same text kept twice in one conversation; the earlier copy publishes"
+    },
+    {
+      "id": "74ab74aa994b2669d8c734c934aac38bd65dc205f66b32e4760aea583d392e22",
+      "replaced_by": "bc00faeab0191a9ea3395a7b34ae8990925c5d9c87497d199d48ca33f8b02001",
+      "from": "duplicate: the same text kept twice in one conversation; the earlier copy publishes"
+    },
+    {
+      "id": "3b032581f692c055114c6ba75e09511b9ff2cf820f477ee0e18591c29e15ef06",
+      "replaced_by": "086b3b155020dbff5ddf12f44eddf945f80173937a1d32d54a330712e7ec8bf4",
+      "from": "duplicate: the same text kept twice in one conversation; the earlier copy publishes"
+    },
+    {
+      "id": "a39252024a35b0f1c58f788919ca3df1d3b8b02d71846ad42dc0697f95368d16",
+      "replaced_by": "6f47f1ec427af07bef10d4f627444a428bb65973710e3ac23f9eaea6cd8bfa54",
+      "from": "duplicate: the same text kept twice in one conversation; the earlier copy publishes"
+    },
+    {
+      "id": "2b78b46f8367cadecdf8398923f447625e2a4aae199d1a265bdca0d7ca1c70de",
+      "replaced_by": "429295a3741151811f2b7a351180a0d94114b51a1f3ec1ea7f5509a1b78876e9",
+      "from": "duplicate: the same text kept twice in one conversation; the earlier copy publishes"
+    },
+    {
+      "id": "3181318d22b40d45a2c651fd83b985d72fee1d1376f9889f8a0c22facb6aef88",
+      "replaced_by": "db56f10dc113c7b44aed987d69df5772af0ae467f0906203bfdeeb7d5f0f6731",
+      "from": "duplicate: the same text kept twice in one conversation; the earlier copy publishes"
+    },
+    {
+      "id": "f6981b83a2e2f56208bb060b669922e044dd8e2b7a292675b96b5c8d6b70e17e",
+      "replaced_by": "dc160635fd3f5aae1f8ddd378a9d8acc3f8f2d0633a21dad743923bc846a6149",
+      "from": "duplicate: the same text kept twice in one conversation; the earlier copy publishes"
+    },
+    {
+      "id": "a1066517926588c17ff71fa915a3e6dd4427fb1836d5c9daf99fce643e602b10",
+      "replaced_by": "b7838f75107eae34e0194e0bafb862fcbf0defd5da54d03b699e071e054994f9",
+      "from": "duplicate: the same text kept twice in one conversation; the earlier copy publishes"
+    },
+    {
+      "id": "41e244ef6fa35b9636c1eb62268f07beefdc97cd550b88b7d72d861f1ec6e8d7",
+      "replaced_by": "4255b79505a8b3fa35ece6e9a3d001b0a8ce0950e4d3e14a5619621ff0f1c357",
+      "from": "duplicate: the same text kept twice in one conversation; the earlier copy publishes"
+    },
+    {
+      "id": "625a889855a150b5e4fe7dff8f9d3931c4eab13b3687b32dec68bf4a8629421e",
+      "replaced_by": "5ca5d42343274cf36606f3ffec2c8b987c58ed0b30d3cf443c330c51b98ba558",
+      "from": "duplicate: the same text kept twice in one conversation; the earlier copy publishes"
     }
   ]
 }

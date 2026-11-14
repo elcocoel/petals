@@ -42,7 +42,7 @@ import { type FlowerReading, modelOf } from '../flower/model.ts';
 import { SHAPE } from '../flower/ring.ts';
 import { type BlocSpan, blocChoices, periodWords } from '../lib/bloc-words.ts';
 import type { Rect, Size } from '../lib/float-box.ts';
-import { mapClaimGroups, mapClaimWords } from '../lib/map-claims.ts';
+import { atConfidence, mapClaimGroups, mapClaimWords } from '../lib/map-claims.ts';
 import { historyOf } from '../lib/map-history.ts';
 import { layerWords, mapLayers } from '../lib/map-layers.ts';
 import { MAP_SEARCH_ID, mapSearchWords, type SearchRow, searchRows } from '../lib/map-search.ts';
@@ -117,6 +117,9 @@ export type MapShow =
   | { wallet: string; chain?: string | null }
   | { line: readonly [string, string] }
   | { proposal: { map: string; id: string } };
+
+/** No claims for the map's pins. */
+const NO_PINS: ReadonlyMap<string, readonly Claim[]> = new Map();
 
 /** The strip's words while a change in Tools reads the map again. */
 const UPDATING = 'Updating the map';
@@ -766,11 +769,16 @@ export function LandscapeCanvas({
   }, [data]);
   // Gravity: how close the flowers on a chain sit (the legend's control)
   const [gravity, setGravity] = useState(GRAVITY_DEFAULT);
+  // the least confidence an insight needs to show, from Tools, for the visit
+  const [confidence, setConfidence] = useState(0);
   // claims as pins on the map (landscape/pins.ts): the maps drawn big enough to carry them, their claims, the open one
   const [pinMaps, setPinMaps] = useState<readonly string[]>([]);
   const [openPin, setOpenPin] = useState<PinAnchor | null>(null);
   const pinCard = useRef<HTMLElement | null>(null);
-  const keepPins = useCallback((cs: readonly Claim[]) => cs, []);
+  const keepPins = useCallback(
+    (cs: readonly Claim[]) => atConfidence(cs, confidence),
+    [confidence],
+  );
   const pinClaims = useClaimPins(pinMaps, keepPins);
   const pinNames = useMemo(() => {
     const f = openPin ? data.flowers.find((x) => x.map === openPin.map) : undefined;
@@ -926,7 +934,13 @@ export function LandscapeCanvas({
     const f = inNow.current;
     toldWallet.current?.(id && f ? { id, chain: f.place.chain, flower: f.name } : null);
   }, []);
-  const claims = useMapClaims(legend ? (inFlower?.map ?? null) : null);
+  const allClaims = useMapClaims(legend ? (inFlower?.map ?? null) : null);
+  // the claims at or above Tools' Confidence: what Insights and the map's pins show
+  const shownClaims = useMemo(
+    () => (allClaims ? atConfidence(allClaims, confidence) : null),
+    [allClaims, confidence],
+  );
+  const claims = shownClaims;
   // the map's layers, each with its period and who mapped it, from its card and its insights
   const card = useMapCard(legend && movable ? (inFlower?.map ?? null) : null, version);
   // the map's layers as strata, each first author in their colour (the card's layers and authors)
@@ -1156,12 +1170,20 @@ export function LandscapeCanvas({
       }
       // how much the map's flowers draw together (gravity), for the visit
       gravity={{ value: gravity, onChange: setGravity }}
+      // the least confidence an insight needs to show, for the visit
+      confidence={{ value: confidence, onChange: setConfidence }}
       worth={{ on: worth, onChange: setWorth }}
       // the map's own controls back as they came, from the same 'Put the default back' as the view's
       resetMap={
-        gravity !== GRAVITY_DEFAULT || span !== 'all' || !worth || !insightsOn || bloc !== null
+        gravity !== GRAVITY_DEFAULT ||
+        confidence !== 0 ||
+        span !== 'all' ||
+        !worth ||
+        !insightsOn ||
+        bloc !== null
           ? () => {
               setGravity(GRAVITY_DEFAULT);
+              setConfidence(0);
               setSpan('all');
               setWorth(true);
               setInsightsOn(true);
@@ -1234,7 +1256,8 @@ export function LandscapeCanvas({
           progress={progressHere}
           unlabelled={latestView(person.view).dimensions.labels === null}
           pins={{
-            claims: pinClaims,
+            // Insights switched off in Information: its pins go with it
+            claims: insightsOn ? pinClaims : NO_PINS,
             onPinMaps: setPinMaps,
             pinOpen: openPin?.key ?? null,
             pinCard,

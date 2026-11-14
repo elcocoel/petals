@@ -67,7 +67,7 @@ describe('maps hidden from the Power Map', () => {
   test('the claims a mapping run reissued are retired, never deleted: each names its replacement and what changed', () => {
     const all = (retired as { claims: { id: string; replaced_by: string; from: string }[] }).claims;
     const claims = all.filter((c) => c.replaced_by !== '');
-    expect(claims.length).toBe(3);
+    expect(claims.length).toBe(15);
     for (const c of claims) {
       expect(c.id).toMatch(/^[0-9a-f]{64}$/);
       expect(c.replaced_by).toMatch(/^[0-9a-f]{64}$/);

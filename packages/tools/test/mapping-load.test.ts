@@ -168,7 +168,7 @@ describe('loading a mapping run', () => {
     // loaded again, it's kept once
     const again = await loadMapping(r.ctx, root, { by: 'mapping.petals.near' });
     expect(again.formats.claim).toMatchObject({ good: 1, kept: 0, left: 1 });
-    expect(await mapClaims(r.ctx, DAO)).toEqual([claim]);
+    expect(await mapClaims(r.ctx, DAO)).toEqual([{ ...claim, confidence: null }]);
     expect(
       await mapClaims(r.ctx, 'eip155:1:0x0000000000000000000000000000000000000000'),
     ).toBeNull();
@@ -212,6 +212,6 @@ describe('loading a mapping run', () => {
     writeFileSync(join(dir, 'claim-gov.json'), JSON.stringify(claim));
     const done = await loadMapping(r.ctx, root, { by: 'mapping.petals.near' });
     expect(done.drawn).toBe(1);
-    expect(await mapClaims(r.ctx, DAO)).toEqual([claim]);
+    expect(await mapClaims(r.ctx, DAO)).toEqual([{ ...claim, confidence: null }]);
   });
 });

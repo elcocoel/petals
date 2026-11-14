@@ -306,6 +306,7 @@ export function ViewLegend({
   edit,
   groups,
   gravity,
+  confidence,
   worth,
   insights,
   between,
@@ -335,6 +336,8 @@ export function ViewLegend({
   groups?: LegendGroups | undefined;
   /** On a map, how much its flowers draw together (gravity), 0 apart to 1 close, kept for the visit. */
   gravity?: { value: number; onChange: (value: number) => void } | undefined;
+  /** On a map, the least confidence an insight needs to show, 0 to 1, kept for the visit. */
+  confidence?: { value: number; onChange: (value: number) => void } | undefined;
   /**
    * On a map, whether each DAO's treasury and token price show under its name at some magnification,
    * switched from the Tools box.
@@ -434,7 +437,7 @@ export function ViewLegend({
           </div>
         </>
       )}
-      {(gravity || worth || insights || between) && (
+      {(gravity || confidence || worth || insights || between) && (
         <>
           <SectionHead
             size="panel"
@@ -454,6 +457,23 @@ export function ViewLegend({
                     shown={`${Math.round(gravity.value * 100)}%`}
                     onChange={gravity.onChange}
                     // it's for the visit, not kept in the view: nothing to keep when the hand lets go
+                    onSet={() => undefined}
+                  />
+                </span>
+              </ToolRow>
+            )}
+            {confidence && (
+              <ToolRow label={panelWords.legendConfidence} hint={panelWords.legendConfidenceDoes}>
+                <span className="w-full min-w-0">
+                  <Range
+                    label={panelWords.legendConfidence}
+                    min={0}
+                    max={1}
+                    step={0.05}
+                    value={confidence.value}
+                    shown={`${Math.round(confidence.value * 100)}%`}
+                    onChange={confidence.onChange}
+                    // it's for the visit, not kept in the view
                     onSet={() => undefined}
                   />
                 </span>
