@@ -82,18 +82,18 @@ The Power Map is built together by its people, and three counts per person show 
 
 ## What uses NEAR
 
-| Piece                   | Role                                                                                                   | Source                                                                                                                     |
-| ----------------------- | ------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------- |
-| Credit contract         | `petals-credit.near` on mainnet: payments go in as deposits, always withdrawable                       | [Rust contract](packages/near/contract/src/lib.rs)                                                                         |
-| Charger                 | `petals-charger.near` can only charge the credit contract for the agent's answers                      | [Rust contract](packages/near/contract/src/lib.rs)                                                                         |
-| Owner                   | `petals.near` signed the base data on 267 maps once; upgrades the credit contract this first wave      | [Manifest schema](packages/core/schema/manifest.schema.json)                                                               |
-| NEAR AI Cloud, in a TEE | Petals' hosted agent; each answer can carry a `provider_tee` signature made inside the model's enclave | [Client](packages/agent/src/near-ai.ts), [signatures](packages/agent/src/signature.ts)                                     |
-| NEAR Intents (1Click)   | Top up from supported tokens and chains                                                                | [1Click adapter](packages/near/src/pay/one-click.ts), [payment routes](packages/agent/src/pay-routes.ts)                   |
-| FastData publications   | `petals-writer.near` writes published map data to `petals.near`; anyone reads it back from FastData    | [Writer](packages/near/src/map/fastdata-writer.ts), [reader](packages/near/src/map/fastdata-reader.ts)                     |
-| NEAR Social             | Public profile data, read from NEAR Social's API                                                       | [Profile integration](apps/web/lib/near-social.ts)                                                                         |
-| near-connect, NEP-413   | Sign in by proving control of an account, through near-connect's wallet picker                         | [Wallet](apps/web/lib/wallet.ts), [verifier](packages/near/src/auth/nep413.ts)                                             |
-| Sputnik DAO             | Read NEAR DAO governance                                                                               | [Reader](packages/inputs/src/modules/sputnik-dao.ts)                                                                       |
-| People's own agents     | Join a person's work and return mapping jobs                                                           | [Connection chapters](https://petals.elementarycomplexity.com/docs/connect-your-agent), [jobs](packages/agent/src/jobs.ts) |
+| Piece                   | Role                                                                                                                                                                                                                  | Source                                                                                                                     |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Credit contract         | `petals-credit.near` on mainnet: payments go in as deposits. `petals.near` can upgrade it (deliberate for the hackathon), so "always withdrawable" is Petals' promise, kept in every build, not enforced by the chain | [Rust contract](packages/near/contract/src/lib.rs)                                                                         |
+| Charger                 | `petals-charger.near`'s service key can only call `charge` on the credit contract; the account also holds the owner's full-access key                                                                                 | [Rust contract](packages/near/contract/src/lib.rs)                                                                         |
+| Owner                   | `petals.near` signed the base data on 267 maps once; upgrades the credit contract this first wave                                                                                                                     | [Manifest schema](packages/core/schema/manifest.schema.json)                                                               |
+| NEAR AI Cloud, in a TEE | Petals' hosted agent; each answer can carry a `provider_tee` signature made inside the model's enclave                                                                                                                | [Client](packages/agent/src/near-ai.ts), [signatures](packages/agent/src/signature.ts)                                     |
+| NEAR Intents (1Click)   | Top up from supported tokens and chains                                                                                                                                                                               | [1Click adapter](packages/near/src/pay/one-click.ts), [payment routes](packages/agent/src/pay-routes.ts)                   |
+| FastData publications   | `petals-writer.near` writes published map data to `petals.near` with a key restricted to `__fastdata_kv`; the account also holds the owner's full-access key                                                          | [Writer](packages/near/src/map/fastdata-writer.ts), [reader](packages/near/src/map/fastdata-reader.ts)                     |
+| NEAR Social             | Public profile data, read from NEAR Social's API                                                                                                                                                                      | [Profile integration](apps/web/lib/near-social.ts)                                                                         |
+| near-connect, NEP-413   | Sign in by proving control of an account, through near-connect's wallet picker                                                                                                                                        | [Wallet](apps/web/lib/wallet.ts), [verifier](packages/near/src/auth/nep413.ts)                                             |
+| Sputnik DAO             | Read NEAR DAO governance                                                                                                                                                                                              | [Reader](packages/inputs/src/modules/sputnik-dao.ts)                                                                       |
+| People's own agents     | Join a person's work and return mapping jobs                                                                                                                                                                          | [Connection chapters](https://petals.elementarycomplexity.com/docs/connect-your-agent), [jobs](packages/agent/src/jobs.ts) |
 
 ## Verify it on chain
 
@@ -109,8 +109,12 @@ near contract call-function as-read-only petals-credit.near config json-args '{}
 # What it has charged so far, in yoctoNEAR
 near contract call-function as-read-only petals-credit.near earned json-args '{}' network-config mainnet now
 
-# One account's deposit, in yoctoNEAR
+# One account's deposit, in yoctoNEAR (for example; balances move as people use Petals)
 near contract call-function as-read-only petals-credit.near balance_of json-args '{"account_id":"elcocoel.near"}' network-config mainnet now
+
+# The service accounts' keys: a restricted key each, and the owner's full-access key
+near account list-keys petals-charger.near network-config mainnet now
+near account list-keys petals-writer.near network-config mainnet now
 ```
 
 The same calls over JSON-RPC, with no install:
