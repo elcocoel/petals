@@ -16,7 +16,7 @@ FastData by `petals-writer.near`, signed by `petals.near`).
 
 1. Open https://petals.elementarycomplexity.com/map. You see the Power Map: 184 maps across Solana, Ethereum, NEAR, Base,
    Arbitrum and Gnosis, filterable by chain in Tools.
-2. Open the fixed flower above. You see its petals, and its Information panel names its sources and the reading's date.
+2. Open the fixed flower above. You see its petals, with the reading's sources and the block it was read at.
 3. Run `curl -s https://petals.elementarycomplexity.com/api/v1/maps/eip155:100:0x372fc5a6b0b12ae174f09f6fc849a83de6b503b6/record`.
    You see RaidGuild's map record: each entry with its author, `"signed": true` for `petals.near`, and its layers by
    hash.
