@@ -20,11 +20,11 @@ Sign in, then press **Connect an agent** at the top of Petals’ side panel. It 
 
 Each app has its own chapter, with the steps your agent follows:
 
-| Your app                        | Where it runs                                              | Its chapter                                                         |
-| ------------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------- |
-| Claude Code                     | In a terminal, or under **Code** in the Claude desktop app | [Connect Claude Code](/docs/connect-your-agent/connect-claude-code) |
-| Codex                           | In a terminal                                              | [Connect Codex](/docs/connect-your-agent/connect-codex)             |
-| Hermes                          | In a terminal, or over ACP                                 | [Connect Hermes](/docs/connect-your-agent/connect-hermes)           |
+| Your app                        | Where it runs                                                                        | Its chapter                                                         |
+| ------------------------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------- |
+| Claude Code                     | In a terminal, or under **Code** in the Claude desktop app                           | [Connect Claude Code](/docs/connect-your-agent/connect-claude-code) |
+| Codex                           | In a terminal                                                                        | [Connect Codex](/docs/connect-your-agent/connect-codex)             |
+| Hermes                          | In a terminal, or over ACP                                                           | [Connect Hermes](/docs/connect-your-agent/connect-hermes)           |
 | The Claude app, ChatGPT, Cursor | In the cloud, or on your computer (Cursor), as a connector at Petals’ `/mcp` address | [Connect a cloud app](/docs/connect-your-agent/connect-cloud)       |
 
 ## On your computer or in the cloud
