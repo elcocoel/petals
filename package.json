@@ -25,6 +25,7 @@
     "import:spike": "node scripts/import-spike-data.ts",
     "relations:rebuild": "node scripts/relations-rebuild.ts",
     "check": "bash scripts/check.sh",
+    "verify:live": "node scripts/verify-live.ts",
     "prepare": "git config core.hooksPath scripts/git-hooks 2>/dev/null || true"
   },
   "dependencies": {
