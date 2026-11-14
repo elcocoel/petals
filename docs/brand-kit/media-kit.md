@@ -40,7 +40,7 @@ The folded map: the Power Map.
 
 ### Brain
 
-![Skill library](/landing/how-it-works/brain.webp)
+![Skill library](../assets/brain-small.webp)
 
 The Brain has no icon of its own yet; its picture is the Skill library illustration.
 

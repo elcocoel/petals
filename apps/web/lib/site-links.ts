@@ -32,8 +32,8 @@ export const siteLinks = {
   github: 'https://github.com/elcocoel/petals',
   /** Elementary Complexity's site: the footer's name links here. */
   elementaryComplexity: 'https://elementarycomplexity.com',
-  /** The brand kit, logos and media for anyone writing about Petals: the lab holds it for now. */
-  brandKit: '/lab',
+  /** The brand kit: logos and media for anyone writing about Petals. */
+  brandKit: '/docs/brand-kit',
   /** The points leaderboard; an empty address is one still to come. */
   leaderboard: '',
   /** The merch drop (Petals Drop #1); an empty address is one still to come. */
