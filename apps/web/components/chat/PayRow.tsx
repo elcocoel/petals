@@ -126,11 +126,15 @@ export function PayRow({
  */
 export function TopUpFields({ topUp }: { topUp: TopUpView }) {
   const sent = topUp.sent;
-  if (sent && !sent.ended && !sent.landed) return <Sending sent={sent} topUp={topUp} />;
+  // the form stays where it is; where to send, and how it stands, show in their own place under it
   return (
     <>
       <Form topUp={topUp} withUsd={false} />
-      {sent && <p className="my-0 type-ui text-muted">{sent.status}</p>}
+      {sent && !sent.ended && !sent.landed ? (
+        <Sending sent={sent} topUp={topUp} />
+      ) : (
+        sent && <p className="my-0 type-ui text-muted">{sent.status}</p>
+      )}
     </>
   );
 }
