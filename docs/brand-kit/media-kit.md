@@ -10,7 +10,7 @@ order: 20
 
 ### Press paragraph
 
-Petals draws a network as a flower. Every account is a petal, and bands inside a petal can show who backs it. An agent reads the network’s chain, forum and documents, decides what counts as power there, and explains any petal on request, with the evidence. Petals was built for the NEAR Hackathon in November 2026 by Elementary Complexity. Its agent runs on NEAR AI, it reads networks on NEAR, Ethereum, Base, Arbitrum, Gnosis and Solana, and its code is open under the MIT licence.
+Petals draws any network as a flower. Every account is a petal, and the space in the middle shows the ties between them: delegated votes, shared funding, joint signatures and wallets that answer to the same hands. An agent reads the network’s chain, forum and documents, decides what counts as power there, and explains any petal on request, with the evidence. Petals was built for the NEAR Hackathon in November 2026 by Elementary Complexity. Its agent runs on NEAR AI, it reads networks on NEAR, Ethereum, Base, Arbitrum, Gnosis and Solana, and its code is open under the MIT licence.
 
 ## The wordmark, colours and type
 
@@ -74,9 +74,9 @@ The home page.
 
 A network you know: Ref Finance, a DAO on NEAR, drawn as a flower.
 
-![The Power Map, the networks Petals has read](../assets/screenshot-power-map.webp)
+![The Power Map, every network Petals has read](../assets/screenshot-power-map.webp)
 
-The Power Map: the networks Petals has read, by chain.
+The Power Map: every network Petals has read, by chain.
 
 ## Demo
 
