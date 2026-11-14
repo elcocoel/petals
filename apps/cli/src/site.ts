@@ -101,6 +101,11 @@ export const SITE_TOOLS = [
   // what the person kept about a map and could publish with one press there: the
   // site holds their claims; the press and the wallet's signature stay theirs, on the page
   'list_publishable',
+  // the Power Map lives on the site, and this computer holds none of it: a map, its voting blocs and its
+  // payouts are read there, through the site's own /mcp door, which answers in the tools' own shapes
+  'get_map',
+  'find_voting_blocs',
+  'list_payouts',
 ] as const;
 
 /**
@@ -306,6 +311,53 @@ export function siteDoor(opts: SiteOptions) {
 
   const post = (path: string, input: unknown) =>
     call('POST', path, JSON.stringify(input), { 'content-type': 'application/json' });
+
+  /** A tool run on the site, through its /mcp door: the tool's own answer, or its error. */
+  async function onSite(name: string, args: Json): Promise<Json> {
+    let res: Response;
+    try {
+      res = await f(`${site}/mcp`, {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          accept: 'application/json, text/event-stream',
+        },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          id: 1,
+          method: 'tools/call',
+          params: { name, arguments: args },
+        }),
+      });
+    } catch (e) {
+      return fault(
+        'source_failed',
+        `Petals' site (${site}) didn't answer: ${(e as Error).message}`,
+        'Say so in a line and carry on with your answer; the reads and drawings still work here.',
+      );
+    }
+    const text = await res.text();
+    // a stream of one event, or plain JSON
+    const body = text.includes('data:')
+      ? text
+          .split('\n')
+          .filter((l) => l.startsWith('data:'))
+          .map((l) => l.slice(5).trim())
+          .join('')
+      : text;
+    try {
+      const out = JSON.parse(body) as {
+        result?: { structuredContent?: Json };
+        error?: { message?: unknown };
+      };
+      if (out.result?.structuredContent) return out.result.structuredContent;
+      if (out.error)
+        return fault('source_failed', `Petals' site refused ${name}: ${String(out.error.message)}`);
+    } catch {
+      // below
+    }
+    return fault('source_failed', `Petals' site answered ${res.status} to ${name} with no result.`);
+  }
 
   /** The site holds this snapshot, or now does: posted from here, read on this machine. */
   async function ensureSnapshot(ref: string, sha: string, ctx: ToolContext): Promise<Json | null> {
@@ -546,6 +598,12 @@ export function siteDoor(opts: SiteOptions) {
           return call('GET', `/api/v1/brain/files/${encodeURIComponent(i.id)}`);
         case 'brain_index':
           return call('GET', '/api/v1/brain');
+        case 'get_map':
+        case 'find_voting_blocs':
+        case 'list_payouts': {
+          const { exploration: _, ...args } = i;
+          return onSite(tool.name, args);
+        }
         default:
           return fault('internal', `${tool.name} has no route on the site.`);
       }
