@@ -389,6 +389,7 @@ export function InteractionSurface({
                             {state.pill}
                           </Button>
                         )}
+                        {state.turn && <span className="type-mono text-muted">{state.turn}</span>}
                         {state.balance && (
                           <span className="type-mono text-muted">
                             {state.balance}

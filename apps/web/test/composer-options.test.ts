@@ -5,6 +5,7 @@ import {
   modelOptions,
   modelPill,
   type Settings,
+  turnPrice,
   withModel,
 } from '../lib/composer-options.ts';
 
@@ -91,5 +92,19 @@ describe('a pick', () => {
     expect(
       withModel(catalogue, { ...settings, model: 'haiku', effort: null }, 'flash').effort,
     ).toBe('low');
+  });
+});
+
+describe('what a turn costs, beside the balance', () => {
+  test("the picked model's measured turn, dollars first and NEAR beside", () => {
+    expect(turnPrice(catalogue, settings, 0, 3)).toBe('A turn: $0.012 · 0.004 NEAR');
+  });
+
+  test('with the tip on top, said as the tip', () => {
+    expect(turnPrice(catalogue, settings, 5, null)).toBe('A turn: $0.013, with your 5% tip');
+  });
+
+  test('nothing for a model with no measured turn', () => {
+    expect(turnPrice(catalogue, { ...settings, model: 'haiku' }, 5, 3)).toBeNull();
   });
 });

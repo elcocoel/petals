@@ -6,7 +6,7 @@ import { accountRef } from '@petal/core';
 import type { Spec } from '@petal/core/types';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { MapWallet } from '../landscape/LandscapeCanvas.tsx';
-import { readDrawingSpec, readMapDrawing, saveSettings } from '../lib/agent-client.ts';
+import { readDrawingSpec, readMapDrawing, readTip, saveSettings } from '../lib/agent-client.ts';
 import { aboutLine } from '../lib/ask-about.ts';
 import { ceremonyWords, creating, making, turnShow } from '../lib/ceremony.ts';
 import {
@@ -14,6 +14,7 @@ import {
   modelOptions,
   modelPill,
   type Settings,
+  turnPrice,
   withModel,
 } from '../lib/composer-options.ts';
 import { decodeDraft } from '../lib/draft.ts';
@@ -317,6 +318,20 @@ export function useWorkspace(props: {
   const [picked, setPicked] = useState<Settings | null>(null);
   const settings = picked ?? conversation?.settings ?? catalogue?.default ?? null;
   const showModel = Boolean(catalogue && settings && !recorded && !initialElsewhere);
+  // the person's tip (price/v2), read once they're signed in: what a turn costs them includes it
+  const [tip, setTip] = useState<number | null>(null);
+  const signedIn = Boolean(session.account);
+  useEffect(() => {
+    if (!signedIn) return;
+    let gone = false;
+    void readTip().then(
+      (t) => !gone && setTip(t?.tip_percent ?? null),
+      () => {},
+    );
+    return () => {
+      gone = true;
+    };
+  }, [signedIn]);
   const [modelsOpen, setModelsOpen] = useState(false);
 
   // The box's cursor once there's a box to be in, after the server says who's here.
@@ -463,6 +478,11 @@ export function useWorkspace(props: {
           ? modelOptions(catalogue, settings, funds?.where?.near_usd ?? null)
           : [],
       modelsOpen: showModel && modelsOpen,
+      /** what a turn costs with the model picked, the tip included, beside the balance; null until one is measured */
+      turn:
+        showModel && catalogue && settings
+          ? turnPrice(catalogue, settings, tip, funds?.where?.near_usd ?? null)
+          : null,
       recorded,
     },
     actions: {
