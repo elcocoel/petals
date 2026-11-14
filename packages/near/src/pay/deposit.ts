@@ -34,7 +34,16 @@ export interface DepositQuote {
   amount_out_usd: string | null;
   /** after it, the address stops taking deposits and anything late is refunded */
   deadline: string;
+  /** with the credit contract: it lands there as NEAR, on the payer's own NEAR account */
+  into?: { contract: string; payer: string };
 }
+
+/** Wrapped NEAR, what NEAR Intents delivers for NEAR: the credit contract takes it and unwraps it. */
+export const NEAR_WNEAR = 'nep141:wrap.near';
+
+/** Dollars at NEAR's price as yoctoNEAR, rounded to a millionth of a NEAR. */
+const yoctoOfUsd = (usd: number, nearUsd: number) =>
+  (BigInt(Math.round((usd / nearUsd) * 1e6)) * 10n ** 18n).toString();
 
 /** Where a top-up stands. Only SUCCESS is money in. */
 export interface SwapStatus {
@@ -70,25 +79,45 @@ const str = (v: unknown): string | null => (typeof v === 'string' && v ? v : nul
 
 /** A real quote: `usd` dollars of USDC to `recipient` inside NEAR Intents, from `originAsset`. */
 export async function depositQuote(
-  o: { usd: number; originAsset: string; refundTo: string; recipient: string },
+  o: {
+    usd: number;
+    originAsset: string;
+    refundTo: string;
+    recipient: string;
+    /** the credit contract: NEAR for the dollars asked, delivered into it on the payer's own account */
+    into?: { contract: string; payer: string; nearUsd: number };
+  },
   deps: DepositDeps = {},
 ): Promise<DepositQuote> {
   const now = (deps.now ?? (() => new Date()))();
-  const body = {
+  const base = {
     dry: false,
     swapType: 'EXACT_OUTPUT',
     slippageTolerance: 100,
     originAsset: o.originAsset,
     depositType: 'ORIGIN_CHAIN',
-    destinationAsset: NEAR_USDC,
-    amount: usdcUnits(o.usd),
     refundTo: o.refundTo,
     refundType: 'ORIGIN_CHAIN',
-    recipient: o.recipient,
-    recipientType: 'INTENTS',
     deadline: new Date(now.getTime() + 60 * 60_000).toISOString(),
     referral: 'petals',
   };
+  // with the contract, wNEAR to it by ft_transfer_call, the message naming the payer: it lands on their NEAR
+  const body = o.into
+    ? {
+        ...base,
+        destinationAsset: NEAR_WNEAR,
+        amount: yoctoOfUsd(o.usd, o.into.nearUsd),
+        recipient: o.into.contract,
+        recipientType: 'DESTINATION_CHAIN',
+        customRecipientMsg: o.into.payer,
+      }
+    : {
+        ...base,
+        destinationAsset: NEAR_USDC,
+        amount: usdcUnits(o.usd),
+        recipient: o.recipient,
+        recipientType: 'INTENTS',
+      };
   const answer = (await oneClick(deps, '/quote', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -111,6 +140,7 @@ export async function depositQuote(
     amount_out: amountOut,
     amount_out_usd: str(q.amountOutUsd),
     deadline: str(q.deadline) ?? body.deadline,
+    ...(o.into ? { into: { contract: o.into.contract, payer: o.into.payer } } : {}),
   };
 }
 
