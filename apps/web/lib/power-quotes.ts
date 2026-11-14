@@ -1,4 +1,4 @@
-// The illustrated power quotes, the final selection of thirteen, shown wherever a screen is empty. The pictures are in
+// The illustrated power quotes, the approved selection of eighteen, shown wherever a screen is empty. The pictures are in
 // public/quotes/, 960 px wide. Pure.
 
 export interface PowerQuoteItem {
@@ -94,6 +94,38 @@ export const POWER_QUOTES: readonly PowerQuoteItem[] = [
     author:
       'Usually credited to Bismarck. The earliest version is the poet John Godfrey Saxe (1869).',
     image: '/quotes/16-sausages.webp',
+  },
+  {
+    id: '18-water',
+    quote: 'Do not, my friends, become addicted to water.',
+    author: 'Immortan Joe, Mad Max: Fury Road (2015)',
+    image: '/quotes/18-water.webp',
+  },
+  {
+    id: '19-animals',
+    quote: 'All animals are equal, but some animals are more equal than others.',
+    author: 'George Orwell, Animal Farm (1945)',
+    image: '/quotes/19-animals.webp',
+  },
+  {
+    id: '21-feared-loved',
+    quote:
+      'Would I rather be feared or loved? Easy. Both. I want people to be afraid of how much they love me.',
+    author: 'Michael Scott, The Office (2006)',
+    image: '/quotes/21-feared-loved.webp',
+  },
+  {
+    id: '22-equal-law',
+    quote:
+      'The law, in its majestic equality, forbids rich and poor alike to sleep under bridges, to beg in the streets, and to steal bread.',
+    author: 'Anatole France, The Red Lily (1894)',
+    image: '/quotes/22-equal-law.webp',
+  },
+  {
+    id: '23-crew',
+    quote: 'Crew expendable.',
+    author: 'Special Order 937, Alien (1979)',
+    image: '/quotes/23-crew.webp',
   },
 ];
 
