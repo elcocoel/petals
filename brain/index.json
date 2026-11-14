@@ -1397,7 +1397,7 @@
       ]
     },
     {
-      "task": "When it unlocks, how much is locked",
+      "task": "When it unlocks",
       "words": [
         "unlock",
         "locked",
