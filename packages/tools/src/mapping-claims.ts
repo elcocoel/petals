@@ -70,11 +70,32 @@ export async function cardAccounts(ctx: ToolContext, card: MapCard): Promise<Set
 export const aboutOneOf = (accounts: ReadonlySet<string>, subject: string) =>
   accounts.has(accountKey(subject));
 
-/** A map's claims by Petals' mapping, or null for a map that isn't on the map. */
-export async function mapClaims(ctx: ToolContext, id: string): Promise<Claim[] | null> {
+/**
+ * A map's claims by Petals' mapping and as people published them, or null for a map that isn't on the map: each
+ * with `confidence`, the qualifier's reading the press recorded with it (0 to 1), or null when it wasn't scored.
+ */
+export async function mapClaims(
+  ctx: ToolContext,
+  id: string,
+): Promise<(Claim & { confidence: number | null })[] | null> {
   const card = mapsOf(await mapViews(ctx, undefined, { hidden: true })).find((m) => m.id === id);
   if (!card) return null;
-  return claimsAbout(ctx, await cardAccounts(ctx, card));
+  const accounts = await cardAccounts(ctx, card);
+  const store = privateStore(ctx.config);
+  return [...(await store.annotation.list(MAPPING)), ...(await store.annotation.list(PUBLISHED))]
+    .filter((r) => aboutOneOf(accounts, r.subject) && !retiredClaim(r.id))
+    .map((r) => ({ ...(JSON.parse(r.body) as Claim), confidence: confidenceOf(r.credential) }));
+}
+
+/** The confidence a published claim's credential keeps, as the press recorded it; null where there's none. */
+function confidenceOf(credential: string | null | undefined): number | null {
+  if (!credential) return null;
+  try {
+    const c = (JSON.parse(credential) as { confidence?: unknown }).confidence;
+    return typeof c === 'number' && c >= 0 && c <= 1 ? c : null;
+  } catch {
+    return null;
+  }
 }
 
 /** The claims about these accounts that everyone reads: Petals' mapping's, then what people published; none retired. */

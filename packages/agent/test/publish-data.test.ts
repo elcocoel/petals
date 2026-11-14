@@ -316,7 +316,13 @@ describe('the press: a signed version on the shared map', () => {
     });
     const said = await w.request(`/api/v1/maps/${encodeURIComponent(w.map)}/claims`);
     expect(said.body.claims).toContainEqual(
-      expect.objectContaining({ subject: POOL, object: { value: 'Astro' }, by: author }),
+      expect.objectContaining({
+        subject: POOL,
+        object: { value: 'Astro' },
+        by: author,
+        // the qualifier's reading the press recorded with it, for the map's Confidence filter
+        confidence: ready.body.claims[0].confidence,
+      }),
     );
     expect(said.body.claims.some((c: Out) => c.object?.value === 'Astro Stakers')).toBe(false);
     // the map names its author, on this map
