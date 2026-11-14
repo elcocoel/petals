@@ -419,7 +419,7 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
     try {
       overview = (await drawnOverview(
         ctx,
-        (await mapViews(ctx)).map((v) => v.snapshot),
+        (await mapViews(ctx)).filter((v) => !v.dated).map((v) => v.snapshot),
       )) as unknown as typeof overview;
     } catch (e) {
       return respond(c, versioned(fromThrown(e, 'internal')));
@@ -427,7 +427,8 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
     return named(c, {
       made: new Date().toISOString(),
       source: (ctx.config.apiBase ?? '').replace(/\/+$/, ''),
-      views: await mapViews(await forViewer(c), view),
+      // what each map draws: a map at another moment (dated) is the Play's, on its card's readings
+      views: (await mapViews(await forViewer(c), view)).filter((v) => !v.dated),
       groups: (overview.groups ?? []).map((g) => ({
         id: g.id,
         chain: g.chain,
@@ -451,9 +452,9 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
     const view = await viewAsked(ctx, c.req.query('view'));
     if (!view) return respond(c, noView());
     return respond(c, {
-      views: (await mapViews(await forViewer(c), view)).map(
-        ({ reading: _r, given: _g, ...row }) => row,
-      ),
+      views: (await mapViews(await forViewer(c), view))
+        .filter((v) => !v.dated)
+        .map(({ reading: _r, given: _g, ...row }) => row),
     });
   });
   // One card per map (maps of the same address come together as versions of
@@ -625,9 +626,12 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
     const at = c.req.query('at');
     const until = at ? (/^\d+$/.test(at) ? null : Date.parse(at)) : null;
     const block = at && /^\d+$/.test(at) ? Number(at) : null;
-    const views = (await mapViews(await forViewer(c), view, { hidden: true })).filter(
+    const all = (await mapViews(await forViewer(c), view, { hidden: true })).filter(
       (v) => v.map === id,
     );
+    // asked by its layers, any reading of the map (a dated one too, for the Play); else what the map draws
+    const main = all.filter((v) => !v.dated);
+    const views = on.length || !main.length ? all : main;
     const record = await mapRecord(ctx, id);
     const published = new Set(record.layers.map((l) => l.sha256));
     const chosen = views

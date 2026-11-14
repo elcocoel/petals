@@ -11,6 +11,7 @@ import {
   lookFills,
   mapOf,
   namePieces,
+  PETALS_AUTHOR,
   pictureQuery,
   piecesOf,
   readFlower,
@@ -84,10 +85,18 @@ export interface MapView {
   given: SeamPiece[];
   /** who made it (a NEAR account), when that's recorded */
   made_by: string | null;
+  /**
+   * a map at another moment, beside the one it draws: a reading someone published of a map Petals' own mapping
+   * reads (a dated series, for the Play). It never replaces what the map draws, nor feeds its roads.
+   */
+  dated: boolean;
   reading: { title: string; petals: unknown[] };
 }
 
-type Read = Omit<MapView, 'sha' | 'name' | 'view_url' | 'picture' | 'made_by'>;
+/** Petals' own mapping: where it has read a map, its readings are what the map draws. */
+const PETALS_OWN = new Set(['mapping.petals.near', PETALS_AUTHOR]);
+
+type Read = Omit<MapView, 'sha' | 'name' | 'view_url' | 'picture' | 'made_by' | 'dated'>;
 
 /** A view's row in a list of the map (GET /api/v1/map/views): all of it but its reading and what was given with it. */
 export type MapViewRow = Omit<MapView, 'reading' | 'given'>;
@@ -230,8 +239,12 @@ export async function mapViews(
       view_url: `${base(ctx)}/d/${row.sha256}`,
       picture: pictureOf(ctx, row.sha256, view),
       made_by: row.made_by ?? null,
+      dated: false,
     });
   }
+  // where Petals' own mapping reads a map, the readings others published of it are the map at other moments
+  const petalsRead = new Set(out.filter((v) => PETALS_OWN.has(v.made_by ?? '')).map((v) => v.map));
+  for (const v of out) v.dated = petalsRead.has(v.map) && !PETALS_OWN.has(v.made_by ?? '');
   // a map hidden from the Power Map is in no list of it, nor is a reading a mapping run replaced
   const shown = out.filter((v) => !retiredReading(v.snapshot));
   return o.hidden ? shown : shown.filter((v) => !hiddenMap(v.map));
@@ -253,6 +266,8 @@ export interface MapReading {
   count: number;
   /** who made it: the maker of its first drawing */
   made_by: string | null;
+  /** the map at another moment, never what it draws (MapView's dated): for the Play */
+  dated: boolean;
   /** the oldest first */
   drawings: MapDrawing[];
 }
@@ -349,7 +364,9 @@ export function mapsOf(
   });
   const cards: { at: number; card: MapCard }[] = [];
   for (const [id, drawn] of byMap) {
-    const newest = drawn.at(-1) as MapView;
+    // what the card shows is what the map draws: its newest reading that isn't another moment of it
+    const main = drawn.filter((v) => !v.dated);
+    const newest = (main.length ? main : drawn).at(-1) as MapView;
     const bySnapshot = new Map<string, MapView[]>();
     for (const v of drawn) bySnapshot.set(v.snapshot, [...(bySnapshot.get(v.snapshot) ?? []), v]);
     const readings = [...bySnapshot.values()]
@@ -363,13 +380,14 @@ export function mapsOf(
         title: first.title,
         count: first.count,
         made_by: first.made_by,
+        dated: first.dated,
         drawings: vs.map(drawing),
       }));
     cards.push({
       at: views.indexOf(newest),
       card: {
         id,
-        name: drawn.findLast((v) => v.name)?.name ?? null,
+        name: (main.length ? main : drawn).findLast((v) => v.name)?.name ?? null,
         title: newest.title,
         about: newest.about,
         chain: newest.chain,
