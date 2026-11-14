@@ -17,6 +17,7 @@ import {
   fastfsServes,
   readKeptPicture,
   readSignedIn,
+  readSocialProfile,
   readSocialTx,
   readWallets,
   saveMyProfile,
@@ -131,6 +132,20 @@ async function served(url: string): Promise<boolean> {
   return false;
 }
 
+/**
+ * Whether NEAR Social's indexer has `account`'s profile saying what was written, asked a few times: a wallet may
+ * call the write failed (FastData's expected CodeDoesNotExist) while NEAR Social has it.
+ */
+async function onSocial(account: string, draft: ProfileDraft): Promise<boolean> {
+  for (let i = 0; i < ASKS; i++) {
+    const p = await readSocialProfile(account).catch(() => null);
+    if (p && (p.name ?? '') === draft.name.trim() && (p.about ?? '') === draft.about.trim())
+      return true;
+    await pause(APART_MS);
+  }
+  return false;
+}
+
 const accepted = (out: TxOutcome) => {
   if (out.kind === 'refused') throw new Stop(editorWords.rejected(out.why.join('; ')));
   if (out.kind === 'waiting') throw new Stop(editorWords.slow);
@@ -161,8 +176,6 @@ export function useProfileEditor(
   const [problem, setProblem] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [published, setPublished] = useState(false);
-  /** the wallet named another account: the next press signs it in afresh */
-  const [switching, setSwitching] = useState(false);
   /** The NEAR account it publishes as: undefined while it's read, null when the person has none. */
   const [near, setNear] = useState<string | null | undefined>(undefined);
 
@@ -211,17 +224,13 @@ export function useProfileEditor(
   }, [picture, kept, draft, reload]);
 
   const publish = useCallback(
-    async (near: string) => {
+    async (_profileAccount: string) => {
       setProblem(null);
       try {
-        const wallet = await connectWallet('mainnet', readKept, switching).catch(() => {
+        // whichever account the wallet signs as writes it: the page never stops a write, the chain answers
+        const as = await connectWallet('mainnet', readKept).catch(() => {
           throw new Stop(editorWords.refused);
         });
-        if (wallet !== near) {
-          setSwitching(true);
-          throw new Stop(editorWords.otherWallet(wallet, near));
-        }
-        setSwitching(false);
         // the picture to store: a new one, or the one Petals keeps at its own address (a fastfs:// one is
         // on NEAR Social already, so it stays as it is)
         let bytes = picture.bytes;
@@ -240,13 +249,19 @@ export function useProfileEditor(
           const hash = await send(FASTFS_METHOD, fastfsSimple(path, mime, bytes));
           setPhase('storing');
           accepted(await confirmed(hash));
-          if (!(await served(fastfsUrl(near, path)))) throw new Stop(editorWords.slow);
-          avatar = fastfsUri(near, path);
+          if (!(await served(fastfsUrl(as, path)))) throw new Stop(editorWords.slow);
+          avatar = fastfsUri(as, path);
         }
         setPhase('signing');
-        const hash = await send(KV_METHOD, profileArgs(profile, draft, avatar));
-        setPhase('checking');
-        accepted(await confirmed(hash));
+        try {
+          const hash = await send(KV_METHOD, profileArgs(profile, draft, avatar));
+          setPhase('checking');
+          accepted(await confirmed(hash));
+        } catch (e) {
+          // the wallet or the indexer may call it failed while NEAR Social has it: what NEAR Social says wins
+          setPhase('checking');
+          if (!(await onSocial(as, draft))) throw e;
+        }
         // Petals keeps what was published, the picture at its fastfs:// address, so the two say the same
         await saveMyProfile(
           toPetals(draft, avatar ?? kept?.avatar ?? keptAvatar(picture.src), kept),
@@ -261,7 +276,7 @@ export function useProfileEditor(
         setPhase('failed');
       }
     },
-    [picture, profile, draft, kept, reload, switching],
+    [picture, profile, draft, kept, reload],
   );
 
   const view: ProfileEditorView | null =

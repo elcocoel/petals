@@ -25,7 +25,7 @@ import { CreditPointer } from '../components/chat/CreditPointer.tsx';
 import { JobRow } from '../components/chat/JobRow.tsx';
 import { ModelOptions } from '../components/chat/ModelOptions.tsx';
 import { NewConversation } from '../components/chat/NewConversation.tsx';
-import { PayRow } from '../components/chat/PayRow.tsx';
+import { PayRow, TopUpFields } from '../components/chat/PayRow.tsx';
 import { Speech } from '../components/chat/Speech.tsx';
 import { Steps } from '../components/chat/Steps.tsx';
 import { Thread } from '../components/chat/Thread.tsx';
@@ -146,7 +146,7 @@ import { settledMs } from '../lib/hero-story.ts';
 import { intentWords, type TopUpView, tokenChoices } from '../lib/intents.ts';
 import { type JobControlsView, jobMoves, jobWords } from '../lib/jobs.ts';
 import { landingCopy } from '../lib/landing-copy.ts';
-import { type ProfileEditorView, withdrawView } from '../lib/lobby-view.ts';
+import type { ProfileEditorView } from '../lib/lobby-view.ts';
 import { mapClaimGroups } from '../lib/map-claims.ts';
 import { mappingView, toMapLines } from '../lib/mapping.ts';
 import { drawingTile, type MapCard, mapTile } from '../lib/maps.ts';
@@ -2975,96 +2975,26 @@ export const registry: LabEntry[] = [
     source: 'apps/web/components/workspace/Funds.tsx',
     states: [
       {
-        name: 'the pay row laid out under the balance',
+        name: 'the one money panel',
         render: () => (
           <Funds
-            balance={{ usd: '1.52', near: '0.42' }}
-            withdrawal={null}
-            phase="ready"
-            withdrew={null}
-            onWithdraw={() => {}}
-            add={
-              <PayRow
-                bare
-                phase="ready"
-                added={null}
-                onPay={() => {}}
-                label="Add $5.00 · 1.46 NEAR"
-                amount={{ usd: '5', label: 'Dollars to add', onUsd: () => {} }}
-              />
-            }
+            balance={{ usd: '3.88', near: '1.13' }}
+            amount={{ usd: '5', label: 'Dollars', onUsd: () => {} }}
+            add={{ label: 'Add $5.00 · 1.46 NEAR', canPress: true, onPress: () => {} }}
+            withdraw={{ label: 'Withdraw $5.00 · 1.46 NEAR', canPress: false, onPress: () => {} }}
+            line="Adds to elcocoel.near’s balance; any NEAR wallet you connect can pay."
           />
         ),
       },
       {
-        name: 'Add funds beside Withdraw',
+        name: 'after an add',
         render: () => (
           <Funds
-            balance={{ usd: '3.04', near: '0.84' }}
-            withdrawal={withdrawView('840000000000000000000000', 3.04, 3.62)}
-            phase="ready"
-            withdrew={null}
-            onWithdraw={() => {}}
-          />
-        ),
-      },
-      {
-        name: 'credit, as on the live site (no contract)',
-        render: () => (
-          <Funds
-            balance={{ usd: '1.52', near: '0.42' }}
-            withdrawal={null}
-            phase="ready"
-            withdrew={null}
-            onWithdraw={() => {}}
-          />
-        ),
-      },
-      {
-        name: 'holding NEAR in the contract',
-        render: () => (
-          <Funds
-            balance={{ usd: '3.04', near: '0.84' }}
-            withdrawal={withdrawView('840000000000000000000000', 3.04, 3.62)}
-            phase="ready"
-            withdrew={null}
-            onWithdraw={() => {}}
-          />
-        ),
-      },
-      {
-        name: 'waiting for the wallet',
-        render: () => (
-          <Funds
-            balance={{ usd: '3.04', near: '0.84' }}
-            withdrawal={withdrawView('840000000000000000000000', 3.04, 3.62)}
-            phase="withdrawing"
-            withdrew={null}
-            onWithdraw={() => {}}
-          />
-        ),
-      },
-      {
-        name: 'withdrew',
-        render: () => (
-          <Funds
-            balance={{ usd: '0.00', near: '0.00' }}
-            withdrawal={withdrawView('0', 0, 3.62)}
-            phase="withdrew"
-            withdrew="0.84"
-            onWithdraw={() => {}}
-          />
-        ),
-      },
-      {
-        name: "didn't go through",
-        render: () => (
-          <Funds
-            balance={{ usd: '3.04', near: '0.84' }}
-            withdrawal={withdrawView('840000000000000000000000', 3.04, 3.62)}
-            phase="failed"
-            withdrew={null}
-            onWithdraw={() => {}}
+            balance={{ usd: '4.88', near: '1.42' }}
+            amount={{ usd: '1', label: 'Dollars', onUsd: () => {} }}
+            add={{ label: 'Add $1.00 · 0.29 NEAR', canPress: true, onPress: () => {} }}
+            withdraw={{ label: 'Withdraw $1.00 · 0.29 NEAR', canPress: true, onPress: () => {} }}
+            status="Added 0.292 NEAR to elcocoel.near, paid from petals.near."
           />
         ),
       },
@@ -3073,46 +3003,9 @@ export const registry: LabEntry[] = [
         render: () => (
           <Funds
             balance={null}
-            withdrawal={null}
-            phase="ready"
-            withdrew={null}
-            onWithdraw={() => {}}
-          />
-        ),
-      },
-      {
-        name: 'nothing held',
-        render: () => (
-          <Funds
-            balance={{ usd: '0.00', near: '0.00' }}
-            withdrawal={withdrawView('0', 0, 3.62)}
-            phase="ready"
-            withdrew={null}
-            onWithdraw={() => {}}
-          />
-        ),
-      },
-      {
-        name: 'credit from before the contract, nothing to withdraw',
-        render: () => (
-          <Funds
-            balance={{ usd: '1.00', near: '0.29' }}
-            withdrawal={withdrawView('0', 1, 3.46)}
-            phase="ready"
-            withdrew={null}
-            onWithdraw={() => {}}
-          />
-        ),
-      },
-      {
-        name: 'some in the contract, some from before it',
-        render: () => (
-          <Funds
-            balance={{ usd: '4.04', near: '1.12' }}
-            withdrawal={withdrawView('840000000000000000000000', 4.04, 3.62)}
-            phase="ready"
-            withdrew={null}
-            onWithdraw={() => {}}
+            amount={null}
+            add={{ label: 'Add 1 NEAR', canPress: true, onPress: () => {} }}
+            withdraw={null}
           />
         ),
       },
@@ -3636,6 +3529,17 @@ export const registry: LabEntry[] = [
           />
         ),
       },
+    ],
+  },
+  {
+    id: 'TopUpFields',
+    group: 'The workspace',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/chat/PayRow.tsx',
+    states: [
+      { name: 'laid out, a token picked', render: () => <TopUpFields topUp={TOPUP.picking} /> },
+      { name: 'sending', render: () => <TopUpFields topUp={TOPUP.sending} /> },
     ],
   },
   {

@@ -120,6 +120,21 @@ export function PayRow({
   );
 }
 
+/**
+ * Paying with another token, laid out where nothing opens it (the lobby's money panel): the form, or, once an
+ * address is given, where to send and how it stands.
+ */
+export function TopUpFields({ topUp }: { topUp: TopUpView }) {
+  const sent = topUp.sent;
+  if (sent && !sent.ended && !sent.landed) return <Sending sent={sent} topUp={topUp} />;
+  return (
+    <>
+      <Form topUp={topUp} withUsd={false} />
+      {sent && <p className="my-0 type-ui text-muted">{sent.status}</p>}
+    </>
+  );
+}
+
 /** `withUsd`: the dollars here too, where the row above has none to share (no price, or a transfer waiting). */
 function Form({ topUp, withUsd }: { topUp: TopUpView; withUsd: boolean }) {
   const { actions } = topUp;
