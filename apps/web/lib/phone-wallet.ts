@@ -3,10 +3,15 @@
 // extension. One client for the site, on its Reown project (a public client id, locked to the site's own
 // address), loaded only when it's first asked for. It opens a session for one chain by a QR code, keeps it, and
 // asks the phone for one signature at a time: a personal_sign of an Ethereum text, a solana_signMessage of a
-// Solana one; nothing else, so no transaction and no spend. NEAR's phone wallets (NEAR Mobile, Meteor, HOT) show
+// Solana one; nothing else, so no transaction and no spend. Its QR code shows in Reown's own popup (AppKit's core,
+// on the same project, given this client's address: manualWCControl), the one people know from other sites: a QR
+// on a computer, the list of phone wallets on a phone. It loads only when a phone wallet is asked for, with
+// analytics, email and social sign-in, swaps and onramp off. NEAR's phone wallets (NEAR Mobile, Meteor, HOT) show
 // their own QR codes in NEAR's picker, each opening its own app; NEAR's picker doesn't get this client, since a
 // WalletConnect link opens the phone's default wallet, often one that can't sign for NEAR (lib/wallet.ts).
 // Pure of React; viewmodels call it.
+import type { AppKit } from '@reown/appkit/core';
+import type { AppKitNetwork } from '@reown/appkit/networks';
 import type SignClient from '@walletconnect/sign-client';
 
 /** The site's Reown project: a public id, which works only on the addresses the project allows. */
@@ -38,6 +43,53 @@ export function walletConnectClient(): Promise<SignClient> {
   return client;
 }
 
+let kit: Promise<AppKit> | null = null;
+
+/** Reown's popup, made the first time a phone wallet is asked for, showing this client's address only. */
+function popup(): Promise<AppKit> {
+  kit ??= Promise.all([import('@reown/appkit/core'), import('@reown/appkit/networks')]).then(
+    ([{ createAppKit }, { mainnet, solana }]) => {
+      const site = globalThis.location?.origin ?? '';
+      return createAppKit({
+        projectId: WALLETCONNECT_PROJECT_ID,
+        // AppKit's own networks, typed against its own viem
+        networks: [mainnet, solana] as [AppKitNetwork, ...AppKitNetwork[]],
+        manualWCControl: true,
+        themeMode: 'light',
+        metadata: {
+          name: 'Petals',
+          description: 'See who holds power.',
+          url: site,
+          icons: [`${site}/icon.png`],
+        },
+        features: { analytics: false, email: false, socials: false, swaps: false, onramp: false },
+      });
+    },
+  );
+  return kit;
+}
+
+/**
+ * The phone's answer to a new session, while Reown's popup shows its address; closing the popup first is a no.
+ * The popup closes once the phone has answered.
+ */
+async function inPopup<T>(uri: string, answer: Promise<T>): Promise<T> {
+  const modal = await popup();
+  await modal.open({ uri });
+  let unsubscribe = () => {};
+  const closed = new Promise<never>((_, reject) => {
+    unsubscribe = modal.subscribeState((s) => {
+      if (!s.open) reject(new Error('The phone wallet was closed.'));
+    });
+  });
+  try {
+    return await Promise.race([answer, closed]);
+  } finally {
+    unsubscribe();
+    await modal.close();
+  }
+}
+
 const NAMESPACES = {
   eip155: { chains: ['eip155:1'], methods: ['personal_sign'], events: [] as string[] },
   solana: { chains: [SOLANA_MAINNET], methods: ['solana_signMessage'], events: [] as string[] },
@@ -56,13 +108,10 @@ const PHONE_NAME = 'Your phone wallet';
 const accountOf = (caip10: string) => caip10.split(':').slice(2).join(':');
 
 /**
- * The phone wallet's session for a chain: one already open, or a new one, whose QR code `show` draws until the
- * phone approves. Rejects when the person says no on the phone.
+ * The phone wallet's session for a chain: one already open, or a new one, whose QR code Reown's popup shows until
+ * the phone approves. Rejects when the person says no on the phone, or closes the popup.
  */
-export async function phoneSession(
-  chain: Chain,
-  show: (uri: string) => void,
-): Promise<PhoneSession> {
+export async function phoneSession(chain: Chain): Promise<PhoneSession> {
   const c = await walletConnectClient();
   const open = c.session.getAll().find((s) => (s.namespaces[chain]?.accounts.length ?? 0) > 0);
   const first = open?.namespaces[chain]?.accounts[0];
@@ -73,8 +122,7 @@ export async function phoneSession(
       name: open.peer.metadata.name || PHONE_NAME,
     };
   const { uri, approval } = await c.connect({ optionalNamespaces: { [chain]: NAMESPACES[chain] } });
-  if (uri) show(uri);
-  const session = await approval();
+  const session = uri ? await inPopup(uri, approval()) : await approval();
   const account = session.namespaces[chain]?.accounts[0];
   if (!account) throw new Error('The phone wallet named no account.');
   return {
@@ -97,12 +145,6 @@ export async function phoneSessionFor(chain: Chain, account: string): Promise<Ph
       return { topic: s.topic, address: accountOf(held), name: s.peer.metadata.name || PHONE_NAME };
   }
   return null;
-}
-
-/** The QR code of a WalletConnect address, as a picture's data: URL. */
-export async function qrOf(uri: string): Promise<string> {
-  const { toDataURL } = await import('qrcode');
-  return toDataURL(uri, { margin: 1, width: 240 });
 }
 
 const hexOf = (text: string) =>

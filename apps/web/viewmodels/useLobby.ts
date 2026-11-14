@@ -22,7 +22,7 @@ import {
 import { contributionView } from '../lib/contribution-view.ts';
 import { evmWallets } from '../lib/evm-wallet.ts';
 import { fundsWords } from '../lib/lobby-view.ts';
-import { PHONE, qrOf } from '../lib/phone-wallet.ts';
+import { PHONE } from '../lib/phone-wallet.ts';
 import {
   type AddWalletPhase,
   type ClaimsView,
@@ -139,7 +139,7 @@ export function useLobby() {
     const current = () => attempt.current === mine;
     let wallet: string = profilePageWords.nearWallet;
     if (kind !== 'near') {
-      // the phone first, by a QR code, then the wallets in this browser
+      // the phone first (its QR code in Reown's popup), then the wallets in this browser
       const list = [
         { id: PHONE, name: profilePageWords.phone, icon: null },
         ...(kind === 'evm' ? evmWallets() : solanaWallets()),
@@ -158,13 +158,8 @@ export function useLobby() {
         ? { kind: 'adding', wallet: profilePageWords.phoneWallet }
         : { kind: 'adding', wallet },
     );
-    // a phone shows its QR code until it says yes, then is named by what it calls itself
+    // a phone's QR code shows in Reown's popup until it says yes; then it's named by what it calls itself
     const phone = {
-      show: (uri: string) => {
-        void qrOf(uri).then((qr) => {
-          if (current()) setAdding({ kind: 'scan', qr });
-        });
-      },
       approved: (name: string) => {
         wallet = name;
         if (current()) setAdding({ kind: 'adding', wallet: name });
