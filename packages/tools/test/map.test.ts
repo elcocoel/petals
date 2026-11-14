@@ -215,6 +215,12 @@ describe('the map', () => {
       [kept, true],
       [MOLOCH, false],
     ]);
+    // the map's reading is its main one; the dated one comes when asked for by its layer (the Play)
+    const id = encodeURIComponent(card?.id as string);
+    const reading = async (q = '') =>
+      ((await (await app.request(`/api/v1/maps/${id}/reading${q}`)).json()) as Out).snapshot;
+    expect(await reading()).toBe(MOLOCH);
+    expect(await reading(`?layers=${kept}`)).toBe(kept);
   });
 
   test('GET /api/v1/map/views lists the same views with their pictures, without readings', async () => {

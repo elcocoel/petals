@@ -626,9 +626,12 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
     const at = c.req.query('at');
     const until = at ? (/^\d+$/.test(at) ? null : Date.parse(at)) : null;
     const block = at && /^\d+$/.test(at) ? Number(at) : null;
-    const views = (await mapViews(await forViewer(c), view, { hidden: true })).filter(
+    const all = (await mapViews(await forViewer(c), view, { hidden: true })).filter(
       (v) => v.map === id,
     );
+    // asked by its layers, any reading of the map (a dated one too, for the Play); else what the map draws
+    const main = all.filter((v) => !v.dated);
+    const views = on.length || !main.length ? all : main;
     const record = await mapRecord(ctx, id);
     const published = new Set(record.layers.map((l) => l.sha256));
     const chosen = views
