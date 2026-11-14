@@ -668,9 +668,9 @@ export function LandscapeCanvas({
   useEffect(() => {
     if (placeholderChain) setChain(placeholderChain);
   }, [placeholderChain]);
-  // the overlays' folds: open where the map has room, folded to their bars where it's narrow, a phone's or
-  // /make's beside the conversation: its own room, not the window's (on the map's boxes the chain
-  // list's fold is Tools', and Insights' is Information's)
+  // the overlays' folds: open where there's room, folded to their bars where it's narrow. The map with boxes
+  // (/map, /make) asks the window, so it opens the same on both pages and folds on a phone's; a map inside a
+  // page asks its own room (on the map's boxes the chain list's fold is Tools', and Insights' is Information's)
   const [listOpen, setListOpen] = useState(true);
   // Tools' Chains section, folded under its head by hand
   const [chainsOpen, setChainsOpen] = useState(true);
@@ -680,8 +680,7 @@ export function LandscapeCanvas({
   // the room was narrow when the map came (a phone): Information's bar sits at the room's foot
   const [low, setLow] = useState(false);
   const narrow = useCallback(
-    () =>
-      ((movable ? room.current?.clientWidth : roomOf(aside.current)) ?? window.innerWidth) < ROOM,
+    () => ((movable ? window.innerWidth : roomOf(aside.current)) ?? window.innerWidth) < ROOM,
     [movable],
   );
   // before the first paint, so a phone never sees a box open over the flower

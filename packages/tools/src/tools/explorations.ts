@@ -134,6 +134,10 @@ function ended(stopped: boolean): ToolFailure {
 export const explorationIdOf = async (ctx: ToolContext, ref: string): Promise<string> =>
   (await open(ctx, ref)).row.id;
 
+/** Who holds a project's layers: its owner, or the project itself until someone claims it. */
+export const layerOwnerOf = (row: { id: string; owner: string | null }) =>
+  row.owner ?? `exploration:${row.id}`;
+
 export function writable(o: Opened): void {
   if (o.as === 'read') {
     throw new ToolFailure(

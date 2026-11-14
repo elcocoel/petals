@@ -1,7 +1,8 @@
 // add_layer and compose_view (specs/005-mapping-brain, data.md and seam.md). An agent's own
 // gathering becomes a layer, named by its hash and kept with the person's readings. compose_view
 // makes one reading of a reader's snapshot and other layers, so a flower can take its size from one
-// and its height from another. Both run on the person's side: what they keep is the person's.
+// and its height from another. add_layer runs on the person's side: what it keeps is the person's.
+// compose_view runs there too, or on the site with the layers the person kept there (keep_layer).
 import { existsSync } from 'node:fs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -19,9 +20,11 @@ import {
   seamOf,
 } from '@petal/core';
 import { defineTool } from '../define.ts';
-import { stateDirOf } from '../drafts.ts';
+import { privateStore, stateDirOf } from '../drafts.ts';
 import { ToolFailure } from '../errors.ts';
+import { assertRoom } from '../limits.ts';
 import type { ToolContext } from '../types.ts';
+import { layerOwnerOf, open, REF } from './explorations.ts';
 import { findSnapshot, loadSnapshot, measuresIn, obj, SHA256 } from './shared.ts';
 
 const SHA = /^[0-9a-f]{64}$/;
@@ -88,14 +91,21 @@ export const addLayer = defineTool<{ layer: unknown }, object>({
   },
 });
 
-export const composeViewTool = defineTool<{ base: string; layers: string[] }, object>({
+export const composeViewTool = defineTool<
+  { base: string; layers: string[]; exploration?: string },
+  object
+>({
   name: 'compose_view',
   title: 'One reading from several layers',
   description:
-    "Make one reading from a reader's snapshot (base) and other layers: a layer from add_layer, or another reading of the same address. Each measure keeps its name and its source. Then draw it as any reading: propose_spec with its sha256 and, for example, height m:proposals_written. A measure name may come from one layer only.",
+    "Make one reading from a reader's snapshot (base) and other layers: a layer from add_layer, or another reading of the same address. Each measure keeps its name and its source. Then draw it as any reading: propose_spec with its sha256 and, for example, height m:proposals_written. A measure name may come from one layer only. On the site, a layer is one kept with keep_layer: give its project as exploration.",
   input: obj(['base', 'layers'], {
     base: { ...SHA256, description: 'the sha256 of the reading the flower is of' },
     layers: { type: 'array', minItems: 1, maxItems: 8, items: SHA256 },
+    exploration: {
+      ...REF,
+      description: 'on the site: the project its layers were kept in (an exp_… id or its link)',
+    },
   }),
   output: obj(['sha256', 'network', 'measures', 'layers', 'seam'], {
     sha256: SHA256,
@@ -110,13 +120,22 @@ export const composeViewTool = defineTool<{ base: string; layers: string[] }, ob
     }),
   }),
   annotations: { readOnlyHint: false, idempotentHint: true, openWorldHint: false },
-  onTheirMachine: true,
-  async run({ base, layers }, ctx) {
+  async run({ base, layers, exploration }, ctx) {
     const s = await loadSnapshot(ctx, base);
+    // the site's layers are their owner's: through a project's link, or the signed-in person's own
+    const owner = exploration
+      ? layerOwnerOf((await open(ctx, exploration)).row)
+      : ctx.caller?.subject;
+    const kept = async (hash: string): Promise<Layer | null> => {
+      const own = ctx.config.public ? null : await readLayer(ctx, hash);
+      if (own || !owner) return own;
+      const row = await privateStore(ctx.config).layer.get(owner, hash);
+      return row ? checkLayer(JSON.parse(row.body)) : null;
+    };
     const added: Added[] = [];
     for (const hash of layers) {
       if (!SHA.test(hash)) throw new ToolFailure('bad_input', `${hash} is not a sha256.`);
-      const layer = await readLayer(ctx, hash);
+      const layer = await kept(hash);
       if (layer) {
         added.push({ hash, layer });
         continue;
@@ -126,7 +145,7 @@ export const composeViewTool = defineTool<{ base: string; layers: string[] }, ob
         throw new ToolFailure(
           'not_found',
           `No layer or reading ${hash} here.`,
-          'Keep it first: add_layer for your own gathering, get_snapshot for a reading.',
+          'Keep it first: add_layer for your own gathering (keep_layer on the site, with its project as exploration), get_snapshot for a reading.',
         );
       added.push({ hash, snapshot });
     }
@@ -138,10 +157,14 @@ export const composeViewTool = defineTool<{ base: string; layers: string[] }, ob
     } catch (e) {
       return badLayer(e);
     }
-    // the typed seam (seam/v1), kept beside the layers by its hash, for the look to read
+    // the typed seam (seam/v1), kept beside the layers by its hash, for the look to read; the site
+    // keeps no files of a person's, so there it is only answered
     const seamSha = seamHash(seam);
-    await mkdir(layersDir(ctx), { recursive: true });
-    await writeFile(join(layersDir(ctx), `seam-${seamSha}.json`), canonicalJson(seam));
+    if (ctx.config.public) await assertRoom(ctx.config, ctx.now());
+    else {
+      await mkdir(layersDir(ctx), { recursive: true });
+      await writeFile(join(layersDir(ctx), `seam-${seamSha}.json`), canonicalJson(seam));
+    }
     const { sha256 } = await ctx.store.put(view);
     // Each measure's kind, standing and layer, as the seam promises (seam.md): a reader's measures are
     // verified, and their kind is the reader's own, so it isn't named here.

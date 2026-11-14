@@ -257,7 +257,8 @@ export function useLobby() {
         canPay: pay.canPay,
         // the lobby's own words: what adding is here, not the chat's first-question line
         line: funds.where?.method === 'deposit' ? fundsWords.addDeposit : fundsWords.addTransfer,
-        addedWords: fundsWords.added,
+        // the sentence says how much, into whose balance and from which wallet
+        addedWords: (said: string) => said,
       },
     },
     tip: {

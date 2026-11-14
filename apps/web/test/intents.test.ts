@@ -58,12 +58,13 @@ describe('what a person can pay with', () => {
 });
 
 describe('the dollars typed', () => {
-  test('a number above 0 and up to 1,000, to the cent; anything else is none', () => {
+  test('a number above 0, to the cent, however large; anything else is none', () => {
     expect(dollarsOf('5')).toBe(5);
     expect(dollarsOf('$12.345')).toBe(12.35);
     expect(dollarsOf('1,000')).toBe(1000);
     expect(dollarsOf('0')).toBeNull();
-    expect(dollarsOf('1001')).toBeNull();
+    expect(dollarsOf('100,000')).toBe(100000);
+    expect(dollarsOf('Infinity')).toBeNull();
     expect(dollarsOf('five')).toBeNull();
   });
 });
