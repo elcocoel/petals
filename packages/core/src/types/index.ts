@@ -641,6 +641,8 @@ export interface ChatInput {
   messages: ChatMessage[];
   draft?: Draft;
   run_id?: string;
+  /** additive: what the canvas beside the chat has open as the person asks */
+  in_front?: InFront;
 }
 
 export type Stage =
@@ -704,6 +706,19 @@ export type MapShow =
   | { wallet: string; chain?: string | null }
   | { line: readonly [string, string] }
   | { proposal: { map: string; id: string } };
+
+/**
+ * What the canvas beside the chat has open as the person asks (POST /api/v1/agent/chat's in_front): the map
+ * entered (null: the whole Power Map, none entered), a flower drawn apart from the map (its spec_sha256), the
+ * moment shown, the layers still on where some are off, and what's chosen on it (the show event's shape).
+ */
+export interface InFront {
+  map: string | null;
+  flower?: string;
+  at?: string;
+  layers?: string[];
+  selected?: MapShow;
+}
 
 /**
  * The ceremony's facts (mapping something new is a ceremony), on the yes a new map waits for:

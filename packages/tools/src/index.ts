@@ -125,7 +125,7 @@ export {
   touched,
 } from './tools/explorations.ts';
 export { workerPlace } from './tools/jobs.ts';
-export { mapIdOf, nextSteps, whereItLands } from './tools/maps.ts';
+export { mapIdOf, mapIndex, nextSteps, whereItLands } from './tools/maps.ts';
 export { makeReadPage } from './tools/read-page.ts';
 export {
   DEFAULT_KINDS,

@@ -234,6 +234,33 @@ describe('runs you can leave and come back to', () => {
     expect(run.events.filter((e) => e.event === 'run')).toHaveLength(2);
   });
 
+  test("in_front goes with each turn into the system notes, a continued run's too", async () => {
+    const llm = scriptedLlm([{ content: 'first answer' }, { content: 'second answer' }]);
+    const { app } = setup({ llm });
+    const one = parseSse(
+      await (
+        await chat(app, { messages: QUESTION.messages.slice(0, 1), in_front: { map: null } })
+      ).text(),
+    );
+    const { run_id } = data<{ run_id: string }>(one, 'run');
+    expect(llm.requests[0]?.messages[0]?.content).toContain(
+      'the whole Power Map, with no map entered',
+    );
+    await (
+      await chat(app, {
+        messages: [{ role: 'user', content: 'and this?' }],
+        run_id,
+        in_front: { map: 'near:mainnet:nowhere.near' },
+      })
+    ).text();
+    const second = llm.requests[1]?.messages[0]?.content ?? '';
+    expect(second).toContain('the address near:mainnet:nowhere.near, where no map is drawn yet');
+    expect(second).not.toContain('the whole Power Map');
+    // a malformed one is refused with the reason
+    const bad = await chat(app, { ...QUESTION, in_front: { map: null, zoom: 2 } });
+    expect(bad.status).toBe(400);
+  });
+
   test('a run that is still going cannot take a second chat', async () => {
     const { app } = setup({ llm: slowRecorded(40) });
     const res = await chat(app);
