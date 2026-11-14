@@ -3,7 +3,7 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, test } from 'vitest';
 import { PublishPress } from '../components/PublishPress.tsx';
-import { pressAllView, pressAllWords } from '../lib/press-all.ts';
+import { inYourName, pressAllView, pressAllWords } from '../lib/press-all.ts';
 import { nearSigner, publishWords } from '../lib/publish-press.ts';
 
 const READ = {
@@ -79,9 +79,20 @@ describe('one press over many maps', () => {
     expect(done).toMatchObject({
       title: pressAllWords.what(2, 4),
       press: pressAllWords.press,
-      step: 'On the shared map in your name: 2 maps.',
+      step: 'This press: 2 versions.',
       busy: true,
     });
+  });
+
+  test('once published: this press, then everything in their name, from their credit', () => {
+    const credit = {
+      totals: { layers: 223 },
+      layers: [{ map: 'a' }, { map: 'a' }, { map: 'b' }],
+    };
+    expect(pressAllWords.published(19, inYourName(credit))).toBe(
+      'This press: 19 versions. In your name: 223 layers on 2 maps.',
+    );
+    expect(pressAllWords.published(1, null)).toBe('This press: 1 version.');
   });
 });
 
