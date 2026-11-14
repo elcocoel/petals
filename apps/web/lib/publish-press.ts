@@ -24,16 +24,15 @@ export const publishWords = {
   /** when the wallet isn't connected on this page as the author: it signs in first, a new QR by phone */
   signInFirst:
     'Your wallet asks you to sign in, then signs once. By phone, that’s one more scan. Nothing is spent.',
-  /** the one line of what goes, at the top of the press */
-  what: (layers: number) =>
-    layers === 1 ? 'What you’ve kept here: 1 layer' : `What you’ve kept here: ${layers} layers`,
+  /** the press's title, the same in every state */
+  kept: 'What you’ve kept here',
+  /** what goes, on its own line under the title */
+  count: (layers: number) => (layers === 1 ? '1 layer' : `${layers} layers`),
   preparing: 'Preparing your version…',
   /** only once the wallet's request is out */
   waiting: 'Waiting for your wallet: sign there',
   waitingSignIn: 'Waiting for your wallet: sign in, then sign',
   sending: 'Sending it to the shared map…',
-  /** what goes, folded under the press */
-  seeWhatGoes: 'See what goes',
   published: (line: string | null) =>
     line ? `On the shared map in your name: ${line}.` : 'On the shared map in your name.',
   failed: 'That didn’t publish. Try again.',
@@ -106,8 +105,10 @@ export interface PublishRow {
 }
 
 export interface PublishPressView {
-  /** the one line of what goes, over the press; null with no press */
+  /** the press's title, the same in every state; null with no press */
   title: string | null;
+  /** what goes, on its own line under the title; empty until it's read */
+  count: string;
   /** the press, or null when nothing can go now */
   press: string | null;
   /** the true step, from the first second: preparing, waiting for the wallet, sending, then what happened */
@@ -139,7 +140,8 @@ export function publishPressView(
   // published, the card stays, with what joined the map; its press has nothing left to do
   if (phase === 'published')
     return {
-      title: publishWords.what(data.layers?.length ?? 0),
+      title: publishWords.kept,
+      count: publishWords.count(data.layers?.length ?? 0),
       press: publishWords.press,
       step: said,
       running: false,
@@ -169,7 +171,8 @@ export function publishPressView(
     why: p.why,
   }));
   return {
-    title: publishWords.what(data.layers.length),
+    title: publishWords.kept,
+    count: publishWords.count(data.layers.length),
     press: publishWords.press,
     step: stepOf(phase, said, signsIn, publishWords.preparing),
     running: pressRuns(phase),

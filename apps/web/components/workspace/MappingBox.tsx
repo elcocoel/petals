@@ -1,7 +1,8 @@
-// The mapping state on /make (lib/mapping.ts), in the conversation's place: first the publish press, as an action
-// of its own (components/PublishPress), then the wallet chosen on the map, then the map in front and what the
-// person would add to it in their name, layer by layer (new data, a new moment, new subjects, a match credited
-// to both, or a value that differs, both standing), and what can't go yet, saying why. Props only.
+// The mapping state on /make (lib/mapping.ts), under the conversation and right above the composer's switch: the
+// wallet chosen on the map, the map in front and what the person would add to it in their name, layer by layer
+// (new data, a new moment, new subjects, a match credited to both, or a value that differs, both standing), what
+// can't go yet, saying why, and last, nearest the hand, the publish press, an action of its own
+// (components/PublishPress). With no map in front the press says what's kept, so no line asks to go into one.
 import type { ReactNode } from 'react';
 import type { MappingView } from '../../lib/mapping.ts';
 import type { PublishPressView } from '../../lib/publish-press.ts';
@@ -25,16 +26,13 @@ export function MappingBox({
 }) {
   return (
     <div className="flex flex-col gap-text-gap p-block-gap">
-      {/* the press first: what goes, the press, and where it stands */}
-      {all && <PublishPress view={all.view} onPublish={all.onPublish} />}
-      {press && <PublishPress view={press} onPublish={onPublish} />}
       {wallet && (
         <section className="flex flex-col gap-space-4 border-b border-hairline pb-text-gap">
           <h3 className="m-0 type-ui font-semibold wrap-anywhere">{wallet.heading}</h3>
           {wallet.body}
         </section>
       )}
-      <p className="m-0 type-label">{view.intro}</p>
+      {!all && <p className="m-0 type-label">{view.intro}</p>}
       {view.layers.length > 0 && (
         <ul className="m-0 flex list-none flex-col gap-space-8 p-0">
           {view.layers.map((l) => (
@@ -55,7 +53,10 @@ export function MappingBox({
           ))}
         </ul>
       )}
-      {view.empty && <p className="m-0 type-ui text-muted">{view.empty}</p>}
+      {view.empty && !all && <p className="m-0 type-ui text-muted">{view.empty}</p>}
+      {/* the press last, by the composer's switch: what goes, the press, and where it stands */}
+      {press && <PublishPress view={press} onPublish={onPublish} />}
+      {all && <PublishPress view={all.view} onPublish={all.onPublish} />}
     </div>
   );
 }
