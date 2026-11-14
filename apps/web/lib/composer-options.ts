@@ -81,6 +81,25 @@ const turnCost = (m: Money) =>
     '\u00a0',
   );
 
+/**
+ * What a turn costs the person with the model picked, beside the balance: that model's measured turn (what NEAR AI
+ * bills), plus their tip as a percent of it; "A turn: $0.013, with your 5% tip". Dollars only, so it sits beside
+ * the model on a phone; the balance beside it says NEAR. Nothing while no turn of that model is measured, so it
+ * never guesses.
+ */
+export function turnPrice(
+  c: Catalogue,
+  s: Settings,
+  tipPercent: number | null,
+  near_usd: number | null,
+): string | null {
+  const usd = modelOf(c, s.model)?.usd_per_turn;
+  if (typeof usd !== 'number' || usd <= 0) return null;
+  const tip = tipPercent && tipPercent > 0 ? tipPercent : 0;
+  const cost = `$${money(usd * (1 + tip / 100), near_usd, 'cost').usd}`;
+  return tip > 0 ? `A turn: ${cost}, with your ${tip}% tip` : `A turn: ${cost}`;
+}
+
 /** A new model brings its own effort: its default, or none if it offers none. */
 export function withModel(c: Catalogue, s: Settings, id: string): Settings {
   return { ...s, model: id, effort: modelOf(c, id)?.default_effort ?? null };
