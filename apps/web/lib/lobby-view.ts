@@ -35,6 +35,8 @@ export const fundsWords = {
   /** The credit or NEAR's price couldn't be read. */
   unread: 'Your balance can’t be read right now.',
   withdraw: 'Withdraw',
+  /** Beside the one figure when Petals' allowance, off the contract, is part of it. */
+  withAllowance: 'with Petals’ allowance',
   /** The panel's one amount, which both Add and Withdraw act on. */
   amount: 'Dollars',
   /** Over the other-token fields, laid out in the panel. */

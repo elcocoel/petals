@@ -1,10 +1,11 @@
 // A turn's steps in plain words, as they start, and open while the turn runs (lib/tool-words.ts, thread-view.ts).
 import type { AgentEvent } from '@petal/core/types';
+import { registry } from '@petal/tools';
 import { describe, expect, test } from 'vitest';
 import { DEFAULT_PERSON_VIEW } from '../lib/person-view.ts';
 import { chatReducer, initialChat } from '../lib/thread.ts';
 import { threadView } from '../lib/thread-view.ts';
-import { toolDoing } from '../lib/tool-words.ts';
+import { hasWords, toolDoing } from '../lib/tool-words.ts';
 
 describe('a step in plain words', () => {
   test('says what it looks for, quoted', () => {
@@ -15,8 +16,15 @@ describe('a step in plain words', () => {
     expect(toolDoing('show', { map: 'x' })).toBe('Moving the map');
   });
 
-  test('a tool it has no words for reads as its name', () => {
-    expect(toolDoing('list_layers', {})).toBe('List layers');
+  test('ranking says what it ranks by', () => {
+    expect(toolDoing('rank_maps', { by: 'treasury' })).toBe('Ranking the maps by treasury');
+    expect(toolDoing('rank_maps', { by: 'market_cap' })).toBe('Ranking the maps by market value');
+  });
+
+  test('every tool the agent can call has its own words, so none shows its name', () => {
+    // the registry, and the agent's own: show, handing a job, a note on a petal
+    const names = [...registry.map((t) => t.name), 'show', 'hand_job', 'annotate'];
+    expect(names.filter((n) => !hasWords(n))).toEqual([]);
   });
 });
 
