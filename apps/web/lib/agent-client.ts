@@ -727,7 +727,8 @@ export async function readComposed(
   layers: readonly string[],
   view: string,
 ): Promise<ComposedReading | null> {
-  const q = new URLSearchParams({ layers: layers.join(','), view });
+  // no layers asked: the server composes every published layer itself, however many the map has
+  const q = new URLSearchParams(layers.length > 0 ? { layers: layers.join(','), view } : { view });
   const res = await fetch(`/api/v1/maps/${encodeURIComponent(map)}/reading?${q}`).catch(() => null);
   if (!res?.ok) return null;
   const json = (await res.json().catch(() => null)) as ComposedReading | null;
