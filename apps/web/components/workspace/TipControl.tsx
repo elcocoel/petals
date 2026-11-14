@@ -4,6 +4,7 @@
 
 import { panelWords } from '../../lib/panel-words.ts';
 import { tipWords } from '../../lib/tip.ts';
+import { Mono } from '../ui/Mono.tsx';
 import { NavItem } from '../ui/NavItem.tsx';
 import { Range } from '../ui/Range.tsx';
 
@@ -30,8 +31,32 @@ export function TipControl({
   onSet,
   line,
   failed,
-}: TipView) {
+  inline = false,
+}: TipView & {
+  /** In plain sight where it's charged: always open, no row to unfold. */
+  inline?: boolean;
+}) {
   if (percent === null || !scale) return null;
+  if (inline)
+    return (
+      <div className="flex w-full flex-col gap-space-4">
+        <span className="type-label">{tipWords.onTop}</span>
+        <Range
+          label={tipWords.slider}
+          min={scale.min}
+          max={scale.max}
+          step={scale.step}
+          value={percent}
+          shown={tipWords.percent(percent)}
+          onChange={onSlide}
+          onSet={onSet}
+        />
+        <Mono as="p" tone="muted">
+          {line}
+        </Mono>
+        {failed && <p className="my-0 type-ui text-muted">{panelWords.settings.failed(failed)}</p>}
+      </div>
+    );
   return (
     <div className="flex flex-col">
       <NavItem

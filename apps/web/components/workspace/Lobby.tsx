@@ -110,7 +110,7 @@ export function Lobby({
     signer?: string | null;
   };
   /** Add funds: whether the pay row is open under the balance, and the row itself. */
-  add: { open: boolean; toggle: () => void; row: Omit<ComponentProps<typeof PayRow>, 'first'> };
+  add: { row: Omit<ComponentProps<typeof PayRow>, 'first'> };
   /** Every call charged to them (usage/v1), in the Usage card. */
   usage: UsageView | 'reading' | 'unread';
   wallets: WalletRow[] | 'reading' | 'unread';
@@ -213,9 +213,7 @@ export function Lobby({
             failedWhy={funds.failedWhy ?? null}
             signer={funds.signer ?? null}
             onWithdraw={funds.withdraw}
-            adding={add.open}
-            onAdd={add.toggle}
-            add={<PayRow {...add.row} />}
+            add={<PayRow bare {...add.row} />}
             tip={tip}
           />
           <Usage usage={usage} />

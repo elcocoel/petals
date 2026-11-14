@@ -35,14 +35,12 @@ export const fundsWords = {
   unread: 'Your balance can’t be read right now.',
   withdraw: 'Withdraw',
   /** Beside Withdraw: what it takes out, which is everything the person holds in the contract. */
-  canWithdraw: (m: Money) =>
-    `You can withdraw ${moneyWords(m)}: the NEAR you deposited in Petals’ credit contract that chats haven’t spent. Withdraw sends all of it back to your wallet.`,
+  canWithdraw: (m: Money) => `Withdraw sends ${moneyWords(m)} back to your wallet.`,
   /** Beside Withdraw while the contract holds nothing for the person. */
-  nothingToWithdraw:
-    'Nothing to withdraw yet: what you deposit in Petals’ credit contract stays yours, and Withdraw sends what chats haven’t spent back to your wallet.',
+  nothingToWithdraw: 'Nothing to withdraw yet.',
   /** The rest of the balance, which isn't in the contract, and why. */
   cannotWithdraw: (m: Money) =>
-    `${moneyWords(m)} can’t be withdrawn: credit from before the contract or from an invite isn’t held in the contract. Chats spend it first.`,
+    `${moneyWords(m)} from before the contract or an invite can’t be withdrawn; chats spend it first.`,
   /** Opens the pay row's own flow under the balance: NEAR from a wallet, or any token through NEAR Intents. */
   add: 'Add funds',
   /** The pay row's first line in the lobby, with the credit contract: what a deposit is. */
