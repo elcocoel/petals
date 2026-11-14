@@ -86,6 +86,8 @@ export async function depositQuote(
     usd: number;
     originAsset: string;
     refundTo: string;
+    /** INTENTS: anything unswapped goes back to refundTo's own account inside NEAR Intents; default the origin chain */
+    refundType?: 'ORIGIN_CHAIN' | 'INTENTS';
     recipient: string;
     /**
      * the credit contract: whatever is sent, as NEAR, delivered into it on the named balance. FLEX_INPUT: any amount
@@ -104,7 +106,7 @@ export async function depositQuote(
     originAsset: o.originAsset,
     depositType: 'ORIGIN_CHAIN',
     refundTo: o.refundTo,
-    refundType: 'ORIGIN_CHAIN',
+    refundType: o.refundType ?? 'ORIGIN_CHAIN',
     deadline: new Date(now.getTime() + 60 * 60_000).toISOString(),
     referral: 'petals',
   };
