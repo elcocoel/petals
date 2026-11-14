@@ -6,6 +6,7 @@
 // these props, so there's no className: a one-off look needs a new variant here. `compact` is primary at the
 // app's scale (a row high, UI words): the conversation's Send and Connect, beside the side panel's rows.
 import type { MouseEventHandler, ReactNode } from 'react';
+import { outside } from '../../lib/outside.ts';
 import { Icon } from './Icon.tsx';
 
 export type ButtonVariant =
@@ -101,6 +102,7 @@ export function Button({ variant = 'primary', arrow, children, ...rest }: Button
     return (
       <a
         href={rest.href}
+        {...outside(rest.href)}
         aria-current={rest.current ? 'page' : undefined}
         data-current={rest.current ? '' : undefined}
         data-button=""

@@ -1,4 +1,5 @@
 'use client';
+import { outside } from '../lib/outside.ts';
 // The publish steps (T066): prepare_publish, sign in the wallet (NEP-413, one prompt), then
 // publish_flower. Shows the key, the writer and the explorer link, and why the receipt "fails".
 import type { EntryDraft, Prepared } from '../lib/publish.ts';
@@ -58,7 +59,7 @@ export function PublishFlow({
             </li>
             <li>
               Transaction:{' '}
-              <a href={published.explorer_url} rel="noreferrer">
+              <a href={published.explorer_url} {...outside(published.explorer_url)}>
                 <code>{published.tx_hash}</code>
               </a>
               {published.tx_hash.startsWith('fake') && (

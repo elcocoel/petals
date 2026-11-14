@@ -5,6 +5,7 @@ import styles from '../../../../components/docs/docs.module.css';
 import { byDepartment } from '../../../../components/docs/groups.ts';
 import { Button } from '../../../../components/ui/Button.tsx';
 import { Icon } from '../../../../components/ui/Icon.tsx';
+import { outside } from '../../../../lib/outside.ts';
 import { Sidebar } from '../Sidebar.tsx';
 
 // All source reads happen at build time; no filesystem or source tracing is needed on the host.
@@ -56,7 +57,7 @@ export default async function Docs({ params }: Props) {
           {page.kind === 'reference' && (
             <div className={styles.provenance}>
               <span>Rendered from source</span>
-              <a href={editUrl(page.source)}>
+              <a href={editUrl(page.source)} {...outside(editUrl(page.source))}>
                 <code>{page.source}</code>
               </a>
             </div>
@@ -83,8 +84,18 @@ export default async function Docs({ params }: Props) {
             </div>
             <p className={styles.provenance}>
               <span>Generated from source</span>
-              <a href={editUrl('packages/core/src/view/index.ts')}>View definitions</a>
-              <a href={editUrl('apps/web/lib/person-view.ts')}>Person's default view</a>
+              <a
+                href={editUrl('packages/core/src/view/index.ts')}
+                {...outside(editUrl('packages/core/src/view/index.ts'))}
+              >
+                View definitions
+              </a>
+              <a
+                href={editUrl('apps/web/lib/person-view.ts')}
+                {...outside(editUrl('apps/web/lib/person-view.ts'))}
+              >
+                Person's default view
+              </a>
             </p>
             <div
               className={`${styles.prose} type-label`}
@@ -160,7 +171,7 @@ export default async function Docs({ params }: Props) {
             <Contents headings={document.headings} />
           </>
         )}
-        <a href={editUrl(page.source)}>
+        <a href={editUrl(page.source)} {...outside(editUrl(page.source))}>
           Edit on GitHub <Icon name="arrow" />
         </a>
       </aside>

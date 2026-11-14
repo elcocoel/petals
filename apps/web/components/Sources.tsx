@@ -1,4 +1,5 @@
 // Source ids, linked when the snapshot (or the interpretation's documents) gives their URL.
+import { outside } from '../lib/outside.ts';
 export function SourceList({
   ids,
   urls,
@@ -13,7 +14,7 @@ export function SourceList({
         <span key={id}>
           {i > 0 && ', '}
           {urls?.[id] ? (
-            <a href={urls[id]} rel="noreferrer">
+            <a href={urls[id]} {...outside(urls[id] ?? '')}>
               {id}
             </a>
           ) : (

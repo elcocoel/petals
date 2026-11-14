@@ -2,6 +2,7 @@
 // word in a path. A thumb in a box, a title, a note; the whole card is the link. The words are optional,
 // for a card that's only a picture, and then `label` is what a screen reader hears for the link.
 import type { ThumbKind } from '../../lib/figures.ts';
+import { outside } from '../../lib/outside.ts';
 import { Drawing } from './Drawing.tsx';
 
 export function GalleryCard({
@@ -20,6 +21,7 @@ export function GalleryCard({
   return (
     <a
       href={href}
+      {...outside(href)}
       aria-label={label}
       data-b="link"
       data-kind="card"

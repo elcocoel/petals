@@ -17,6 +17,7 @@ import { ActionRow } from '../ui/ActionRow.tsx';
 import { Badge } from '../ui/Badge.tsx';
 import { Button } from '../ui/Button.tsx';
 import { TextLink } from '../ui/TextLink.tsx';
+import { DeclaredLink } from './DeclaredLink.tsx';
 
 export function Profile({
   social,
@@ -56,7 +57,7 @@ export function Profile({
               <span className="w-1/5 shrink-0 type-caption text-muted wrap-anywhere">
                 {serviceName(l.service)}
               </span>
-              <span className="min-w-0 flex-1 type-label wrap-anywhere">{l.value}</span>
+              <DeclaredLink service={l.service} value={l.value} />
               <Badge>{profileWords.declared}</Badge>
             </li>
           ))}

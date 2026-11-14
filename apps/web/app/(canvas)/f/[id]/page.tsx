@@ -12,6 +12,7 @@ import { powerMapAt } from '../../../../landscape/land.ts';
 import { api } from '../../../../lib/api.ts';
 import { dateLabel } from '../../../../lib/flower-view.ts';
 import { isMissing } from '../../../../lib/missing.ts';
+import { outside } from '../../../../lib/outside.ts';
 import { storedPanelFlower } from '../../../../lib/panel-view.ts';
 import { explorerTxUrl } from '../../../../lib/publish.ts';
 import { viewerView } from '../../../../lib/viewer-view.ts';
@@ -83,7 +84,7 @@ export default async function FlowerPageRoute({ params }: { params: Promise<{ id
           {tx_hash && (
             <>
               , written in transaction{' '}
-              <a href={explorerTxUrl(tx_hash)} rel="noreferrer">
+              <a href={explorerTxUrl(tx_hash)} {...outside(explorerTxUrl(tx_hash))}>
                 <code>{`${tx_hash.slice(0, 6)}…${tx_hash.slice(-4)}`}</code>
               </a>
             </>

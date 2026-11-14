@@ -1,6 +1,7 @@
 // The interpretation (T064, constitution II): the argued reading, every mapping with its sources,
 // conflicts, what is inferred, and what the data can't tell (unknowns).
 import type { ModelSignature, Interpretation as Reading } from '@petal/core/types';
+import { outside } from '../lib/outside.ts';
 import { SourceList } from './Sources.tsx';
 
 export function Interpretation({
@@ -72,7 +73,7 @@ export function Interpretation({
           <ul>
             {reading.documents.map((d) => (
               <li key={d.id}>
-                <a href={d.url} rel="noreferrer">
+                <a href={d.url} {...outside(d.url)}>
                   {d.title ?? d.url}
                 </a>{' '}
                 <span className="muted">
@@ -116,7 +117,10 @@ export function SignatureLine({
       {signature.attestation?.report_url && (
         <>
           {' '}
-          — <a href={signature.attestation.report_url}>attestation report</a>
+          —{' '}
+          <a href={signature.attestation.report_url} {...outside(signature.attestation.report_url)}>
+            attestation report
+          </a>
         </>
       )}
       .

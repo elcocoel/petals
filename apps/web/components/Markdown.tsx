@@ -3,6 +3,7 @@
 // bigger than the words, a table in UI.
 import { createElement, type ReactNode } from 'react';
 import type { Block, Inline } from '../lib/markdown.ts';
+import { outside } from '../lib/outside.ts';
 
 /** A link the page can handle itself: true means it did. A modified click stays the browser's. */
 type OnLink = (href: string) => boolean;
@@ -38,7 +39,7 @@ function spans(c: Inline[], onLink?: OnLink, app = false): ReactNode[] {
             // biome-ignore lint/suspicious/noArrayIndexKey: a parsed text never reorders
             key={i}
             href={x.href}
-            rel="noreferrer"
+            {...outside(x.href)}
             onClick={
               onLink &&
               ((e) => {
