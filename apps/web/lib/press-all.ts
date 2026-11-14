@@ -33,17 +33,17 @@ export const pressAllWords = {
   none: 'Nothing you’ve kept on a map waits to be published.',
   /** the read refused, with the server's reason */
   unread: (why: string) => `Couldn’t read what you’ve kept: ${why}`,
-  /** what this press published, and, read from the person's credit, all that stands in their name now */
+  /** what this press published, and what the person's credit counts as theirs, in the credit's own words */
   published: (n: number, all?: { layers: number; maps: number } | null) => {
-    const press = `This press: ${n === 1 ? '1 version' : `${n} versions`}.`;
+    const count = (k: number, one: string, many: string) =>
+      k === 1 ? `1 ${one}` : `${k.toLocaleString('en-US')} ${many}`;
+    const press = `This press: ${count(n, 'version', 'versions')}.`;
     if (!all) return press;
-    const layers = all.layers === 1 ? '1 layer' : `${all.layers} layers`;
-    const maps = all.maps === 1 ? '1 map' : `${all.maps} maps`;
-    return `${press} In your name: ${layers} on ${maps}.`;
+    return `${press} Credited to you: ${count(all.layers, 'layer', 'layers')} on ${count(all.maps, 'map', 'maps')}.`;
   },
 } as const;
 
-/** All that stands in the person's name (credit/v1): their layers, and the maps those layers are on. */
+/** What the person's credit (credit/v1) counts as theirs: their layers, and the maps those layers are on. */
 export function inYourName(credit: {
   layers: readonly { map: string }[];
   totals: { layers: number };

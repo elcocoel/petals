@@ -411,60 +411,67 @@ export function InteractionSurface({
           )
         }
       >
-        {state.mode === 'mapping' ? (
-          // the mapping state: the press first, then what the person would add to the map in front
-          <MappingBox
-            view={mapping}
-            press={publishing.view}
-            onPublish={() => void publishing.publish()}
-            all={pressAll.view && { view: pressAll.view, onPublish: () => void pressAll.publish() }}
-            wallet={
-              chosen && chosenAccount
-                ? {
-                    heading: shortId(chosen.id),
-                    body: (
-                      <>
-                        <PetalClaims account={chosenAccount} conversation={state.conversationRef} />
-                        {chosenUnmapped && canAsk && (
-                          <div className="flex">
-                            <Button variant="quiet" onClick={actions.mapPopulation}>
-                              {populationWords.notMapped}
-                            </Button>
-                          </div>
-                        )}
-                      </>
-                    ),
-                  }
-                : undefined
-            }
-          />
-        ) : (
-          /* The thread; empty, where to start. */
-          <ConversationThread
-            recorded={state.recorded}
-            rows={state.rows}
-            thumbs={state.thumbs}
-            threadRef={refs.thread}
-            className="px-block-gap pt-space-16 overscroll-none"
-            openWord=""
-            onOpenTurn={actions.openTurn}
-            onOpenStored={actions.openStored}
-            onRefollow={actions.refollow}
-            onLink={actions.followLink}
-            empty={
-              state.recorded ? undefined : (
-                <NewConversation starts={starts} onOpen={(href) => actions.followLink(href)} />
-              )
-            }
-            jobs={state.jobs}
-            jobControls={state.jobControls}
-            onMapIt={actions.mapIt}
-            next={{
-              onStep: actions.step,
-              moreOpen: state.nextMore,
-              onMore: actions.toggleNextMore,
-            }}
-          />
+        {/* The thread; empty, where to start. */}
+        <ConversationThread
+          recorded={state.recorded}
+          rows={state.rows}
+          thumbs={state.thumbs}
+          threadRef={refs.thread}
+          className="px-block-gap pt-space-16 overscroll-none"
+          openWord=""
+          onOpenTurn={actions.openTurn}
+          onOpenStored={actions.openStored}
+          onRefollow={actions.refollow}
+          onLink={actions.followLink}
+          empty={
+            state.recorded ? undefined : (
+              <NewConversation starts={starts} onOpen={(href) => actions.followLink(href)} />
+            )
+          }
+          jobs={state.jobs}
+          jobControls={state.jobControls}
+          onMapIt={actions.mapIt}
+          next={{
+            onStep: actions.step,
+            moreOpen: state.nextMore,
+            onMore: actions.toggleNextMore,
+          }}
+        />
+        {state.mode === 'mapping' && (
+          // the mapping state, under the conversation and right above the composer's switch: the press last,
+          // where the eye and the hand already are; it scrolls in its own room, at most half the box
+          <div className="max-h-1/2 shrink-0 overflow-y-auto border-t border-hairline">
+            <MappingBox
+              view={mapping}
+              press={publishing.view}
+              onPublish={() => void publishing.publish()}
+              all={
+                pressAll.view && { view: pressAll.view, onPublish: () => void pressAll.publish() }
+              }
+              wallet={
+                chosen && chosenAccount
+                  ? {
+                      heading: shortId(chosen.id),
+                      body: (
+                        <>
+                          <PetalClaims
+                            account={chosenAccount}
+                            conversation={state.conversationRef}
+                          />
+                          {chosenUnmapped && canAsk && (
+                            <div className="flex">
+                              <Button variant="quiet" onClick={actions.mapPopulation}>
+                                {populationWords.notMapped}
+                              </Button>
+                            </div>
+                          )}
+                        </>
+                      ),
+                    }
+                  : undefined
+              }
+            />
+          </div>
         )}
       </FloatBox>
       <FloatBox

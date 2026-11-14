@@ -84,13 +84,13 @@ describe('one press over many maps', () => {
     });
   });
 
-  test('once published: this press, then everything in their name, from their credit', () => {
+  test('once published: this press, then what their credit counts, in the credit’s words', () => {
     const credit = {
-      totals: { layers: 223 },
+      totals: { layers: 4039 },
       layers: [{ map: 'a' }, { map: 'a' }, { map: 'b' }],
     };
     expect(pressAllWords.published(19, inYourName(credit))).toBe(
-      'This press: 19 versions. In your name: 223 layers on 2 maps.',
+      'This press: 19 versions. Credited to you: 4,039 layers on 2 maps.',
     );
     expect(pressAllWords.published(1, null)).toBe('This press: 1 version.');
   });
