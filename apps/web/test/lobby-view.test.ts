@@ -64,9 +64,9 @@ describe('Withdraw says what it can and can’t take out', () => {
 });
 
 describe('the profile part’s account', () => {
-  test('a 64-character implicit account shows its first six and last four, and in full for the pointer', () => {
+  test('a 64-character implicit account is shortened as every address is, and in full for the pointer', () => {
     const id = '02b85f8c8bbfbcc34f4d30b55724f36336768f05c27c2d7f97936e5d699018fc';
-    expect(shownAccount(id)).toEqual({ shown: '02b85f…18fc', full: id });
+    expect(shownAccount(id)).toEqual({ shown: '02b8…18fc', full: id });
   });
 
   test('a named account shows as it is', () => {
