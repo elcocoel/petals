@@ -31,7 +31,12 @@ beforeEach(async () => {
     'moloch-v1': modules['moloch-v1'] as NonNullable<(typeof modules)[string]>,
   };
   const proposed = await run('propose_spec', { network: 'moloch-v1', sha256: MOLOCH });
-  await run('render_flower', { spec: proposed.spec });
+  const drawn = await run('render_flower', { spec: proposed.spec });
+  // on the shared map, as Petals' loads put a view there
+  await privateStore(r.ctx.config).draft.label(drawn.spec_sha256 as string, {
+    name: null,
+    made_by: 'mapping.petals.near',
+  });
 });
 
 /** One allocation held by the reading's largest petal: a cliff a year before the reading, then monthly steps. */

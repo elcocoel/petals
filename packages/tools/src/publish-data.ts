@@ -354,7 +354,7 @@ async function drawnReadings(
   const specs = await specsOf(ctx, owner, shared);
   if (!specs.size) return { readings: [], theirs: 0 };
   const views = (
-    await once(shared, 'views', () => mapViews(ctx, undefined, { hidden: true }))
+    await once(shared, 'views', () => mapViews(ctx, undefined, { hidden: true, unpublished: true }))
   ).filter((v) => v.map === about && specs.has(v.sha));
   return {
     readings: views
@@ -956,7 +956,9 @@ async function mapsWith(
   for (const row of await privateStore(ctx.config).layer.list(owner)) add(row.about);
   const specs = await specsOf(ctx, owner, shared);
   if (specs.size)
-    for (const v of await once(shared, 'views', () => mapViews(ctx, undefined, { hidden: true })))
+    for (const v of await once(shared, 'views', () =>
+      mapViews(ctx, undefined, { hidden: true, unpublished: true }),
+    ))
       if (specs.has(v.sha)) add(v.map);
   const out = await publishedIds(ctx, shared);
   const waiting = (await annotationsOf(ctx, owner, shared)).filter(

@@ -113,7 +113,12 @@ describe("a person's names on the petals drawn for them", () => {
 
   test("a tile is the person's when its address names their set: drawn with it for them, kept by no cache", async () => {
     const { spec, named } = await flowerAndName();
-    await run('render_flower', { spec });
+    const drawn = await run('render_flower', { spec });
+    // on the shared map, as Petals' loads put a view there
+    await privateStore(r.ctx.config).draft.label(drawn.spec_sha256 as string, {
+      name: null,
+      made_by: 'mapping.petals.near',
+    });
     // the person's view, kept as a person's is when they set it, so its picture can name it by hash
     await privateStore(r.ctx.config).viewDoc.put(
       viewHash(NAMES_ON),
@@ -146,7 +151,12 @@ describe("a person's names on the petals drawn for them", () => {
   test("the map's readings carry the person's names, kept apart from a visitor's", async () => {
     const { spec, named } = await flowerAndName();
     // drawn once, so it's on the map
-    await run('render_flower', { spec });
+    const drawn = await run('render_flower', { spec });
+    // on the shared map, as Petals' loads put a view there
+    await privateStore(r.ctx.config).draft.label(drawn.spec_sha256 as string, {
+      name: null,
+      made_by: 'mapping.petals.near',
+    });
     const visitor = JSON.stringify(await mapViews(r.ctx, NAMES_ON));
     const person = JSON.stringify(await mapViews({ ...r.ctx, names: [named] }, NAMES_ON));
     expect(person).toContain('Ada Pool');
