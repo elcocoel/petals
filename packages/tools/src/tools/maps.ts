@@ -6,6 +6,7 @@
 import { payoutsIn, validateMark, validateProposals } from '@petal/core';
 import type { Claim, NextStep, NextSteps } from '@petal/core/types';
 import { EVM_CHAINS } from '@petal/inputs';
+import { proposalStamps } from '../activity.ts';
 import { defineTool } from '../define.ts';
 import { privateStore } from '../drafts.ts';
 import { ToolFailure } from '../errors.ts';
@@ -165,6 +166,82 @@ function insight(c: Claim) {
     ...(c.by ? { by: c.by } : {}),
   };
 }
+
+/** What rank_maps ranks by: each a figure the map's card already holds. */
+const RANK_BY = ['treasury', 'market_cap', 'holders', 'proposals'] as const;
+type RankBy = (typeof RANK_BY)[number];
+
+/** Each map's proposals in short, parsed once per read (a read never changes). */
+const proposalCounts = new Map<string, number | null>();
+
+export const rankMaps = defineTool<{ by: RankBy; limit?: number }, Record<string, unknown>>({
+  name: 'rank_maps',
+  title: 'Rank the maps',
+  description:
+    'The maps on the Power Map in order of one figure each card already holds, highest first: treasury (its ' +
+    "priced total in dollars), market_cap (dollars), holders (its newest reading's accounts) or proposals " +
+    '(how many were read). Nothing is read anew, so it answers at once: for "take me to the one with the most X", ' +
+    'call this, then show the first. A map with no such figure is left out, and counted.',
+  input: obj(['by'], {
+    by: { type: 'string', enum: [...RANK_BY] },
+    limit: { type: 'integer', minimum: 1, maximum: 50, description: 'how many, default 10' },
+  }),
+  output: obj(['by', 'maps', 'without'], {
+    by: { type: 'string' },
+    maps: {
+      type: 'array',
+      items: obj(['id', 'name', 'value', 'map_url'], {
+        id: { type: 'string' },
+        name: { type: 'string' },
+        value: { type: 'number' },
+        unpriced: {
+          type: 'integer',
+          description: 'treasury: how many of its assets have no price',
+        },
+        map_url: { type: 'string' },
+      }),
+    },
+    without: { type: 'integer', description: 'maps with no such figure' },
+  }),
+  annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
+  async run({ by, limit }, ctx) {
+    const cards = (await mapIndex(ctx)).map((x) => x.card);
+    const stamps = by === 'proposals' ? await proposalStamps(ctx) : null;
+    const figure = async (c: MapCard): Promise<number | null> => {
+      if (by === 'treasury') return c.value?.treasury_usd ? Number(c.value.treasury_usd) : null;
+      if (by === 'market_cap')
+        return c.value?.market_cap?.usd ? Number(c.value.market_cap.usd) : null;
+      if (by === 'holders') return c.readings[0]?.count ?? null;
+      const at = stamps?.get(c.id);
+      if (!at) return null;
+      const key = `${c.id}@${at}`;
+      if (!proposalCounts.has(key))
+        proposalCounts.set(key, (await proposalsFor(ctx, c.id))?.count ?? null);
+      return proposalCounts.get(key) ?? null;
+    };
+    const ranked: { card: MapCard; value: number }[] = [];
+    let without = 0;
+    for (const card of cards) {
+      const value = await figure(card);
+      if (value === null || !Number.isFinite(value)) without++;
+      else ranked.push({ card, value });
+    }
+    ranked.sort((a, b) => b.value - a.value);
+    return {
+      by,
+      maps: ranked.slice(0, limit ?? 10).map(({ card, value }) => ({
+        id: card.id,
+        name: nameOf(card),
+        value,
+        ...(by === 'treasury' && card.value?.treasury_unpriced
+          ? { unpriced: card.value.treasury_unpriced }
+          : {}),
+        map_url: mapUrl(ctx, card.id),
+      })),
+      without,
+    };
+  },
+});
 
 export const getMap = defineTool<{ map: string }, Record<string, unknown>>({
   name: 'get_map',

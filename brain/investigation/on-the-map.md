@@ -2,8 +2,8 @@
 id: on-the-map
 department: investigation
 for: going to what's already on the Power Map and interpreting it, before any new reading
-recognise: navigate, take me, go to, open, show me, what's there, already, on the map, what do we have, what we found
-tools: look_up, get_map, find_voting_blocs, list_payouts, describe_snapshot, compute_figures, list_publishable
+recognise: navigate, take me, go to, open, show me, what's there, already, on the map, what do we have, what we found, highest, most, biggest, largest
+tools: look_up, rank_maps, get_map, find_voting_blocs, list_payouts, describe_snapshot, compute_figures, list_publishable
 continues: going-deeper, where-power-lives, payouts, voting-blocs-over-time
 status: ready
 ---
@@ -12,7 +12,7 @@ status: ready
 
 The Power Map already holds most of what people ask about. Start from it: never count from scratch what a map already holds.
 
-1. **Go there.** `look_up` with the person's words gives each map that matches, with its `map_url`. When they ask to go somewhere, the answer is that link, with the map's name, and a line on what's there. Nothing comes before it.
+1. **Go there, at once.** Going somewhere is navigation, not research: answer from what the map holds, in seconds, the way the search box would. `look_up` with the person's words gives each map that matches; for the one with the most or highest of something (treasury, market cap, holders, proposals), `rank_maps` gives them in order. Then `show` the map straight away, so the canvas moves while you say its name and a line on what's there. Nothing comes before it: no reading, no search of the web.
 2. **Say what's there.** `get_map` with the map's `id` gives its layers, each with its date and who mapped it:
    - its readings: who holds what, as of when;
    - its proposals, and the period they cover;
