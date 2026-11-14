@@ -115,7 +115,9 @@ Closed lists: `grounds` is a sorted, comma-separated set of `funding_lineage`, `
 
 ## Real people
 
-**Private annotations (10 Nov)**: names are allowed in a person's own annotations, kept in their own project, so a person can tie wallets to names they know. `validateClaim(claim, { private: true })` reads a claim kept there. Rules 2 and 5 below give way there, for `named` and `noted` and for the evidence's notes and quotes; rules 1, 3 and 4 hold everywhere. Anything published keeps the first version below, decided again before annotations are published.
+**Private annotations (10 Nov)**: names are allowed in a person's own annotations, kept in their own project, so a person can tie wallets to names they know. `validateClaim(claim, { private: true })` reads a claim kept there. Rules 2 and 5 below give way there, for `named` and `noted` and for the evidence's notes and quotes; rules 1, 3 and 4 hold everywhere. Anything published keeps the first version below, with one exception.
+
+**Published names.** A `named` claim publishes when it's `sourced` and one piece of its evidence is a public source it rests on, with that source's own words in `quote`: a proposal (`type: proposal`, `proposal`), a transaction (`type: tx`, `tx`), or a page or post (`type: page` or `post`, `url`, with `platform` and `archive_url` where they exist). Its quote is kept as written. A name worked out from traces (`inferred`) stays in a person's own project. The note check holds for every published claim (`sourcedName` in `people.ts`).
 
 **The first version.** It lives in `packages/core/src/claims/people.ts`. Constitution line 56 allows links "wherever public evidence allows" and promises removal. Both hold only off chain, so that line is under question (open question 9).
 
