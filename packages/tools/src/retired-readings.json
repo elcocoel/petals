@@ -1,6 +1,6 @@
 {
   "note": "Readings that mapping runs replaced, retired from every list of the map, never deleted: each stays in the store and its flower still opens by its hash; its map shows the reading that replaced it. Taking its line out brings it back. Each says what changed. Claims a mapping run reissued are retired the same way (claims): no map's list of the mapping's claims shows them, and search leaves them out.",
-  "decided": "Shared map curation, 11 Nov 2026: map identity repairs on Gnosis, Ethereum, Arbitrum and Base; 12 Nov 2026: the NEAR and Solana repairs, and the 1-day holder windows of 9 Nov read again whole",
+  "decided": "Shared map curation, 11 Nov 2026: map identity repairs on Gnosis, Ethereum, Arbitrum and Base; 12 Nov 2026: the NEAR and Solana repairs, and the 1-day holder windows of 9 Nov read again whole; 14 Nov 2026: 43 claims a mapping run kept under a NEAR config binding its source did not declare, withheld from publishing",
   "retired": [
     {
       "snapshot": "00a4ada1c64d9c7a93848fba523f4e290a635db84681ead51a830ecb72273345",
@@ -763,6 +763,221 @@
       "id": "c046eac4914032142be7621e5dbc834f186cc6ae6a7b1d7db39a2310f5eea1d4",
       "replaced_by": "f0e6efdc39294717aa5175ceb4f80447ad80074489a5d43c410ffbc5f9da8995",
       "from": "House of Stake identity repair: the old key near:mainnet:house-of-stake names no account; the House of Stake is one map on venear.dao"
+    },
+    {
+      "id": "da50a11951463fa53ebb1c7c4ffb4f6d91c8ff882de8b211ae02d51106f302cc",
+      "replaced_by": "",
+      "from": "withheld from publishing: kept by a mapping run under a NEAR config binding its source did not declare"
+    },
+    {
+      "id": "bb404ed802d2eb7f1951cc6e1a77bbf106b9dfc9a3f70185cef64feaddb13cde",
+      "replaced_by": "",
+      "from": "withheld from publishing: kept by a mapping run under a NEAR config binding its source did not declare"
+    },
+    {
+      "id": "f0a8142f9621f70d4b3ab43ba057a558e67c3a9e4b589756fdabc135a01f9694",
+      "replaced_by": "",
+      "from": "withheld from publishing: kept by a mapping run under a NEAR config binding its source did not declare"
+    },
+    {
+      "id": "fe369885bb3964deb4c09093b48b42f8ecc24bb3024bac4a5c29af386a12ad04",
+      "replaced_by": "",
+      "from": "withheld from publishing: kept by a mapping run under a NEAR config binding its source did not declare"
+    },
+    {
+      "id": "5be849fe9127709ed3a8c35819d4602858a5bfb284c4127845bddca80b5235e9",
+      "replaced_by": "",
+      "from": "withheld from publishing: kept by a mapping run under a NEAR config binding its source did not declare"
+    },
+    {
+      "id": "3af56bafef15a9d1fc07a8c6138f71e5d89d00fae854339fbc1f6b0353eb7f1d",
+      "replaced_by": "",
+      "from": "withheld from publishing: kept by a mapping run under a NEAR config binding its source did not declare"
+    },
+    {
+      "id": "0e7c994e73680ef8e239092f964ace41c2696613f837f08350c4975465284689",
+      "replaced_by": "",
+      "from": "withheld from publishing: kept by a mapping run under a NEAR config binding its source did not declare"
+    },
+    {
+      "id": "c8b07399a0c516e846934612231547f29e7f0f7847f4b4cc04518faa69a141d3",
+      "replaced_by": "",
+      "from": "withheld from publishing: kept by a mapping run under a NEAR config binding its source did not declare"
+    },
+    {
+      "id": "e4926ade52a85f28dc071f4db32c35000e1222e02c5f9fe52715863678131e0e",
+      "replaced_by": "",
+      "from": "withheld from publishing: kept by a mapping run under a NEAR config binding its source did not declare"
+    },
+    {
+      "id": "54b81e06bef8b121c65c5c69017bda7b12e10273e4c93f75cd1e1f8996bc67c7",
+      "replaced_by": "",
+      "from": "withheld from publishing: kept by a mapping run under a NEAR config binding its source did not declare"
+    },
+    {
+      "id": "2c8d30f9419010a75a22b51fc6d0e270a65cd2cb65e2bf4e9e774b4fec309b28",
+      "replaced_by": "",
+      "from": "withheld from publishing: kept by a mapping run under a NEAR config binding its source did not declare"
+    },
+    {
+      "id": "c884981ae3cf4cdd20cad6cf547248f8b46dee47b56a29b7872d5aec15709508",
+      "replaced_by": "",
+      "from": "withheld from publishing: kept by a mapping run under a NEAR config binding its source did not declare"
+    },
+    {
+      "id": "ce66992f322ae971eb37fcf93dccd5cd3c352fe608621a6bda844288fff98222",
+      "replaced_by": "",
+      "from": "withheld from publishing: kept by a mapping run under a NEAR config binding its source did not declare"
+    },
+    {
+      "id": "bcada554ab03abae426e3f3c18e59fe0833b930a6cf3b1139388ad5d7019203b",
+      "replaced_by": "",
+      "from": "withheld from publishing: kept by a mapping run under a NEAR config binding its source did not declare"
+    },
+    {
+      "id": "4070e7c725bfe064aef740c4eb0e457ab2b62dacfd5e5748da4f704ee28b616f",
+      "replaced_by": "",
+      "from": "withheld from publishing: kept by a mapping run under a NEAR config binding its source did not declare"
+    },
+    {
+      "id": "30a8f344e27198c50b1a9fdfbbda0ad275cb9ceb79cd6bc832d65b7c4f8de77c",
+      "replaced_by": "",
+      "from": "withheld from publishing: kept by a mapping run under a NEAR config binding its source did not declare"
+    },
+    {
+      "id": "0bff0666e34cb2b850f204f6a841b09be5a86bc67fa0022cbd967fa1c8264b39",
+      "replaced_by": "",
+      "from": "withheld from publishing: kept by a mapping run under a NEAR config binding its source did not declare"
+    },
+    {
+      "id": "923cef7065e9090c9d426f6258d3b3c604d3b9584ff01218b4636936ece76c0c",
+      "replaced_by": "",
+      "from": "withheld from publishing: kept by a mapping run under a NEAR config binding its source did not declare"
+    },
+    {
+      "id": "4bfac5a20a58a96279e643327613669ce112b200988da353e7b0ed40d14654b5",
+      "replaced_by": "",
+      "from": "withheld from publishing: kept by a mapping run under a NEAR config binding its source did not declare"
+    },
+    {
+      "id": "c6da111736a70a0c37e0a93e1d7bb92cbc44c52ecd508c21eb0cb2fbdf86c08c",
+      "replaced_by": "",
+      "from": "withheld from publishing: kept by a mapping run under a NEAR config binding its source did not declare"
+    },
+    {
+      "id": "e401f605074ac3ec68db77e22b8795615d1454318ed72f38f87e38ca11992492",
+      "replaced_by": "",
+      "from": "withheld from publishing: kept by a mapping run under a NEAR config binding its source did not declare"
+    },
+    {
+      "id": "74c4494a5c772dd19c876bda21451ca193a7c1d2066067ef30ab4de92897719e",
+      "replaced_by": "",
+      "from": "withheld from publishing: kept by a mapping run under a NEAR config binding its source did not declare"
+    },
+    {
+      "id": "356c18c3be03d2a827d03679f32d72e24b34c3667e70435d0846b93880314a65",
+      "replaced_by": "",
+      "from": "withheld from publishing: kept by a mapping run under a NEAR config binding its source did not declare"
+    },
+    {
+      "id": "d9b9e437fd1821fac618e254a9ba2054da7f999ff863994be12ef86b1c4e9bde",
+      "replaced_by": "",
+      "from": "withheld from publishing: kept by a mapping run under a NEAR config binding its source did not declare"
+    },
+    {
+      "id": "b14477034dfe3df6dd856608729b2633cc4962d31e11d7566231f59cf4d0a7e7",
+      "replaced_by": "",
+      "from": "withheld from publishing: kept by a mapping run under a NEAR config binding its source did not declare"
+    },
+    {
+      "id": "69d8b272504b4268cd4ab00debbf7fb0e9377eb24656738def76b247177fdbb1",
+      "replaced_by": "",
+      "from": "withheld from publishing: kept by a mapping run under a NEAR config binding its source did not declare"
+    },
+    {
+      "id": "93f71ee90ea8461517fc08b389431594479a290ee30febd02efb87eec1a31178",
+      "replaced_by": "",
+      "from": "withheld from publishing: kept by a mapping run under a NEAR config binding its source did not declare"
+    },
+    {
+      "id": "d68811fdbffccecb8f2d0909f06238aed294c722f82fe56251d2c2060c25fa8c",
+      "replaced_by": "",
+      "from": "withheld from publishing: kept by a mapping run under a NEAR config binding its source did not declare"
+    },
+    {
+      "id": "96afbed8fbb1037d04c5d2b652d251dc315ea503c2bcdf27dd0bdf1f7babf3a8",
+      "replaced_by": "",
+      "from": "withheld from publishing: kept by a mapping run under a NEAR config binding its source did not declare"
+    },
+    {
+      "id": "4dca76a2a76e4c78d2b28e5301a327410f534c7e5d4a3f7e358ca8a31f4ab920",
+      "replaced_by": "",
+      "from": "withheld from publishing: kept by a mapping run under a NEAR config binding its source did not declare"
+    },
+    {
+      "id": "d8830a5986d018d33ea06355ddf667e2f98010ea14fe1795680c245839dab568",
+      "replaced_by": "",
+      "from": "withheld from publishing: kept by a mapping run under a NEAR config binding its source did not declare"
+    },
+    {
+      "id": "004d414ba7fbefc14391c7b5c33b6ed755c153f071a2672932df9421556ec5f4",
+      "replaced_by": "",
+      "from": "withheld from publishing: kept by a mapping run under a NEAR config binding its source did not declare"
+    },
+    {
+      "id": "2978291bf1761b77af8985e8c78de6856ae1254f90a9a1aeb01f9535db1e5495",
+      "replaced_by": "",
+      "from": "withheld from publishing: kept by a mapping run under a NEAR config binding its source did not declare"
+    },
+    {
+      "id": "9dda14fc09f66e9273dd161b851d056527366fb70f31687c43f4f8f35571d786",
+      "replaced_by": "",
+      "from": "withheld from publishing: kept by a mapping run under a NEAR config binding its source did not declare"
+    },
+    {
+      "id": "941ee123741d61673d81f1d999dacfabc70c778a40f8e17b800d6ad3fa5380d6",
+      "replaced_by": "",
+      "from": "withheld from publishing: kept by a mapping run under a NEAR config binding its source did not declare"
+    },
+    {
+      "id": "3677e0e777e3d4795d93ef5b2e91d8981728cffc9d89a2e70c323d6e1f3c4cc9",
+      "replaced_by": "",
+      "from": "withheld from publishing: kept by a mapping run under a NEAR config binding its source did not declare"
+    },
+    {
+      "id": "92a86619061122feb03188179ba928a7676dc4ba775bd8801f67c168f191a2f9",
+      "replaced_by": "",
+      "from": "withheld from publishing: kept by a mapping run under a NEAR config binding its source did not declare"
+    },
+    {
+      "id": "da146c1152f5d77bd2569c5f8770fa56ae90c031d183f299caaad8e74b354932",
+      "replaced_by": "",
+      "from": "withheld from publishing: kept by a mapping run under a NEAR config binding its source did not declare"
+    },
+    {
+      "id": "34f2a4fb5e88382a9e6dea102020283b04a07ec39de1ae259b852adf9e616d38",
+      "replaced_by": "",
+      "from": "withheld from publishing: kept by a mapping run under a NEAR config binding its source did not declare"
+    },
+    {
+      "id": "5853a4105be6b48b577c3f96e50e8ae2fa7fc4bb97d42923b01efa9dabe89567",
+      "replaced_by": "",
+      "from": "withheld from publishing: kept by a mapping run under a NEAR config binding its source did not declare"
+    },
+    {
+      "id": "6e80b0620f5535c3c51f47a87a1f1525651e5917daf86c712c65e983e0294369",
+      "replaced_by": "",
+      "from": "withheld from publishing: kept by a mapping run under a NEAR config binding its source did not declare"
+    },
+    {
+      "id": "ba16461887f89bac6951a5d6cd57e352b94ef04265dae18f828e816df09ffb97",
+      "replaced_by": "",
+      "from": "withheld from publishing: kept by a mapping run under a NEAR config binding its source did not declare"
+    },
+    {
+      "id": "05595b57fa371a6f3a86c12afc73fcb92f59096862d769c4f636fa943367e0dc",
+      "replaced_by": "",
+      "from": "withheld from publishing: kept by a mapping run under a NEAR config binding its source did not declare"
     }
   ]
 }
