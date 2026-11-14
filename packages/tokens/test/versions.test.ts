@@ -150,7 +150,12 @@ describe('v1 is untouched', () => {
     if (before === null) return; // No tag here: a shallow checkout, or a deployed copy.
     // The seed is its values, so a .ts file's comment lines don't count; the CSS is compared whole.
     const code = (s: string) =>
-      path.endsWith('.ts') ? s.split('\n').filter((l) => !/^\s*(\/\/|\/?\*)/.test(l)).join('\n') : s;
+      path.endsWith('.ts')
+        ? s
+            .split('\n')
+            .filter((l) => !/^\s*(\/\/|\/?\*)/.test(l))
+            .join('\n')
+        : s;
     expect(code(readFileSync(join(repo, path), 'utf8'))).toBe(code(before));
   });
 });
