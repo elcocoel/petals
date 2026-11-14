@@ -21,7 +21,9 @@
 import type { Price } from '@petal/core';
 import { TOOLS_VERSION } from '@petal/core';
 import {
+  DEPOSIT_DAYS,
   type DepositDeps,
+  type DepositQuote,
   depositQuote,
   nearUsd,
   PAY_RECEIVER,
@@ -327,7 +329,8 @@ export function payRoutes(d: PayDeps): Hono {
   // -- a top-up through NEAR Intents, so a person can pay with any token from any chain:
   //    GET  /api/v1/pay/tokens          what a person can pay from: every token and chain 1Click lists
   //    POST /api/v1/pay/intents         { usd, origin_asset, refund_to, account_id? } → a deposit address to send to;
-  //                                     with the contract, account_id names the NEAR balance it funds (anyone's)
+  //                                     with the contract, account_id names the NEAR balance it funds (anyone's), and
+  //                                     anything unswapped goes back to the person's NEAR account (refund_to unused)
   //    GET  /api/v1/pay/intents/:deposit where it stands; once it's landed, the dollars are on their credit
   // Into NEAR Intents under Petals' account, mainnet only, as NEAR Intents is. It lands as the dollars of
   // USDC it delivered, once, with its own entry, at the price it came in at.
@@ -368,16 +371,19 @@ export function payRoutes(d: PayDeps): Hono {
           'origin_asset is the token to pay with, as GET /api/v1/pay/tokens names it',
         );
       }
-      // where anything unswapped goes back: the address asked, else the person's own linked wallet on that chain
+      // where anything unswapped goes back: with the contract, the person's own NEAR account inside NEAR Intents, with
+      // no address asked; else the address asked, else their own linked wallet on that chain
       const token = d.credit
         ? (await payTokens(d.oneClick).catch(() => [])).find((t) => t.asset === origin_asset)
         : undefined;
+      const own = d.credit ? me.accounts[0] : undefined;
       const refund_to =
-        typeof given === 'string' && given
+        own ??
+        (typeof given === 'string' && given
           ? given
           : token
             ? walletOn(token.chain, await d.gate.authorsOf(me.person))
-            : null;
+            : null);
       if (typeof refund_to !== 'string' || !refund_to) {
         return fail(
           c,
@@ -424,6 +430,19 @@ export function payRoutes(d: PayDeps): Hono {
           amountIn: unitsOf(usd / token.usd, token.decimals),
         };
       }
+      // the person's open address for this token, while it has days left and nothing has come to it: shown again,
+      // so opening the panel doesn't make a new address (each one is asked after until its deadline)
+      if (into) {
+        for (const row of await d.store.topUp.ofPerson(me.person, Number.MAX_SAFE_INTEGER)) {
+          if (row.settled_at || row.status !== 'PENDING_DEPOSIT' || row.usd !== usd) continue;
+          const open = JSON.parse(row.quote) as DepositQuote;
+          if (open.origin_asset !== origin_asset || open.into?.payer !== into.payer) continue;
+          if (Date.parse(open.deadline) - clock() < (DEPOSIT_DAYS / 2) * 86_400_000) continue;
+          const s = await settleTopUp(d, me.person, row).catch(() => null);
+          if (s?.status === 'PENDING_DEPOSIT')
+            return ok(c, { top_up: { ...open, usd, status: 'PENDING_DEPOSIT' } });
+        }
+      }
       let quote: Awaited<ReturnType<typeof depositQuote>>;
       try {
         quote = await depositQuote(
@@ -431,6 +450,7 @@ export function payRoutes(d: PayDeps): Hono {
             usd,
             originAsset: origin_asset,
             refundTo: refund_to,
+            ...(own ? { refundType: 'INTENTS' as const } : {}),
             recipient: PAY_RECEIVER.mainnet,
             ...(into ? { into } : {}),
           },

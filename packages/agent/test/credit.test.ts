@@ -55,7 +55,8 @@ function fake1Click() {
           amountInUsd: '1.0050',
           amountOut: String(NEAR / 4n),
           amountOutUsd: '0.8750',
-          deadline: '2026-11-14T21:00:00.000Z',
+          // an address for any amount waits a week
+          deadline: new Date(Date.now() + 7 * 86_400_000).toISOString(),
         },
       });
     if (url.pathname === '/v0/tokens')
@@ -313,6 +314,9 @@ describe('the credit contract', () => {
       recipientType: 'DESTINATION_CHAIN',
       customRecipientMsg: 'alice.near',
       swapType: 'FLEX_INPUT',
+      // unswapped, back to their NEAR account inside NEAR Intents: the address given isn't used
+      refundTo: 'alice.near',
+      refundType: 'INTENTS',
     });
     expect(Date.parse(quoted.deadline as string) - Date.now()).toBeGreaterThan(6 * 24 * 3600_000);
     // it lands: the contract holds it under alice.near; the credit is read back from there
@@ -338,18 +342,20 @@ describe('the credit contract', () => {
     const top = await w.call('POST', '/api/v1/pay/intents', { origin_asset: 'nep141:wrap.near' });
     expect(top.status, await top.clone().text()).toBe(200);
     const quoted = w.one.asked.find((a) => a.path === '/v0/quote')?.body as Record<string, unknown>;
-    // a dollar's reference (a quarter NEAR at $4), back to the person's own NEAR account if unswapped
+    // asked again for the same token while nothing has come: the same address, with no new quote
+    const again = (await (
+      await w.call('POST', '/api/v1/pay/intents', { origin_asset: 'nep141:wrap.near' })
+    ).json()) as { top_up: { deposit_address: string } };
+    expect(again.top_up.deposit_address).toBe('0xdeposit');
+    expect(w.one.asked.filter((a) => a.path === '/v0/quote').length).toBe(1);
+    // a dollar's reference (a quarter NEAR at $4), back to the person's own NEAR account inside NEAR Intents if unswapped
     expect(quoted).toMatchObject({
       swapType: 'FLEX_INPUT',
       amount: String(NEAR / 4n),
       refundTo: 'alice.near',
+      refundType: 'INTENTS',
       customRecipientMsg: 'alice.near',
     });
-    // a chain they hold no wallet on needs the address
-    const base = await w.call('POST', '/api/v1/pay/intents', {
-      origin_asset: 'nep141:base-0x833589fcd6edb6e08f4c7c32d4f71b54bda02913.omft.near',
-    });
-    expect(base.status).toBe(400);
     w.one.land();
     const history = (await (await w.call('GET', '/api/v1/pay/intents')).json()) as {
       top_ups: Record<string, unknown>[];

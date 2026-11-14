@@ -13,6 +13,7 @@ export {
   yoctoToUsd,
 } from './credit.ts';
 export {
+  DEPOSIT_DAYS,
   type DepositDeps,
   type DepositQuote,
   depositQuote,
