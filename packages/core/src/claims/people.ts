@@ -8,7 +8,9 @@
 // governance post, a post on X), with that source's own words quoted. The same holds for any claim taken from
 // such a source (`publiclySourced`): its quotes are kept as written, and a sourced note keeps its words; the
 // claimer's own evidence notes are still checked. A name worked out from traces (patterns, timing, style, scraps
-// put together) is inferred, and stays private. In a person's own project, rules 2 and 5
+// put together) publishes as an inferred claim (`inferredName`), marked inferred, with its method and the public
+// evidence it was worked out from; the claimer answers for it and the qualifier rates it. In a person's own
+// project, rules 2 and 5
 // give way for claim/v2's named and noted and for the evidence's notes and quotes; rules 1, 3 and 4 hold
 // everywhere.
 //
@@ -72,7 +74,7 @@ const REASON = {
     'claims name accounts, contracts and groups, not natural people (people.ts, first-version rule)',
   word: 'this word is not in the vocabulary: say what the accounts did, not what anyone is',
   note: 'a note must not name a person: point to the evidence instead (people.ts)',
-  name: "a name publishes as a sourced claim resting on a public source, a proposal, a transaction, a page or a post, with that source's own words quoted (people.ts); a name worked out from traces stays in a person's own project",
+  name: "a name publishes as a sourced claim resting on a public source, a proposal, a transaction, a page or a post, with that source's own words quoted, or as an inferred claim with its method and the public pages, posts, proposals or transactions it was worked out from as evidence (people.ts)",
   inbound:
     'an inference can not rest on inbound transfers alone: anyone can send anything to anyone',
 };
@@ -101,6 +103,16 @@ export function publiclySourced(c: Claim): boolean {
 
 /** A name a public source ties to the address: a `named` claim, publicly sourced. */
 export const sourcedName = (c: Claim): boolean => c.verb === 'named' && publiclySourced(c);
+
+/**
+ * A name worked out from traces: a `named` claim, inferred, with its method, resting on a public page, post,
+ * proposal or transaction as evidence. It publishes marked inferred; the claimer answers for it.
+ */
+export const inferredName = (c: Claim): boolean =>
+  c.verb === 'named' &&
+  c.kind === 'inferred' &&
+  !!c.method?.trim() &&
+  c.evidence.some(publicSource);
 
 /** The rule, as far as a machine can check it, for a claim kept where `scope` says. */
 export function peopleRuleIssues(c: Claim, scope: PeopleScope = {}): ValidationIssue[] {
@@ -140,9 +152,10 @@ export function peopleRuleIssues(c: Claim, scope: PeopleScope = {}): ValidationI
   for (const [path, text] of texts)
     if (text !== undefined && FORBIDDEN_WORDS.test(text)) add(path, 'vocabulary', REASON.word);
 
-  // Names: allowed in a person's own project; published only as a public source states them.
+  // Names: allowed in a person's own project; published as a public source states them, or inferred from public
+  // evidence with the method that did it.
   if (!scope.private) {
-    const sourced = publiclySourced(c);
+    const sourced = publiclySourced(c) || inferredName(c);
     if (c.verb === 'named' && !sourced) add('/object/value', 'no_free_text_name', REASON.name);
     const words: [string, string | undefined][] = [
       // a sourced note says what its source says; any other note, or a type, is the claimer's own words

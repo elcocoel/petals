@@ -52,9 +52,9 @@ describe("Codex's CSV as annotations", () => {
       method: 'codex/research@2026-11-10',
       qualifiers: { grounds: 'research' },
     });
-    // kept in a person's own project; published, a name goes only as a proposal declares it (people.ts, 12 Nov)
+    // kept in a person's own project; published, the worked-out one goes as an inferred claim (people.ts)
     for (const c of claims) expect(validateClaim(c, { private: true }).ok).toBe(true);
-    expect(claims.map((c) => validateClaim(c).ok)).toEqual([true, false]);
+    expect(claims.map((c) => validateClaim(c).ok)).toEqual([true, true]);
     expect(refused).toEqual([
       { row: 3, name: 'Nobody', why: ['not an address on eip155:100: not-an-address'] },
     ]);

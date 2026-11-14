@@ -122,7 +122,7 @@ const layerAbout = (about: string, from: string[] = [], value = '3'): Layer =>
     standing: 'verified',
   }) as unknown as Layer;
 
-/** A name the DAO's own records tie to the pool, and one worked out from traces. */
+/** A name the DAO's own records tie to the pool, and one worked out from traces with nothing public behind it. */
 const DECLARED = {
   subject: POOL,
   verb: 'named',
@@ -144,7 +144,7 @@ const WORKED_OUT = {
   kind: 'inferred',
   method: 'codex/research@2026-11-10',
   qualifiers: { grounds: 'research' },
-  evidence: [{ type: 'page', url: 'https://astrostakers.com/', quote: 'Astro Stakers' }],
+  evidence: [{ type: 'note', note: 'by timing and style' }],
 };
 
 /** The person's own layer, kept as keep_layer keeps it. */
@@ -215,7 +215,7 @@ describe('the press: a signed version on the shared map', () => {
       expect.objectContaining({
         subject: POOL,
         name: 'Astro Stakers',
-        why: expect.stringMatching(/worked out from traces/),
+        why: expect.stringMatching(/inferred claim with its method/),
       }),
     ]);
     // each layer the press would publish, and what it adds to the map in front (composition.md, section 9)
