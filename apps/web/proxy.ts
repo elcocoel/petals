@@ -7,7 +7,9 @@
 //
 // A page opened with ?invite=<token> (a link handed to someone, /make?invite=…) redeems that invite here, before
 // the page is drawn: the server's session cookie comes back with a move to the same address without the token,
-// so the page opens as a session that holds the invite (and /make lets it in with no wallet).
+// so the page opens as a session that holds the invite (and /make lets it in with no wallet). /judges does the same
+// with the judges' invite, which the site holds in PETAL_JUDGES_INVITE and never in its code, and opens /make;
+// without it, /judges goes to the front page.
 import { type NextRequest, NextResponse } from 'next/server';
 import {
   SITE_HEADER,
@@ -19,8 +21,19 @@ import {
 } from './lib/server.ts';
 
 export async function proxy(request: NextRequest) {
+  if (request.nextUrl.pathname === '/judges') {
+    const judges = process.env.PETAL_JUDGES_INVITE;
+    const to = request.nextUrl.clone();
+    to.search = '';
+    to.pathname = judges ? '/make' : '/';
+    return judges ? redeem(request, judges, to) : NextResponse.redirect(to);
+  }
   const invite = request.nextUrl.searchParams.get('invite');
-  if (invite && !request.nextUrl.pathname.startsWith('/api/')) return redeem(request, invite);
+  if (invite && !request.nextUrl.pathname.startsWith('/api/')) {
+    const to = request.nextUrl.clone();
+    to.searchParams.delete('invite');
+    return redeem(request, invite, to);
+  }
   const headers = new Headers(request.headers);
   const visitor = visitorOf(request.headers);
   if (visitor) headers.set(VISITOR_HEADER, visitor);
@@ -35,8 +48,8 @@ export async function proxy(request: NextRequest) {
   });
 }
 
-/** Redeems an invite for this visitor's session (a new one if they have none) and moves to the address without it. */
-async function redeem(request: NextRequest, token: string): Promise<NextResponse> {
+/** Redeems an invite for this visitor's session (a new one if they have none) and moves to `to`, the cookie with it. */
+async function redeem(request: NextRequest, token: string, to: URL): Promise<NextResponse> {
   // a call from this site's own server, not from a page: no Origin, which the server reads only from browsers
   const headers = new Headers({ 'content-type': 'application/json' });
   const cookie = request.headers.get('cookie');
@@ -51,8 +64,6 @@ async function redeem(request: NextRequest, token: string): Promise<NextResponse
     headers,
     body: JSON.stringify({ token }),
   }).catch(() => null);
-  const to = request.nextUrl.clone();
-  to.searchParams.delete('invite');
   const moved = NextResponse.redirect(to);
   for (const set of answer?.headers.getSetCookie() ?? []) moved.headers.append('set-cookie', set);
   return moved;
@@ -72,6 +83,7 @@ export const config = {
     '/petal.mjs',
     '/d/:path*',
     '/s/:path*',
+    '/judges',
     { source: '/:path*', has: [{ type: 'query', key: 'invite' }] },
   ],
 };
