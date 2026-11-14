@@ -46,9 +46,13 @@ describe('the landing page', () => {
     for (const href of new Set(hrefs)) {
       if (href.startsWith('/#')) expect(anchors, href).toContain(href.slice(2));
       else if (href.startsWith(`${siteLinks.docs}/`)) expect(docs, href).toContain(href);
-      // off the site, only Petals' own code on GitHub and the maker's site
+      // off the site, only Petals' own code on GitHub, the maker's site and Petals' Telegram
       else if (href.startsWith('https://'))
-        expect([siteLinks.github, siteLinks.elementaryComplexity]).toContain(href);
+        expect([
+          siteLinks.github,
+          siteLinks.elementaryComplexity,
+          siteLinks.socials.telegram,
+        ]).toContain(href);
       else expect(routes[href.split(/[?#]/)[0] as string], href).toBeDefined();
     }
   });
