@@ -6,7 +6,7 @@ import { accountRef } from '@petal/core';
 import type { Spec } from '@petal/core/types';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { MapWallet } from '../landscape/LandscapeCanvas.tsx';
-import { readDrawingSpec, readMapDrawing, saveSettings } from '../lib/agent-client.ts';
+import { readDrawingSpec, readMapDrawing, readTip, saveSettings } from '../lib/agent-client.ts';
 import { aboutLine } from '../lib/ask-about.ts';
 import { ceremonyWords, creating, making, turnShow } from '../lib/ceremony.ts';
 import {
@@ -14,6 +14,7 @@ import {
   modelOptions,
   modelPill,
   type Settings,
+  turnPrice,
   withModel,
 } from '../lib/composer-options.ts';
 import { decodeDraft } from '../lib/draft.ts';
@@ -75,8 +76,10 @@ export function useWorkspace(props: {
   initialPetal?: string | null;
   /** What a person can pick from. Null: the API couldn't say, so there's nothing to pick. */
   catalogue?: Catalogue | null;
+  /** let in on a funded invite, with no wallet (app/(work)/make/page.tsx) */
+  invited?: boolean;
 }) {
-  const { shelf, initialElsewhere, catalogue = null, ...chatProps } = props;
+  const { shelf, initialElsewhere, catalogue = null, invited = false, ...chatProps } = props;
   const { state: chat, dispatch, actions: chatActions, refs } = useMakeChat(chatProps);
   const { rows, open, petal, section, busy, runId, question, items, recorded, asked } = chat;
 
@@ -221,9 +224,12 @@ export function useWorkspace(props: {
   // Read when the page opens, and again when a turn starts or ends here: nothing runs on a timer.
   const session = useSession(!recorded);
   // Another agent's conversation needs no wallet here: nothing here is spent on it.
-  const needsWallet = !recorded && !initialElsewhere && session.known && !session.account;
+  // An invite pays for the chats of a visitor it let in, so no wallet is asked for.
+  const needsWallet =
+    !recorded && !initialElsewhere && !invited && session.known && !session.account;
   // Until the server has said who's here, nothing offers to send or to connect.
-  const composerShown = recorded || Boolean(initialElsewhere) || Boolean(session.account);
+  const composerShown =
+    recorded || Boolean(initialElsewhere) || invited || Boolean(session.account);
   // Jobs handed to the person's own agent, in the conversation the newest one names.
   const jobsIn = useMemo(
     () => items.findLast((i) => i.kind === 'job')?.job.exploration ?? null,
@@ -256,7 +262,8 @@ export function useWorkspace(props: {
   const funds = panelBus.person?.funds;
   // Credit is added in the lobby's Balance, not in the conversation: with none left, the composer points there.
   const threadRows = shownRows;
-  const noCredit = !recorded && !initialElsewhere && funds?.balance?.usd === '0.00';
+  // A visitor on an invite has no balance of their own to read (the invite pays), so none shows and no credit is asked.
+  const noCredit = !recorded && !initialElsewhere && !invited && funds?.balance?.usd === '0.00';
 
   // Only the conversation's own flower stands on the canvas: before it draws one, it's empty ground.
   const onCanvas = canvas;
@@ -317,6 +324,20 @@ export function useWorkspace(props: {
   const [picked, setPicked] = useState<Settings | null>(null);
   const settings = picked ?? conversation?.settings ?? catalogue?.default ?? null;
   const showModel = Boolean(catalogue && settings && !recorded && !initialElsewhere);
+  // the person's tip (price/v2), read once they're signed in: what a turn costs them includes it
+  const [tip, setTip] = useState<number | null>(null);
+  const signedIn = Boolean(session.account);
+  useEffect(() => {
+    if (!signedIn) return;
+    let gone = false;
+    void readTip().then(
+      (t) => !gone && setTip(t?.tip_percent ?? null),
+      () => {},
+    );
+    return () => {
+      gone = true;
+    };
+  }, [signedIn]);
   const [modelsOpen, setModelsOpen] = useState(false);
 
   // The box's cursor once there's a box to be in, after the server says who's here.
@@ -447,7 +468,7 @@ export function useWorkspace(props: {
       panelEdge: panelBus.edge,
       jobs,
       jobControls,
-      balance: funds?.balance ? payWords.balance(funds.balance) : null,
+      balance: funds?.balance && !invited ? payWords.balance(funds.balance) : null,
       /** none left to spend: the composer links to the lobby's Balance, where credit is added */
       noCredit,
       session,
@@ -463,6 +484,11 @@ export function useWorkspace(props: {
           ? modelOptions(catalogue, settings, funds?.where?.near_usd ?? null)
           : [],
       modelsOpen: showModel && modelsOpen,
+      /** what a turn costs with the model picked, the tip included, beside the balance; null until one is measured */
+      turn:
+        showModel && catalogue && settings
+          ? turnPrice(catalogue, settings, tip, funds?.where?.near_usd ?? null)
+          : null,
       recorded,
     },
     actions: {

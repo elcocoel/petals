@@ -547,10 +547,15 @@
         "already",
         "on the map",
         "what do we have",
-        "what we found"
+        "what we found",
+        "highest",
+        "most",
+        "biggest",
+        "largest"
       ],
       "tools": [
         "look_up",
+        "rank_maps",
         "get_map",
         "find_voting_blocs",
         "list_payouts",
@@ -566,7 +571,7 @@
       ],
       "status": "ready",
       "file": "investigation/on-the-map.md",
-      "sha256": "874f04c4ad11ddae9bdd2c7d26d38e062997a866c38ff9d65c58bcc93a23a24a"
+      "sha256": "805554acbec8136db0ada06630741d2e95c0cea5f75b144939f2b7ce0fb3f985"
     },
     {
       "id": "open-calls",
@@ -1432,10 +1437,13 @@
         "take me",
         "go to",
         "open",
+        "show me",
         "what's there",
         "already",
         "on the map",
-        "what we found"
+        "what we found",
+        "highest",
+        "most"
       ],
       "load": [
         "on-the-map"

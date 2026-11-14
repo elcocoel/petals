@@ -27,7 +27,7 @@ done
 [ -z "$cap" ] || export PETAL_LLM_DAILY_USD="$cap"
 if [ "$public" = 1 ]; then
   export PETAL_PUBLIC=1
-  unset PETAL_WRITER_KEY_FILE
+  # It keeps the map writer's key file: a person signed in publishes their own flower through it (wall 5)
   # The site key: the server answers nothing but health without it, and won't start public without it.
   export PETAL_SITE_KEY_FILE=/secrets/petal-site-key
   unset PETAL_SITE_KEY

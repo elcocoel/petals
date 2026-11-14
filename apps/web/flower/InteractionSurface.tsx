@@ -67,6 +67,8 @@ export function InteractionSurface({
   initialRun?: string | undefined;
   /** The conversation this page follows, from the address (`?elsewhere=`). */
   initialElsewhere?: string | undefined;
+  /** let in on a funded invite, with no wallet: the composer is there and no wallet is asked for */
+  invited?: boolean;
   catalogue?: Catalogue | null;
   initialQuestion: string | null;
   recorded: boolean;
@@ -389,6 +391,7 @@ export function InteractionSurface({
                             {state.pill}
                           </Button>
                         )}
+                        {state.turn && <span className="type-mono text-muted">{state.turn}</span>}
                         {state.balance && (
                           <span className="type-mono text-muted">
                             {state.balance}

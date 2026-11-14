@@ -147,8 +147,6 @@ export const panelWords = {
     scale: 'Scale',
     /** How a number grows into a petal's size: as it is, or softened. */
     scales: { sqrt: 'Softened', linear: 'As it is', log: 'Much softened' },
-    /** A dimension no data takes yet, on hover. */
-    nothingFits: 'No data takes this yet',
     /** Highlight, on hover, until a chosen group comes with the data. */
     highlightSoon: 'Comes with a chosen group of petals',
     reset: 'Put the default back',

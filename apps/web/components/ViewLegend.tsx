@@ -280,9 +280,6 @@ function DimensionRows({
         <DimensionInput d={d} view={view} pieces={pieces} edit={edit} />
       </ToolRow>
       <ScaleRow d={d} view={view} pieces={pieces} edit={edit} />
-      {edit && edit.choices[d].length === 0 && dataOf(view, d) === null && (
-        <Note>{words.nothingFits}</Note>
-      )}
       {d === 'colour' && drawn.colour !== null && gradeKeys && (
         <ColourGrade grade={gradeKeys} edit={edit} />
       )}
@@ -362,6 +359,10 @@ export function ViewLegend({
   const [highlightOpen, setHighlightOpen] = useState(true);
   const [mapOpen, setMapOpen] = useState(true);
   const rows = { view, drawn, pieces, keys, keysNote, gradeKeys, edit };
+  // a dimension no data can go in yet isn't offered: it comes back when data fits it
+  const offered = (d: Dimension) => !edit || edit.choices[d].length > 0 || dataOf(view, d) !== null;
+  const petals = PETALS.filter(offered);
+  const more = MORE.filter(offered);
   const body = (
     <>
       <SectionHead
@@ -371,19 +372,19 @@ export function ViewLegend({
       />
       {petalsOpen && (
         <div className="flex flex-col py-space-4">
-          {PETALS.map((d) => (
+          {petals.map((d) => (
             <DimensionRows key={d} d={d} {...rows} />
           ))}
         </div>
       )}
       <SectionHead
         size="panel"
-        title={panelWords.legendMore(MORE.length)}
+        title={panelWords.legendMore(more.length)}
         fold={{ open: moreOpen, onToggle: () => setMoreOpen((now) => !now) }}
       />
       {moreOpen && (
         <div className="flex flex-col py-space-4">
-          {MORE.map((d) => (
+          {more.map((d) => (
             <DimensionRows key={d} d={d} {...rows} />
           ))}
         </div>

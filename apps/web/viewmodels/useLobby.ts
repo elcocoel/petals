@@ -22,7 +22,9 @@ import {
 } from '../lib/agent-client.ts';
 import { contributionView } from '../lib/contribution-view.ts';
 import { evmWallets } from '../lib/evm-wallet.ts';
-import { fundsWords } from '../lib/lobby-view.ts';
+import { shortId } from '../lib/flower-view.ts';
+import { fundsWords, nearExact } from '../lib/lobby-view.ts';
+import { money, moneyWords, payWords, sentBy, yoctoOf } from '../lib/pay.ts';
 import { PHONE } from '../lib/phone-wallet.ts';
 import {
   type AddWalletPhase,
@@ -38,7 +40,7 @@ import {
 } from '../lib/profile-view.ts';
 import { solanaWallets } from '../lib/solana-wallet.ts';
 import { tipLine } from '../lib/tip.ts';
-import { connectWallet, SIGN_IN_NETWORK, signPrepared } from '../lib/wallet.ts';
+import { connectWallet, SIGN_IN_NETWORK, sendFrom, signPrepared } from '../lib/wallet.ts';
 import { usePay } from './usePay.ts';
 import { usePowerQuote } from './usePowerQuote.ts';
 import { evmProof, solanaProof } from './useSession.ts';
@@ -118,6 +120,45 @@ export function useLobby() {
   // or any other token, from any chain, through NEAR Intents, beside it in the same row
   const topUp = useTopUp(asking, paid, pay);
   const nearUsd = funds.where?.near_usd ?? null;
+  // the other-token fields are laid out from the start: their token list is read once, now
+  const openTopUp = useRef(topUp.actions.open);
+  useEffect(() => openTopUp.current(), []);
+
+  // Withdraw: the panel's one amount, out of the wallet's own balance in the contract, back to it. Any NEAR
+  // wallet may send it; the chain answers for what it holds.
+  const [withdrawing, setWithdrawing] = useState(false);
+  const [took, setTook] = useState<string | null>(null);
+  /** which press spoke last: the panel's one line is its */
+  const [last, setLast] = useState<'add' | 'withdraw' | null>(null);
+  const usdNow = Number(pay.usd.replace(/,/g, '')) || 0;
+  const takeNear = nearUsd && nearUsd > 0 ? Math.floor((usdNow / nearUsd) * 1000) / 1000 : 0;
+  const takeYocto = takeNear > 0 ? yoctoOf(takeNear) : null;
+  const held = funds.held;
+  const withdraw = useCallback(() => {
+    const where = funds.where;
+    if (!where || !takeYocto) return;
+    setLast('withdraw');
+    setTook(null);
+    setWithdrawing(true);
+    void sendFrom(where.network, where.receiver, {
+      type: 'FunctionCall',
+      params: {
+        methodName: 'withdraw',
+        args: { amount: takeYocto },
+        gas: '30000000000000',
+        deposit: '1',
+      },
+    })
+      .then((answer) => {
+        const sent = sentBy(answer);
+        setTook(
+          sent ? fundsWords.took(String(takeNear), shortId(sent.account)) : fundsWords.failed,
+        );
+        funds.reread();
+      })
+      .catch((e) => setTook(walletRefusal(profilePageWords.nearWallet, e)))
+      .finally(() => setWithdrawing(false));
+  }, [funds, takeYocto, takeNear]);
   const usageShown = useMemo(
     () => (typeof usage === 'string' ? usage : usageView(usage.calls, usage.spent, nearUsd)),
     [usage, nearUsd],
@@ -245,20 +286,43 @@ export function useLobby() {
     contribution: typeof credit === 'string' ? credit : contributionView(credit),
     quote,
     menu: { open: menuOpen, toggle: toggleMenu, close: closeMenu },
-    add: {
-      row: {
-        phase: pay.phase,
-        added: pay.added,
-        onPay: pay.pay,
-        topUp,
-        label: pay.label,
-        amount: pay.amount,
-        failedWords: pay.failedWords,
-        canPay: pay.canPay,
-        // the lobby's own words: what adding is here, not the chat's first-question line
-        line: funds.where?.method === 'deposit' ? fundsWords.addDeposit : fundsWords.addTransfer,
-        addedWords: fundsWords.added,
+    money: {
+      held: funds.held !== null ? nearExact(funds.held) : null,
+      // the one amount both presses act on
+      amount: pay.amount ? { ...pay.amount, label: fundsWords.amount } : null,
+      add: {
+        label: pay.phase === 'paying' ? payWords.paying : pay.label,
+        canPress: pay.canPay && pay.phase !== 'paying',
+        onPress: () => {
+          setLast('add');
+          pay.pay();
+        },
       },
+      withdraw:
+        held === null
+          ? null
+          : {
+              label: withdrawing
+                ? payWords.paying
+                : `${fundsWords.withdraw} ${moneyWords(money(usdNow, nearUsd))}`,
+              canPress: !withdrawing && takeYocto !== null && BigInt(takeYocto) <= BigInt(held),
+              onPress: withdraw,
+            },
+      line: funds.signer ? payWords.fundsFor(shortId(funds.signer)) : null,
+      topUp,
+      // the last press's outcome, in one line; the next press clears it
+      status:
+        last === 'add'
+          ? pay.phase === 'added' && pay.added
+            ? funds.where?.method === 'deposit'
+              ? pay.added
+              : payWords.added(pay.added)
+            : pay.phase === 'failed'
+              ? pay.failedWords
+              : null
+          : last === 'withdraw'
+            ? took
+            : null,
     },
     tip: {
       percent: tipped.percent,

@@ -80,6 +80,8 @@ describe('inputs and outputs match their schemas (near-validators fixture)', () 
     // the map the flow drew is on the Power Map: look_up gives its id, get_map what it holds
     const [onMap] = found.maps as { id: string }[];
     await run('get_map', { map: onMap?.id ?? 'none' });
+    // the maps in order of a figure their cards hold, at once
+    await run('rank_maps', { by: 'holders', limit: 3 });
     await run(
       'list_publishable',
       { map: onMap?.id ?? 'none' },

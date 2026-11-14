@@ -84,6 +84,11 @@ export interface ToolDef<I, O> {
    * person's own agent runs it on their machine instead.
    */
   onTheirMachine?: boolean;
+  /**
+   * With onTheirMachine: a public site that holds its map writer's key runs it for a person signed in with their
+   * wallet (a flower's publish: their own wallet signs it), and still refuses anyone else.
+   */
+  signedInOnSite?: boolean;
   run(input: I, ctx: ToolContext): Promise<O | ToolError>;
 }
 
@@ -173,7 +178,11 @@ export function defineTool<I, O extends object>(def: ToolDef<I, O>): PetalTool<I
     output,
     async run(raw: I, ctx: ToolContext): Promise<Versioned<O> | Versioned<ToolError>> {
       // First, so a refused call reads nothing, not even its input.
-      if (def.onTheirMachine === true && ctx.config.public)
+      if (
+        def.onTheirMachine === true &&
+        ctx.config.public &&
+        !(def.signedInOnSite === true && ctx.map.writer && ctx.caller?.by)
+      )
         return versioned(notOnThisSite(def.name, ctx.config.apiBase));
       const i = raw === undefined || raw === null ? ({} as I) : raw;
       if (!check(i)) return versioned(toolError('bad_input', describeErrors(check.errors), hint));

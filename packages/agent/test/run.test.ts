@@ -8,7 +8,7 @@ import { runAgent } from '../src/index.ts';
 import { type Budget, DEFAULT_BUDGET, type LlmClient } from '../src/llm.ts';
 import { LlmCallError } from '../src/near-ai.ts';
 import { HAND_TRANSCRIPT, recordedClient } from '../src/recorded.ts';
-import { type RunOptions, SKILL_HINT, startRun } from '../src/run.ts';
+import { type RunOptions, STOPPED_AT, startRun } from '../src/run.ts';
 import { draftLink } from '../src/summary.ts';
 import {
   agreed,
@@ -409,18 +409,18 @@ describe('limits', () => {
     expect(pick(es, 'tool_call')).toHaveLength(2);
     expect(seen).toHaveLength(3);
     expect(seen[2]).toBeUndefined();
-    expect(pick(es, 'error')[0]?.data).toMatchObject({
+    // plain words, no code word and no sending them away: the conversation goes on
+    expect(pick(es, 'error')[0]?.data).toEqual({
       code: 'budget_exhausted',
-      hint: SKILL_HINT,
+      message: STOPPED_AT.rounds,
     });
-    expect(pick(es, 'error')[0]?.data.message).toMatch(/2 tool rounds/);
     expect(names(es).at(-1)).toBe('done');
   });
 
   test('wall time: the chat stops when its seconds are up', async () => {
     const es = await collect(run(slowRecorded(80), { budget: { wallSeconds: 0.2 } }).events);
     expect(pick(es, 'error')[0]?.data).toMatchObject({ code: 'budget_exhausted' });
-    expect(pick(es, 'error')[0]?.data.message).toMatch(/0.2 s/);
+    expect(pick(es, 'error')[0]?.data.message).toBe(STOPPED_AT.time);
     expect(names(es).at(-1)).toBe('done');
     expect(pick(es, 'flower')).toHaveLength(0);
   });
@@ -436,21 +436,19 @@ describe('limits', () => {
     );
     const es = await collect(run(llm).events);
     expect(llm.requests).toHaveLength(2);
-    expect(pick(es, 'error')[0]?.data.message).toMatch(/\$0.05 budget/);
+    expect(pick(es, 'error')[0]?.data.message).toBe(STOPPED_AT.spend);
     expect(pick(es, 'done')[0]?.data.cost_usd).toBe(0.06);
   });
 
-  test('the daily cap: no model call, budget_exhausted pointing to the skill', async () => {
+  test('the daily cap: no model call, budget_exhausted in plain words, sending no one away', async () => {
     const ledger = memoryLedger();
     await ledger.add(3);
     const llm = scriptedLlm([{ content: 'never' }]);
     const es = await collect(run(llm, { budget: { ledger } }).events);
     expect(llm.requests).toHaveLength(0);
     expect(names(es)).toEqual(['run', 'stage', 'error', 'done']);
-    expect(pick(es, 'error')[0]?.data).toMatchObject({
-      code: 'budget_exhausted',
-      hint: SKILL_HINT,
-    });
+    expect(pick(es, 'error')[0]?.data).toMatchObject({ code: 'budget_exhausted' });
+    expect(pick(es, 'error')[0]?.data.hint).toBeUndefined();
   });
 
   test('the daily cap holds inside a chat: no further model call once it is reached', async () => {

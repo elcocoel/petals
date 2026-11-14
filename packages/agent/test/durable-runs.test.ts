@@ -20,7 +20,7 @@ import {
 } from '../src/llm.ts';
 import { LlmCallError } from '../src/near-ai.ts';
 import { type AgentRouteOptions, createAgentRoutes } from '../src/routes.ts';
-import { STOPPED } from '../src/run.ts';
+import { STOPPED, STOPPED_AT } from '../src/run.ts';
 import { INTERRUPTED, interruptRuns, type RunStore, sqliteRunStore } from '../src/runs.ts';
 import { fakeContext, fakeRegistry, parseSse, runIdOf, type SseEvent, tmpRoot } from './helpers.ts';
 
@@ -544,6 +544,6 @@ describe('the boot scan', () => {
     );
     const id = await startRun(app);
     await until(async () => (await read(app, id)).status !== 'running', 'the limit');
-    expect(JSON.stringify((await read(app, id)).events)).toContain('ran past its 0.05 s');
+    expect(JSON.stringify((await read(app, id)).events)).toContain(STOPPED_AT.time);
   });
 });

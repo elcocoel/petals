@@ -35,6 +35,12 @@ export const fundsWords = {
   /** The credit or NEAR's price couldn't be read. */
   unread: 'Your balance can’t be read right now.',
   withdraw: 'Withdraw',
+  /** The panel's one amount, which both Add and Withdraw act on. */
+  amount: 'Dollars',
+  /** Over the other-token fields, laid out in the panel. */
+  otherToken: 'Or pay with another token, from any chain',
+  /** What a withdrawal of some of the balance did. */
+  took: (near: string, to: string) => `Withdrew ${near} NEAR to ${to}.`,
   /** Beside Withdraw: what it takes out, which is everything the person holds in the contract. */
   /** Withdraw's own words while the contract holds something: what it takes out, as Add says what it adds. */
   withdrawAmount: (m: Money) => `Withdraw ${moneyWords(m)}`,
@@ -256,6 +262,14 @@ const YOCTO_PER_HUNDREDTH = 10n ** 22n;
 export function nearOf(yocto: string): string {
   const hundredths = (BigInt(yocto) + YOCTO_PER_HUNDREDTH / 2n) / YOCTO_PER_HUNDREDTH;
   return `${hundredths / 100n}.${(hundredths % 100n).toString().padStart(2, '0')}`;
+}
+
+/** yoctoNEAR as NEAR to five places, trailing zeros dropped ('0.27904'): the contract's own figure. */
+export function nearExact(yocto: string): string {
+  const units = BigInt(yocto) / 10n ** 19n;
+  const whole = units / 100000n;
+  const part = (units % 100000n).toString().padStart(5, '0').replace(/0+$/, '');
+  return part ? `${whole}.${part}` : `${whole}`;
 }
 
 /** Withdraw takes something out while the contract holds something for the person. */
