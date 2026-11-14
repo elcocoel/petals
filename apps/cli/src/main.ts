@@ -707,7 +707,7 @@ class Cli {
       "  join <key> --as <n> join the person's Petals as one of their agents, with their agent key\n",
     );
     p(
-      "  jobs wait           the next job Petals' agent hands you, or none yet (--worker <id>, --for <seconds>)\n",
+      "  jobs wait           the next job Petals' agent hands you, or none yet (--worker <id>, --for <seconds>: 10 to 3600, 570 by default)\n",
     );
     if (!this.sys.asFile) {
       p(`  api                 the HTTP API (petalApp) on http://localhost:${DEFAULT_PORT}\n`);
