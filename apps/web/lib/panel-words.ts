@@ -109,6 +109,8 @@ export const panelWords = {
   legendOnMap: 'On the map',
   legendBlocs: 'Voting blocs',
   legendGravity: 'Gravity',
+  legendConfidence: 'Confidence',
+  legendConfidenceDoes: 'Hides insights scored below it; an unscored one counts as 0',
   legendVotes: 'Votes',
   /** What the map's Tools turn on and off (insights, pricing and the rest). */
   legendWorth: 'Treasury and price',
