@@ -11,6 +11,7 @@ export {
 } from './observed.ts';
 export {
   FORBIDDEN_WORDS,
+  inferredName,
   PERSON_NAMESPACES,
   type PeopleScope,
   peopleRuleIssues,

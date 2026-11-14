@@ -523,7 +523,7 @@ export const listPublishable = defineTool<
     'accounts) and could publish to the shared Power Map with one press on that map, signed by their own wallet ' +
     'and credited to them: each item one per row (its name, address, source and a confidence from the search ' +
     "model's reranker, how strongly its own evidence says it), which stay private and why (the people rule: a name goes as a claim when a public " +
-    'source, a record, a page or a post, ties it to the account in its own words, quoted; a name worked out from traces stays private), and how many are published already. It publishes nothing; never sign for them. ' +
+    'source, a record, a page or a post, ties it to the account in its own words, quoted, or as an inferred claim when worked out from traces, with its method and that public evidence), and how many are published already. It publishes nothing; never sign for them. ' +
     "A person's own agent names their project by its link (exploration); on the site it's the person signed in.",
   input: obj(
     ['map'],

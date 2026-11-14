@@ -30,6 +30,7 @@ export {
   EVIDENCE_TYPES,
   GROUNDS,
   groupRef,
+  inferredName,
   isMetaVerb,
   isVerb,
   kindOfIdentityStatus,

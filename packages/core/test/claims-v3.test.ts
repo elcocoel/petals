@@ -4,7 +4,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, test } from 'vitest';
-import { applyPolicy, makeClaim, validateClaim } from '../src/claims/index.ts';
+import { applyPolicy, inferredName, makeClaim, validateClaim } from '../src/claims/index.ts';
 import { namePieces } from '../src/seam.ts';
 import type { Claim, ClaimDraft, ClaimEvidence, Snapshot } from '../src/types/index.ts';
 
@@ -298,27 +298,43 @@ describe('a published name, as a public source states it (people.ts)', () => {
     expect(ok(named([page])).ok).toBe(true);
   });
 
-  test("a source not quoted, a name worked out from traces, or a note that names someone stays in a person's own project", () => {
+  test("a source not quoted, or a note that names someone, stays in a person's own project", () => {
     const { quote: _q, ...unquoted } = proposal;
     expect(ok(named([unquoted])).ok).toBe(false);
     const bare = named([{ type: 'page', url: 'https://example.org/', ...found }]);
     expect(ok(bare).ok).toBe(false);
     expect(ok(bare, { private: true }).ok).toBe(true);
-    const worked = v3({
-      subject: ADA,
-      verb: 'named',
-      object: { value: 'Dekan' },
-      issued_at: WHEN,
-      kind: 'inferred',
-      method: 'codex/research@2026-11-10',
-      qualifiers: { grounds: 'research' },
-      evidence: [
-        { type: 'post', url: 'https://x.com/dekan/status/1', platform: 'x', quote: 'gm', ...found },
-      ],
-      by: PERSON,
-    });
-    expect(ok(worked).ok).toBe(false);
-    expect(ok(worked, { private: true }).ok).toBe(true);
     expect(ok(named([{ ...proposal, note: 'Also Jane Doe in #245' }])).ok).toBe(false);
+  });
+
+  test('a name worked out from traces publishes as an inferred claim, with its method and its public evidence', () => {
+    const worked = (evidence: ClaimEvidence[]) =>
+      v3({
+        subject: ADA,
+        verb: 'named',
+        object: { value: 'Dekan Smith' },
+        issued_at: WHEN,
+        kind: 'inferred',
+        method: 'codex/research@2026-11-10',
+        qualifiers: { grounds: 'research' },
+        evidence,
+        by: PERSON,
+      });
+    const xpost = {
+      type: 'post' as const,
+      url: 'https://x.com/dekan/status/1',
+      platform: 'x',
+      ...found,
+    };
+    const c = worked([{ ...xpost, quote: 'Dekan Smith here, gm' }]);
+    expect(inferredName(c)).toBe(true);
+    expect(ok(c).ok).toBe(true);
+    // nothing public it rests on: it stays in the person's own project
+    const unsourced = worked([{ type: 'note', note: 'by timing', ...found }]);
+    expect(ok(unsourced).ok).toBe(false);
+    expect(ok(unsourced, { private: true }).ok).toBe(true);
+    // the vocabulary and the claimer's own notes are checked as for any published claim
+    expect(ok(worked([{ ...xpost, quote: 'a known scammer' }])).ok).toBe(false);
+    expect(ok(worked([{ ...xpost, note: 'Also Jane Doe' }])).ok).toBe(false);
   });
 });
