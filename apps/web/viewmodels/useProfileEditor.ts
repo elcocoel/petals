@@ -12,7 +12,7 @@
 // `social` has no contract, so every receipt fails with CodeDoesNotExist, as expected: confirmation comes
 // from the indexer (GET /v1/tx/{hash}), never from the receipt. The waits ask a few times, a moment apart,
 // and only after the person pressed Publish. lib/near-social.ts holds the data and lib/lobby-view.ts the words.
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   fastfsServes,
   readKeptPicture,
@@ -161,15 +161,21 @@ export function useProfileEditor(
   const [problem, setProblem] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [published, setPublished] = useState(false);
+  /** the wallet named another account: the next press signs it in afresh */
+  const [switching, setSwitching] = useState(false);
   /** The NEAR account it publishes as: undefined while it's read, null when the person has none. */
   const [near, setNear] = useState<string | null | undefined>(undefined);
 
+  /** The read of that account while it runs, so a Save pressed before it ends waits for it. */
+  const nearRead = useRef<Promise<string | null>>(Promise.resolve(null));
+
   /** Reads which NEAR account it publishes as, when the editor opens: every account starts with one. */
   const readNear = useCallback(() => {
-    void Promise.all([readSignedIn(), readWallets()]).then(
-      ([me, wallets]) => setNear(nearAccountOf(me, wallets ?? [])),
-      () => setNear(null),
+    nearRead.current = Promise.all([readSignedIn(), readWallets()]).then(
+      ([me, wallets]) => nearAccountOf(me, wallets ?? []),
+      () => null,
     );
+    void nearRead.current.then(setNear);
   }, []);
 
   const open = useCallback(() => {
@@ -204,51 +210,59 @@ export function useProfileEditor(
     }
   }, [picture, kept, draft, reload]);
 
-  const publish = useCallback(async () => {
-    if (!near) return;
-    setProblem(null);
-    try {
-      const wallet = await connectWallet('mainnet', readKept).catch(() => {
-        throw new Stop(editorWords.refused);
-      });
-      if (wallet !== near) throw new Stop(editorWords.otherWallet(wallet, near));
-      // the picture to store: a new one, or the one Petals keeps at its own address (a fastfs:// one is
-      // on NEAR Social already, so it stays as it is)
-      let bytes = picture.bytes;
-      let mime = picture.mime;
-      if (!bytes && picture.src && isPetalsMedia(picture.src)) {
-        const stored = await readKeptPicture(picture.src).catch((e) => {
-          throw new Stop(editorWords.notKept(message(e)));
+  const publish = useCallback(
+    async (near: string) => {
+      setProblem(null);
+      try {
+        const wallet = await connectWallet('mainnet', readKept, switching).catch(() => {
+          throw new Stop(editorWords.refused);
         });
-        bytes = stored.bytes;
-        mime = stored.mime;
-      }
-      let avatar: string | null = null;
-      if (bytes && mime) {
-        setPhase('picturing');
-        const path = fastfsPath(await sha256Hex(bytes), mime);
-        const hash = await send(FASTFS_METHOD, fastfsSimple(path, mime, bytes));
-        setPhase('storing');
+        if (wallet !== near) {
+          setSwitching(true);
+          throw new Stop(editorWords.otherWallet(wallet, near));
+        }
+        setSwitching(false);
+        // the picture to store: a new one, or the one Petals keeps at its own address (a fastfs:// one is
+        // on NEAR Social already, so it stays as it is)
+        let bytes = picture.bytes;
+        let mime = picture.mime;
+        if (!bytes && picture.src && isPetalsMedia(picture.src)) {
+          const stored = await readKeptPicture(picture.src).catch((e) => {
+            throw new Stop(editorWords.notKept(message(e)));
+          });
+          bytes = stored.bytes;
+          mime = stored.mime;
+        }
+        let avatar: string | null = null;
+        if (bytes && mime) {
+          setPhase('picturing');
+          const path = fastfsPath(await sha256Hex(bytes), mime);
+          const hash = await send(FASTFS_METHOD, fastfsSimple(path, mime, bytes));
+          setPhase('storing');
+          accepted(await confirmed(hash));
+          if (!(await served(fastfsUrl(near, path)))) throw new Stop(editorWords.slow);
+          avatar = fastfsUri(near, path);
+        }
+        setPhase('signing');
+        const hash = await send(KV_METHOD, profileArgs(profile, draft, avatar));
+        setPhase('checking');
         accepted(await confirmed(hash));
-        if (!(await served(fastfsUrl(near, path)))) throw new Stop(editorWords.slow);
-        avatar = fastfsUri(near, path);
+        // Petals keeps what was published, the picture at its fastfs:// address, so the two say the same
+        await saveMyProfile(
+          toPetals(draft, avatar ?? kept?.avatar ?? keptAvatar(picture.src), kept),
+        );
+        await reload();
+        setEditing(false);
+        setSaved(false);
+        setPublished(true);
+        setPhase('editing');
+      } catch (e) {
+        setProblem(e instanceof Stop ? e.message : editorWords.refused);
+        setPhase('failed');
       }
-      setPhase('signing');
-      const hash = await send(KV_METHOD, profileArgs(profile, draft, avatar));
-      setPhase('checking');
-      accepted(await confirmed(hash));
-      // Petals keeps what was published, the picture at its fastfs:// address, so the two say the same
-      await saveMyProfile(toPetals(draft, avatar ?? kept?.avatar ?? keptAvatar(picture.src), kept));
-      await reload();
-      setEditing(false);
-      setSaved(false);
-      setPublished(true);
-      setPhase('editing');
-    } catch (e) {
-      setProblem(e instanceof Stop ? e.message : editorWords.refused);
-      setPhase('failed');
-    }
-  }, [near, picture, profile, draft, kept, reload]);
+    },
+    [picture, profile, draft, kept, reload, switching],
+  );
 
   const view: ProfileEditorView | null =
     editing && account
@@ -282,8 +296,14 @@ export function useProfileEditor(
           },
           // one Save: with a NEAR account it goes onto NEAR Social, which the person's own NEAR wallet
           // signs and pays for (Petals keeps the same copy after); with none, it's kept on Petals
-          save: () => void (PUBLISH_TO_NEAR_SOCIAL && near ? publish() : save()),
-          onSocial: Boolean(PUBLISH_TO_NEAR_SOCIAL && near),
+          // with a NEAR account it goes onto NEAR Social; a Save pressed while that account is still read waits
+          // for the read, so it never quietly keeps it on Petals only
+          save: () =>
+            void (near !== undefined ? Promise.resolve(near) : nearRead.current).then((account) =>
+              PUBLISH_TO_NEAR_SOCIAL && account ? publish(account) : save(),
+            ),
+          // while the account is read, every account starts with one
+          onSocial: Boolean(PUBLISH_TO_NEAR_SOCIAL && near !== null),
           cancel: () => setEditing(false),
         }
       : null;
