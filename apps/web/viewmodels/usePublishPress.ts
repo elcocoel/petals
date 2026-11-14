@@ -15,6 +15,7 @@ import { asksSignIn, signPublication } from '../lib/publication-sign.ts';
 import {
   nearSigner,
   type PublishPhase,
+  pressRuns,
   publishPressView,
   publishWords,
 } from '../lib/publish-press.ts';
@@ -57,7 +58,7 @@ export function usePublishPress(map: string | null) {
   const signer = useMemo(() => (me ? nearSigner(me) : null), [me]);
   const pressable = Boolean(map && signer && data?.layers?.length);
   useEffect(() => {
-    if (!(pressable && signer) || phase === 'signing') return;
+    if (!(pressable && signer) || pressRuns(phase)) return;
     let gone = false;
     void asksSignIn(signer.wallet)
       .then((asks) => {
@@ -71,10 +72,13 @@ export function usePublishPress(map: string | null) {
   const publish = useCallback(async () => {
     if (!map || !signer || !data?.layers?.length) return;
     const layers = data.layers;
-    setPhase('signing');
+    setPhase('preparing');
     try {
       const p = await preparePublication({ map, author: signer.author });
+      // the wallet's request goes out now: only from here is it waited for
+      setPhase('waiting');
       const proof = await signPublication(signer.wallet, p);
+      setPhase('sending');
       const out = await publishPublication(p.sha256, proof);
       if ('refused' in out) {
         setSaid(out.refused === 401 ? publishWords.otherWallet : publishWords.failed);

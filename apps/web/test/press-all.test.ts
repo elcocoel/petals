@@ -25,27 +25,31 @@ describe('one press over many maps', () => {
   test('a person with nothing anywhere to publish meets no press, only a line saying so', () => {
     expect(pressAllView(null, 'ready', null)).toBeNull();
     const none = pressAllView({ ...READ, maps: [] }, 'ready', null);
-    expect(none?.across).toBe(pressAllWords.none);
+    expect(none?.step).toBe(pressAllWords.none);
     expect(none?.press).toBeNull();
   });
 
   test('a slow read says it is reading, and a refused one says why, never looking empty', () => {
     const reading = pressAllView(null, 'ready', null, false, { reading: true });
-    expect(reading?.across).toBe(pressAllWords.reading);
+    expect(reading?.step).toBe(pressAllWords.reading);
+    expect(reading?.running).toBe(true);
     expect(reading?.press).toBeNull();
     const refused = pressAllView(null, 'ready', null, false, { unread: 'Not signed in.' });
-    expect(refused?.across).toBe(pressAllWords.unread('Not signed in.'));
+    expect(refused?.step).toBe(pressAllWords.unread('Not signed in.'));
     expect(refused?.press).toBeNull();
   });
 
-  test('every map that goes, with its layers, then the press, then why the rest stay', () => {
+  test('the press first, with one line of what goes; the maps and why the rest stay, folded under it', () => {
     const v = pressAllView(READ, 'ready', null);
     if (!v) throw new Error('a press with maps to publish');
-    expect(v.across).toBe(pressAllWords.across(2));
+    expect(v.title).toBe(pressAllWords.what(2, 4));
     expect(v.press).toBe(pressAllWords.press);
     const html = renderToStaticMarkup(
       createElement(PublishPress, { view: v, onPublish: () => {} }),
     );
+    // the press comes before the folded list
+    expect(html.indexOf(pressAllWords.press)).toBeLessThan(html.indexOf('<details'));
+    expect(html.indexOf('<details')).toBeLessThan(html.indexOf('RaidGuild'));
     expect(html).toContain('RaidGuild');
     expect(html).toContain(pressAllWords.layers(3));
     expect(html).toContain('marketing DAO');
@@ -58,8 +62,16 @@ describe('one press over many maps', () => {
     expect(pressAllView(READ, 'ready', null)?.sign).toBe(publishWords.sign);
   });
 
-  test('while the wallet signs, and once it landed', () => {
-    expect(pressAllView(READ, 'signing', null)?.press).toBe(publishWords.signing);
+  test('the true step from the first second: preparing, then the wallet only once it is asked, then sending', () => {
+    expect(pressAllView(READ, 'preparing', null)).toMatchObject({
+      step: pressAllWords.preparing(2),
+      running: true,
+      busy: true,
+    });
+    expect(pressAllView(READ, 'waiting', null)?.step).toBe(publishWords.waiting);
+    expect(pressAllView(READ, 'waiting', null, true)?.step).toBe(publishWords.waitingSignIn);
+    expect(pressAllView(READ, 'sending', null)?.step).toBe(publishWords.sending);
+    expect(pressAllView(READ, 'ready', null)?.step).toBeNull();
     const done = pressAllView(READ, 'published', pressAllWords.published(2));
     expect(done?.press).toBeNull();
     expect(done?.said).toBe('On the shared map in your name: 2 maps.');

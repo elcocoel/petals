@@ -1,13 +1,22 @@
 // Publishing what a person mapped, with one press: the heart of collective mapping. The press publishes one
 // signed version of the layers the Mapping box lists (publication/v1, specs/005-mapping-brain/
 // composition.md §2): the wallet the person chose signs two readable lines once, no transaction, nothing spent,
-// and the layers join the shared map in that wallet's name, credited per fact. The names that go are listed
-// first, each with its source, to look at before the press; the rest stay private, each saying why.
+// and the layers join the shared map in that wallet's name, credited per fact. The press comes first, with one
+// line of what goes and a line that always says the true step (preparing, waiting for the wallet, sending); the
+// names that go, each with its source, and the ones that stay private, each saying why, are folded under it.
 import type { PublishableData, PublishSource } from './agent-client.ts';
 import { shortId } from './flower-view.ts';
 import { type ProvenWallet, walletRows } from './profile-view.ts';
 
-export type PublishPhase = 'ready' | 'signing' | 'published' | 'failed';
+/**
+ * Where a press is: ready; preparing its version (the server's prepare, seconds over many maps); waiting for the
+ * wallet, once its request is out; sending the signed version; then published or failed.
+ */
+export type PublishPhase = 'ready' | 'preparing' | 'waiting' | 'sending' | 'published' | 'failed';
+
+/** The phases a press is running in: its button waits, and its step line runs. */
+export const pressRuns = (p: PublishPhase) =>
+  p === 'preparing' || p === 'waiting' || p === 'sending';
 
 export const publishWords = {
   press: 'Publish in your name',
@@ -15,7 +24,16 @@ export const publishWords = {
   /** when the wallet isn't connected on this page as the author: it signs in first, a new QR by phone */
   signInFirst:
     'Your wallet asks you to sign in, then signs once. By phone, that’s one more scan. Nothing is spent.',
-  signing: 'Waiting for your wallet…',
+  /** the one line of what goes, at the top of the press */
+  what: (layers: number) =>
+    layers === 1 ? 'What you’ve kept here: 1 layer' : `What you’ve kept here: ${layers} layers`,
+  preparing: 'Preparing your version…',
+  /** only once the wallet's request is out */
+  waiting: 'Waiting for your wallet: sign there',
+  waitingSignIn: 'Waiting for your wallet: sign in, then sign',
+  sending: 'Sending it to the shared map…',
+  /** what goes, folded under the press */
+  seeWhatGoes: 'See what goes',
   published: (line: string | null) =>
     line ? `On the shared map in your name: ${line}.` : 'On the shared map in your name.',
   failed: 'That didn’t publish. Try again.',
@@ -88,8 +106,14 @@ export interface PublishRow {
 }
 
 export interface PublishPressView {
+  /** the one line of what goes, over the press; null with no press */
+  title: string | null;
   /** the press, or null when nothing can go now */
   press: string | null;
+  /** the true step, from the first second: preparing, waiting for the wallet, sending, then what happened */
+  step: string | null;
+  /** the step is running now: it ends on a moving cursor */
+  running: boolean;
   sign: string;
   /** the private ones and why, folded */
   why: { label: string; lines: string[] } | null;
@@ -113,7 +137,17 @@ export function publishPressView(
 ): PublishPressView | null {
   if (!data) return null;
   if (phase === 'published')
-    return { press: null, sign: publishWords.sign, why: null, rows: null, said, busy: false };
+    return {
+      title: null,
+      press: null,
+      step: said,
+      running: false,
+      sign: publishWords.sign,
+      why: null,
+      rows: null,
+      said,
+      busy: false,
+    };
   if (!(data.layers?.length && signer)) return null;
   const going: PublishRow[] = (data.claims ?? []).map((c) => ({
     key: c.id,
@@ -134,7 +168,10 @@ export function publishPressView(
     why: p.why,
   }));
   return {
-    press: phase === 'signing' ? publishWords.signing : publishWords.press,
+    title: publishWords.what(data.layers.length),
+    press: publishWords.press,
+    step: stepOf(phase, said, signsIn, publishWords.preparing),
+    running: pressRuns(phase),
     sign: signsIn ? publishWords.signInFirst : publishWords.sign,
     // with the list, the private ones are in it, each with why; without it, folded under one line
     why:
@@ -146,6 +183,28 @@ export function publishPressView(
         ? { goes: publishWords.goes, stays: publishWords.stays, going, staying }
         : null,
     said: phase === 'failed' ? said : null,
-    busy: phase === 'signing',
+    busy: pressRuns(phase),
   };
+}
+
+/** The step line of a press in `phase`: what it's doing now, or what happened; nothing while it's ready. */
+export function stepOf(
+  phase: PublishPhase,
+  said: string | null,
+  signsIn: boolean,
+  preparing: string,
+): string | null {
+  switch (phase) {
+    case 'preparing':
+      return preparing;
+    case 'waiting':
+      return signsIn ? publishWords.waitingSignIn : publishWords.waiting;
+    case 'sending':
+      return publishWords.sending;
+    case 'published':
+    case 'failed':
+      return said;
+    default:
+      return null;
+  }
 }

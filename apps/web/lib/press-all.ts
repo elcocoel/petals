@@ -1,7 +1,7 @@
 // One press over many maps (manifest/v1, specs/005-mapping-brain/composition.md section 2b): everything a person
 // kept on maps across the Power Map goes in one signature, each map as its own version, all at once or none. The
 // Mapping box shows it when no single map is in front, in the one-map press's own look (components/PublishPress):
-// the maps that go, each with its layers, then the press, then what stays and why, folded. Pure.
+// the press first, with one line of what goes and the true step, then the maps that go and what stays, folded. Pure.
 
 import type { PressAll } from './agent-client.ts';
 import { shortId } from './flower-view.ts';
@@ -9,16 +9,18 @@ import {
   type PublishPhase,
   type PublishPressView,
   type PublishRow,
+  pressRuns,
   publishWords,
+  stepOf,
 } from './publish-press.ts';
 
 export const pressAllWords = {
-  /** over the press: how far one signature reaches */
-  across: (n: number) =>
-    n === 1
-      ? 'What you’ve kept on 1 map goes in one signature.'
-      : `What you’ve kept on ${n} maps goes in one signature.`,
-  press: 'Publish all in your name',
+  /** the one line of what goes, at the top of the press: one version on each map */
+  what: (maps: number, layers: number) =>
+    `What you’ve kept: ${maps === 1 ? '1 map' : `${maps} maps`}, ${layers === 1 ? '1 layer' : `${layers} layers`}`,
+  press: 'Publish all',
+  /** the server's prepare, seconds over many maps */
+  preparing: (n: number) => (n === 1 ? 'Preparing 1 version…' : `Preparing ${n} versions…`),
   goes: 'Maps that go',
   stays: 'Stays for now',
   layers: (n: number) => (n === 1 ? '1 layer' : `${n} layers`),
@@ -49,9 +51,11 @@ const row = (key: string, name: string, about: string, source: string | null, wh
 /** Where the read is: running, refused (with why), or done. */
 export type PressAllRead = { reading: true } | { unread: string } | { done: true };
 
-const line = (across: string): PublishPressView & { across: string } => ({
-  across,
+const line = (step: string, running = false): PublishPressView => ({
+  title: null,
   press: null,
+  step,
+  running,
   sign: publishWords.sign,
   why: null,
   rows: null,
@@ -70,24 +74,29 @@ export function pressAllView(
   /** the press asks the wallet to sign in first (lib/publication-sign.ts asksSignIn) */
   signsIn = false,
   state: PressAllRead = { done: true },
-): (PublishPressView & { across: string }) | null {
+): PublishPressView | null {
   if (phase === 'published')
     return {
-      across: '',
+      title: null,
       press: null,
+      step: said,
+      running: false,
       sign: publishWords.sign,
       why: null,
       rows: null,
       said,
       busy: false,
     };
-  if ('reading' in state) return line(pressAllWords.reading);
+  if ('reading' in state) return line(pressAllWords.reading, true);
   if ('unread' in state) return line(pressAllWords.unread(state.unread));
   if (!read) return null;
   if (read.maps.length === 0) return line(pressAllWords.none);
+  const layers = read.maps.reduce((n, m) => n + m.layers, 0);
   return {
-    across: pressAllWords.across(read.maps.length),
-    press: phase === 'signing' ? publishWords.signing : pressAllWords.press,
+    title: pressAllWords.what(read.maps.length, layers),
+    press: pressAllWords.press,
+    step: stepOf(phase, said, signsIn, pressAllWords.preparing(read.maps.length)),
+    running: pressRuns(phase),
     sign: signsIn ? publishWords.signInFirst : publishWords.sign,
     why: read.left.length
       ? { label: pressAllWords.why, lines: read.left.map((l) => `${shortId(l.about)}: ${l.why}`) }
@@ -101,6 +110,6 @@ export function pressAllView(
       staying: [],
     },
     said: phase === 'failed' ? said : null,
-    busy: phase === 'signing',
+    busy: pressRuns(phase),
   };
 }

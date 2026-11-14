@@ -72,10 +72,13 @@ describe('the publish press', () => {
   });
 
   test('waits on the wallet, then says what joined the map, or why not', () => {
-    expect(publishPressView(data, 'signing', null, one)).toMatchObject({
-      press: publishWords.signing,
+    expect(publishPressView(data, 'preparing', null, one)).toMatchObject({
+      step: publishWords.preparing,
+      running: true,
       busy: true,
     });
+    expect(publishPressView(data, 'waiting', null, one)?.step).toBe(publishWords.waiting);
+    expect(publishPressView(data, 'sending', null, one)?.step).toBe(publishWords.sending);
     expect(
       publishPressView(data, 'published', publishWords.published('1 new kind of data'), one),
     ).toMatchObject({
