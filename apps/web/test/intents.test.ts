@@ -5,7 +5,6 @@ import {
   chainName,
   chainsOf,
   historyRows,
-  homeChain,
   intentWords,
   isUnderWay,
   quoteLine,
@@ -60,13 +59,6 @@ describe('what a person can pay with', () => {
     expect(tokensOn(TOKENS, 'base', 'usdc').map((t) => t.symbol)).toEqual(['USDC']);
     expect(tokensOn(TOKENS, 'sol', 'solana').map((t) => t.symbol)).toEqual(['JUP']);
     expect(chainsOf(TOKENS, 'nothing like it')).toEqual([]);
-  });
-
-  test('it opens on a chain the person has a wallet on, Ethereum first, else NEAR', () => {
-    expect(homeChain(['NEAR', 'Ethereum'])).toBe('eth');
-    expect(homeChain(['Solana', 'NEAR'])).toBe('sol');
-    expect(homeChain(['NEAR'])).toBe('near');
-    expect(homeChain([])).toBe('near');
   });
 
   test('a chain with no name here is its id, capitalised', () => {

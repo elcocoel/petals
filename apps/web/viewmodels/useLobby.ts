@@ -23,9 +23,8 @@ import {
 import { contributionView } from '../lib/contribution-view.ts';
 import { evmWallets } from '../lib/evm-wallet.ts';
 import { shortId } from '../lib/flower-view.ts';
-import { homeChain } from '../lib/intents.ts';
 import { fundsWords, nearExact } from '../lib/lobby-view.ts';
-import { grownTop, money, moneyWords, payWords, SLIDE_USD, sentBy, yoctoOf } from '../lib/pay.ts';
+import { money, moneyWords, payWords, sentBy, yoctoOf } from '../lib/pay.ts';
 import { PHONE } from '../lib/phone-wallet.ts';
 import {
   type AddWalletPhase,
@@ -119,16 +118,8 @@ export function useLobby() {
   const paid = funds.reread;
   const pay = usePay(funds.where ?? null, asking, paid, funds.signer ?? null);
   const nearUsd = funds.where?.near_usd ?? null;
-  // or any other token, from any chain, through NEAR Intents, opening on a chain they hold a wallet on
-  const topUp = useTopUp(
-    asking,
-    paid,
-    nearUsd,
-    homeChain(Array.isArray(wallets) ? wallets.map((w) => w.chain) : []),
-  );
-  // the slider's top, a dollar to five at first; held at its end, it goes further
-  const [top, setTop] = useState<number>(SLIDE_USD.top);
-  const setUsd = pay.setUsd;
+  // the chain and token picker: NEAR from their wallet (the amount and Add above), or any other token's address
+  const topUp = useTopUp(asking, paid, nearUsd);
 
   // Withdraw: the panel's one amount, out of the wallet's own balance in the contract, back to it. Any NEAR
   // wallet may send it; the chain answers for what it holds.
@@ -139,11 +130,6 @@ export function useLobby() {
   /** which press spoke last: the panel's one line is its */
   const [last, setLast] = useState<'add' | 'withdraw' | null>(null);
   const usdNow = Number(pay.usd.replace(/,/g, '')) || 0;
-  const grow = useCallback(() => {
-    const next = grownTop(Math.max(top, Math.ceil(usdNow)));
-    setTop(next);
-    setUsd(String(next));
-  }, [top, usdNow, setUsd]);
   const takeNear = nearUsd && nearUsd > 0 ? Math.floor((usdNow / nearUsd) * 1000) / 1000 : 0;
   const takeYocto = takeNear > 0 ? yoctoOf(takeNear) : null;
   const held = funds.held;
@@ -314,7 +300,7 @@ export function useLobby() {
             0.005
           : false,
       // the one amount both presses act on
-      amount: pay.amount ? { ...pay.amount, label: fundsWords.amount, top, onGrow: grow } : null,
+      amount: pay.amount ? { ...pay.amount, label: fundsWords.amount } : null,
       add: {
         label: pay.phase === 'paying' ? payWords.paying : pay.label,
         canPress: pay.canPay && pay.phase !== 'paying',

@@ -110,6 +110,9 @@ const CHAINS_FIRST = [
   'avax',
 ];
 
+/** What the panel opens on, so an address is there at once. */
+export const OPENS_ON = { chain: 'eth', symbol: 'USDC' } as const;
+
 /** On a chain, what most people hold first, in this order. */
 const TOKENS_FIRST = ['USDC', 'USDT', 'ETH', 'BTC', 'SOL', 'NEAR', 'WNEAR'];
 
@@ -154,13 +157,6 @@ export function tokensOn(tokens: readonly PayToken[], chain: string, search = ''
           firstOf(TOKENS_FIRST, b.symbol.toUpperCase()) ||
         a.symbol.localeCompare(b.symbol, undefined, { sensitivity: 'base' }),
     );
-}
-
-/** The chain the list opens on: one the person has a wallet on, Ethereum's first, else NEAR. */
-export function homeChain(walletChains: readonly string[]): string {
-  if (walletChains.includes('Ethereum')) return 'eth';
-  if (walletChains.includes('Solana')) return 'sol';
-  return 'near';
 }
 
 /** An amount as people write it: four significant figures, no trailing zeros. */
@@ -246,7 +242,9 @@ export function historyRows(
 }
 
 export const intentWords = {
-  search: 'Search tokens and chains',
+  other: 'Or send another token',
+  searchChains: 'Search chains',
+  searchTokens: 'Search tokens',
   chain: 'Chain',
   token: 'Token',
   loading: 'Reading the tokens…',
@@ -260,9 +258,6 @@ export const intentWords = {
   fees: (pct: string) => `Fees about ${pct}%`,
   least: (amount: string, symbol: string) => `at least ${amount} ${symbol}`,
   until: (day: string) => `open until ${day}`,
-  refund: (chain: string) => `Your address on ${chain}, where anything not swapped goes back`,
-  /** Under the refund field: Enter, or leaving it, asks again. */
-  refundThen: 'Then press Enter.',
   copy: 'Copy',
   copied: 'Copied',
   history: 'Your top-ups',
@@ -297,9 +292,8 @@ export interface TokenPick {
   icon: string | null;
 }
 
-/** Paying with another token, as the money panel shows it (viewmodels/useTopUp.ts makes it). */
+/** Sending another token, as the money panel shows it (viewmodels/useTopUp.ts makes it). */
 export interface TopUpView {
-  search: string;
   /** null while the list is on its way */
   chains: ChainChoice[] | null;
   chain: string;
@@ -318,18 +312,13 @@ export interface TopUpView {
     /** where it stands, once something arrived */
     status: string | null;
   } | null;
-  /** the server asked for a refund address on this chain: the one field, then Enter */
-  refund: { label: string; value: string } | null;
   error: string | null;
   copied: 'address' | 'memo' | null;
   /** null while it's being read */
   history: HistoryRow[] | null;
   actions: {
-    search: (q: string) => void;
     chooseChain: (chain: string) => void;
     choose: (asset: string) => void;
-    setRefund: (v: string) => void;
-    sendRefund: () => void;
     copy: (which: 'address' | 'memo', text: string) => void;
   };
 }
