@@ -50,6 +50,9 @@ export const PAY_NEAR = 1;
 /** What the pay row offers to add, in dollars, before the person changes it (about $1). */
 export const PAY_USD = 1;
 
+/** The top of the lobby's dollars slider. */
+export const PAY_USD_MAX = 100;
+
 /** NEAR for `usd` dollars at today's price, in thousandths and never less than asked; null without a price. */
 export function nearFor(usd: number, near_usd: number | null): number | null {
   if (!near_usd || near_usd <= 0 || !(usd > 0)) return null;

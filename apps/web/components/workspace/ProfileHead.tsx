@@ -30,12 +30,16 @@ export function ProfileHead({
         : null;
   const eyebrow = [chain, where].filter(Boolean).join('  ·  ');
   return (
-    <header className="flex items-center gap-block-gap">
+    // on a phone the picture sits above, so the name keeps the width
+    <header className="flex flex-col items-start gap-block-gap sm:flex-row sm:items-center">
       <Avatar src={profile?.avatar ?? null} size="large" />
       <div className="flex min-w-0 flex-1 flex-col gap-space-8">
-        {eyebrow && <Mono tone="primary">{eyebrow.toUpperCase()}</Mono>}
+        {eyebrow && <p className="my-0 type-mono whitespace-nowrap">{eyebrow.toUpperCase()}</p>}
         {account && (
-          <h1 title={account} className="m-0 type-title wrap-anywhere md:type-display-compact">
+          <h1
+            title={account}
+            className={`m-0 type-title md:type-display-compact ${profile?.name ? 'wrap-anywhere' : 'whitespace-nowrap'}`}
+          >
             {profile?.name ?? shortId(account)}
           </h1>
         )}

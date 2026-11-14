@@ -1,5 +1,6 @@
 // The lobby (specs/004-workspace, W3): where a person's work sits when they come back. A skeleton. Pure: its
 // words and where each thing goes are decided here, and the view only lays them out.
+import { shortId } from './flower-view.ts';
 import type { ProfileDraft, SocialProfile } from './near-social.ts';
 import { type Credit, type Money, money, moneyWords, type PayAction, payWords } from './pay.ts';
 
@@ -35,14 +36,11 @@ export const fundsWords = {
   unread: 'Your balance can’t be read right now.',
   withdraw: 'Withdraw',
   /** Beside Withdraw: what it takes out, which is everything the person holds in the contract. */
-  canWithdraw: (m: Money) =>
-    `You can withdraw ${moneyWords(m)}: the NEAR you deposited in Petals’ credit contract that chats haven’t spent. Withdraw sends all of it back to your wallet.`,
-  /** Beside Withdraw while the contract holds nothing for the person. */
-  nothingToWithdraw:
-    'Nothing to withdraw yet: what you deposit in Petals’ credit contract stays yours, and Withdraw sends what chats haven’t spent back to your wallet.',
+  /** Withdraw's own words while the contract holds something: what it takes out, as Add says what it adds. */
+  withdrawAmount: (m: Money) => `Withdraw ${moneyWords(m)}`,
   /** The rest of the balance, which isn't in the contract, and why. */
   cannotWithdraw: (m: Money) =>
-    `${moneyWords(m)} can’t be withdrawn: credit from before the contract or from an invite isn’t held in the contract. Chats spend it first.`,
+    `${moneyWords(m)} from before the contract or an invite can’t be withdrawn; chats spend it first.`,
   /** Opens the pay row's own flow under the balance: NEAR from a wallet, or any token through NEAR Intents. */
   add: 'Add funds',
   /** The pay row's first line in the lobby, with the credit contract: what a deposit is. */
@@ -236,10 +234,8 @@ export type SocialState =
  * shortened to its first six and last four, as /make does; a named account as it is.
  */
 export function shownAccount(account: string): { shown: string; full: string } {
-  return {
-    shown: account.replace(/^([0-9a-f]{6})[0-9a-f]{54}([0-9a-f]{4})$/, '$1…$2'),
-    full: account,
-  };
+  // the one shortening every address gets
+  return { shown: shortId(account), full: account };
 }
 
 /** The credit as GET and POST /api/v1/pay answer it with the contract: with what it holds, in yoctoNEAR. */
@@ -271,8 +267,8 @@ const usdOfYocto = (yocto: string, nearUsd: number) =>
 
 /** Withdraw in the Balance band: always there with the contract, and saying what it can and can't take out. */
 export interface WithdrawView {
-  /** what Withdraw takes out: what the contract holds for the person */
-  can: string;
+  /** the press's words: what it takes out (what the contract holds for the person), or just Withdraw */
+  label: string;
   /** the rest of the balance, which isn't in the contract, and why; null when there's none */
   cannot: string | null;
   /** false while the contract holds nothing */
@@ -292,9 +288,9 @@ export function withdrawView(
   const heldUsd = usdOfYocto(held, nearUsd);
   const kept = balanceUsd - heldUsd;
   return {
-    can: canWithdraw(held)
-      ? fundsWords.canWithdraw(money(heldUsd, nearUsd))
-      : fundsWords.nothingToWithdraw,
+    label: canWithdraw(held)
+      ? fundsWords.withdrawAmount(money(heldUsd, nearUsd))
+      : fundsWords.withdraw,
     // under half a cent is rounding, not credit
     cannot: kept >= 0.005 ? fundsWords.cannotWithdraw(money(kept, nearUsd)) : null,
     enabled: canWithdraw(held),

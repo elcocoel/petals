@@ -3,7 +3,7 @@
 // and posts what it made. The shared map is the copies of published rows the site ships.
 
 import { randomBytes } from 'node:crypto';
-import { mkdtempSync } from 'node:fs';
+import { mkdtempSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { gzipSync } from 'node:zlib';
@@ -25,7 +25,6 @@ const FIRST_FLOWER = '9ac16c8917aa5ca579c8421a';
 /** The tools that reach outside the site, write a chain, or keep a person's own work (005): a public site refuses each. */
 const ON_THEIR_MACHINE = [
   'add_layer',
-  'compose_view',
   'find_target',
   'get_snapshot',
   'look_up',
@@ -156,6 +155,70 @@ describe('a public site holds no key and reads nothing outside', () => {
     expect(names).toContain('save_step');
     expect(names).toContain('render_flower');
     for (const n of ON_THEIR_MACHINE) expect(names).not.toContain(n);
+  });
+});
+
+describe('a view of layers kept on the site, made through its /mcp', () => {
+  const layer = {
+    petal: 'layer/v1',
+    about: 'near:mainnet:validators-test',
+    kind: 'measures',
+    measures: [{ name: 'proposals_written', unit: 'proposals', kind: 'count' }],
+    rows: [{ participant: 'figment.poolv1.near', measure: 'proposals_written', value: '9' }],
+    how: {
+      method: 'counted submission events by who sent them',
+      sources: [{ url: 'https://rpc.example' }],
+    },
+    from: [],
+    when: { as_of: '2026-11-09T00:00:00Z' },
+    standing: 'verified',
+  };
+  const call = async (app: Hono, args: Out): Promise<Out> => {
+    const res = await app.request('/mcp', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        accept: 'application/json, text/event-stream',
+      },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'tools/call',
+        params: { name: 'compose_view', arguments: args },
+      }),
+    });
+    const text = await res.text();
+    return (JSON.parse(text.includes('data:') ? (text.split('data:')[1] as string) : text) as Out)
+      .result;
+  };
+
+  test("a reading and the project's own layer make one view; another project's layer is not found", async () => {
+    const r = await rig();
+    const ctx = { ...r.ctx, config: { ...r.ctx.config, public: true } };
+    const app = httpApp(ctx);
+    const base = testFixture('two-participants');
+    const mine = ((await callTool('start_exploration', { question: 'who writes?' }, ctx)) as Out)
+      .link.url as string;
+    const other = ((await callTool('start_exploration', { question: 'someone else' }, ctx)) as Out)
+      .link.url as string;
+    const kept = (await callTool('keep_layer', { exploration: mine, layer }, ctx)) as Out;
+    expect(kept.error).toBeUndefined();
+
+    const view = await call(app, { base: base.sha256, layers: [kept.hash], exploration: mine });
+    expect(view.isError).toBeFalsy();
+    expect(view.structuredContent.measures).toEqual([
+      expect.objectContaining({ id: 'validator_stake_current_epoch', from: base.sha256 }),
+      expect.objectContaining({ id: 'proposals_written', standing: 'verified', from: kept.hash }),
+    ]);
+    // the view is held, so a flower can be drawn of it
+    expect(await ctx.store.get(view.structuredContent.sha256)).not.toBeNull();
+
+    for (const args of [{}, { exploration: other }]) {
+      const refused = await call(app, { base: base.sha256, layers: [kept.hash], ...args });
+      expect(refused.isError).toBe(true);
+      expect(refused.structuredContent.error.code).toBe('not_found');
+    }
+    expect(outside).toEqual([]);
   });
 });
 
@@ -310,5 +373,74 @@ describe("a reading made on the person's machine, posted so the site can draw it
     });
     expect(res.status).toBe(400);
     expect(((await res.json()) as Out).error.message).toContain('256 KiB');
+  });
+});
+
+describe("a public site with its writer's key: the person signed in publishes their own flower", () => {
+  function withWriter(): ToolContext {
+    const state = mkdtempSync(join(tmpdir(), 'petal-public-'));
+    const env = {
+      PETAL_PUBLIC: '1',
+      PETAL_MAP_NETWORK: 'testnet',
+      PETAL_MAP_RECEIVER: 'petals.testnet',
+      PETAL_WRITER_ACCOUNT: 'petals-writer.testnet',
+      // never read here: the writer opens its key only when it writes
+      PETAL_WRITER_KEY_FILE: join(state, 'writer.json'),
+      PETAL_API: 'https://petals.example',
+      PETAL_STATE_DIR: state,
+    };
+    return createContext(configFromEnv(env, REPO));
+  }
+  const draft = () => {
+    const row = JSON.parse(
+      readFileSync(join(REPO, 'fixtures', 'map-rows', `${FIRST_FLOWER}.row.json`), 'utf8'),
+    ) as { value: Record<string, Out> };
+    const { id: _id, ...entry } = row.value;
+    const { maker: _maker, ...provenance } = entry.provenance as Out;
+    return { ...entry, provenance };
+  };
+
+  test('a visitor is refused; a person signed in with their wallet prepares it, reading nothing outside', async () => {
+    const ctx = withWriter();
+    expect(ctx.map.writer).not.toBeNull();
+    const visitor = (await callTool('prepare_publish', { entry: draft() }, ctx)) as Out;
+    expect(visitor.error?.code).toBe('not_on_this_site');
+    const person = {
+      ...ctx,
+      caller: { subject: 'prs_a', by: 'near:testnet:alice.testnet', door: 'http' },
+    };
+    const prepared = (await callTool('prepare_publish', { entry: draft() }, person)) as Out;
+    expect(prepared.error).toBeUndefined();
+    expect(prepared).toMatchObject({ recipient: 'petals.testnet' });
+    expect(prepared.sign_url).toMatch(/^https:\/\/petals\.example\/publish\//);
+    expect(outside).toEqual([]);
+    // publishing goes on to check the signature (a wrong one is refused there), not refused as off this site
+    const published = (await callTool(
+      'publish_flower',
+      {
+        entry_sha256: prepared.entry_sha256,
+        proof: {
+          account_id: 'alice.testnet',
+          public_key: 'ed25519:11111111111111111111111111111111',
+          signature: 'AAAA',
+          nonce: prepared.nonce,
+          recipient: prepared.recipient,
+          message: prepared.message,
+          type: 'nep413',
+        },
+      },
+      person,
+    )) as Out;
+    expect(published.error?.code).not.toBe('not_on_this_site');
+  });
+
+  test("without the writer's key, the site refuses both, signed in or not", async () => {
+    const ctx = publicSite();
+    const person = {
+      ...ctx,
+      caller: { subject: 'prs_a', by: 'near:testnet:alice.testnet', door: 'http' },
+    };
+    for (const name of ['prepare_publish', 'publish_flower'])
+      expect(((await callTool(name, {}, person)) as Out).error?.code).toBe('not_on_this_site');
   });
 });

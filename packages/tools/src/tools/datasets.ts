@@ -18,6 +18,7 @@ import { brainOf } from './brain.ts';
 import {
   credentialOf,
   lastingStore,
+  layerOwnerOf,
   open,
   READS,
   REF,
@@ -28,9 +29,7 @@ import {
 import { LAYER_INPUT } from './layers.ts';
 import { DATETIME, obj, SHA256 } from './shared.ts';
 
-/** Who holds a project's layers: its owner, or the project itself until someone claims it. */
-export const layerOwnerOf = (row: { id: string; owner: string | null }) =>
-  row.owner ?? `exploration:${row.id}`;
+export { layerOwnerOf };
 
 const ABOUT = { type: 'string', minLength: 3, maxLength: 200, description: 'chain:address' };
 const VERSION = obj(['id', 'about', 'seq', 'parent', 'layers', 'created_at'], {

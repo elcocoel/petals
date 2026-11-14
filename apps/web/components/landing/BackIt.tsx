@@ -1,7 +1,7 @@
 // Petal Mania, the band of ways to take part (Figma's Join the community, 66:2346): a short hint about a
 // leaderboard, then four cards in one line, in the order a person takes part (map, join, develop, the drop). Each card is
 // itself the link, a plate you press (PlateLink: it rises and tilts), with no text beyond its name; a card whose
-// address isn't set yet shows without a link. The section's name is in the logo's face (SectionName).
+// address isn't set yet shows without a link, its name greyed as the footer's unbuilt destinations are. The section's name is in the logo's face (SectionName).
 import { landingCopy } from '../../lib/landing-copy.ts';
 import { siteLinks } from '../../lib/site-links.ts';
 import { Icon } from '../ui/Icon.tsx';
@@ -37,7 +37,7 @@ export function BackIt() {
             <li key={way.title} className="min-w-0">
               <PlateLink href={href}>
                 <span className="flex min-h-drawing-144 items-end justify-between gap-block-gap">
-                  <span className="type-heading">{way.title}</span>
+                  <span className={`type-heading ${href ? '' : 'text-muted'}`}>{way.title}</span>
                   {href && <Icon name="arrow" />}
                 </span>
               </PlateLink>

@@ -676,11 +676,12 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
     const caip10 = c.req.param('caip10');
     const wallet = (await walletsOf(person)).find((w) => w.caip10 === caip10);
     if (!wallet) return fail(c, 'not_found', 'That wallet isn’t connected to your account.');
-    if (wallet.network !== 'eip155' && wallet.network !== 'solana') {
+    // the profile's own NEAR account (the one links name) stays; any other wallet, NEAR included, can go
+    if (wallet.caip10 === (await profileOf(person))) {
       return fail(
         c,
         'bad_input',
-        'Your NEAR account is your profile, so it can’t be disconnected.',
+        'This NEAR account is your profile, so it can’t be disconnected.',
       );
     }
     const index = d.cipher().index(wallet.caip10);

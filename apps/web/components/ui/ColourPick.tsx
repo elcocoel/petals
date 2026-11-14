@@ -76,7 +76,7 @@ export function ColourPick({
         onPointerDown={(e) => e.stopPropagation()}
         onClick={() => setOpen((now) => !now)}
         data-b="item"
-        className="inline-flex cursor-pointer items-center bg-transparent p-space-4 hover:bg-tint hover:opacity-100 focus-visible:outline-accent aria-expanded:bg-tint"
+        className="inline-flex h-auto cursor-pointer items-center bg-transparent p-space-4 hover:bg-tint hover:opacity-100 focus-visible:outline-accent aria-expanded:bg-tint"
       >
         <span className="swatch" data-swatch={swatch} />
       </button>

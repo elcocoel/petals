@@ -49,14 +49,14 @@ describe('Withdraw says what it can and can’t take out', () => {
   test('credit from before the contract: Withdraw is there, takes nothing, and says why', () => {
     const v = withdrawView('0', 1, 3.46);
     expect(v?.enabled).toBe(false);
-    expect(v?.can).toBe(fundsWords.nothingToWithdraw);
+    expect(v?.label).toBe(fundsWords.withdraw);
     expect(v?.cannot).toBe(fundsWords.cannotWithdraw({ usd: '1.00', near: '0.29' }));
   });
 
   test('what the contract holds can come out; the rest says why it can’t', () => {
     const all = withdrawView('840000000000000000000000', 3.0408, 3.62);
     expect(all?.enabled).toBe(true);
-    expect(all?.can).toBe(fundsWords.canWithdraw({ usd: '3.04', near: '0.84' }));
+    expect(all?.label).toBe('Withdraw $3.04 · 0.84 NEAR');
     expect(all?.cannot).toBeNull();
     const both = withdrawView('840000000000000000000000', 4.0408, 3.62);
     expect(both?.cannot).toBe(fundsWords.cannotWithdraw({ usd: '1.00', near: '0.28' }));
@@ -64,9 +64,9 @@ describe('Withdraw says what it can and can’t take out', () => {
 });
 
 describe('the profile part’s account', () => {
-  test('a 64-character implicit account shows its first six and last four, and in full for the pointer', () => {
+  test('a 64-character implicit account is shortened as every address is, and in full for the pointer', () => {
     const id = '02b85f8c8bbfbcc34f4d30b55724f36336768f05c27c2d7f97936e5d699018fc';
-    expect(shownAccount(id)).toEqual({ shown: '02b85f…18fc', full: id });
+    expect(shownAccount(id)).toEqual({ shown: '02b8…18fc', full: id });
   });
 
   test('a named account shows as it is', () => {

@@ -88,7 +88,6 @@ export function Wallets({
             ))}
           </ul>
           {removed && <p className="my-0 type-body">{removed}</p>}
-          <p className="my-0 type-caption text-muted">{profilePageWords.walletsNote}</p>
         </>
       )}
       {onAdd && (

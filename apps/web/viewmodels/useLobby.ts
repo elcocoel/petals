@@ -101,21 +101,18 @@ export function useLobby() {
   const toggleMenu = useCallback(() => setMenuOpen((now) => !now), []);
   const closeMenu = useCallback(() => setMenuOpen(false), []);
 
-  // Add funds: the pay row's own flow, unfolded under the balance; /lobby#add arrives with it open, scrolled to
-  // the Balance band
-  const [addOpen, setAddOpen] = useState(false);
+  // Adding funds: the pay row's own flow, laid out under the balance from the start; /lobby#add arrives scrolled
+  // to the Balance band
   useEffect(() => {
     const arrive = () => {
       if (window.location.hash.slice(1) !== ADD_HASH) return;
-      setAddOpen(true);
       requestAnimationFrame(() => document.getElementById('balance')?.scrollIntoView());
     };
     arrive();
     window.addEventListener('hashchange', arrive);
     return () => window.removeEventListener('hashchange', arrive);
   }, []);
-  const toggleAdd = useCallback(() => setAddOpen((now) => !now), []);
-  const asking = addOpen ? ADDING : null;
+  const asking = ADDING;
   const paid = funds.reread;
   const pay = usePay(funds.where ?? null, asking, paid, funds.signer ?? null);
   // or any other token, from any chain, through NEAR Intents, beside it in the same row
@@ -249,8 +246,6 @@ export function useLobby() {
     quote,
     menu: { open: menuOpen, toggle: toggleMenu, close: closeMenu },
     add: {
-      open: addOpen,
-      toggle: toggleAdd,
       row: {
         phase: pay.phase,
         added: pay.added,
