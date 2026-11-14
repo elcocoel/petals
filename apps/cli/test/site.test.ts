@@ -856,6 +856,71 @@ describe("the map's search goes to the site", () => {
   });
 });
 
+describe('the Power Map is read on the site', () => {
+  test('get_map, find_voting_blocs and list_payouts ask the site through /mcp and run nothing here', async () => {
+    const site = fakeSite();
+    const asked: { name: string; arguments: unknown }[] = [];
+    const fetch = async (url: string, init: RequestInit = {}) => {
+      if (url === `${SITE}/mcp`) {
+        const { params } = JSON.parse(String(init.body)) as {
+          params: { name: string; arguments: unknown };
+        };
+        asked.push(params);
+        const result = { structuredContent: { id: 'eip155:1:0xens', from: params.name } };
+        return new Response(
+          `event: message\ndata: ${JSON.stringify({ jsonrpc: '2.0', id: 1, result })}\n\n`,
+          {
+            headers: { 'content-type': 'text/event-stream' },
+          },
+        );
+      }
+      return site.fetch(url, init);
+    };
+    let ranHere = 0;
+    const local = (name: string) =>
+      tool(name, async () => {
+        ranHere++;
+        return {};
+      });
+    const tools = siteDoor({ site: SITE, fetch }).tools([
+      ...registry.filter((t) => !['get_map', 'find_voting_blocs', 'list_payouts'].includes(t.name)),
+      local('get_map'),
+      local('find_voting_blocs'),
+      local('list_payouts'),
+    ]);
+    for (const name of ['get_map', 'find_voting_blocs', 'list_payouts']) {
+      const out = await byName(tools, name).run({ map: 'eip155:1:0xens' } as never, ctx());
+      expect(out).toEqual({ id: 'eip155:1:0xens', from: name });
+    }
+    expect(ranHere).toBe(0);
+    expect(asked.map((a) => a.name)).toEqual(['get_map', 'find_voting_blocs', 'list_payouts']);
+    expect(asked[0]?.arguments).toEqual({ map: 'eip155:1:0xens' });
+  });
+
+  test("the site's refusal comes back as an error, and a site that's down is said in a line", async () => {
+    const refusing = async (url: string) =>
+      url.endsWith('/mcp')
+        ? new Response(
+            JSON.stringify({ jsonrpc: '2.0', id: 1, error: { message: 'unknown tool' } }),
+          )
+        : new Response('{}');
+    const tools = siteDoor({ site: SITE, fetch: refusing }).tools(registry);
+    const out = (await byName(tools, 'get_map').run({ map: 'x' } as never, ctx())) as {
+      error: { code: string; message: string };
+    };
+    expect(out.error.code).toBe('source_failed');
+    expect(out.error.message).toContain('unknown tool');
+    const down = async () => {
+      throw new Error('ECONNREFUSED');
+    };
+    const off = siteDoor({ site: SITE, fetch: down }).tools(registry);
+    const gone = (await byName(off, 'get_map').run({ map: 'x' } as never, ctx())) as {
+      error: { code: string };
+    };
+    expect(gone.error.code).toBe('source_failed');
+  });
+});
+
 describe('what an agent found goes in the project, privately (keep_data)', () => {
   test("keep_data posts the document to the job's project; list_data asks by petal", async () => {
     const { writeFileSync } = await import('node:fs');
