@@ -8,5 +8,6 @@ Brand kit images, captured from the live site with a headless browser:
 
 - `wordmark.png`: the footer's wordmark.
 - `icon-petals.png`, `icon-power-map.png`, `icon-agents.png`: the site's Phosphor icons for Petals, the Power Map and an agent (Flower, MapTrifold, TerminalWindow, regular weight).
+- `brain-small.webp`: the Skill library illustration at icon scale, for the Brain, which has no icon yet.
 - `icon-near.png`: NEAR's mark, as the Power Map's chain list shows it.
 - `screenshot-landing.webp`, `screenshot-network.webp`, `screenshot-power-map.webp`: the home page, its map section and the Power Map, at 1440 wide.
