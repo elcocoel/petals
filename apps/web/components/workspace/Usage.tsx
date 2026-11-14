@@ -21,9 +21,12 @@ export function Usage({
   return (
     <Card title={usageWords.title} labelledBy="lobby-usage">
       {typeof usage === 'string' ? (
-        <p className="my-0 type-caption text-muted">
-          {usage === 'reading' ? usageWords.reading : usageWords.unread}
-        </p>
+        <>
+          <p className="my-0 type-caption text-muted">
+            {usage === 'reading' ? usageWords.reading : usageWords.unread}
+          </p>
+          {tipped}
+        </>
       ) : usage.rows.length === 0 ? (
         <>
           <p className="my-0 type-body text-muted">{usageWords.none}</p>
