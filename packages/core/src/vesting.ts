@@ -288,6 +288,8 @@ export interface AllocationAt {
   beneficiary: string | null;
   total: string;
   unlocked: string;
+  /** what is still locked now: the next unlock, until it happens, and later */
+  locked: string;
   next_unlock: { at: string; amount: string } | null;
   later: string;
   known: Known;
@@ -322,6 +324,7 @@ export function vestingAt(v: Vesting, t: number): VestingAt {
       beneficiary: a.beneficiary,
       total: fmt(total),
       unlocked: fmt(unlocked),
+      locked: fmt(total - unlocked),
       next_unlock: m === null ? null : { at: isoOf(m), amount: fmt(soon) },
       later: fmt(total - unlocked - soon),
       known: a.known,
@@ -341,6 +344,7 @@ export function vestingAt(v: Vesting, t: number): VestingAt {
     totals: {
       total: fmt(total),
       unlocked: fmt(unlocked),
+      locked: fmt(total - unlocked),
       next_unlock: m === null ? null : { at: isoOf(m), amount: fmt(soon) },
       later: fmt(total - unlocked - soon),
     },

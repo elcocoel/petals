@@ -173,7 +173,8 @@ export const getMap = defineTool<{ map: string }, Record<string, unknown>>({
     "One map on the Power Map, by its address (look_up's maps give it) or its link: everything already there, " +
     'to interpret without reading anew. Its link; its readings, each with its date, size and who mapped it; its ' +
     'proposals and the period they cover; its value (price, supply, market cap, treasury), each with its source ' +
-    "and date; its vesting now, where it was read (each allocation's unlocked, next unlock and later, and their " +
+    "and date; its vesting now, where it was read (each allocation's unlocked, locked (the next unlock and later), " +
+    'next unlock and later, and their ' +
     "totals, by its schedules); its payouts in short; Insights, the claims Petals' mapping made about its accounts and those people " +
     'published, each with who answers for it; and the ' +
     "signed-in person's own names for its accounts, which are theirs alone until they publish them. " +
@@ -230,7 +231,7 @@ export const getMap = defineTool<{ map: string }, Record<string, unknown>>({
       vesting: {
         type: ['object', 'null'],
         description:
-          'the kept vesting at now, by its schedules: totals and each allocation, unlocked, next_unlock {at, amount}, later',
+          'the kept vesting at now, by its schedules: totals and each allocation, unlocked, locked (what is still locked now: next_unlock until it happens, and later), next_unlock {at, amount}, later',
       },
       payouts: { type: ['object', 'null'] },
       insights: {
