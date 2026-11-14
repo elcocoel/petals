@@ -1,6 +1,7 @@
 'use client';
-// The Play's one control (lib/play.ts): play or pause, and the moment the flower shows, in mono beside it; before
-// the first press, the first and last moments. The map places it on each frame right under the flower it moves,
+// The Play's one control (lib/play.ts): play or pause, what it plays (the dated readings' own title, so a series
+// of delegates never reads as the map's holders), and the moment the flower shows, in mono beside it; before the
+// first press, the first and last moments. The map places it on each frame right under the flower it moves,
 // clear of the map's boxes (useLandscape), as a box over the map.
 import { momentOf, type PlayStep, playWords } from '../lib/play.ts';
 import { IconButton } from './ui/IconButton.tsx';
@@ -42,6 +43,7 @@ export function PlayControl({
         tip="right"
         onClick={onToggle}
       />
+      <span className="type-ui">{(shown ?? first)?.title}</span>
       <Mono as="span">
         {shown
           ? momentOf(shown.as_of)
