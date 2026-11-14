@@ -48,6 +48,29 @@ export function signerOf(wallets: readonly ProvenWallet[]): Signer | null {
   };
 }
 
+const isNear = (w: ProvenWallet) => w.network === 'mainnet' || w.network === 'testnet';
+
+/**
+ * The wallet a press over many maps is signed by: the profile's master key, NEAR. The NEAR wallet this session
+ * signed in with, else (signed in with a linked Ethereum or Solana wallet) the person's first NEAR wallet. The same
+ * author goes to the read and to the prepare, so what's listed is what goes, in that name.
+ */
+export function nearSigner(me: {
+  network: string;
+  account: string | null;
+  wallets: readonly ProvenWallet[];
+}): Signer | null {
+  const near = me.wallets.filter((w) => isNear(w) && w.author);
+  const wallet =
+    near.find((w) => w.network === me.network && w.account_id === me.account) ?? near[0];
+  if (!wallet?.author) return null;
+  return {
+    wallet,
+    author: wallet.author,
+    shown: walletRows([wallet])[0]?.shown ?? wallet.account_id,
+  };
+}
+
 /** One name in the list: what it names, where, from what, and how sure; or why it stays. */
 export interface PublishRow {
   key: string;
