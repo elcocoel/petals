@@ -172,13 +172,15 @@ impl Credit {
         balance
     }
 
-    /// Adds the NEAR sent with this call to the caller's balance, less what storing a new balance costs.
+    /// Adds the NEAR sent with this call to `account_id`'s balance, or the caller's when it names none: any wallet
+    /// can fund anyone's balance, and only that account ever withdraws it. Less what storing a new balance costs.
     /// Returns the balance after.
     #[payable]
-    pub fn deposit(&mut self) -> U128 {
+    pub fn deposit(&mut self, account_id: Option<AccountId>) -> U128 {
         let attached = env::attached_deposit().as_yoctonear();
         require!(attached > 0, "Send some NEAR with the deposit.");
-        U128(self.credit(env::predecessor_account_id(), attached))
+        let to = account_id.unwrap_or_else(env::predecessor_account_id);
+        U128(self.credit(to, attached))
     }
 
     /// wNEAR received (NEP-141's `ft_transfer_call`, as NEAR Intents delivers a top-up): onto the NEAR balance of
@@ -358,13 +360,34 @@ mod tests {
     }
 
     #[test]
+    fn anyone_can_fund_a_named_balance_and_only_its_account_withdraws_it() {
+        let mut c = contract();
+        // bob has no balance of his own; he funds alice's
+        as_caller("bob.testnet", NEAR);
+        let funded = c.deposit(Some(account("alice.testnet"))).0;
+        assert!(funded < NEAR && funded > NEAR - NEAR / 100, "{funded}");
+        assert_eq!(c.balance_of(account("alice.testnet")).0, funded);
+        assert_eq!(c.balance_of(account("bob.testnet")).0, 0);
+        // naming none still funds the caller
+        as_caller("alice.testnet", NEAR);
+        assert_eq!(c.deposit(None).0, funded + NEAR);
+        // bob can't take what he gave: his own balance is empty
+        as_caller("bob.testnet", 1);
+        let taken = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            c.withdraw(None);
+        }));
+        assert!(taken.is_err());
+        assert_eq!(c.balance_of(account("alice.testnet")).0, funded + NEAR);
+    }
+
+    #[test]
     fn a_first_deposit_pays_for_storing_the_balance_and_a_second_doesnt() {
         let mut c = contract();
         as_caller("alice.testnet", NEAR);
-        let first = c.deposit().0;
+        let first = c.deposit(None).0;
         assert!(first < NEAR && first > NEAR - NEAR / 100, "{first}");
         as_caller("alice.testnet", NEAR);
-        assert_eq!(c.deposit().0, first + NEAR);
+        assert_eq!(c.deposit(None).0, first + NEAR);
         assert_eq!(c.balance_of(account("alice.testnet")).0, first + NEAR);
         assert_eq!(c.balance_of(account("bob.testnet")).0, 0);
     }
@@ -374,14 +397,14 @@ mod tests {
     fn a_deposit_needs_near() {
         let mut c = contract();
         as_caller("alice.testnet", 0);
-        c.deposit();
+        c.deposit(None);
     }
 
     #[test]
     fn the_person_withdraws_some_or_all() {
         let mut c = contract();
         as_caller("alice.testnet", NEAR);
-        let had = c.deposit().0;
+        let had = c.deposit(None).0;
         as_caller("alice.testnet", 1);
         c.withdraw(Some(U128(NEAR / 4)));
         assert_eq!(c.balance_of(account("alice.testnet")).0, had - NEAR / 4);
@@ -395,7 +418,7 @@ mod tests {
     fn a_withdrawal_needs_the_wallet_itself() {
         let mut c = contract();
         as_caller("alice.testnet", NEAR);
-        c.deposit();
+        c.deposit(None);
         as_caller("alice.testnet", 0);
         c.withdraw(None);
     }
@@ -405,7 +428,7 @@ mod tests {
     fn nobody_withdraws_more_than_they_have() {
         let mut c = contract();
         as_caller("alice.testnet", NEAR);
-        c.deposit();
+        c.deposit(None);
         as_caller("alice.testnet", 1);
         c.withdraw(Some(U128(2 * NEAR)));
     }
@@ -414,7 +437,7 @@ mod tests {
     fn the_charger_charges_up_to_the_balance_into_earned() {
         let mut c = contract();
         as_caller("alice.testnet", NEAR);
-        let had = c.deposit().0;
+        let had = c.deposit(None).0;
         as_caller("charger.testnet", 0);
         assert_eq!(
             c.charge(account("alice.testnet"), U128(NEAR / 10)).0,
@@ -435,7 +458,7 @@ mod tests {
     fn nobody_else_charges() {
         let mut c = contract();
         as_caller("alice.testnet", NEAR);
-        c.deposit();
+        c.deposit(None);
         as_caller("alice.testnet", 0);
         c.charge(account("alice.testnet"), U128(1));
     }
@@ -444,7 +467,7 @@ mod tests {
     fn the_owner_claims_what_was_earned() {
         let mut c = contract();
         as_caller("alice.testnet", NEAR);
-        c.deposit();
+        c.deposit(None);
         as_caller("charger.testnet", 0);
         c.charge(account("alice.testnet"), U128(NEAR / 2));
         as_caller("petals.testnet", 1);
@@ -457,7 +480,7 @@ mod tests {
     fn nobody_else_claims() {
         let mut c = contract();
         as_caller("alice.testnet", NEAR);
-        c.deposit();
+        c.deposit(None);
         as_caller("charger.testnet", 0);
         c.charge(account("alice.testnet"), U128(NEAR / 2));
         as_caller("charger.testnet", 1);
