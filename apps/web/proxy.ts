@@ -7,9 +7,10 @@
 //
 // A page opened with ?invite=<token> (a link handed to someone, /make?invite=…) redeems that invite here, before
 // the page is drawn: the server's session cookie comes back with a move to the same address without the token,
-// so the page opens as a session that holds the invite (and /make lets it in with no wallet). /judges does the same
-// with the judges' invite, which the site holds in PETAL_JUDGES_INVITE and never in its code, and opens /make;
-// without it, /judges goes to the front page.
+// so the page opens as a session that holds the invite (and /make lets it in with no wallet). The judges' own path
+// does the same with the judges' invite and opens /make: both are held in the site's environment, never in its
+// code (PETAL_JUDGES_PATH, of the form judges-…, and PETAL_JUDGES_INVITE), so the path can't be guessed. Any
+// other judges-… path, or one with neither set, is the site's own 404.
 import { type NextRequest, NextResponse } from 'next/server';
 import {
   SITE_HEADER,
@@ -21,12 +22,14 @@ import {
 } from './lib/server.ts';
 
 export async function proxy(request: NextRequest) {
-  if (request.nextUrl.pathname === '/judges') {
+  if (request.nextUrl.pathname.startsWith('/judges-')) {
+    const path = process.env.PETAL_JUDGES_PATH;
     const judges = process.env.PETAL_JUDGES_INVITE;
+    if (!path || !judges || request.nextUrl.pathname !== `/${path}`) return NextResponse.next();
     const to = request.nextUrl.clone();
     to.search = '';
-    to.pathname = judges ? '/make' : '/';
-    return judges ? redeem(request, judges, to) : NextResponse.redirect(to);
+    to.pathname = '/make';
+    return redeem(request, judges, to);
   }
   const invite = request.nextUrl.searchParams.get('invite');
   if (invite && !request.nextUrl.pathname.startsWith('/api/')) {
@@ -83,7 +86,7 @@ export const config = {
     '/petal.mjs',
     '/d/:path*',
     '/s/:path*',
-    '/judges',
+    '/judges-:code',
     { source: '/:path*', has: [{ type: 'query', key: 'invite' }] },
   ],
 };
