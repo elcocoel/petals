@@ -8,6 +8,7 @@
 // transfer that has already gone.
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { addMyWallet, confirmPay, readWallets, sessionClient } from '../lib/agent-client.ts';
+import { shortId } from '../lib/flower-view.ts';
 import {
   PAY_USD,
   type PayInfo,
@@ -24,6 +25,7 @@ import {
   connectedAccount,
   type Network,
   sendAs,
+  sendFrom,
   signPrepared,
   WrongAccount,
 } from '../lib/wallet.ts';
@@ -186,6 +188,18 @@ export function usePay(
         setPhase('ready');
         return;
       }
+      if (where.method === 'deposit') {
+        // into the signed-in person's balance, named in the deposit, from whichever NEAR wallet pays; the
+        // balance is then read from the contract again
+        const sent = sentBy(
+          await sendFrom(where.network, where.receiver, payAction(where, yoctoOf(send), signer)),
+        );
+        if (!sent) throw new Error('no transaction');
+        setAdded(payWords.addedFor(String(send), shortId(signer), shortId(sent.account)));
+        setPhase('added');
+        paid();
+        return;
+      }
       const action = payAction(where, yoctoOf(send));
       // signed as the account signed in to Petals, or not sent at all
       let answer: unknown;
@@ -213,7 +227,7 @@ export function usePay(
     } catch {
       setPhase('failed');
     }
-  }, [where, from, pending, send, signer, switching, confirm]);
+  }, [where, from, pending, send, signer, switching, confirm, paid]);
 
   return {
     /** The pay row that's live; earlier ones were answered or passed. */

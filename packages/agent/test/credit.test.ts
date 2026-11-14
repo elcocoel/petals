@@ -306,6 +306,39 @@ describe('the credit contract', () => {
     expect(w.charges.length).toBe(1);
   });
 
+  test("a NEAR Intents top-up funds the NEAR balance it names, anyone's, and never the asker's", async () => {
+    const w = setup({ 'alice.near': 0n });
+    await w.signIn();
+    const top = await w.call('POST', '/api/v1/pay/intents', {
+      usd: 0.875,
+      origin_asset: 'nep141:base-0x833589fcd6edb6e08f4c7c32d4f71b54bda02913.omft.near',
+      refund_to: '0x2527D02599Ba641c19FEa793cD0F167589a0f10D',
+      account_id: 'bob.near',
+    });
+    expect(top.status, await top.clone().text()).toBe(200);
+    const quoted = w.one.asked.find((a) => a.path === '/v0/quote')?.body as Record<string, unknown>;
+    expect(quoted).toMatchObject({ recipient: CONTRACT, customRecipientMsg: 'bob.near' });
+    // it lands on bob.near's balance: alice's credit stays what the contract holds for her
+    w.one.land();
+    w.balances['bob.near'] = NEAR / 4n;
+    const after = (await (await w.call('GET', '/api/v1/pay/intents/0xdeposit')).json()) as {
+      top_up: { status: string };
+    };
+    expect(after.top_up.status).toBe('SUCCESS');
+    const pay = (await (await w.call('GET', '/api/v1/pay')).json()) as {
+      credit: { left_usd: number };
+    };
+    expect(pay.credit.left_usd).toBe(0);
+    // a name that isn't a NEAR account is refused
+    const bad = await w.call('POST', '/api/v1/pay/intents', {
+      usd: 1,
+      origin_asset: 'nep141:base-0x833589fcd6edb6e08f4c7c32d4f71b54bda02913.omft.near',
+      refund_to: '0x2527D02599Ba641c19FEa793cD0F167589a0f10D',
+      account_id: 'Not An Account',
+    });
+    expect(bad.status).toBe(400);
+  });
+
   test('what is off the contract pays first, and the contract is charged only for the rest', async () => {
     const w = setup({ 'alice.near': NEAR });
     await w.signIn();

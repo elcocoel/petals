@@ -36,7 +36,6 @@ import type {
   WalletLogos,
   WalletRow,
 } from '../../lib/profile-view.ts';
-import { PayRow } from '../chat/PayRow.tsx';
 import { MapList } from '../MapList.tsx';
 import { Badge } from '../ui/Badge.tsx';
 import { Card } from '../ui/Card.tsx';
@@ -67,7 +66,7 @@ export function Lobby({
   leave,
   editor,
   funds,
-  add,
+  money,
   usage,
   wallets,
   adding,
@@ -110,7 +109,8 @@ export function Lobby({
     signer?: string | null;
   };
   /** Add funds: whether the pay row is open under the balance, and the row itself. */
-  add: { row: Omit<ComponentProps<typeof PayRow>, 'first'> };
+  /** The money panel's controls, the same in every state. */
+  money: Omit<ComponentProps<typeof Funds>, 'balance' | 'tip'>;
   /** Every call charged to them (usage/v1), in the Usage card. */
   usage: UsageView | 'reading' | 'unread';
   wallets: WalletRow[] | 'reading' | 'unread';
@@ -205,17 +205,7 @@ export function Lobby({
           layout="split"
           figure="start"
         >
-          <Funds
-            balance={funds.balance}
-            withdrawal={funds.withdrawal}
-            phase={funds.phase}
-            withdrew={funds.withdrew}
-            failedWhy={funds.failedWhy ?? null}
-            signer={funds.signer ?? null}
-            onWithdraw={funds.withdraw}
-            add={<PayRow bare {...add.row} />}
-            tip={tip}
-          />
+          <Funds balance={funds.balance} {...money} tip={tip} />
           <Usage usage={usage} />
         </Section>
 

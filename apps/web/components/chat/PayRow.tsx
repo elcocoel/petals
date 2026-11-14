@@ -47,7 +47,7 @@ export function PayRow({
   /** laid out on its page, under what it adds to: no box and no first line, the amount a slider by the press */
   bare?: boolean;
 }) {
-  if (phase === 'added' && added) {
+  if (phase === 'added' && added && !bare) {
     return (
       <p className="my-0 type-ui">
         {addedWords
@@ -67,6 +67,9 @@ export function PayRow({
       className={`flex w-full flex-col gap-text-gap ${bare ? 'items-stretch' : 'items-start border border-hairline p-text-gap'}`}
     >
       {!bare && <p className="my-0 type-ui">{line ?? (first ? payWords.start : payWords.out)}</p>}
+      {bare && phase === 'added' && added && (
+        <p className="my-0 type-ui">{addedWords ? addedWords(added) : payWords.added(added)}</p>
+      )}
       {amount && !bare && (
         <Field
           id="pay-usd"
@@ -114,6 +117,21 @@ export function PayRow({
         ))}
       {sent?.ended && <p className="my-0 type-ui text-muted">{sent.status}</p>}
     </div>
+  );
+}
+
+/**
+ * Paying with another token, laid out where nothing opens it (the lobby's money panel): the form, or, once an
+ * address is given, where to send and how it stands.
+ */
+export function TopUpFields({ topUp }: { topUp: TopUpView }) {
+  const sent = topUp.sent;
+  if (sent && !sent.ended && !sent.landed) return <Sending sent={sent} topUp={topUp} />;
+  return (
+    <>
+      <Form topUp={topUp} withUsd={false} />
+      {sent && <p className="my-0 type-ui text-muted">{sent.status}</p>}
+    </>
   );
 }
 

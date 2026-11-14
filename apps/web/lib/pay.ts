@@ -34,12 +34,20 @@ export type PayAction =
       params: { methodName: string; args: Record<string, string>; gas: string; deposit: string };
     };
 
-/** What the wallet is asked to send for `yocto`: a deposit into the contract, or a plain transfer. */
-export function payAction(info: PayInfo, yocto: string): PayAction {
+/**
+ * What the wallet is asked to send for `yocto`: a deposit into the contract (into `account`'s balance when it's
+ * named, whichever wallet pays), or a plain transfer.
+ */
+export function payAction(info: PayInfo, yocto: string, account?: string): PayAction {
   return info.method === 'deposit'
     ? {
         type: 'FunctionCall',
-        params: { methodName: 'deposit', args: {}, gas: '30000000000000', deposit: yocto },
+        params: {
+          methodName: 'deposit',
+          args: account ? { account_id: account } : {},
+          gas: '30000000000000',
+          deposit: yocto,
+        },
       }
     : { type: 'Transfer', params: { deposit: yocto } };
 }
@@ -166,6 +174,14 @@ export const payWords = {
   paying: 'Waiting for your wallet…',
   /** Before any press: the one account a payment or a withdrawal is signed as. */
   signsAs: (account: string) => `Your NEAR wallet signs as ${account}.`,
+  /** Under the press: whose balance it adds to, and who may pay. */
+  fundsFor: (account: string) =>
+    `Adds to ${account}’s balance; any NEAR wallet you connect can pay.`,
+  /** Once a deposit landed: how much, into whose balance, from which wallet. */
+  addedFor: (near: string, to: string, from: string) =>
+    from === to
+      ? `Added ${near} NEAR to ${to}.`
+      : `Added ${near} NEAR to ${to}, paid from ${from}.`,
   /** The wallet was signed in as another account: nothing was sent. */
   wrongAccount: (connected: string | null, signer: string) =>
     connected
