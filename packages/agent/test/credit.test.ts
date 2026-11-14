@@ -58,10 +58,34 @@ function fake1Click() {
           deadline: '2026-11-14T21:00:00.000Z',
         },
       });
+    if (url.pathname === '/v0/tokens')
+      return json([
+        {
+          assetId: 'nep141:base-0x833589fcd6edb6e08f4c7c32d4f71b54bda02913.omft.near',
+          blockchain: 'base',
+          symbol: 'USDC',
+          decimals: 6,
+          price: 1,
+        },
+        {
+          assetId: 'nep141:wrap.near',
+          blockchain: 'near',
+          symbol: 'wNEAR',
+          decimals: 24,
+          price: 4,
+        },
+      ]);
     if (url.pathname === '/v0/status')
       return json({
         status,
-        swapDetails: { amountOut: String(NEAR / 4n), amountOutUsd: '0.8750' },
+        swapDetails: {
+          amountIn: '1000000',
+          amountInFormatted: '1.0',
+          amountInUsd: '1.0000',
+          amountOut: String(NEAR / 4n),
+          amountOutFormatted: '0.25',
+          amountOutUsd: '0.8750',
+        },
       });
     return new Response('{}', { status: 404 });
   };
@@ -281,14 +305,16 @@ describe('the credit contract', () => {
     expect(top.status, await top.clone().text()).toBe(200);
     // wNEAR for the dollars at NEAR's price, to the contract, by ft_transfer_call naming the payer
     const quoted = w.one.asked.find((a) => a.path === '/v0/quote')?.body as Record<string, unknown>;
+    // any amount: FLEX_INPUT, the dollars asked only the reference (0.875 USDC), the address waiting for days
     expect(quoted).toMatchObject({
       destinationAsset: 'nep141:wrap.near',
-      amount: String(NEAR / 4n),
+      amount: '875000',
       recipient: CONTRACT,
       recipientType: 'DESTINATION_CHAIN',
       customRecipientMsg: 'alice.near',
-      swapType: 'EXACT_OUTPUT',
+      swapType: 'FLEX_INPUT',
     });
+    expect(Date.parse(quoted.deadline as string) - Date.now()).toBeGreaterThan(6 * 24 * 3600_000);
     // it lands: the contract holds it under alice.near; the credit is read back from there
     w.one.land();
     w.balances['alice.near'] = NEAR / 4n;
@@ -304,6 +330,39 @@ describe('the credit contract', () => {
     await (await w.call('POST', '/api/v1/agent/chat', QUESTION)).text();
     await settled();
     expect(w.charges.length).toBe(1);
+  });
+
+  test('pay with another token: no amount and no refund address asked; its history says what was sent and what landed', async () => {
+    const w = setup({ 'alice.near': 0n });
+    await w.signIn();
+    const top = await w.call('POST', '/api/v1/pay/intents', { origin_asset: 'nep141:wrap.near' });
+    expect(top.status, await top.clone().text()).toBe(200);
+    const quoted = w.one.asked.find((a) => a.path === '/v0/quote')?.body as Record<string, unknown>;
+    // a dollar's reference (a quarter NEAR at $4), back to the person's own NEAR account if unswapped
+    expect(quoted).toMatchObject({
+      swapType: 'FLEX_INPUT',
+      amount: String(NEAR / 4n),
+      refundTo: 'alice.near',
+      customRecipientMsg: 'alice.near',
+    });
+    // a chain they hold no wallet on needs the address
+    const base = await w.call('POST', '/api/v1/pay/intents', {
+      origin_asset: 'nep141:base-0x833589fcd6edb6e08f4c7c32d4f71b54bda02913.omft.near',
+    });
+    expect(base.status).toBe(400);
+    w.one.land();
+    const history = (await (await w.call('GET', '/api/v1/pay/intents')).json()) as {
+      top_ups: Record<string, unknown>[];
+    };
+    expect(history.top_ups).toEqual([
+      expect.objectContaining({
+        deposit_address: '0xdeposit',
+        origin_asset: 'nep141:wrap.near',
+        status: 'SUCCESS',
+        sent: '1.0',
+        landed_near: '0.25',
+      }),
+    ]);
   });
 
   test("a NEAR Intents top-up funds the NEAR balance it names, anyone's, and never the asker's", async () => {
