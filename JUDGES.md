@@ -27,11 +27,11 @@ Every row is live on mainnet unless its status says otherwise.
 
 ### Privacy & Private AI
 
-| Claim                                                                                            | Status | Code or test                                                                                                | Check                                                                                                         | Expected                                                        |
-| ------------------------------------------------------------------------------------------------ | ------ | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
-| Petals' agent runs on NEAR AI Cloud; every answer keeps its TEE signature and attestation report | live   | `packages/agent/src/near-ai.ts`, `packages/agent/src/signature.ts`, `packages/agent/test/signature.test.ts` | With the invite link, ask a question; the answer's report is served at `/api/v1/attestations/<report_sha256>` | The attestation report NEAR AI returned, matched by its hash    |
-| A person's conversations and pages stay private                                                  | live   | `packages/tools/test/private-state.test.ts`; run owners in `specs/001-petal-core/contracts/http-api.md`     | `curl -sI https://petals.elementarycomplexity.com/lobby`                                                      | `307` to `/`: a person's own page is closed to visitors         |
-| Mail addresses and phone numbers are kept out of published claims about people                   | live   | `packages/core/src/claims/people.ts`                                                                        | Read the rule at the top of that file                                                                         | Values, notes and quotes with an address or number stay private |
+| Claim                                                                                                                  | Status | Code or test                                                                                                | Check                                                                                                         | Expected                                                        |
+| ---------------------------------------------------------------------------------------------------------------------- | ------ | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| Petals' agent runs on NEAR AI Cloud; answers keep their TEE signature and attestation report when NEAR AI returns them | live   | `packages/agent/src/near-ai.ts`, `packages/agent/src/signature.ts`, `packages/agent/test/signature.test.ts` | With the invite link, ask a question; the answer's report is served at `/api/v1/attestations/<report_sha256>` | The attestation report NEAR AI returned, matched by its hash    |
+| A person's conversations and pages stay private                                                                        | live   | `packages/tools/test/private-state.test.ts`; run owners in `specs/001-petal-core/contracts/http-api.md`     | `curl -sI https://petals.elementarycomplexity.com/lobby`                                                      | `307` to `/`: a person's own page is closed to visitors         |
+| Mail addresses and phone numbers are kept out of published claims about people                                         | live   | `packages/core/src/claims/people.ts`                                                                        | Read the rule at the top of that file                                                                         | Values, notes and quotes with an address or number stay private |
 
 ### AI Security & Defense
 
@@ -62,11 +62,11 @@ Every row is live on mainnet unless its status says otherwise.
 
 ### Agent Economy
 
-| Claim                                                                   | Status | Code or test                                                                                          | Check                                                         | Expected                                    |
-| ----------------------------------------------------------------------- | ------ | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- | ------------------------------------------- |
-| Petals' agent earns NEAR for each answer, from the person's own deposit | live   | `packages/near/contract/src/lib.rs` (`charge`, `earned`), `packages/agent/test/person-credit.test.ts` | `earned` on `petals-credit.near` (README, Verify it on chain) | A nonzero amount in yoctoNEAR               |
-| It pays NEAR AI for its compute                                         | live   | `packages/agent/src/near-ai.ts`                                                                       | Not on chain: NEAR AI Cloud bills Petals' account             |                                             |
-| Anyone's own agent works with Petals through `/mcp` and `skill.md`      | live   | `packages/tools/` (MCP), `skill/petal/SKILL.md`                                                       | `/skill.md`; `/mcp` takes MCP over POST                       | The skill text; a GET to `/mcp` answers 405 |
+| Claim                                                                                                  | Status | Code or test                                                                                          | Check                                                         | Expected                                    |
+| ------------------------------------------------------------------------------------------------------ | ------ | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- | ------------------------------------------- |
+| Petals' agent charges answers paid from a deposit in NEAR (invites and allowances are spent off chain) | live   | `packages/near/contract/src/lib.rs` (`charge`, `earned`), `packages/agent/test/person-credit.test.ts` | `earned` on `petals-credit.near` (README, Verify it on chain) | A nonzero amount in yoctoNEAR               |
+| It pays NEAR AI for its compute                                                                        | live   | `packages/agent/src/near-ai.ts`                                                                       | Not on chain: NEAR AI Cloud bills Petals' account             |                                             |
+| Anyone's own agent works with Petals through `/mcp` and `skill.md`                                     | live   | `packages/tools/` (MCP), `skill/petal/SKILL.md`                                                       | `/skill.md`; `/mcp` takes MCP over POST                       | The skill text; a GET to `/mcp` answers 405 |
 
 ### Open Innovation
 
@@ -92,6 +92,8 @@ Every row is live on mainnet unless its status says otherwise.
 
 FastData writes (flowers, NEAR Social) go to an account with no contract, so the explorer shows the receipt as failed by
 design; the indexer reads the call (step 6).
+
+Explorers may block automated browsers; `pnpm verify:live` and the RPC calls in step 6 check the same on chain.
 
 ## Verify it in ten minutes
 
