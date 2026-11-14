@@ -17,6 +17,8 @@ export interface ConnectedAgent {
   last_seen?: string | null;
   /** One it took and hasn't reported. */
   job: { id: string; title: string; exploration?: string } | null;
+  /** An agent working in one of the person's conversations with no agent key: that conversation. */
+  conversation?: { id: string; title: string } | null;
 }
 
 /** The agents people know, by the names they join with (the connector's `--as`). */
@@ -56,8 +58,10 @@ export interface AgentRow {
   label: string;
   status: string;
   here: boolean;
-  /** What it's doing, for the panel's few characters: on a job, waiting for one, or not connected. */
-  state: 'busy' | 'waiting' | 'away';
+  /** What it's doing, for the panel's few characters: on a job, working in a conversation, waiting, or not connected. */
+  state: 'busy' | 'working' | 'waiting' | 'away';
+  /** Where it works, for an agent in one of the person's conversations: that conversation. */
+  href?: string;
 }
 
 /**
@@ -70,7 +74,7 @@ export const workerName = (name: string, n?: number | null) =>
 /** Where Connect an agent was pressed, so its Copied shows there alone. */
 export type CopiedAt = 'top';
 
-const BUSIEST: readonly AgentRow['state'][] = ['busy', 'waiting', 'away'];
+const BUSIEST: readonly AgentRow['state'][] = ['busy', 'working', 'waiting', 'away'];
 
 /**
  * What the panel's top says of the agents: each agent once, however many
@@ -90,21 +94,40 @@ export function agentsAtTop(
 }
 
 export function agentRows(agents: readonly ConnectedAgent[]): AgentRow[] {
-  return agents.map((a) => ({
-    key: `${a.name}:${a.n ?? 1}`,
-    name: a.name,
-    agent: readableAgent(a.name),
-    label: workerName(a.name, a.n),
-    status: a.job ? agentWords.on(a.job.title) : a.waiting ? agentWords.waiting : agentWords.away,
-    here: Boolean(a.job) || a.waiting,
-    state: a.job ? 'busy' : a.waiting ? 'waiting' : 'away',
-  }));
+  return agents.map((a) =>
+    a.conversation
+      ? {
+          key: `in:${a.conversation.id}`,
+          name: a.name,
+          agent: readableAgent(a.name),
+          label: readableAgent(a.name),
+          status: agentWords.in(a.conversation.title),
+          here: true,
+          state: 'working' as const,
+          href: `/make?elsewhere=${encodeURIComponent(a.conversation.id)}`,
+        }
+      : {
+          key: `${a.name}:${a.n ?? 1}`,
+          name: a.name,
+          agent: readableAgent(a.name),
+          label: workerName(a.name, a.n),
+          status: a.job
+            ? agentWords.on(a.job.title)
+            : a.waiting
+              ? agentWords.waiting
+              : agentWords.away,
+          here: Boolean(a.job) || a.waiting,
+          state: a.job ? 'busy' : a.waiting ? 'waiting' : 'away',
+        },
+  );
 }
 
 export const agentWords = {
   waiting: 'Waiting for a job',
   away: 'Not connected now',
   on: (title: string) => `On: ${title}`,
+  /** An agent working in one of the person's conversations. */
+  in: (title: string) => `In: ${title}`,
   /** The panel's top, with more than one agent connected. */
   several: (n: number) => `${n} agents`,
   /** The one prompt's button, the same at the panel's top and in Your agents. */

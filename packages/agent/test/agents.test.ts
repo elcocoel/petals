@@ -678,3 +678,36 @@ describe('agents across projects', () => {
     expect(await spent()).toBeCloseTo(0.03);
   });
 });
+
+describe('agents working in the person’s own conversations, with no agent key', () => {
+  test('a conversation an agent named itself in lists that agent, with the conversation and when it was last active', async () => {
+    const w = setup([]);
+    await w.signInFunded();
+    const started = (await (
+      await w.call('POST', '/api/v1/explorations', {
+        question: 'Enrich the NEAR maps',
+        client: 'Codex',
+      })
+    ).json()) as Out;
+    const agents = ((await (await w.call('GET', '/api/v1/agents')).json()) as Out).agents as Out[];
+    expect(agents).toEqual([
+      {
+        name: 'Codex',
+        n: 1,
+        worker: null,
+        waiting: false,
+        last_seen: expect.any(String),
+        can: null,
+        job: null,
+        conversation: { id: started.exploration, title: 'Enrich the NEAR maps' },
+      },
+    ]);
+  });
+
+  test('a conversation no agent named itself in lists nothing', async () => {
+    const w = setup([]);
+    await w.signInFunded();
+    await w.call('POST', '/api/v1/explorations', { question: 'Mine alone' });
+    expect(((await (await w.call('GET', '/api/v1/agents')).json()) as Out).agents).toEqual([]);
+  });
+});

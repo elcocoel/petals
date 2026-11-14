@@ -81,6 +81,28 @@ describe('your agents in the menu', () => {
     expect(new Set(rows.map((r) => r.key)).size).toBe(3);
   });
 
+  test('an agent working in one of the person’s conversations: the conversation, a way there, nothing to disconnect', async () => {
+    const { agentRows, agentWords, agentsAtTop } = await import('../lib/agents.ts');
+    const rows = agentRows([
+      {
+        name: 'Codex',
+        waiting: false,
+        job: null,
+        conversation: { id: 'exp_1', title: 'Enrich the NEAR maps' },
+      },
+      { name: 'codex', n: 1, waiting: true, job: null },
+    ]);
+    expect(rows[0]).toMatchObject({
+      key: 'in:exp_1',
+      label: 'Codex',
+      status: agentWords.in('Enrich the NEAR maps'),
+      state: 'working',
+      href: '/make?elsewhere=exp_1',
+    });
+    expect(rows[1]?.href).toBeUndefined();
+    expect(agentsAtTop(rows)).toMatchObject({ state: 'working' });
+  });
+
   test("the panel's top names each agent once, the busiest state, and nothing with none connected", async () => {
     const { agentRows, agentsAtTop } = await import('../lib/agents.ts');
     expect(agentsAtTop([])).toBeNull();
