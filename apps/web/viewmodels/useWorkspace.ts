@@ -261,7 +261,8 @@ export function useWorkspace(props: {
   const funds = panelBus.person?.funds;
   // Credit is added in the lobby's Balance, not in the conversation: with none left, the composer points there.
   const threadRows = shownRows;
-  const noCredit = !recorded && !initialElsewhere && funds?.balance?.usd === '0.00';
+  // A visitor on an invite has no balance of their own to read (the invite pays), so none shows and no credit is asked.
+  const noCredit = !recorded && !initialElsewhere && !invited && funds?.balance?.usd === '0.00';
 
   // Only the conversation's own flower stands on the canvas: before it draws one, it's empty ground.
   const onCanvas = canvas;
@@ -452,7 +453,7 @@ export function useWorkspace(props: {
       panelEdge: panelBus.edge,
       jobs,
       jobControls,
-      balance: funds?.balance ? payWords.balance(funds.balance) : null,
+      balance: funds?.balance && !invited ? payWords.balance(funds.balance) : null,
       /** none left to spend: the composer links to the lobby's Balance, where credit is added */
       noCredit,
       session,
