@@ -13,7 +13,13 @@ import {
 } from '../lib/agent-client.ts';
 import { type PressAllRead, pressAllView, pressAllWords } from '../lib/press-all.ts';
 import { asksSignIn, signPublication } from '../lib/publication-sign.ts';
-import { nearSigner, type PublishPhase, publishWords, type Signer } from '../lib/publish-press.ts';
+import {
+  nearSigner,
+  type PublishPhase,
+  pressRuns,
+  publishWords,
+  type Signer,
+} from '../lib/publish-press.ts';
 
 export function usePressAll(active: boolean, landed: () => void) {
   const [read, setRead] = useState<PressAll | null>(null);
@@ -48,7 +54,7 @@ export function usePressAll(active: boolean, landed: () => void) {
   }, [active]);
   const pressable = Boolean(active && signer && read?.maps.length);
   useEffect(() => {
-    if (!(pressable && signer) || phase === 'signing') return;
+    if (!(pressable && signer) || pressRuns(phase)) return;
     let gone = false;
     void asksSignIn(signer.wallet)
       .then((asks) => {
@@ -61,9 +67,11 @@ export function usePressAll(active: boolean, landed: () => void) {
   }, [pressable, signer, phase]);
   const publish = useCallback(async () => {
     if (!signer || !read?.maps.length) return;
-    setPhase('signing');
+    setPhase('preparing');
     try {
       const p = await preparePress({ maps: 'all', author: signer.author });
+      // the wallet's request goes out now: only from here is it waited for
+      setPhase('waiting');
       const proof = await signPublication(signer.wallet, {
         publication: p.manifest,
         sha256: p.sha256,
@@ -71,6 +79,7 @@ export function usePressAll(active: boolean, landed: () => void) {
         ...(p.recipient ? { recipient: p.recipient } : {}),
         ...(p.nonce ? { nonce: p.nonce } : {}),
       });
+      setPhase('sending');
       const out = await publishPress(p.sha256, proof);
       if ('refused' in out) {
         setSaid(out.refused === 401 ? publishWords.otherWallet : publishWords.failed);
