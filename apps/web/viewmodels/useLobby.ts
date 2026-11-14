@@ -288,6 +288,12 @@ export function useLobby() {
     menu: { open: menuOpen, toggle: toggleMenu, close: closeMenu },
     money: {
       held: funds.held !== null ? nearExact(funds.held) : null,
+      // credit off the contract (Petals' allowance) in the balance, past a cent's rounding
+      allowance:
+        funds.held !== null && nearUsd !== null && funds.balance !== null
+          ? Number(funds.balance.usd) - (Number(BigInt(funds.held) / 10n ** 18n) / 1e6) * nearUsd >=
+            0.005
+          : false,
       // the one amount both presses act on
       amount: pay.amount ? { ...pay.amount, label: fundsWords.amount } : null,
       add: {

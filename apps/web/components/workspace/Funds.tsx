@@ -27,6 +27,7 @@ export interface MoneyPress {
 export function Funds({
   balance,
   held = null,
+  allowance = false,
   amount,
   add,
   withdraw,
@@ -39,6 +40,8 @@ export function Funds({
   balance: Money | null;
   /** What the contract holds for the person, in NEAR as the chain says it; null with no contract. */
   held?: string | null;
+  /** Part of the balance is Petals' allowance, off the contract: the one figure is then the dollars usable. */
+  allowance?: boolean;
   /** The one amount both presses act on, in dollars; null until there's a price to set it against. */
   amount: { usd: string; label: string; onUsd: (usd: string) => void } | null;
   add: MoneyPress;
@@ -56,7 +59,15 @@ export function Funds({
   const usd = Number(amount?.usd.replace(/,/g, '')) || 0;
   return (
     <div className="flex flex-col gap-block-gap">
-      {balance !== null && held !== null ? (
+      {balance !== null && held !== null && allowance ? (
+        // one figure: what the person can use, saying in a few words that Petals' allowance is in it
+        <p className="my-0 flex flex-wrap items-baseline gap-x-block-gap">
+          <span className="type-title whitespace-nowrap md:type-display-compact">
+            ${balance.usd}
+          </span>
+          <span className="type-lead whitespace-nowrap text-muted">{fundsWords.withAllowance}</span>
+        </p>
+      ) : balance !== null && held !== null ? (
         // the contract's own NEAR, as the chain says it, and the balance in dollars beside
         <p className="my-0 flex flex-wrap items-baseline gap-x-block-gap">
           <span className="type-title whitespace-nowrap md:type-display-compact">
