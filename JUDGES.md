@@ -204,7 +204,7 @@ Needs Node 24 and pnpm 10.33.0 (pinned in `.nvmrc` and `package.json`). Run from
 - Readers cover specific systems on NEAR, Ethereum, Base, Arbitrum, Gnosis and Solana; other chains aren't read.
 - The hosted agent needs credit or an invite; browsing the Power Map and the docs needs nothing. Flows that move funds
   or publish need a NEAR wallet and can't be exercised read-only.
-- The recorded end-to-end suite (`tests/e2e`) is behind the current code; `scripts/check.sh` is the gate.
+- `pnpm test:e2e` passes (29 pass, 37 skipped). These are skipped, each with its reason in the file, to be updated after the hackathon: the recorded quickstart (`skeleton.test.ts`, recorded before the agent stream changed), the hardening runs (`harden.test.ts`, server start outlasts the hook timeout), the credit lines of `test1.test.ts` (written before credit moved to the contract; they reach NEAR AI's billing) and one health-shape test in `seam.test.ts`. The live suite runs only with `PETAL_LIVE=1`. `scripts/check.sh` is the gate.
 - A fresh local clone has an empty Power Map; the fixtures replay recorded data, not today's network.
 - Ties inside a flower are drawn where a map has votes-alike data (for example Ref Finance); on the Power Map, lines
   join networks that share accounts. The Texture and Markings dimensions take no data yet and are hidden.
