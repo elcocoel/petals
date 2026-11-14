@@ -5,7 +5,13 @@ import type { AgentEvent } from '@petal/core/types';
 import { openStore, type Store } from '@petal/store';
 import { describe, expect, test } from 'vitest';
 import { storeLedger } from '../../src/budget.ts';
-import { inviteLedger, mintInvite } from '../../src/invites.ts';
+import {
+  INVITE_SPENT,
+  inviteLedger,
+  inviteSessionUsd,
+  mintInvite,
+  SHARE_SPENT,
+} from '../../src/invites.ts';
 import { DEFAULT_BUDGET, type LlmClient, type LlmCompletion } from '../../src/llm.ts';
 import { createNearAiClient, LlmCallError } from '../../src/near-ai.ts';
 import { startRun } from '../../src/run.ts';
@@ -322,5 +328,48 @@ describe('an invite', () => {
     const made = await mintInvite(store, { usd: 1, now });
     expect(made.expires_at).toBe('2026-11-20T00:00:00.000Z');
     expect((await store.invite.get(made.id))?.expires_at).toBe('2026-11-20T00:00:00.000Z');
+  });
+});
+
+describe("a session's share of an invite (PETAL_INVITE_SESSION_USD)", () => {
+  test('one session stops at its share; another still draws on the same invite', async () => {
+    const store = openStore(':memory:');
+    const { id } = await mintInvite(store, { usd: 1 });
+    const day = storeLedger(store);
+    const a = inviteLedger(store, id, day, undefined, { subject: 'anon:a', usd: 0.1 });
+    const b = inviteLedger(store, id, day, undefined, { subject: 'anon:b', usd: 0.1 });
+    expect(a.account).toBe(`invite:${id}`);
+    for (let i = 0; i < 2; i++) {
+      const hold = await a.reserve(0.05, 3);
+      expect(hold).not.toBeNull();
+      await a.settle(hold as NonNullable<typeof hold>, 0.05);
+    }
+    expect(await a.reserve(0.05, 3)).toBeNull();
+    expect(a.refusal?.()?.message).toBe(SHARE_SPENT);
+    const other = await b.reserve(0.05, 3);
+    expect(other).not.toBeNull();
+    await b.settle(other as NonNullable<typeof other>, 0.05);
+    expect((await store.invite.get(id))?.spent_usd).toBeCloseTo(0.15, 9);
+    expect((await store.credit.get(`invite:${id}`))?.balance_usd).toBeCloseTo(0.85, 9);
+  });
+
+  test('the invite running out first says so', async () => {
+    const store = openStore(':memory:');
+    const { id } = await mintInvite(store, { usd: 0.05 });
+    const ledger = inviteLedger(store, id, storeLedger(store), undefined, {
+      subject: 'anon:a',
+      usd: 0.5,
+    });
+    const hold = await ledger.reserve(0.05, 3);
+    await ledger.settle(hold as NonNullable<typeof hold>, 0.05);
+    expect(await ledger.reserve(0.05, 3)).toBeNull();
+    expect(ledger.refusal?.()?.message).toBe(INVITE_SPENT);
+  });
+
+  test('read from the environment: unset or not a positive number, no share', () => {
+    expect(inviteSessionUsd({ PETAL_INVITE_SESSION_USD: '0.5' })).toBe(0.5);
+    expect(inviteSessionUsd({})).toBeUndefined();
+    expect(inviteSessionUsd({ PETAL_INVITE_SESSION_USD: 'x' })).toBeUndefined();
+    expect(inviteSessionUsd({ PETAL_INVITE_SESSION_USD: '0' })).toBeUndefined();
   });
 });

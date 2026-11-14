@@ -15,6 +15,9 @@ export const NO_INVITE =
   "Petals' own agent runs only on a sponsored invite, and this session doesn't hold one, so nothing was spent. You can use your own agent instead.";
 export const INVITE_SPENT =
   "This invite's budget is used up, so Petals' agent stopped here. You can carry on with your own agent.";
+/** One session's share of an invite is used up (PETAL_INVITE_SESSION_USD): the invite may still have more. */
+export const SHARE_SPENT =
+  "This session has used its share of the invite, so Petals' agent stopped here. You can carry on with your own agent.";
 export const INVITE_CLOSED =
   "This invite isn't valid any more, so Petals' agent stopped here. You can carry on with your own agent.";
 export const CREDIT_SPENT =
@@ -25,6 +28,17 @@ export const PAYMENT_NEEDED =
 /** Where to pay, for a caller that isn't the page. */
 export const PAY_HINT =
   'GET /api/v1/pay says where to send NEAR; POST it the transaction to add it.';
+
+/**
+ * What one session may spend of any invite, from PETAL_INVITE_SESSION_USD, so one visitor can't spend a shared
+ * invite on their own. Unset, a session may spend all of it.
+ */
+export function inviteSessionUsd(
+  env: Record<string, string | undefined> = process.env,
+): number | undefined {
+  const usd = Number(env.PETAL_INVITE_SESSION_USD);
+  return env.PETAL_INVITE_SESSION_USD && Number.isFinite(usd) && usd > 0 ? usd : undefined;
+}
 
 /** An invite minted with no days given ends after this many. An open-ended one is never closed. */
 export const DEFAULT_INVITE_DAYS = 14;
@@ -227,14 +241,18 @@ function creditLedger(
   };
 }
 
-/** The day's ledger, with this invite's budget on top. */
+/**
+ * The day's ledger, with this invite's budget on top. With `share`, the session's own share of the invite on
+ * top of that: an account of its own, funded once with `usd` the first time it chats, drawn with the invite.
+ */
 export function inviteLedger(
   store: Store,
   id: string,
   day: BudgetLedger,
   now: () => Date = () => new Date(),
+  share?: { subject: string; usd: number },
 ): BudgetLedger {
-  return creditLedger(
+  const invite = creditLedger(
     store,
     accountOf(id),
     {
@@ -245,6 +263,31 @@ export function inviteLedger(
     day,
     now,
   );
+  if (!share) return invite;
+  const account = `invite-share:${id}:${share.subject}`;
+  const shared = creditLedger(
+    store,
+    account,
+    { refusal: async () => null, spent: SHARE_SPENT },
+    invite,
+    now,
+  );
+  return {
+    ...shared,
+    // what each call is charged to stays the invite
+    account: invite.account,
+    async reserve(usd, capUsd) {
+      await store.credit.apply({
+        id: `share:${account}`,
+        account_key: account,
+        delta_usd: share.usd,
+        reason: 'share',
+        at: now().toISOString(),
+      });
+      return shared.reserve(usd, capUsd);
+    },
+    refusal: () => shared.refusal?.() ?? invite.refusal?.() ?? null,
+  };
 }
 
 // A person's own credit (T374). It belongs to the person, not to a session or a wallet: any of their wallets
