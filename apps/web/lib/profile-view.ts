@@ -15,7 +15,7 @@ export const profilePageWords = {
   /** Under a wallet: when it signed. */
   provedOn: (date: string) => `Signed in on ${date}`,
   walletsNote: 'Each one signed a message with its own key, so it’s proven yours.',
-  /** On an Ethereum or Solana wallet's row: takes it off the profile (the NEAR account is the profile). */
+  /** On a wallet's row: takes it off the profile (the profile's own NEAR account has none). */
   disconnect: 'Disconnect',
   /** Once it's off. */
   disconnected: (shown: string) => `Disconnected ${shown}. It no longer signs in to this profile.`,
@@ -130,7 +130,7 @@ export interface WalletRow {
   chain: string;
   /** "Signed in on 11 Nov 2026" */
   when: string;
-  /** An Ethereum or Solana wallet's CAIP-10, for Disconnect; absent for NEAR, which is the profile. */
+  /** A wallet's CAIP-10, for Disconnect; absent for the profile's own NEAR account, which stays. */
   caip10?: string;
 }
 
@@ -145,6 +145,10 @@ export const walletChain = (network: string) =>
         : 'NEAR';
 
 export function walletRows(wallets: readonly ProvenWallet[]): WalletRow[] {
+  // the profile's own NEAR account, as the server names it (its first mainnet NEAR wallet, else its first NEAR
+  // one, in the server's order), has no Disconnect; every other wallet has
+  const near = wallets.filter((w) => w.network === 'mainnet' || w.network === 'testnet');
+  const primary = near.find((w) => w.network === 'mainnet') ?? near[0];
   return wallets.map((w) => ({
     key: `${w.network}:${w.account_id}`,
     ...(w.network === 'eip155' || w.network === 'solana'
@@ -152,7 +156,7 @@ export function walletRows(wallets: readonly ProvenWallet[]): WalletRow[] {
       : shownAccount(w.account_id)),
     chain: walletChain(w.network),
     when: profilePageWords.provedOn(dateLabel(w.proved_at)),
-    ...((w.network === 'eip155' || w.network === 'solana') && w.author ? { caip10: w.author } : {}),
+    ...(w !== primary && w.author ? { caip10: w.author } : {}),
   }));
 }
 
