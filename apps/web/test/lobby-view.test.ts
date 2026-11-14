@@ -3,6 +3,7 @@ import { describe, expect, test } from 'vitest';
 import {
   canWithdraw,
   fundsWords,
+  nearExact,
   nearOf,
   shownAccount,
   WITHDRAW_ALL,
@@ -37,6 +38,14 @@ describe('the profile part’s money', () => {
       type: 'FunctionCall',
       params: { methodName: 'withdraw', args: {}, gas: '30000000000000', deposit: '1' },
     });
+  });
+});
+
+describe('the contract’s own NEAR', () => {
+  test('to five places, trailing zeros dropped, as the chain says it', () => {
+    expect(nearExact('279040000000000000000000')).toBe('0.27904');
+    expect(nearExact('1000000000000000000000000')).toBe('1');
+    expect(nearExact('0')).toBe('0');
   });
 });
 

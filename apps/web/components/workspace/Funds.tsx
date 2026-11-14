@@ -26,6 +26,7 @@ export interface MoneyPress {
 
 export function Funds({
   balance,
+  held = null,
   amount,
   add,
   withdraw,
@@ -36,6 +37,8 @@ export function Funds({
 }: {
   /** What's left, dollars first and NEAR beside, as /make shows it; null until it can be read. */
   balance: Money | null;
+  /** What the contract holds for the person, in NEAR as the chain says it; null with no contract. */
+  held?: string | null;
   /** The one amount both presses act on, in dollars; null until there's a price to set it against. */
   amount: { usd: string; label: string; onUsd: (usd: string) => void } | null;
   add: MoneyPress;
@@ -50,10 +53,18 @@ export function Funds({
   /** What the last action did, in one line; null before any. */
   status?: string | null;
 }) {
-  const usd = Number(amount?.usd) || 0;
+  const usd = Number(amount?.usd.replace(/,/g, '')) || 0;
   return (
     <div className="flex flex-col gap-block-gap">
-      {balance !== null ? (
+      {balance !== null && held !== null ? (
+        // the contract's own NEAR, as the chain says it, and the balance in dollars beside
+        <p className="my-0 flex flex-wrap items-baseline gap-x-block-gap">
+          <span className="type-title whitespace-nowrap md:type-display-compact">
+            {fundsWords.near(held)}
+          </span>
+          <span className="type-lead whitespace-nowrap text-muted">${balance.usd}</span>
+        </p>
+      ) : balance !== null ? (
         <p className="my-0 flex flex-wrap items-baseline gap-x-block-gap">
           <span className="type-title whitespace-nowrap md:type-display-compact">
             ${balance.usd}

@@ -165,6 +165,14 @@ describe('the dollars the person chooses', () => {
     expect(payOffer('5', 3.42, false).send).toBe(1.462);
   });
 
+  test('no ceiling: any size typed, commas too', () => {
+    expect(payOffer('5000', 3.42, false)).toMatchObject({
+      label: 'Add $5000.00 · 1461.99 NEAR',
+      canPay: true,
+    });
+    expect(payOffer('5,000', 3.42, false).send).toBe(payOffer('5000', 3.42, false).send);
+  });
+
   test('with no price, one NEAR; a transfer out is confirmed, with no field', () => {
     expect(payOffer('', null, false)).toEqual({
       send: PAY_NEAR,

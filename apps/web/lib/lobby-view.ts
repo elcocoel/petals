@@ -264,6 +264,14 @@ export function nearOf(yocto: string): string {
   return `${hundredths / 100n}.${(hundredths % 100n).toString().padStart(2, '0')}`;
 }
 
+/** yoctoNEAR as NEAR to five places, trailing zeros dropped ('0.27904'): the contract's own figure. */
+export function nearExact(yocto: string): string {
+  const units = BigInt(yocto) / 10n ** 19n;
+  const whole = units / 100000n;
+  const part = (units % 100000n).toString().padStart(5, '0').replace(/0+$/, '');
+  return part ? `${whole}.${part}` : `${whole}`;
+}
+
 /** Withdraw takes something out while the contract holds something for the person. */
 export const canWithdraw = (held: string): boolean => BigInt(held) > 0n;
 
