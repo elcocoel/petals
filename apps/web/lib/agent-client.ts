@@ -373,12 +373,14 @@ export interface PressAll {
 }
 
 /** What one press over many maps would publish; null for nobody, or a server that can't say. */
-export async function readPressAll(author: string): Promise<PressAll | null> {
+export async function readPressAll(author: string): Promise<PressAll> {
   const res = await fetch(`/api/v1/publish/data?maps=all&author=${encodeURIComponent(author)}`, {
     cache: 'no-store',
   });
-  if (!res.ok) return null;
-  return (await res.json()) as PressAll;
+  const json = (await res.json().catch(() => ({}))) as PressAll & { error?: { message?: string } };
+  // refused: the server's own reason, which the box says
+  if (!res.ok) throw new Error(json.error?.message ?? `HTTP ${res.status}`);
+  return json;
 }
 
 /** One press over many maps, prepared when it's pressed (manifest/v1): every map's version and the one text. */

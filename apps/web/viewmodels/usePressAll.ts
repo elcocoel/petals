@@ -11,7 +11,7 @@ import {
   readPressAll,
   readSession,
 } from '../lib/agent-client.ts';
-import { pressAllView, pressAllWords } from '../lib/press-all.ts';
+import { type PressAllRead, pressAllView, pressAllWords } from '../lib/press-all.ts';
 import { asksSignIn, signPublication } from '../lib/publication-sign.ts';
 import { nearSigner, type PublishPhase, publishWords, type Signer } from '../lib/publish-press.ts';
 
@@ -23,11 +23,14 @@ export function usePressAll(active: boolean, landed: () => void) {
   const [said, setSaid] = useState<string | null>(null);
   /** the press asks the wallet to sign in first: said beforehand, since by phone it means a new QR */
   const [signsIn, setSignsIn] = useState(false);
+  /** where the read is, so a slow one says so (it is the press's own dry run) */
+  const [state, setState] = useState<PressAllRead>({ done: true });
   useEffect(() => {
     if (!active) return;
     let gone = false;
     setPhase('ready');
     setSaid(null);
+    setState({ reading: true });
     void (async () => {
       const me = await readSession();
       const who = me ? nearSigner(me) : null;
@@ -35,7 +38,10 @@ export function usePressAll(active: boolean, landed: () => void) {
       if (gone) return;
       setSigner(who);
       setRead(got);
-    })().catch(() => {});
+      setState({ done: true });
+    })().catch((e: unknown) => {
+      if (!gone) setState({ unread: e instanceof Error ? e.message : String(e) });
+    });
     return () => {
       gone = true;
     };
@@ -79,5 +85,5 @@ export function usePressAll(active: boolean, landed: () => void) {
       setPhase('failed');
     }
   }, [signer, read, landed]);
-  return { view: active ? pressAllView(read, phase, said, signsIn) : null, publish };
+  return { view: active ? pressAllView(read, phase, said, signsIn, state) : null, publish };
 }
