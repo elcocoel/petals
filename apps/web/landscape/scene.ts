@@ -49,6 +49,8 @@ export interface LandFlower {
   proposals?: number | undefined;
   /** its map's treasury and token price, in words, shown under its name at some magnification */
   worth?: readonly string[] | undefined;
+  /** the pairs of its accounts the view's Lines ties inside it (lib/ties.ts), or none */
+  ties?: readonly (readonly [string, string])[] | null | undefined;
 }
 
 export interface LandView {
