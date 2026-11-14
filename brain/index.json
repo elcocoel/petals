@@ -900,7 +900,7 @@
       ],
       "status": "partial",
       "file": "money/vesting.md",
-      "sha256": "46c5b7245a3b678a02a3f9b39f564efa67235fdcacaef3ab6bce4afcfd13f3b9"
+      "sha256": "577f4c31beabed45a7c0f7bf41bd3aef24a40b74c07c4cd950ab6ce1d9be4d7b"
     },
     {
       "id": "voting-blocs-over-time",
@@ -1400,6 +1400,7 @@
       "task": "When it unlocks",
       "words": [
         "unlock",
+        "locked",
         "vesting",
         "cliff",
         "release"
