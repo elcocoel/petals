@@ -10,7 +10,7 @@
 // transaction back and says what's left (POST /api/v1/pay). There is no timer. lib/lobby-view.ts holds the
 // arithmetic and the words.
 import { useCallback, useEffect, useState } from 'react';
-import { confirmPay, readCredit, readPay } from '../lib/agent-client.ts';
+import { confirmPay, readCredit, readPay, readSession } from '../lib/agent-client.ts';
 import {
   type HeldCredit,
   WITHDRAW_ALL,
@@ -18,9 +18,10 @@ import {
   withdrawn,
   withdrawView,
 } from '../lib/lobby-view.ts';
-import { type Credit, type Money, money, type PayInfo, sentBy } from '../lib/pay.ts';
+import { type Credit, type Money, money, type PayInfo, payWords, sentBy } from '../lib/pay.ts';
 import { profilePageWords, walletRefusal } from '../lib/profile-view.ts';
-import { connectWallet, sendAction } from '../lib/wallet.ts';
+import { sendAs, WrongAccount } from '../lib/wallet.ts';
+import { readKept } from './usePay.ts';
 
 export function useFunds(cue: string) {
   const [info, setInfo] = useState<PayInfo | null>(null);
@@ -36,14 +37,25 @@ export function useFunds(cue: string) {
   const [failedWhy, setFailedWhy] = useState<string | null>(null);
   /** Bumped by reread(), so the read runs again with the same cue. */
   const [again, setAgain] = useState(0);
+  /**
+   * The NEAR account signed in to Petals on the payment's network: the only one a deposit or a withdrawal is
+   * signed as (with a linked Ethereum or Solana sign-in, the profile's first NEAR wallet there).
+   */
+  const [signer, setSigner] = useState<string | null>(null);
+  /** the wallet was signed in as another account: the next press signs it in afresh */
+  const [switching, setSwitching] = useState(false);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: cue and again say when to read again; the read uses neither
   useEffect(() => {
     let gone = false;
-    void Promise.all([readCredit(), readPay()]).then(
-      ([c, p]) => {
+    void Promise.all([readCredit(), readPay(), readSession()]).then(
+      ([c, p, me]) => {
         if (gone) return;
         setInfo(p);
+        const own = me && p ? me.wallets.filter((w) => w.network === p.network) : [];
+        setSigner(
+          (me && p && me.network === p.network ? me.account : null) ?? own[0]?.account_id ?? null,
+        );
         // with the contract, what it holds now, read from the chain, is the truer balance (as usePay)
         setCredit(p?.credit ?? c.credit);
         setInviteLeft(c.inviteLeftUsd);
@@ -61,20 +73,25 @@ export function useFunds(cue: string) {
   const reread = useCallback(() => setAgain((n) => n + 1), []);
 
   const withdraw = useCallback(() => {
-    if (!info || held === null) return;
+    if (!info || held === null || !signer) return;
     const before = held;
     setPhase('withdrawing');
     setFailedWhy(null);
     void (async () => {
-      // the person's own NEAR wallet sends it: connected first (its picker opens when none is), and what it
-      // says, a no included, is said as it said it
+      // the person's own NEAR wallet sends it, signed as the account signed in to Petals or not at all (its
+      // picker opens when none is connected), and what it says, a no included, is said as it said it
       let sent: ReturnType<typeof sentBy>;
       try {
-        await connectWallet(info.network);
-        sent = sentBy(await sendAction(info.network, info.receiver, WITHDRAW_ALL));
+        sent = sentBy(
+          await sendAs(info.network, info.receiver, WITHDRAW_ALL, signer, switching, readKept),
+        );
         if (!sent) throw new Error('The wallet named no transaction.');
+        setSwitching(false);
       } catch (e) {
-        setFailedWhy(walletRefusal(profilePageWords.nearWallet, e));
+        if (e instanceof WrongAccount) {
+          setSwitching(true);
+          setFailedWhy(payWords.wrongAccount(e.connected, e.signer));
+        } else setFailedWhy(walletRefusal(profilePageWords.nearWallet, e));
         setPhase('failed');
         return;
       }
@@ -94,7 +111,7 @@ export function useFunds(cue: string) {
         setPhase('failed');
       }
     })();
-  }, [info, held]);
+  }, [info, held, signer, switching]);
 
   const balanceUsd = (credit?.left_usd ?? 0) + inviteLeft;
   return {
@@ -106,6 +123,8 @@ export function useFunds(cue: string) {
      */
     balance: (info ? money(balanceUsd, info.near_usd) : null) as Money | null,
     held,
+    /** The NEAR account a deposit or a withdrawal is signed as; null until read, or with none. */
+    signer,
     /** Withdraw, with the contract: what it takes out and what stays, and why; null with no contract. */
     withdrawal: withdrawView(held, balanceUsd, info?.near_usd ?? null),
     phase,

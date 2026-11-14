@@ -117,7 +117,7 @@ export function useLobby() {
   const toggleAdd = useCallback(() => setAddOpen((now) => !now), []);
   const asking = addOpen ? ADDING : null;
   const paid = funds.reread;
-  const pay = usePay(funds.where ?? null, asking, paid);
+  const pay = usePay(funds.where ?? null, asking, paid, funds.signer ?? null);
   // or any other token, from any chain, through NEAR Intents, beside it in the same row
   const topUp = useTopUp(asking, paid, pay);
   const nearUsd = funds.where?.near_usd ?? null;

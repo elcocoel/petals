@@ -106,6 +106,8 @@ export function Lobby({
     withdrew: string | null;
     failedWhy?: string | null;
     withdraw: () => void;
+    /** The NEAR account a deposit or a withdrawal is signed as. */
+    signer?: string | null;
   };
   /** Add funds: whether the pay row is open under the balance, and the row itself. */
   add: { open: boolean; toggle: () => void; row: Omit<ComponentProps<typeof PayRow>, 'first'> };
@@ -209,6 +211,7 @@ export function Lobby({
             phase={funds.phase}
             withdrew={funds.withdrew}
             failedWhy={funds.failedWhy ?? null}
+            signer={funds.signer ?? null}
             onWithdraw={funds.withdraw}
             adding={add.open}
             onAdd={add.toggle}

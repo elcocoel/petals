@@ -20,12 +20,27 @@ import {
   sentBy,
   yoctoOf,
 } from '../lib/pay.ts';
-import { connectedAccount, type Network, sendAction, signPrepared } from '../lib/wallet.ts';
+import {
+  connectedAccount,
+  type Network,
+  sendAs,
+  signPrepared,
+  WrongAccount,
+} from '../lib/wallet.ts';
 
 const readPending = (): PendingPay | null => {
   try {
     const raw = localStorage.getItem(PENDING_KEY);
     return raw ? (JSON.parse(raw) as PendingPay) : null;
+  } catch {
+    return null;
+  }
+};
+
+/** What a wallet keeps on this page, read for lib/wallet.ts (which account Meteor signs with). */
+export const readKept = (key: string): string | null => {
+  try {
+    return localStorage.getItem(key);
   } catch {
     return null;
   }
@@ -101,6 +116,8 @@ export function usePay(
   asking: string | null,
   /** The one balance's re-read, once a payment has landed. */
   paid: () => void,
+  /** The NEAR account signed in to Petals: the only one a payment is signed as. */
+  signer: string | null = null,
 ) {
   const [phase, setPhase] = useState<PayPhase>('ready');
   const [added, setAdded] = useState<string | null>(null);
@@ -108,6 +125,8 @@ export function usePay(
   const [pending, setPending] = useState<PendingPay | null>(null);
   /** the server's words when binding the wallet was refused: nothing was sent */
   const [why, setWhy] = useState<string | null>(null);
+  /** the wallet was signed in as another account: the next press signs it in afresh */
+  const [switching, setSwitching] = useState(false);
   useEffect(() => setPending(readPending()), []);
   const from = useMemo(() => (where ? payFrom(where.network) : null), [where]);
   const [askedBy, setAskedBy] = useState(asking);
@@ -147,28 +166,40 @@ export function usePay(
     setPhase('paying');
     setWhy(null);
     try {
-      // the NEAR comes from one of their own wallets, bound first if it isn't, before any is sent
-      let mine: boolean;
-      try {
-        mine = await payFromMine(from, out?.account);
-      } catch (e) {
-        setWhy(e instanceof Error && e.message ? e.message : null);
-        throw e;
-      }
-      if (!mine) {
-        setPhase('ready');
-        return;
-      }
       if (out) {
+        // the NEAR comes from one of their own wallets, bound first if it isn't
+        let mine: boolean;
+        try {
+          mine = await payFromMine(from, out.account);
+        } catch (e) {
+          setWhy(e instanceof Error && e.message ? e.message : null);
+          throw e;
+        }
+        if (!mine) {
+          setPhase('ready');
+          return;
+        }
         await confirm(out);
         return;
       }
-      if (send === null) {
+      if (send === null || !signer) {
         setPhase('ready');
         return;
       }
       const action = payAction(where, yoctoOf(send));
-      const sent = sentBy(await sendAction(where.network, where.receiver, action));
+      // signed as the account signed in to Petals, or not sent at all
+      let answer: unknown;
+      try {
+        answer = await sendAs(where.network, where.receiver, action, signer, switching, readKept);
+      } catch (e) {
+        if (e instanceof WrongAccount) {
+          setSwitching(true);
+          setWhy(payWords.wrongAccount(e.connected, e.signer));
+        }
+        throw e;
+      }
+      setSwitching(false);
+      const sent = sentBy(answer);
       if (!sent) throw new Error('no transaction');
       const p: PendingPay = {
         network: where.network,
@@ -182,7 +213,7 @@ export function usePay(
     } catch {
       setPhase('failed');
     }
-  }, [where, from, pending, send, confirm]);
+  }, [where, from, pending, send, signer, switching, confirm]);
 
   return {
     /** The pay row that's live; earlier ones were answered or passed. */
