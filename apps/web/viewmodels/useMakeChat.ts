@@ -9,6 +9,7 @@ import { useEffect, useMemo, useReducer, useRef } from 'react';
 import { type AgentClient, agentClient, refusalCode } from '../lib/agent-client.ts';
 import { withAbout } from '../lib/ask-about.ts';
 import type { Settings } from '../lib/composer-options.ts';
+import type { InFront } from '../lib/in-front.ts';
 import {
   type ChatAction,
   type ChatState,
@@ -47,6 +48,8 @@ export async function sendQuestion(
     about?: string | undefined;
     /** a pick the server should hold from this message on */
     settings?: Settings | undefined;
+    /** what is in front of the person on the canvas as they ask (lib/in-front.ts) */
+    inFront?: InFront | undefined;
   },
 ): Promise<void> {
   // a recorded run can't go on from what was said: each play starts over, with no words of its own
@@ -68,6 +71,8 @@ export async function sendQuestion(
       ],
       ...(continuing ? { run_id: continuing } : {}),
       ...(q.settings && !q.recorded ? { settings: q.settings } : {}),
+      // what "this" means: the map, flower and choice in front of them (a recorded run has its own question)
+      ...(q.inFront && !q.recorded ? { in_front: q.inFront } : {}),
     });
     for await (const event of events) {
       if (event.event === 'run') {
@@ -260,12 +265,15 @@ export function useMakeChat({
     dispatch,
     actions: {
       setQuestion: (text: string) => typeQuestion(deps, chat, text),
-      /** `words`, when given, are sent in place of what's in the field (a shortcut's ask) */
-      send: async (about?: string, settings?: Settings, words?: string) => {
+      /**
+       * `words`, when given, are sent in place of what's in the field (a shortcut's ask); `inFront` is what the
+       * canvas has open as they're sent
+       */
+      send: async (about?: string, settings?: Settings, words?: string, inFront?: InFront) => {
         const text = recorded ? RECORDED_QUESTION : (words ?? question).trim();
         if (!text || busy) return;
         following.current = true;
-        await sendQuestion(deps, { text, recorded, greeting, runId, about, settings });
+        await sendQuestion(deps, { text, recorded, greeting, runId, about, settings, inFront });
         box.current?.focus();
       },
       refollow: () => {
