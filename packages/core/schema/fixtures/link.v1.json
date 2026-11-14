@@ -1,0 +1,11 @@
+{
+  "petal": "link/v1",
+  "profile": "near:mainnet:alice.near",
+  "wallet": "eip155:1:0x27bdb83416bbf3ccb631dd09aac8c4a12f5fafd5",
+  "linked_at": "2026-11-14T01:00:00.000Z",
+  "proof": {
+    "standard": "eip191",
+    "message": "petals.example wants you to sign in with your Ethereum account:\n0x27bdb83416bbf3ccb631dd09aac8c4a12f5fafd5\n\nPetals: 0x27bdb83416bbf3ccb631dd09aac8c4a12f5fafd5 belongs to alice.near. Link e8d77da9e4f6dd4ddd0367f6a9df6a9c0ad0cbf686393828bf824fd98a2da9b2\n\nURI: https://petals.example\nVersion: 1\nChain ID: 1\nNonce: 0123456789abcdef\nIssued At: 2026-11-14T01:00:00.000Z",
+    "signature": "0x0243eb8d3d20eea7febfe3614772f4dbf4aa24d6912f3433a4b04d45b85ed8e05d3192e1e75b5bc20e7541e69a63cde40e1f99acba594622b56a7ee8e93b75e91c"
+  }
+}

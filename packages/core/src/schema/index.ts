@@ -13,6 +13,7 @@ import claimV4Schema from '../../schema/claim-v4.schema.json' with { type: 'json
 import creditSchema from '../../schema/credit.schema.json' with { type: 'json' };
 import flowerSchema from '../../schema/flower.schema.json' with { type: 'json' };
 import layerSchema from '../../schema/layer.schema.json' with { type: 'json' };
+import linkSchema from '../../schema/link.schema.json' with { type: 'json' };
 import manifestSchema from '../../schema/manifest.schema.json' with { type: 'json' };
 import markSchema from '../../schema/mark.schema.json' with { type: 'json' };
 import markV2Schema from '../../schema/mark-v2.schema.json' with { type: 'json' };
@@ -106,6 +107,8 @@ export const schemas: {
   credit: object;
   /** one press over many publications: the hashes one signature covers (composition.md, section 2b) */
   manifest: object;
+  /** a wallet's proof that it belongs to a NEAR profile (composition.md, section 2c) */
+  link: object;
 } = {
   snapshot: snapshotSchema,
   spec: view('spec'),
@@ -140,6 +143,7 @@ export const schemas: {
   publication: publicationSchema,
   credit: creditSchema,
   manifest: manifestSchema,
+  link: linkSchema,
 };
 
 /** The two source documents, unchanged. */

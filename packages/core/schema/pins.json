@@ -138,5 +138,9 @@
   "manifest.v1.json": {
     "schema": "urn:petal:schema:manifest:v1",
     "sha256": "03411db81a2fe20048845d9197672236569bfa9bf6a24fd48cd5a23416a9961c"
+  },
+  "link.v1.json": {
+    "schema": "urn:petal:schema:link:v1",
+    "sha256": "6ffad032d723854cba0b327bf8e3ae71eecbf2784c4835030b665834d779c6b3"
   }
 }

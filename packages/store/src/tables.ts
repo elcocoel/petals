@@ -650,6 +650,13 @@ export function tables(db: Db) {
         db.get<WalletBindingRow>('SELECT * FROM wallet_binding WHERE caip10_hash = ?', hash),
       ofPerson: (person: string) =>
         db.all<WalletBindingRow>('SELECT * FROM wallet_binding WHERE person = ?', person),
+      /** A wallet disconnected from its person: the binding goes. True when there was one. */
+      unbind: async (person: string, hash: string) =>
+        (await db.run(
+          'DELETE FROM wallet_binding WHERE person = ? AND caip10_hash = ?',
+          person,
+          hash,
+        )) === 1,
     },
 
     session: {
@@ -2168,6 +2175,9 @@ export function tables(db: Db) {
         )) === 1,
       get: (owner: string, hash: string) =>
         db.get<LayerRow>('SELECT * FROM layer WHERE owner = ? AND hash = ?', owner, hash),
+      /** One of the owner's kept layers, gone: a link they disconnected, before their next press. */
+      remove: async (owner: string, hash: string) =>
+        (await db.run('DELETE FROM layer WHERE owner = ? AND hash = ?', owner, hash)) === 1,
       /** An owner's layers, about one address or all, oldest first. */
       list: (owner: string, about?: string) =>
         about

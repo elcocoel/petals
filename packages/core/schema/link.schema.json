@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:petal:schema:link:v1",
+  "title": "Petal link v1",
+  "description": "link/v1 (specs/005-mapping-brain/composition.md, section 2c): an Ethereum or Solana wallet proving, once, with its own signature, that it belongs to a NEAR profile. The wallet signs a text whose statement names both and this document's hash without its proof: 'Petals: <wallet> belongs to <near account>. Link <hash>'. It goes public as a layer of the profile's own publication about its own account, so the profile's NEAR signature covers it too; anyone checks the wallet's signature over its text, and the profile's over the publication. A link only one side has signed credits nothing. Unlinking is the profile's next version about its own account without it.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["petal", "profile", "wallet", "linked_at", "proof"],
+  "properties": {
+    "petal": { "const": "link/v1" },
+    "profile": { "description": "the NEAR account the wallet belongs to, CAIP-10", "type": "string", "pattern": "^near:(mainnet|testnet):\\S+$" },
+    "wallet": { "description": "the linked wallet, CAIP-10: eip155:1:0x… (one for every EVM chain, lower case) or solana:<genesis>:<base58>", "type": "string", "pattern": "^(eip155:1:0x[0-9a-f]{40}|solana:[1-9A-HJ-NP-Za-km-z]{32}:[1-9A-HJ-NP-Za-km-z]{32,44})$" },
+    "linked_at": { "description": "when the server prepared the link, the signed text's own issued-at", "type": "string", "format": "date-time" },
+    "proof": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["standard", "message", "signature"],
+      "properties": {
+        "standard": { "enum": ["eip191", "ed25519"] },
+        "message": { "description": "the text the wallet signed, whose statement names this link", "type": "string", "minLength": 1 },
+        "signature": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}
