@@ -65,8 +65,8 @@ describe('maps hidden from the Power Map', () => {
   });
 
   test('the claims a mapping run reissued are retired, never deleted: each names its replacement and what changed', () => {
-    const claims = (retired as { claims: { id: string; replaced_by: string; from: string }[] })
-      .claims;
+    const all = (retired as { claims: { id: string; replaced_by: string; from: string }[] }).claims;
+    const claims = all.filter((c) => c.replaced_by !== '');
     expect(claims.length).toBe(3);
     for (const c of claims) {
       expect(c.id).toMatch(/^[0-9a-f]{64}$/);
@@ -78,5 +78,17 @@ describe('maps hidden from the Power Map', () => {
       });
     }
     expect(retiredClaim('0'.repeat(64))).toBeNull();
+  });
+
+  test('claims withheld from publishing are retired with no replacement, and say why', () => {
+    const withheld = (
+      retired as { claims: { id: string; replaced_by: string; from: string }[] }
+    ).claims.filter((c) => c.replaced_by === '');
+    expect(withheld.length).toBe(43);
+    for (const c of withheld) {
+      expect(c.id).toMatch(/^[0-9a-f]{64}$/);
+      expect(c.from).toMatch(/^withheld from publishing/);
+      expect(retiredClaim(c.id)).not.toBeNull();
+    }
   });
 });
