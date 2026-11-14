@@ -110,7 +110,8 @@ export function pictureType(b: Uint8Array): MarkLogo['media_type'] | null {
 const PICTURE_TIMEOUT_MS = 30_000;
 
 /** A picture from an address, or a data: URI, when it's one Petals keeps; null for anything else. */
-async function picture(fetchImpl: Fetch, url: string): Promise<MarkPicture | null> {
+/** A picture by its address: its bytes, its sha256 and its type; null when it isn't a PNG, JPEG or WebP. */
+export async function picture(fetchImpl: Fetch, url: string): Promise<MarkPicture | null> {
   let bytes: Uint8Array;
   try {
     const data = /^data:[^;,]+;base64,(.*)$/s.exec(url);
