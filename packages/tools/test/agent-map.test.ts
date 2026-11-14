@@ -390,13 +390,25 @@ describe('what a press adds, by layer: a clear indicator of the data layers and 
     const store = privateStore(r.ctx.config);
     // the mapping drew the same view: it isn't theirs to take
     expect((await run('list_publishable', { map: MAP }, person)).readings).toEqual([]);
-    // a view nobody is credited with yet, drawn in their project, goes with the press
-    await store.draft.label(drawn.spec_sha256, { name: null, made_by: null });
+    // a view of their own, drawn in their project and credited to nobody yet, goes with the press
+    const own = await run('propose_spec', {
+      network: 'moloch-v1',
+      sha256: MOLOCH,
+      choices: { width: 'equal' },
+    });
+    expect(own.spec_sha256).not.toBe(drawn.spec_sha256);
+    const step = await run(
+      'save_step',
+      { exploration: started.exploration, spec: own.spec, note: 'equal widths' },
+      person,
+    );
+    expect(step.error).toBeUndefined();
+    expect((await store.draft.get(own.spec_sha256))?.made_by ?? null).toBeNull();
     const o = await run('list_publishable', { map: MAP }, person);
     expect(o.readings).toEqual([
       expect.objectContaining({
         layer: 'Readings',
-        id: drawn.spec_sha256,
+        id: own.spec_sha256,
         accounts: expect.any(Number),
       }),
     ]);

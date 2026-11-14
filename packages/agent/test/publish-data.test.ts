@@ -46,7 +46,12 @@ async function setup() {
     { network: 'near-validators', sha256: VALIDATORS },
     ctx,
   )) as Out;
-  await callTool('render_flower', { spec: proposed.spec }, ctx);
+  const drawn = (await callTool('render_flower', { spec: proposed.spec }, ctx)) as Out;
+  // on the Power Map, as Petals' loads put a view there
+  await privateStore(ctx.config).draft.label(drawn.spec_sha256, {
+    name: null,
+    made_by: 'mapping.petals.near',
+  });
   const map = ((await callTool('look_up', { query: 'near validators' }, ctx)) as Out).maps[0].id;
   const app = buildPetalApp(cfg as never, {
     llm: scriptedLlm([]),

@@ -180,12 +180,19 @@ async function readOf(
   }
 }
 
-/** Every view on this site's map whose reading is here, the oldest first, through the viewer's view. */
+/**
+ * Every view on this site's map whose reading is here, the oldest first, through the viewer's view. The shared map
+ * holds what was published or what Petals loaded: a view with a maker. A flower drawn in someone's conversation is
+ * kept under its hash (its short link) and stays theirs until they publish it.
+ */
 export async function mapViews(
   ctx: ToolContext,
   view: View = DEFAULT_VIEW,
-  /** with the maps hidden from the Power Map: only a hidden map's own card asks */
-  o: { hidden?: boolean } = {},
+  /**
+   * hidden: with the maps hidden from the Power Map (only a hidden map's own card asks); unpublished: with the
+   * views no one published yet (only a press asks, for the person's own)
+   */
+  o: { hidden?: boolean; unpublished?: boolean } = {},
 ): Promise<MapView[]> {
   const out: MapView[] = [];
   const through = viewHash(view);
@@ -207,6 +214,7 @@ export async function mapViews(
     ? `:v${sha256Hex([...vested].map(([about, at]) => `${about}@${at}`).join(','))}`
     : '';
   for (const row of await privateStore(ctx.config).draft.list()) {
+    if (!row.made_by && !o.unpublished) continue;
     const key = `${row.sha256}:${through}${named}${priced}${voted}${vesting}`;
     let r = read.get(key);
     if (!r) {
