@@ -1,8 +1,9 @@
 // The Play (lib/play.ts): steps a map's dated readings one after another, reads each (GET /maps/:id/reading by its
 // snapshot) and hands it to the map as a landed reading, so the flower glides from one moment to the next. Every
 // moment is asked for at the first press and kept, and the next step starts once a moment has landed, so a slow
-// read holds the Play rather than being skipped. Pressed again, it pauses where it is; at the last moment it stops
-// there, and a press starts over. Leaving the flower, or a map without moments, gives the map its own reading back.
+// read holds the Play rather than being skipped. Pressed again, it pauses where it is; the last moment holds as
+// long as the others, then the map draws its own reading again, so the last moment isn't taken for the map. Leaving
+// the flower, or a map without moments, gives the map its own reading back too.
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { MapLanded } from '../landscape/LandscapeCanvas.tsx';
 import { type ComposedReading, readComposed } from '../lib/agent-client.ts';
@@ -70,7 +71,12 @@ export function usePlay(
       if (playing)
         next = window.setTimeout(() => {
           if (at + 1 < steps.length) setAt(at + 1);
-          else setPlaying(false);
+          else {
+            // the end: the map's own reading again
+            setPlaying(false);
+            setAt(-1);
+            land.current(null);
+          }
         }, PLAY_STEP);
     });
     return () => {
