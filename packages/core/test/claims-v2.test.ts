@@ -35,26 +35,23 @@ const kept = (c: unknown) => validateClaim(c, { private: true });
 const rules = (r: ReturnType<typeof validateClaim>) => (r.ok ? [] : r.errors.map((e) => e.rule));
 
 describe('claim/v2: what a person or an agent adds', () => {
-  test('the pinned fixture is a name kept in a person own project, refused for publishing', () => {
+  test('the pinned fixture is a name, kept in a person own project and published alike', () => {
     const file = join(import.meta.dirname, '..', 'schema', 'fixtures', 'claim.v2.json');
     const fixture = JSON.parse(readFileSync(file, 'utf8')) as Claim;
     expect(kept(fixture)).toEqual({ ok: true, value: fixture });
-    // the name itself, and the quote that names someone
-    expect(rules(validateClaim(fixture))).toEqual(['no_free_text_name', 'no_free_text_name']);
+    expect(validateClaim(fixture)).toEqual({ ok: true, value: fixture });
   });
 
-  test('a name, a note and a link: kept privately; published, only the link without a name passes', () => {
+  test('a name, a note and a link: kept privately and published alike, quoted or not', () => {
     const name = annotation();
     const note = annotation({ verb: 'noted', object: { value: 'Ada Byron keeps the handbook.' } });
     const link = annotation({ verb: 'linked', object: { value: 'https://example.org/ada' } });
     for (const c of [name, note, link]) expect(kept(c).ok).toBe(true);
     const bare = { url: SOURCE.url, tx: SOURCE.tx };
-    expect(rules(validateClaim(annotation({ evidence: [bare] })))).toEqual(['no_free_text_name']);
-    expect(rules(validateClaim(annotation({ ...note, evidence: [bare] })))).toEqual([
-      'no_free_text_name',
-    ]);
-    const { id: _id, petal: _p, ...linkDraft } = link;
-    expect(validateClaim(annotation({ ...linkDraft, evidence: [bare] })).ok).toBe(true);
+    for (const c of [name, note, link]) {
+      const { id: _id, petal: _p, ...draft } = c;
+      expect(validateClaim(annotation({ ...draft, evidence: [bare] })).ok).toBe(true);
+    }
   });
 
   test('each object fits its verb', () => {

@@ -233,24 +233,6 @@ describe('validateClaim refuses each forbidden case', () => {
       'qualifier',
       '/qualifiers/real_name',
     ],
-    [
-      'a name in a note',
-      () => on({ evidence: [{ url: 'https://example.org', note: 'run by Ada Byron' }] }),
-      'no_free_text_name',
-      '/evidence/0/note',
-    ],
-    [
-      'a handle in a note',
-      () => on({ evidence: [{ url: 'https://example.org', note: 'see @ada' }] }),
-      'no_free_text_name',
-      '/evidence/0/note',
-    ],
-    [
-      'an address for mail in a note',
-      () => on({ evidence: [{ url: 'https://example.org', note: 'mail ada@example.org' }] }),
-      'no_free_text_name',
-      '/evidence/0/note',
-    ],
     // Vocabulary
     ['the verb scammer', () => ({ ...sourcedClaim(), verb: 'scammer' }), 'schema', '/verb'],
     ['the verb sybil', () => ({ ...sourcedClaim(), verb: 'sybil' }), 'schema', '/verb'],

@@ -273,7 +273,7 @@ describe('the next steps on a map just read', () => {
 });
 
 describe("list_publishable through a project's link (a person's own agent has no session)", () => {
-  test("the link's owner is whose data it is: what their agents kept about the map, and what stays private", async () => {
+  test("the link's owner is whose data it is: what their agents kept about the map", async () => {
     // a project their agent works in by its link (an unclaimed one here: its owner is the project itself)
     const started = await run('start_exploration', { question: 'who runs the guild?' });
     const exploration = (started.link as { url: string }).url;
@@ -312,10 +312,10 @@ describe("list_publishable through a project's link (a person's own agent has no
       about: MAP,
       name: 'Founders Guild v1',
       map_url: MAP_URL,
-      ready: 1,
+      ready: 2,
       published: 0,
     });
-    expect(o.private).toHaveLength(1);
+    expect(o.private).toHaveLength(0);
     // with neither a link nor a person signed in, nobody's data
     expect((await run('list_publishable', { map: MAP })).error.code).toBe('unauthorised');
   });

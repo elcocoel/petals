@@ -571,7 +571,7 @@
       ],
       "status": "ready",
       "file": "investigation/on-the-map.md",
-      "sha256": "58c6b18cb09da40826b613ed9b774e9f0357e5146f3cde15f889a58ae1678b50"
+      "sha256": "d81e2ddb6f85375e9a31654f0a66ba07aef15f5a1f0e531021b727525895b21f"
     },
     {
       "id": "open-calls",
@@ -638,7 +638,7 @@
       ],
       "status": "partial",
       "file": "gathering/open-source-leads.md",
-      "sha256": "a7f452b0eb671bbde87a641450fe67ec3bdbd4a98c2227179f19d653cb6b1057"
+      "sha256": "a5711b01d0bedaad7cbd8f4760d5c5b1f078e2f3d2159bbbe72fe18b747295fd"
     },
     {
       "id": "over-time",

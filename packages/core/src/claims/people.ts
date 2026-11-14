@@ -1,45 +1,30 @@
 // REAL PEOPLE. This file is the rule, and it is changed here.
 //
-// Names are allowed in a person's own annotations, kept in their own project (`{ private: true }`), so a
-// person can tie wallets to friends' names. Anything published keeps the first version below, with one
-// exception, so names found while mapping can reach the shared map: a name a public source ties to an address
-// publishes as a claim, said as that source says it, with the source (`sourcedName`): a `named` claim taken from
-// its source, resting on a proposal, a transaction, or a public page or post (an official page, a forum or
-// governance post, a post on X), with that source's own words quoted. The same holds for any claim taken from
-// such a source (`publiclySourced`): its quotes are kept as written, and a sourced note keeps its words; the
-// claimer's own evidence notes are still checked. A name worked out from traces (patterns, timing, style, scraps
-// put together) publishes as an inferred claim (`inferredName`), marked inferred, with its method and the public
-// evidence it was worked out from; the claimer answers for it and the qualifier rates it. In a person's own
-// project, rules 2 and 5
-// give way for claim/v2's named and noted and for the evidence's notes and quotes; rules 1, 3 and 4 hold
-// everywhere.
+// A claim publishes as it is, names and all, whether it's kept in a person's own project (`{ private: true }`)
+// or published: no name net reads it. The claimer answers for it, and the qualifier rates it before the press.
+// A claim taken from a source (`sourced`) says what its source says, with the source. One worked out from
+// traces (`inferred`: patterns, timing, style, scraps put together) is marked inferred, with its method and
+// whatever evidence it has.
 //
-// Why it's strict: a chain can't forget. A wrong claim about a real person can be hidden, not erased,
-// and constitution line 56 ("may link an account to a real person... wherever public evidence
-// allows", with a promise of removal) holds only off chain. That line is under question (open
-// question 9). Until it's decided:
+// Why some of it stays strict: a chain can't forget. A wrong claim about a real person can be hidden, not
+// erased, and constitution line 56 ("may link an account to a real person... wherever public evidence
+// allows", with a promise of removal) holds only off chain. So:
 //
 // 1. Claims name accounts, contracts and groups. No natural person as subject or object.
-// 2. No free-text names in `object`, `qualifiers` or `note`.
-// 3. Nothing in the vocabulary calls anyone a scammer, a sybil or the like.
+// 3. Nothing in the vocabulary calls anyone a scammer, a sybil or the like, except an inferred claim's own
+//    words, which the qualifier weighs.
 // 4. An inference names its method, and can't rest on inbound transfers alone. Anyone can send
 //    anything to anyone: Tornado Cash dust hit 600+ addresses, and some got blocked for it.
-// 5. Names stay in the account's own voice: its profile, its `.near` name, its ENS. They're read at
-//    draw time and shown as "this account says". They're never rewritten as claims.
+// (Rules 2 and 5, no free-text names and names only in the account's own voice, are lifted.)
 //
 // What a machine enforces, in validateClaim:
 // - Refs: only the namespaces in refs.ts parse. `person:`, `entity:` and friends are refused by name.
 // - `object.value` and `qualifiers`: typed per verb (validate.ts), so none can hold a sentence.
-// - The words below, wherever text can sit.
-// - `note`: a net, not a guard. It catches "Firstname Lastname", handles and addresses for mail.
+// - The words below, wherever text can sit, except in an inferred claim.
 // - Inferred: `method` and `grounds` are required, and grounds can't be inbound transfers alone.
 //
-// What no machine here can catch, so a person or a later filter must (open question 15):
-// a lower-case name in a note, a name used as a `role` slug or a token's symbol, a name inside a URL,
-// an account whose id is someone's name, and whether a stated method is what really ran.
-//
-// To loosen the rule: empty PERSON_NAMESPACES and add the namespace to refs.ts, or relax the checks
-// in peopleRuleIssues. Public claims already written can't follow, which is the reason for caution.
+// What no machine here can catch, so a person or a later filter must (open question 15): whether a stated
+// method is what really ran.
 import type { ValidationIssue } from '../types/index.ts';
 import type { Claim } from './types.ts';
 
@@ -64,58 +49,18 @@ export const PERSON_NAMESPACES: ReadonlySet<string> = new Set([
 export const FORBIDDEN_WORDS =
   /scam|sybil|fraud|launder|thief|thieves|criminal|terroris|hacker|ponzi|rug-?pull|drainer|money.?mule/i;
 
-/** Two capitalised words in a row, like a name. Also catches some innocent phrases: reword them. */
-const NAME_LIKE = /\p{Lu}\p{Ll}+[\s.-]+\p{Lu}\p{Ll}+/u;
-/** A handle or an address for mail. */
-const CONTACT = /(^|\s)@[\p{L}\d_]|[\p{L}\d._-]+@[\p{L}\d-]+\.[\p{L}]/u;
-
 const REASON = {
   person:
     'claims name accounts, contracts and groups, not natural people (people.ts, first-version rule)',
   word: 'this word is not in the vocabulary: say what the accounts did, not what anyone is',
-  note: 'a note must not name a person: point to the evidence instead (people.ts)',
-  name: "a name publishes as a sourced claim resting on a public source, a proposal, a transaction, a page or a post, with that source's own words quoted, or as an inferred claim with its method and the public pages, posts, proposals or transactions it was worked out from as evidence (people.ts)",
   inbound:
     'an inference can not rest on inbound transfers alone: anyone can send anything to anyone',
 };
 
 const namespaceOf = (ref: string): string => ref.slice(0, Math.max(0, ref.indexOf(':')));
 
-/** A piece of evidence that is a public source a name can rest on: a proposal, a transaction, a page or a post. */
-const publicSource = (e: Claim['evidence'][number]): boolean =>
-  (e.type === 'proposal' && !!e.proposal) ||
-  (e.type === 'tx' && !!e.tx) ||
-  ((e.type === 'page' || e.type === 'post') && !!e.url);
-
-/**
- * A claim taken from a public source (sourced, never worked out), with a piece of evidence that is a proposal,
- * a transaction, or a page or a post with its address, quoting the source's own words. Said as the source says
- * it, with the source; the claimer answers for it.
- */
-export function publiclySourced(c: Claim): boolean {
-  return (
-    c.kind === 'sourced' &&
-    c.evidence.some(
-      (e) => publicSource(e) && typeof e.quote === 'string' && e.quote.trim().length > 0,
-    )
-  );
-}
-
-/** A name a public source ties to the address: a `named` claim, publicly sourced. */
-export const sourcedName = (c: Claim): boolean => c.verb === 'named' && publiclySourced(c);
-
-/**
- * A name worked out from traces: a `named` claim, inferred, with its method, resting on a public page, post,
- * proposal or transaction as evidence. It publishes marked inferred; the claimer answers for it.
- */
-export const inferredName = (c: Claim): boolean =>
-  c.verb === 'named' &&
-  c.kind === 'inferred' &&
-  !!c.method?.trim() &&
-  c.evidence.some(publicSource);
-
-/** The rule, as far as a machine can check it, for a claim kept where `scope` says. */
-export function peopleRuleIssues(c: Claim, scope: PeopleScope = {}): ValidationIssue[] {
+/** The rule, as far as a machine can check it: the same for a claim kept privately or published. */
+export function peopleRuleIssues(c: Claim, _scope: PeopleScope = {}): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
   const add = (path: string, rule: string, message: string) => issues.push({ path, rule, message });
 
@@ -149,32 +94,11 @@ export function peopleRuleIssues(c: Claim, scope: PeopleScope = {}): ValidationI
     ...c.evidence.map((e, i): [string, string | undefined] => [`/evidence/${i}/note`, e.note]),
     ...c.evidence.map((e, i): [string, string | undefined] => [`/evidence/${i}/quote`, e.quote]),
   ];
+  // an inferred claim is said as worked out, marked inferred: the qualifier, not a word list, weighs it
+  const inferred = c.kind === 'inferred';
   for (const [path, text] of texts)
-    if (text !== undefined && FORBIDDEN_WORDS.test(text)) add(path, 'vocabulary', REASON.word);
-
-  // Names: allowed in a person's own project; published as a public source states them, or inferred from public
-  // evidence with the method that did it.
-  if (!scope.private) {
-    const sourced = publiclySourced(c) || inferredName(c);
-    if (c.verb === 'named' && !sourced) add('/object/value', 'no_free_text_name', REASON.name);
-    const words: [string, string | undefined][] = [
-      // a sourced note says what its source says; any other note, or a type, is the claimer's own words
-      ...(((c.verb === 'noted' && !sourced) || c.verb === 'is_a') && typeof c.object !== 'string'
-        ? ([['/object/value', c.object.value]] as [string, string][])
-        : []),
-      ...c.evidence.map((e, i): [string, string | undefined] => [`/evidence/${i}/note`, e.note]),
-      // a public source's record, page or post is quoted as written: its own words may carry names
-      ...(sourced
-        ? []
-        : c.evidence.map((e, i): [string, string | undefined] => [
-            `/evidence/${i}/quote`,
-            e.quote,
-          ])),
-    ];
-    for (const [path, text] of words)
-      if (text !== undefined && (NAME_LIKE.test(text) || CONTACT.test(text)))
-        add(path, 'no_free_text_name', REASON.note);
-  }
+    if (!inferred && text !== undefined && FORBIDDEN_WORDS.test(text))
+      add(path, 'vocabulary', REASON.word);
 
   // `confidence` rates a claim, so it rests on the claim. Everything else inferred links accounts.
   if (c.kind === 'inferred' && c.verb !== 'confidence') {

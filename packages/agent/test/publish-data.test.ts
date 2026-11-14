@@ -122,7 +122,7 @@ const layerAbout = (about: string, from: string[] = [], value = '3'): Layer =>
     standing: 'verified',
   }) as unknown as Layer;
 
-/** A name the DAO's own records tie to the pool, and one worked out from traces with nothing public behind it. */
+/** A name the DAO's own records tie to the pool. */
 const DECLARED = {
   subject: POOL,
   verb: 'named',
@@ -136,15 +136,6 @@ const DECLARED = {
       quote: 'Pay Astro for running the pool',
     },
   ],
-};
-const WORKED_OUT = {
-  subject: POOL,
-  verb: 'named',
-  object: { value: 'Astro Stakers' },
-  kind: 'inferred',
-  method: 'codex/research@2026-11-10',
-  qualifiers: { grounds: 'research' },
-  evidence: [{ type: 'note', note: 'by timing and style' }],
 };
 
 /** The person's own layer, kept as keep_layer keeps it. */
@@ -170,9 +161,9 @@ describe('the press: a signed version on the shared map', () => {
     expect((await w.request(mapQ(w.map))).status).toBe(401);
     await w.signIn();
     const kept = await w.request('/api/v1/me/annotations', 'POST', {
-      annotations: [DECLARED, WORKED_OUT],
+      annotations: [DECLARED],
     });
-    expect(kept.body, JSON.stringify(kept.body)).toMatchObject({ added: 2 });
+    expect(kept.body, JSON.stringify(kept.body)).toMatchObject({ added: 1 });
 
     // every item, one row each, read before the press (look first), with the qualifier's confidence
     const ready = await w.request(mapQ(w.map));
@@ -201,23 +192,8 @@ describe('the press: a signed version on the shared map', () => {
     expect(ready.body.claims[0].confidence).toBeGreaterThan(0);
     expect(ready.body.adds).toEqual([
       { layer: 'Insights', kind: 'claims', verb: 'named', label: 'Names', count: 1, goes: true },
-      {
-        layer: 'Insights',
-        kind: 'claims',
-        verb: 'named',
-        label: 'Names',
-        count: 1,
-        goes: false,
-        why: 'they stay private: each says why',
-      },
     ]);
-    expect(ready.body.private).toEqual([
-      expect.objectContaining({
-        subject: POOL,
-        name: 'Astro Stakers',
-        why: expect.stringMatching(/inferred claim with its method/),
-      }),
-    ]);
+    expect(ready.body.private).toEqual([]);
     // each layer the press would publish, and what it adds to the map in front (composition.md, section 9)
     const none = {
       new_moment: { states: [] },

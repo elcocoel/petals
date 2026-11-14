@@ -81,15 +81,10 @@ describe("validate_data --public: what the shared map's loader says (mappingProb
     id: 'ed4b56189bc5ec067697d4dbd51a537ecdc8ec7c30da211c04a016c2a41b776f',
   };
 
-  test("a note the person's project takes is refused for the shared map, in the loader's words", () => {
+  test('a note goes to the shared map as it is', () => {
     expect(validateData(NOTE)).toMatchObject({ ok: true });
-    const out = validateData(NOTE, { public: true }) as {
-      ok: boolean;
-      errors: { message: string }[];
-    };
-    expect(out.ok).toBe(false);
-    expect(out.errors.map((e) => e.message)).toEqual(mappingProblems(NOTE));
-    expect(out.errors[0]?.message).toMatch(/a note must not name a person/);
+    expect(validateData(NOTE, { public: true })).toMatchObject({ ok: true });
+    expect(mappingProblems(NOTE)).toEqual([]);
   });
 
   test("a layer, which the loader doesn't take, says so; a valid snapshot passes both ways", () => {

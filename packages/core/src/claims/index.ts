@@ -11,12 +11,9 @@ export {
 } from './observed.ts';
 export {
   FORBIDDEN_WORDS,
-  inferredName,
   PERSON_NAMESPACES,
   type PeopleScope,
   peopleRuleIssues,
-  publiclySourced,
-  sourcedName,
 } from './people.ts';
 export { applyPolicy, DEFAULT_LENS } from './policy.ts';
 export {
