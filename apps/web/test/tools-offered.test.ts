@@ -31,8 +31,6 @@ const draw = (choices: LegendEdit['choices']) =>
   );
 
 test('a dimension no data can go in yet is not offered, and comes back when data fits it', () => {
-  // Width, Outline and Segments take data today; Texture, Markings and Lines don't
-  expect(draw(viewChoices())).toContain(panelWords.legendMore(3));
-  const ties = { name: 'votes_alike', kind: 'relation' } as const;
-  expect(draw({ ...viewChoices(), lines: [ties] })).toContain(panelWords.legendMore(4));
+  // Width, Outline, Segments and Lines (votes alike) take data today; Texture and Markings don't
+  expect(draw(viewChoices())).toContain(panelWords.legendMore(4));
 });
