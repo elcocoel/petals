@@ -653,6 +653,11 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
       );
     const s = await findSnapshot(ctx, pick.snapshot);
     const map = await compositionOf(ctx, id);
+    const drawn = new Set(
+      (pick.reading.petals as { id?: unknown }[])
+        .map((p) => p.id)
+        .filter((x): x is string => typeof x === 'string'),
+    );
     return respond(c, {
       rule: record.rule,
       composed_from: record.composed_from,
@@ -661,9 +666,13 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
       title: pick.reading.title,
       petals: pick.reading.petals,
       given: pick.given,
+      // who brought each drawn petal's facts: the drawn petals only (a reading can hold tens of thousands)
       credit:
         map && s
-          ? readingCredit(map, s)
+          ? readingCredit(map, {
+              network: s.network,
+              participants: s.participants.filter((p) => drawn.has(p.id)),
+            })
           : { pieces: {}, petals: {}, publications: {}, authors: {} },
     });
   });
