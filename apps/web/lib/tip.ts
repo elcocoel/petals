@@ -30,6 +30,8 @@ export function typicalTurn(c: Catalogue | null): TypicalTurn | null {
 
 export const tipWords = {
   label: 'Tip',
+  /** Over the tip's slider where it's laid out; the line under it says what it adds. */
+  onTop: 'Tip to Petals',
   percent: (p: number) => `${p}%`,
   about:
     'An optional donation to Petals: a percent of what the AI costs you, on top of it and charged apart.',

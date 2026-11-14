@@ -2975,7 +2975,7 @@ export const registry: LabEntry[] = [
     source: 'apps/web/components/workspace/Funds.tsx',
     states: [
       {
-        name: 'Add funds, open',
+        name: 'the pay row laid out under the balance',
         render: () => (
           <Funds
             balance={{ usd: '1.52', near: '0.42' }}
@@ -2983,15 +2983,14 @@ export const registry: LabEntry[] = [
             phase="ready"
             withdrew={null}
             onWithdraw={() => {}}
-            adding
-            onAdd={() => {}}
             add={
               <PayRow
-                first
+                bare
                 phase="ready"
                 added={null}
                 onPay={() => {}}
-                label="Add $1.00 (0.28 NEAR)"
+                label="Add $5.00 · 1.46 NEAR"
+                amount={{ usd: '5', label: 'Dollars to add', onUsd: () => {} }}
               />
             }
           />
@@ -3006,7 +3005,6 @@ export const registry: LabEntry[] = [
             phase="ready"
             withdrew={null}
             onWithdraw={() => {}}
-            onAdd={() => {}}
           />
         ),
       },
@@ -3103,7 +3101,6 @@ export const registry: LabEntry[] = [
             phase="ready"
             withdrew={null}
             onWithdraw={() => {}}
-            onAdd={() => {}}
           />
         ),
       },
@@ -3116,7 +3113,6 @@ export const registry: LabEntry[] = [
             phase="ready"
             withdrew={null}
             onWithdraw={() => {}}
-            onAdd={() => {}}
           />
         ),
       },

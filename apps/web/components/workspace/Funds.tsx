@@ -1,17 +1,17 @@
-// The Balance band's own side: the credit the person holds, dollars first in the display's size, as the landing
-// sets its headline, NEAR beside at today's price, and what it is; then the band's two actions, as the
-// landing's: Add funds, the black button, which unfolds the pay row's own flow under it (NEAR from a wallet, or
-// any token through NEAR Intents); and Withdraw beside it, always there with the credit contract, which takes
-// everything the contract holds out through their own wallet, and says under it what it can take out and what it
-// can't, and why (pressable only while the contract holds something). Under them, the tip, an optional donation to Petals on the price's
-// scale (TipControl), once Petals has said what it is. Props only: viewmodels/useFunds.ts reads the credit and
-// holds the withdrawal, viewmodels/usePay.ts and useTopUp.ts the payment (in `add`), viewmodels/useTip.ts the
-// tip. Words from lib/lobby-view.ts and lib/tip.ts.
+// The Balance band's own side, every command under what it changes: the credit the person holds, dollars first
+// in the display's size, NEAR beside at today's price; right under it the dollars to add, dragged on a slider,
+// with the press that adds them (the pay row's own flow, laid out from the start: NEAR from a wallet, or any
+// token through NEAR Intents) and the account the wallet signs as; then Withdraw, always there with the credit
+// contract (pressable only while it holds something), with one short line each on what it takes out and what
+// it can't; then the tip, in plain sight and set right there. Props only: viewmodels/useFunds.ts reads the
+// credit and holds the withdrawal, viewmodels/usePay.ts and useTopUp.ts the payment (in `add`),
+// viewmodels/useTip.ts the tip. Words from lib/lobby-view.ts, lib/pay.ts and lib/tip.ts.
 import type { ReactNode } from 'react';
+import { shortId } from '../../lib/flower-view.ts';
 import { fundsWords, type WithdrawPhase, type WithdrawView } from '../../lib/lobby-view.ts';
 import { type Money, payWords } from '../../lib/pay.ts';
-import { ActionRow } from '../ui/ActionRow.tsx';
 import { Button } from '../ui/Button.tsx';
+import { Mono } from '../ui/Mono.tsx';
 import { TipControl, type TipView } from './TipControl.tsx';
 
 export function Funds({
@@ -22,8 +22,6 @@ export function Funds({
   failedWhy = null,
   signer = null,
   onWithdraw,
-  adding,
-  onAdd,
   add,
   tip,
 }: {
@@ -39,11 +37,7 @@ export function Funds({
   /** The NEAR account a deposit or a withdrawal is signed as, named before any press. */
   signer?: string | null;
   onWithdraw: () => void;
-  /** The pay row is open under the balance. */
-  adding?: boolean;
-  /** Opens it, or folds it away. */
-  onAdd?: () => void;
-  /** The pay row itself, while it's open. */
+  /** The pay row, laid out under the balance from the start. */
   add?: ReactNode;
   /** The person's tip; absent where only the balance shows. */
   tip?: TipView;
@@ -64,44 +58,38 @@ export function Funds({
       ) : (
         <p className="my-0 type-lead text-muted">{fundsWords.unread}</p>
       )}
-      <p className="my-0 type-body text-muted">{fundsWords.note}</p>
-      {(onAdd || withdrawal) && (
-        <ActionRow>
-          {onAdd && (
-            <Button variant={adding ? 'secondary' : 'primary'} arrow={!adding} onClick={onAdd}>
-              {adding ? fundsWords.closeAdd : fundsWords.add}
-            </Button>
-          )}
-          {withdrawal && (
-            <Button
-              variant="secondary"
-              disabled={!withdrawal.enabled || phase === 'withdrawing'}
-              onClick={onWithdraw}
-            >
-              {phase === 'withdrawing' ? fundsWords.waiting : fundsWords.withdraw}
-            </Button>
-          )}
-        </ActionRow>
-      )}
-      {signer && (onAdd || withdrawal) && (
-        <p className="my-0 type-caption text-muted">{payWords.signsAs(signer)}</p>
+      {/* right under the balance: the dollars to add, dragged, with the press that adds them */}
+      {add}
+      {signer && (
+        // as every address is shortened, whole on hover
+        <p className="my-0" title={signer}>
+          <Mono as="span" tone="muted">
+            {payWords.signsAs(shortId(signer))}
+          </Mono>
+        </p>
       )}
       {withdrawal && (
-        <div className="flex max-w-content-width flex-col gap-text-gap">
-          <p className="my-0 type-caption text-muted">{withdrawal.can}</p>
-          {withdrawal.cannot && <p className="my-0 type-caption text-muted">{withdrawal.cannot}</p>}
+        <div className="flex flex-col items-start gap-space-4">
+          <Button
+            variant="secondary"
+            disabled={!withdrawal.enabled || phase === 'withdrawing'}
+            onClick={onWithdraw}
+          >
+            {phase === 'withdrawing' ? fundsWords.waiting : withdrawal.label}
+          </Button>
+          {withdrawal.cannot && (
+            <Mono as="p" tone="muted">
+              {withdrawal.cannot}
+            </Mono>
+          )}
         </div>
       )}
-      {adding && add}
       {phase === 'withdrew' && withdrew !== null && (
-        <p className="my-0 type-caption text-muted">{fundsWords.withdrew(withdrew)}</p>
+        <p className="my-0 type-ui">{fundsWords.withdrew(withdrew)}</p>
       )}
       {phase === 'failed' && <p className="my-0 type-body">{failedWhy ?? fundsWords.failed}</p>}
-      {tip && tip.percent !== null && tip.scale && (
-        <div className="max-w-content-width border-t border-hairline pt-text-gap">
-          <TipControl {...tip} />
-        </div>
-      )}
+      {/* the tip, in plain sight and set right here */}
+      {tip && tip.percent !== null && tip.scale && <TipControl {...tip} inline />}
     </div>
   );
 }

@@ -4,11 +4,12 @@
 // amount to the address given, in one transfer from any wallet. Props only: viewmodels/usePay.ts and useTopUp.ts
 // hold the payments. Words from lib/pay.ts and lib/intents.ts.
 import { intentWords, type TopUpView } from '../../lib/intents.ts';
-import { PAY_NEAR, type PayPhase, payWords } from '../../lib/pay.ts';
+import { PAY_NEAR, PAY_USD_MAX, type PayPhase, payWords } from '../../lib/pay.ts';
 import { ActionRow } from '../ui/ActionRow.tsx';
 import { Button } from '../ui/Button.tsx';
 import { Field } from '../ui/Field.tsx';
 import { Mono } from '../ui/Mono.tsx';
+import { Range } from '../ui/Range.tsx';
 
 export function PayRow({
   first = false,
@@ -22,6 +23,7 @@ export function PayRow({
   canPay = true,
   addedWords,
   line,
+  bare = false,
 }: {
   /** offered before the first question, to someone with no credit yet: its words say so */
   first?: boolean;
@@ -42,6 +44,8 @@ export function PayRow({
   addedWords?: (near: string) => string;
   /** the row's first line, where the page has its own words for it */
   line?: string;
+  /** laid out on its page, under what it adds to: no box and no first line, the amount a slider by the press */
+  bare?: boolean;
 }) {
   if (phase === 'added' && added) {
     return (
@@ -59,9 +63,11 @@ export function PayRow({
     return <p className="my-0 type-ui">{sent.status}</p>;
   }
   return (
-    <div className="flex flex-col items-start gap-text-gap border border-hairline p-text-gap">
-      <p className="my-0 type-ui">{line ?? (first ? payWords.start : payWords.out)}</p>
-      {amount && (
+    <div
+      className={`flex w-full flex-col gap-text-gap ${bare ? 'items-stretch' : 'items-start border border-hairline p-text-gap'}`}
+    >
+      {!bare && <p className="my-0 type-ui">{line ?? (first ? payWords.start : payWords.out)}</p>}
+      {amount && !bare && (
         <Field
           id="pay-usd"
           label={amount.label}
@@ -71,7 +77,26 @@ export function PayRow({
         />
       )}
       <ActionRow gap="tight">
-        <Button variant="compact" disabled={phase === 'paying' || !canPay} onClick={onPay}>
+        {amount && bare && (
+          // the dollars, dragged, beside the press that adds them
+          <span className="min-w-0 basis-full sm:basis-2/5">
+            <Range
+              label={amount.label}
+              min={1}
+              max={PAY_USD_MAX}
+              step={1}
+              value={Number(amount.usd) || 1}
+              shown={`$${Number(amount.usd) || 1}`}
+              onChange={(v) => amount.onUsd(String(v))}
+              onSet={() => {}}
+            />
+          </span>
+        )}
+        <Button
+          variant={bare ? 'primary' : 'compact'}
+          disabled={phase === 'paying' || !canPay}
+          onClick={onPay}
+        >
           {phase === 'paying' ? payWords.paying : label}
         </Button>
         {topUp && !topUp.open && (
