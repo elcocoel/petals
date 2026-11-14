@@ -557,8 +557,12 @@ function EmptyGround({
     s.bottom = bottom === null ? '' : `${bottom}px`;
     s.paddingLeft = besideColumn ? `${PANEL_W + 2 * floatBox.inset}px` : '';
   }, [left, bottom, besideColumn]);
+  // a phone's width has no room beside the boxes: the quote would be squeezed to a letter a line, so it's left out
   return (
-    <div ref={el} className="pointer-events-none absolute inset-0 flex items-center justify-center">
+    <div
+      ref={el}
+      className="pointer-events-none absolute inset-0 hidden items-center justify-center md:flex"
+    >
       <div className="w-full max-w-tile-width">
         <Quote quote={quote} room="column" />
       </div>
