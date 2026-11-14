@@ -193,5 +193,8 @@ export const payWords = {
   outOf: "You're out of credit for Petals' agent.",
   /** the link to the lobby's Balance, where credit is added */
   addCredit: 'Add credit',
+  /** The wallet answered with no transaction, as one that isn't signed in on this page does: the next press
+   * signs it in afresh. */
+  nothingSent: 'Your NEAR wallet answered but sent nothing. Press again to sign in to it afresh.',
   failed: "That payment didn't go through. Try again.",
 } as const;

@@ -19,6 +19,27 @@ describe('a wallet’s refusal, said plainly', () => {
       profilePageWords.busy('MetaMask'),
     );
   });
+  test('the wallet’s window closed before it answered (Meteor)', () => {
+    expect(walletRefusal('Your NEAR wallet', new Error('Wallet closed'))).toBe(
+      profilePageWords.closed('Your NEAR wallet'),
+    );
+    expect(walletRefusal('Your NEAR wallet', new Error('Action was cancelled'))).toBe(
+      profilePageWords.closed('Your NEAR wallet'),
+    );
+  });
+  test('Meteor’s own no', () => {
+    expect(walletRefusal('Your NEAR wallet', new Error('User rejected'))).toBe(
+      profilePageWords.declined('Your NEAR wallet'),
+    );
+  });
+  test('the network, said as the network', () => {
+    expect(walletRefusal('Your NEAR wallet', new TypeError('Failed to fetch'))).toBe(
+      profilePageWords.network('Your NEAR wallet'),
+    );
+    expect(walletRefusal('Your NEAR wallet', new Error('Request timed out'))).toBe(
+      profilePageWords.network('Your NEAR wallet'),
+    );
+  });
   test('anything else, in the wallet’s own words', () => {
     expect(walletRefusal('SafePal', new Error('Wallet is locked'))).toBe(
       'SafePal answered: Wallet is locked',

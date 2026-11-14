@@ -128,9 +128,12 @@ export async function sendFrom(
   network: Network,
   receiverId: string,
   action: PayAction,
+  /** sign a wallet in afresh first, as after it answered with nothing sent */
+  signInFirst = false,
 ): Promise<unknown> {
   const connector = await connectorFor(network);
-  const wallet = (await connector.wallet().catch(() => null)) ?? (await connector.connect());
+  const known = signInFirst ? null : await connector.wallet().catch(() => null);
+  const wallet = known ?? (await connector.connect());
   return wallet.signAndSendTransaction({ network, receiverId, actions: [action] });
 }
 

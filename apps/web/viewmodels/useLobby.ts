@@ -128,6 +128,8 @@ export function useLobby() {
   // wallet may send it; the chain answers for what it holds.
   const [withdrawing, setWithdrawing] = useState(false);
   const [took, setTook] = useState<string | null>(null);
+  /** the wallet answered with nothing sent: the next Withdraw signs it in afresh */
+  const [afresh, setAfresh] = useState(false);
   /** which press spoke last: the panel's one line is its */
   const [last, setLast] = useState<'add' | 'withdraw' | null>(null);
   const usdNow = Number(pay.usd.replace(/,/g, '')) || 0;
@@ -140,25 +142,31 @@ export function useLobby() {
     setLast('withdraw');
     setTook(null);
     setWithdrawing(true);
-    void sendFrom(where.network, where.receiver, {
-      type: 'FunctionCall',
-      params: {
-        methodName: 'withdraw',
-        args: { amount: takeYocto },
-        gas: '30000000000000',
-        deposit: '1',
+    void sendFrom(
+      where.network,
+      where.receiver,
+      {
+        type: 'FunctionCall',
+        params: {
+          methodName: 'withdraw',
+          args: { amount: takeYocto },
+          gas: '30000000000000',
+          deposit: '1',
+        },
       },
-    })
+      afresh,
+    )
       .then((answer) => {
         const sent = sentBy(answer);
+        setAfresh(!sent);
         setTook(
-          sent ? fundsWords.took(String(takeNear), shortId(sent.account)) : fundsWords.failed,
+          sent ? fundsWords.took(String(takeNear), shortId(sent.account)) : payWords.nothingSent,
         );
         funds.reread();
       })
-      .catch((e) => setTook(walletRefusal(profilePageWords.nearWallet, e)))
+      .catch((e) => setTook(walletRefusal(profilePageWords.nearWallet, e, fundsWords.declined)))
       .finally(() => setWithdrawing(false));
-  }, [funds, takeYocto, takeNear]);
+  }, [funds, takeYocto, takeNear, afresh]);
   const usageShown = useMemo(
     () => (typeof usage === 'string' ? usage : usageView(usage.calls, usage.spent, nearUsd)),
     [usage, nearUsd],
