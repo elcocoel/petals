@@ -34,7 +34,7 @@ export function PlayControl({
       data-b="box"
       data-kind="float"
       aria-label={playWords.play}
-      className={`invisible ${place} top-0 left-0 flex items-center gap-space-8 border border-primary bg-surface py-space-4 pr-space-16 pl-space-4`}
+      className={`invisible ${place} top-0 left-0 flex w-max items-center gap-space-8 border border-primary bg-surface py-space-4 pr-space-16 pl-space-4`}
     >
       <IconButton
         icon={playing ? 'pause' : 'play'}
