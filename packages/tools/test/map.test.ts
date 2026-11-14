@@ -77,6 +77,20 @@ describe('the map', () => {
     expect(searchMap(await mapViews(r.ctx), 'raidguild')).toHaveLength(0);
   });
 
+  test('rank_maps orders the maps by a figure their cards hold, and counts the ones without it', async () => {
+    await drawnView('Founders Guild v1', 'mapping.petals.near');
+    const holders = await run('rank_maps', { by: 'holders' });
+    expect(holders.maps).toHaveLength(1);
+    expect(holders.maps[0]).toMatchObject({
+      name: 'Founders Guild v1',
+      map_url: expect.stringMatching(/\/m\//),
+    });
+    expect(holders.maps[0].value).toBeGreaterThan(0);
+    expect(holders.without).toBe(0);
+    // no value read for it yet: no treasury to rank it by
+    expect(await run('rank_maps', { by: 'treasury' })).toMatchObject({ maps: [], without: 1 });
+  });
+
   test('list_flowers finds it with q, says who made it, and without q says how many are there', async () => {
     await drawnView('Founders Guild v1', 'mapping.petals.near');
     const found = await run('list_flowers', { q: 'Founders Guild' });
