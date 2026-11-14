@@ -156,7 +156,7 @@ export function useWorkMenu(
         (list) => {
           if (gone) return;
           setAgents(list);
-          if (list.some((a) => !known.has(workerOf(a)))) clearInterval(look);
+          if (list.some((a) => !a.conversation && !known.has(workerOf(a)))) clearInterval(look);
         },
         () => {},
       );
@@ -190,7 +190,8 @@ export function useWorkMenu(
 
   // every agent, all its workers, at once (line 46)
   const disconnectAll = useCallback(async () => {
-    const names = [...new Set(agents.map((a) => a.name))];
+    // agents working in a conversation hold no key: there's nothing of theirs to disconnect
+    const names = [...new Set(agents.filter((a) => !a.conversation).map((a) => a.name))];
     await Promise.all(names.map((name) => disconnectAgent(name).catch(() => null)));
     setReads((n) => n + 1);
   }, [agents]);

@@ -349,22 +349,34 @@ export function WorkMenu({
         <ul className="m-0 flex list-none flex-col p-0">
           {menu.agents.map((a) => (
             <li key={a.key}>
-              <NavItem
-                icon="agent"
-                label={a.label}
-                title={`${a.label}\n${a.status}`}
-                trail={panelWords.state[a.state]}
-                muted={!a.here}
-                // rule 4: what starts can end, from where you see it
-                action={
-                  <IconButton
-                    icon="close"
-                    // it ends the agent, all its workers (swarm step 1): Disconnect Codex, on Codex 2 too
-                    label={panelWords.disconnect(a.agent)}
-                    onClick={() => menu.disconnect(a.name)}
-                  />
-                }
-              />
+              {a.href ? (
+                // an agent working in one of the person's conversations: the way there; it holds no key to disconnect
+                <NavItem
+                  href={a.href}
+                  icon="agent"
+                  label={a.label}
+                  title={`${a.label}\n${a.status}`}
+                  trail={a.when}
+                  muted
+                />
+              ) : (
+                <NavItem
+                  icon="agent"
+                  label={a.label}
+                  title={`${a.label}\n${a.status}`}
+                  trail={panelWords.state[a.state]}
+                  muted={!a.here}
+                  // rule 4: what starts can end, from where you see it
+                  action={
+                    <IconButton
+                      icon="close"
+                      // it ends the agent, all its workers (swarm step 1): Disconnect Codex, on Codex 2 too
+                      label={panelWords.disconnect(a.agent)}
+                      onClick={() => menu.disconnect(a.name)}
+                    />
+                  }
+                />
+              )}
             </li>
           ))}
           {/* connecting one is at the panel's top, once */}
