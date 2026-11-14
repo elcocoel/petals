@@ -4,6 +4,7 @@
 // its view worked out from the map's camera. A click on a flower, or zooming in until it fills most of the
 // window, enters it: everything else fades, and arrows name the ways out. Esc, or zooming back out, leaves.
 // React mounts this once per chain and never renders per frame.
+import type { Claim } from '@petal/core/types';
 import { type Keyed, lookFills } from '@petal/core/wedge/keys';
 import type { Proposal } from '@petal/core/wedge/votes';
 import { type RefObject, useEffect, useRef } from 'react';
@@ -40,6 +41,15 @@ import { advance, SNAP, spring, stepOf } from '../flower/spring.ts';
 import { readMapProposals, readShared } from '../lib/agent-client.ts';
 import type { CanvasHit } from '../lib/panel-view.ts';
 import { type VoteRing, voteRing } from '../lib/vote-ring.ts';
+import {
+  anchorsOf,
+  groupPins,
+  newPins,
+  PIN,
+  type PinAnchor,
+  type PinGroup,
+  pinMaps,
+} from './pins.ts';
 import { type Road, roadWidth } from './roads.ts';
 import {
   type ArrowHit,
@@ -153,6 +163,16 @@ export interface LandscapeAt {
   unlabelled?: boolean;
   /** Set by the map once it's built: draws it again, for a change it reads on each frame (`worth`). */
   redraw?: () => void;
+  /** The claims the map's pins say (landscape/pins.ts), by map, read on each frame; no pins without. */
+  claims?: ReadonlyMap<string, readonly Claim[]>;
+  /** Told which flowers' maps are drawn big enough to carry pins, when that changes, so their claims are read. */
+  onPinMaps?: (maps: readonly string[]) => void;
+  /** The pin whose claims are open, by its key (pins.ts pinKey), read on each frame. */
+  pinOpen?: string | null;
+  /** The box that says the open pin's claims: the map places it beside its pin on each frame. */
+  pinCard?: RefObject<HTMLElement | null>;
+  /** Told when a press opens a pin's claims, and when they close (null). */
+  onPin?: (pin: PinAnchor | null) => void;
 }
 
 const LONGEST_FRAME = 1 / 15;
@@ -267,6 +287,10 @@ export function useLandscape(
     let speaking = -1;
     let marked = -1;
     let hits: ArrowHit[] = [];
+    // claims as pins, over everything (pins.ts): the groups last drawn, and which maps' claims were asked for
+    const pins = newPins(node);
+    let pinGroups: PinGroup[] = [];
+    let pinMapsTold = '';
     // The lab's focused lines: inside a flower, the wallets it shares with the flower you came from, or the way
     // out you point at, take the highlight (relations/shared, by each one's snapshot).
     const focusLines = at?.current?.lines === 'focus';
@@ -672,6 +696,14 @@ export function useLandscape(
         progress: at?.current?.progress ?? null,
         over: overOf(),
       });
+      const carry = pinMaps(lives, flowers, cam);
+      if (carry.join('\n') !== pinMapsTold) {
+        pinMapsTold = carry.join('\n');
+        at?.current?.onPinMaps?.(carry);
+      }
+      pinGroups = groupPins(anchorsOf(lives, flowers, cam, at?.current?.claims ?? new Map(), slid));
+      pins.draw(pinGroups, at?.current?.pinOpen ?? null);
+      placeCard();
       // the names moved since the notes gave way to them: once more, so the notes keep clear where they settle
       const key = scene
         .taken()
@@ -689,6 +721,39 @@ export function useLandscape(
     };
     const wake = () => {
       if (!raf) raf = requestAnimationFrame(frame);
+    };
+
+    /** The open pin's box, beside its pin, inside the window; hidden while its pin isn't drawn. */
+    const placeCard = () => {
+      const card = at?.current?.pinCard?.current;
+      if (!card) return;
+      const open = at?.current?.pinOpen;
+      const g = open ? pinGroups.find((x) => x.anchors.some((a) => a.key === open)) : undefined;
+      if (!g) {
+        card.style.visibility = 'hidden';
+        return;
+      }
+      const x = Math.max(8, Math.min(g.x + 3 * PIN, cam.width - card.offsetWidth - 8));
+      const y = Math.max(8, Math.min(g.y - 2 * PIN, cam.height - card.offsetHeight - 8));
+      card.style.translate = `${Math.round(x)}px ${Math.round(y)}px`;
+      card.style.visibility = 'visible';
+    };
+    /**
+     * A press on a pin: a group of several flies in, twice as close where it stands, so it parts; one opens what's
+     * said there, and pressed again, closes. Any other press closes an open one, and goes on as it would.
+     */
+    const pressPin = (x: number, y: number): boolean => {
+      const g = pins.at(x, y);
+      const open = at?.current?.pinOpen ?? null;
+      if (!g) {
+        if (open) at?.current?.onPin?.(null);
+        return false;
+      }
+      const one = g.anchors.length === 1 ? g.anchors[0] : undefined;
+      if (one) at?.current?.onPin?.(one.key === open ? null : one);
+      else flyTo(cam, { k: cam.k * 2, x: g.x - (g.x - cam.x) * 2, y: g.y - (g.y - cam.y) * 2 });
+      wake();
+      return true;
     };
 
     const local = (e: { clientX: number; clientY: number }) => {
@@ -786,6 +851,7 @@ export function useLandscape(
     // two DAOs chosen: the connection between them, shown alone (-2 when they share none), or -1
     let only = -1;
     const click = (x: number, y: number, add = false) => {
+      if (pressPin(x, y)) return;
       if (entered >= 0) {
         for (const h of hits) {
           const onName =
@@ -949,8 +1015,9 @@ export function useLandscape(
         const petal = d.scene.pointedStack();
         if (petal !== null) pressedStack = { flower: i, petal };
       }
+      // a pin over a flower's middle is pressed, not the flower
       for (const [i, d] of lives) {
-        if (d.last && d.scene.onMap(p.x, p.y, d.last)) {
+        if (!pins.at(p.x, p.y) && d.last && d.scene.onMap(p.x, p.y, d.last)) {
           enterFlower(i);
           return;
         }
@@ -1003,6 +1070,11 @@ export function useLandscape(
     };
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
+        // an open pin closes first
+        if (at?.current?.pinOpen) {
+          at.current.onPin?.(null);
+          return;
+        }
         // a chosen wallet goes first, then the map goes home
         if (wallet) {
           chooseWallet(null);
@@ -1246,6 +1318,7 @@ export function useLandscape(
       watch.disconnect();
       for (const d of lives.values()) d.scene.dispose();
       scene.dispose();
+      pins.dispose();
       delete probeHost.landscapeProbe;
     };
   }, [svg, data, probe, aside, at]);
