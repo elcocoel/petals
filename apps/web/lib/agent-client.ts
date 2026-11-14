@@ -994,6 +994,21 @@ export function addMyWallet(
   return sessionPost('/api/v1/me/wallets', { network, proof });
 }
 
+/**
+ * Takes a linked Ethereum or Solana wallet off the person (DELETE /api/v1/me/wallets/:caip10): their wallets
+ * after it. It rejects with the server's words; the NEAR account can't be taken off.
+ */
+export async function removeMyWallet(caip10: string): Promise<{ wallets: ProvenWallet[] }> {
+  const res = await fetch(`/api/v1/me/wallets/${encodeURIComponent(caip10)}`, { method: 'DELETE' });
+  const json = (await res.json().catch(() => ({}))) as { wallets?: ProvenWallet[] } & {
+    error?: { code: string; message: string };
+  };
+  if (!res.ok || json.error) {
+    throw new Refused(json.error?.code ?? 'internal', json.error?.message ?? `HTTP ${res.status}`);
+  }
+  return { wallets: json.wallets ?? [] };
+}
+
 /** The wallets the person proved by signing in, as GET /api/v1/me lists them; null for nobody or no answer. */
 /** Who's signed in, as GET /api/v1/me says: the wallet this session signed in with, and all their wallets. */
 export async function readSession(): Promise<{

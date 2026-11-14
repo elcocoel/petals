@@ -650,7 +650,7 @@ export function tables(db: Db) {
         db.get<WalletBindingRow>('SELECT * FROM wallet_binding WHERE caip10_hash = ?', hash),
       ofPerson: (person: string) =>
         db.all<WalletBindingRow>('SELECT * FROM wallet_binding WHERE person = ?', person),
-      /** A wallet disconnected from its person: the binding goes. True when there was one. */
+      /** Takes this person's wallet off them; false when it isn't theirs. */
       unbind: async (person: string, hash: string) =>
         (await db.run(
           'DELETE FROM wallet_binding WHERE person = ? AND caip10_hash = ?',
@@ -687,6 +687,14 @@ export function tables(db: Db) {
       /** Null once expired. */
       get: (hash: string, now: string) =>
         db.get<SessionRow>('SELECT * FROM session WHERE hash = ? AND expires_at > ?', hash, now),
+      /** Ends a person's sessions opened with one credential: a wallet they disconnected no longer signs in. */
+      async endWith(subject: string, credential: string) {
+        await db.run(
+          'DELETE FROM session WHERE subject = ? AND credential = ?',
+          subject,
+          credential,
+        );
+      },
       async delete(hash: string) {
         await db.run('DELETE FROM session WHERE hash = ?', hash);
       },

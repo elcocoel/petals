@@ -23,7 +23,7 @@ import {
   NO_EVM_WALLET,
   type WalletChoice,
 } from '../lib/evm-wallet.ts';
-import { PHONE, phoneSession, phoneSignEvm, phoneSignSolana, qrOf } from '../lib/phone-wallet.ts';
+import { PHONE, phoneSession, phoneSignEvm, phoneSignSolana } from '../lib/phone-wallet.ts';
 import { profilePageWords, walletRefusal } from '../lib/profile-view.ts';
 import type { WalletSignature } from '../lib/publish.ts';
 import {
@@ -77,11 +77,10 @@ export async function signIn(d: SessionDeps): Promise<void> {
 }
 
 /**
- * What a phone wallet's QR code needs from the page: to show the code (a WalletConnect address), then to know
- * which wallet said yes on the phone, to name it while it's asked to sign.
+ * What a phone wallet needs from the page, once the phone said yes in Reown's popup (lib/phone-wallet.ts): to
+ * know which wallet it was, to name it while it's asked to sign.
  */
 export interface PhoneSteps {
-  show: (uri: string) => void;
   approved: (wallet: string) => void;
 }
 
@@ -92,7 +91,7 @@ export interface PhoneSteps {
  */
 export async function evmProof(wallet?: string, phone?: PhoneSteps): Promise<EvmProof> {
   if (wallet === PHONE) {
-    const s = await phoneSession('eip155', phone?.show ?? (() => {}));
+    const s = await phoneSession('eip155');
     phone?.approved(s.name);
     const address = s.address.toLowerCase();
     const { message } = await evmChallenge(address, 1);
@@ -153,7 +152,7 @@ function refusedWords(e: unknown): string {
  */
 export async function solanaProof(wallet?: string, phone?: PhoneSteps): Promise<SolanaProof> {
   if (wallet === PHONE) {
-    const s = await phoneSession('solana', phone?.show ?? (() => {}));
+    const s = await phoneSession('solana');
     phone?.approved(s.name);
     const { message } = await solanaChallenge(s.address);
     const signature = await phoneSignSolana(s, message);
@@ -200,7 +199,6 @@ export async function signInSolana(
 function sayingAs(wallet: WalletChoice, phone?: PhoneSteps) {
   let name = wallet.id === PHONE ? profilePageWords.phoneRefused : wallet.name;
   const steps: PhoneSteps | undefined = phone && {
-    show: phone.show,
     approved: (n) => {
       name = n;
       phone.approved(n);
@@ -222,8 +220,6 @@ export function useSession(reading: boolean) {
   );
   /** The wallet asked now, by name, so the person knows where to answer. */
   const [waitingFor, setWaitingFor] = useState<string | null>(null);
-  /** A phone wallet's QR code, shown until the phone says yes: a picture's data: URL. */
-  const [qr, setQr] = useState<string | null>(null);
   /** The try at signing in that's current: Stop, or another press, leaves an older try's answer unused. */
   const attempt = useRef(0);
   const deps = useMemo<SessionDeps>(
@@ -273,17 +269,10 @@ export function useSession(reading: boolean) {
     setPick(null);
     setBusy(true);
     setWaitingFor(wallet.id === PHONE ? profilePageWords.phoneWallet : wallet.name);
-    // a phone shows its QR code until it says yes, then is named by what it calls itself
+    // a phone's QR code shows in Reown's popup until it says yes; then it's named by what it calls itself
     const phone: PhoneSteps = {
-      show: (uri) => {
-        void qrOf(uri).then((code) => {
-          if (current()) setQr(code);
-        });
-      },
       approved: (name) => {
-        if (!current()) return;
-        setQr(null);
-        setWaitingFor(name);
+        if (current()) setWaitingFor(name);
       },
     };
     const signIn = chain === 'evm' ? signInEvm : signInSolana;
@@ -300,7 +289,6 @@ export function useSession(reading: boolean) {
       if (!current()) return;
       setBusy(false);
       setWaitingFor(null);
-      setQr(null);
     });
   };
 
@@ -316,7 +304,6 @@ export function useSession(reading: boolean) {
     },
     pick,
     waitingFor,
-    qr,
     /** The same with an EVM wallet: one signed message, then the page loads again. */
     connectEvm: (id?: string) => connectWith('evm', id),
     /** The same with a Solana wallet. */
@@ -331,7 +318,6 @@ export function useSession(reading: boolean) {
       setBusy(false);
       setWaitingFor(null);
       setPick(null);
-      setQr(null);
     },
     disconnect: () => {
       // Leaving the account leaves the app, back to the front page.

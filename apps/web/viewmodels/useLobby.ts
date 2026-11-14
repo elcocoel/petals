@@ -17,12 +17,13 @@ import {
   readMyCredit,
   readMyUsage,
   readWallets,
+  removeMyWallet,
   sessionClient,
 } from '../lib/agent-client.ts';
 import { contributionView } from '../lib/contribution-view.ts';
 import { evmWallets } from '../lib/evm-wallet.ts';
 import { fundsWords } from '../lib/lobby-view.ts';
-import { PHONE, qrOf } from '../lib/phone-wallet.ts';
+import { PHONE } from '../lib/phone-wallet.ts';
 import {
   type AddWalletPhase,
   type ClaimsView,
@@ -139,7 +140,7 @@ export function useLobby() {
     const current = () => attempt.current === mine;
     let wallet: string = profilePageWords.nearWallet;
     if (kind !== 'near') {
-      // the phone first, by a QR code, then the wallets in this browser
+      // the phone first (its QR code in Reown's popup), then the wallets in this browser
       const list = [
         { id: PHONE, name: profilePageWords.phone, icon: null },
         ...(kind === 'evm' ? evmWallets() : solanaWallets()),
@@ -158,13 +159,8 @@ export function useLobby() {
         ? { kind: 'adding', wallet: profilePageWords.phoneWallet }
         : { kind: 'adding', wallet },
     );
-    // a phone shows its QR code until it says yes, then is named by what it calls itself
+    // a phone's QR code shows in Reown's popup until it says yes; then it's named by what it calls itself
     const phone = {
-      show: (uri: string) => {
-        void qrOf(uri).then((qr) => {
-          if (current()) setAdding({ kind: 'scan', qr });
-        });
-      },
       approved: (name: string) => {
         wallet = name;
         if (current()) setAdding({ kind: 'adding', wallet: name });
@@ -206,6 +202,20 @@ export function useLobby() {
       setAdding({ kind: 'failed', why: why(e) });
     }
   }, []);
+  /** What the last Disconnect did, or the server's words when it didn't. */
+  const [removed, setRemoved] = useState<string | null>(null);
+  /** Takes a linked Ethereum or Solana wallet off the profile, and says so. */
+  const removeWallet = useCallback(async (row: WalletRow) => {
+    if (!row.caip10) return;
+    setRemoved(null);
+    try {
+      const { wallets: now } = await removeMyWallet(row.caip10);
+      setWallets(walletRows(now));
+      setRemoved(profilePageWords.disconnected(row.shown));
+    } catch (e) {
+      setRemoved(why(e));
+    }
+  }, []);
   /** Stops waiting for a wallet that doesn't answer, or puts the pick away; a later answer is left unused. */
   const stopAdding = useCallback(() => {
     attempt.current += 1;
@@ -231,6 +241,8 @@ export function useLobby() {
     adding,
     addWallet: (kind: WalletKind, pick?: string) => void addWallet(kind, pick),
     stopAdding,
+    removeWallet: (row: WalletRow) => void removeWallet(row),
+    removed,
     claims,
     conversations: bus.rows,
     contribution: typeof credit === 'string' ? credit : contributionView(credit),

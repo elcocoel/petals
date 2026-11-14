@@ -19,6 +19,7 @@ import {
   accountRef,
   canonicalJson,
   LINK_VERSION,
+  type Link,
   linkStated,
   linkStatement,
   sha256Hex,
@@ -301,7 +302,7 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
     const profile = await profileOf(person);
     const issued = /^Issued At: (.+)$/m.exec(p.message)?.[1]?.trim();
     if (!profile || !issued || !linkStated(p.message)) return;
-    const link = {
+    const link: Omit<Link, 'proof'> = {
       petal: LINK_VERSION,
       profile,
       wallet: caip10Of(network, account),
@@ -662,34 +663,36 @@ export function createAuth(d: AuthDeps): { routes: Hono; gate: RouteAuth } {
     return ok(c, { wallets: await walletsOf(person) });
   });
 
-  // A linked Ethereum or Solana wallet, disconnected: its binding goes, and so does its link, so the profile's
-  // next press publishes a version without it (composition.md, section 2c). The NEAR account, the master key,
-  // stays.
-  app.delete('/api/v1/me/wallets', smallBody, async (c) => {
+  // An Ethereum or Solana wallet the person linked, taken off them, by its CAIP-10 as GET /api/v1/me lists it: its
+  // binding goes, so it no longer signs in to this profile or pays for it. The NEAR account is the profile itself
+  // and stays. This is Petals' private table only: a link already published stays in the public record, and the
+  // profile's next press leaves it out.
+  app.delete('/api/v1/me/wallets/:caip10', async (c) => {
     c.header('Cache-Control', 'no-store');
     if (!originAllowed(c)) return badOrigin(c);
     const session = await sessionOf(c);
     if (!session || !isPerson(session.subject)) return fail(c, 'unauthorised', 'Not signed in.');
     const person = session.subject;
-    const body = (await c.req.json().catch(() => null)) as { wallet?: unknown } | null;
-    const wallet = typeof body?.wallet === 'string' ? body.wallet : '';
-    if (!/^(eip155|solana):/.test(wallet))
+    const caip10 = c.req.param('caip10');
+    const wallet = (await walletsOf(person)).find((w) => w.caip10 === caip10);
+    if (!wallet) return fail(c, 'not_found', 'That wallet isn’t connected to your account.');
+    if (wallet.network !== 'eip155' && wallet.network !== 'solana') {
       return fail(
         c,
         'bad_input',
-        "wallet is a linked Ethereum or Solana wallet, as /api/v1/me's wallets[].caip10 names it: the NEAR account is the profile's master key and stays",
+        'Your NEAR account is your profile, so it can’t be disconnected.',
       );
-    if (!(await store.walletBinding.unbind(person, d.cipher().index(wallet))))
-      return fail(c, 'not_found', "That wallet isn't linked to your profile.");
-    let published = false;
+    }
+    const index = d.cipher().index(wallet.caip10);
+    await store.walletBinding.unbind(person, index);
+    // a session it opened ends now, and its signed link goes, so the profile's next press leaves it out
+    await store.session.endWith(person, `wallet:${index}`);
     for (const row of await store.layer.list(person)) {
       const doc = JSON.parse(row.body) as { petal?: string; wallet?: string };
-      if (doc.petal === LINK_VERSION && doc.wallet === wallet) {
+      if (doc.petal === LINK_VERSION && doc.wallet === wallet.caip10)
         await store.layer.remove(person, row.hash);
-        published ||= !!(await store.publication.layer(row.hash));
-      }
     }
-    return ok(c, { unlinked: wallet, published, wallets: await walletsOf(person) });
+    return ok(c, { wallets: await walletsOf(person) });
   });
 
   const gate: RouteAuth = {

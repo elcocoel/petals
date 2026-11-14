@@ -363,7 +363,6 @@ export function InteractionSurface({
                   ask={
                     <WalletAsk
                       pick={state.session.pick?.wallets ?? null}
-                      qr={state.session.qr}
                       waitingFor={state.session.waitingFor}
                       onChoose={state.session.choose}
                       onStop={state.session.stop}

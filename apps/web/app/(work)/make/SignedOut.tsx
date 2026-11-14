@@ -21,7 +21,6 @@ export function SignedOut({ question }: { question: string }) {
         ask={
           <WalletAsk
             pick={session.pick?.wallets ?? null}
-            qr={session.qr}
             waitingFor={session.waitingFor}
             onChoose={session.choose}
             onStop={session.stop}

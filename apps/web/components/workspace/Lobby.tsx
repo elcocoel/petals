@@ -73,6 +73,8 @@ export function Lobby({
   adding,
   addWallet,
   stopAdding,
+  removeWallet,
+  removed,
   claims,
   conversations,
   map,
@@ -115,6 +117,10 @@ export function Lobby({
   addWallet: (kind: WalletKind, pick?: string) => void;
   /** Stops waiting for a wallet, or puts the pick away. */
   stopAdding: () => void;
+  /** Takes a linked Ethereum or Solana wallet off the profile. */
+  removeWallet: (row: WalletRow) => void;
+  /** What the last Disconnect did, or why it didn't. */
+  removed: string | null;
   claims: ClaimsView | 'reading' | 'unread';
   conversations: ConversationRow[];
   map: LobbyMap;
@@ -134,6 +140,8 @@ export function Lobby({
       adding={adding}
       onAdd={addWallet}
       onStop={stopAdding}
+      onRemove={removeWallet}
+      removed={removed}
       logos={logos}
     />
   );

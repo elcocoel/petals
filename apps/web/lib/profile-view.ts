@@ -15,6 +15,10 @@ export const profilePageWords = {
   /** Under a wallet: when it signed. */
   provedOn: (date: string) => `Signed in on ${date}`,
   walletsNote: 'Each one signed a message with its own key, so it’s proven yours.',
+  /** On an Ethereum or Solana wallet's row: takes it off the profile (the NEAR account is the profile). */
+  disconnect: 'Disconnect',
+  /** Once it's off. */
+  disconnected: (shown: string) => `Disconnected ${shown}. It no longer signs in to this profile.`,
   /** The Wallets widget's one action: adding more wallets. */
   addWallet: 'Add a wallet',
   /** The two ways to add one (buttons say Connect; /make's door says the same). */
@@ -42,9 +46,6 @@ export const profilePageWords = {
   /** The phone's wallet before it has said which it is: waited for, and refusing. */
   phoneWallet: 'your phone',
   phoneRefused: 'Your phone',
-  /** Over the QR code. */
-  scan: 'Scan this with your phone’s wallet: MetaMask, Phantom, Trust or any wallet that connects with WalletConnect.',
-  qrAlt: 'A QR code to connect your phone’s wallet',
   /** What a wallet said, plainly: it was refused, it's busy, or its own words. */
   declined: (wallet: string) => `${wallet} declined. Nothing was added.`,
   busy: (wallet: string) =>
@@ -87,8 +88,6 @@ export type AddWalletPhase =
   | { kind: 'ready' }
   | { kind: 'choose'; chain: 'evm' | 'solana'; wallets: WalletPick[] }
   | { kind: 'adding'; wallet: string }
-  /** A phone wallet's QR code, shown until the phone says yes: a picture's data: URL. */
-  | { kind: 'scan'; qr: string }
   | { kind: 'failed'; why: string };
 
 /**
@@ -131,6 +130,8 @@ export interface WalletRow {
   chain: string;
   /** "Signed in on 11 Nov 2026" */
   when: string;
+  /** An Ethereum or Solana wallet's CAIP-10, for Disconnect; absent for NEAR, which is the profile. */
+  caip10?: string;
 }
 
 /** A proven wallet's chain, by name, from the network the server names it on. */
@@ -151,6 +152,7 @@ export function walletRows(wallets: readonly ProvenWallet[]): WalletRow[] {
       : shownAccount(w.account_id)),
     chain: walletChain(w.network),
     when: profilePageWords.provedOn(dateLabel(w.proved_at)),
+    ...((w.network === 'eip155' || w.network === 'solana') && w.author ? { caip10: w.author } : {}),
   }));
 }
 
