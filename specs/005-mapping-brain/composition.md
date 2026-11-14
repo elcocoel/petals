@@ -143,6 +143,8 @@ Link 5d0e…(64 hex)
 
 **Public, and checked from both sides.** A link works in Petals as soon as the wallet signs it (signing in, paying). It goes public with the profile's next press: it travels as a layer of the profile's own publication about its own account (`about` is the NEAR account), so the profile's NEAR signature covers it, and it costs no second prompt. Anyone checks a link in two steps: the wallet's signature over its text, for that wallet; and the NEAR-signed publication that carries it, for that profile. A link only one side has signed credits nothing.
 
+**Disconnecting a wallet** removes its link: the profile's next version about its own account leaves it out, and from then on the wallet's publications count as its own again. The profile's NEAR account can't be disconnected.
+
 **How the map and credit read links.**
 - **On the map,** each signing account's line stands as published: nothing is hidden or merged. A line signed by a wallet with a public link is shown as the profile's, through that wallet ("alice.near, via 0x12…ab").
 - **In credit,** a profile and its publicly linked wallets are one author: a fact counts once for the profile, under the first of their publications that stated it, and a profile never confirms, builds on or reuses its own linked wallets' work.

@@ -13,7 +13,15 @@ import {
   unsignedHash,
 } from '@petal/core';
 import { evmTestSigner, fakeRpcFor, solanaTestSigner, testSigner } from '@petal/near/auth/testing';
-import { callTool, createContext, privateStore, recordOf, type ToolContext } from '@petal/tools';
+import {
+  appendPublication,
+  callTool,
+  createContext,
+  creditFor,
+  privateStore,
+  recordOf,
+  type ToolContext,
+} from '@petal/tools';
 import { describe, expect, test } from 'vitest';
 import { buildPetalApp } from '../src/app.ts';
 import { scriptedLlm, tmpRoot } from './helpers.ts';
@@ -453,7 +461,7 @@ describe('the press: a signed version on the shared map', () => {
     );
   });
 
-  test('an EVM wallet signs the version with EIP-191, a Solana wallet with ed25519', async () => {
+  test("linked wallets don't sign a publication: they're proven links, published by the NEAR profile", async () => {
     const w = await setup();
     await w.signIn();
     const evm = evmTestSigner('press');
@@ -461,45 +469,77 @@ describe('the press: a signed version on the shared map', () => {
     expect((await w.addWallet('eip155', evm)).status).toBe(200);
     expect((await w.addWallet('solana', sol)).status).toBe(200);
     const me = (await w.request('/api/v1/me')).body;
-    const evmAuthor = `eip155:1:${evm.address}`;
+    const evmAuthor = `eip155:1:${evm.address.toLowerCase()}`;
     const solAuthor = `${SOLANA}:${sol.address}`;
-    expect(me.wallets.map((x: Out) => x.author).sort()).toEqual(
-      ['near:mainnet:alice.near', evmAuthor, solAuthor].sort(),
-    );
     await w.request('/api/v1/me/annotations', 'POST', { annotations: [DECLARED] });
-
+    // an Ethereum or Solana wallet can't be the author: the NEAR account is
+    for (const author of [evmAuthor, solAuthor]) {
+      const refused = await w.request('/api/v1/publish/data/prepare', 'POST', {
+        map: w.map,
+        author,
+      });
+      expect(refused.status).toBe(401);
+      expect(refused.body.error.message).toMatch(/Publish with your NEAR account/);
+    }
+    // each wallet signed its link when it was added: the profile's press carries both, on its own account
+    const profile = 'near:mainnet:alice.near';
+    const ahead = (
+      await w.request(`/api/v1/publish/data?maps=all&author=${encodeURIComponent(profile)}`)
+    ).body;
+    expect(ahead.maps.map((m: Out) => m.about)).toContain(profile);
     const prep = (
-      await w.request('/api/v1/publish/data/prepare', 'POST', { map: w.map, author: evmAuthor })
+      await w.request('/api/v1/publish/data/prepare', 'POST', { maps: [profile], author: profile })
     ).body;
-    expect(prep.publication.author).toBe(evmAuthor);
-    expect(prep.recipient).toBeUndefined();
-    expect(prep.nonce).toBeUndefined();
-    const send = (proof: Out) =>
-      w.request('/api/v1/publish/data', 'POST', { sha256: prep.sha256, proof });
-    // an EVM wallet signs with EIP-191, and only its own signature is its
-    expect((await send({ standard: 'ed25519', signature: sol.sign(prep.text) })).status).toBe(401);
-    expect(
-      (await send({ standard: 'eip191', signature: evmTestSigner('other').sign(prep.text) }))
-        .status,
-    ).toBe(401);
-    const done = await send({ standard: 'eip191', signature: evm.sign(prep.text) });
-    expect(done.status, JSON.stringify(done.body)).toBe(200);
-
-    // the Solana wallet publishes its own version: a layer it kept (the claim is on the map already)
-    await keepLayer(w.ctx, me.person_id, layerAbout(w.map));
-    const solPrep = (
-      await w.request('/api/v1/publish/data/prepare', 'POST', { map: w.map, author: solAuthor })
-    ).body;
-    expect(solPrep.publication).toMatchObject({ author: solAuthor, parent: null, previous: null });
-    const solDone = await w.request('/api/v1/publish/data', 'POST', {
-      sha256: solPrep.sha256,
-      proof: { standard: 'ed25519', signature: sol.sign(solPrep.text) },
+    const links = prep.publications[0].publication.layers;
+    expect(links.map((l: Out) => l.petal)).toEqual(['link/v1', 'link/v1']);
+    const signed = alice.sign({
+      message: prep.text,
+      nonce: prep.nonce,
+      recipient: prep.recipient,
+    } as never);
+    const done = await w.request('/api/v1/publish/data', 'POST', {
+      sha256: prep.sha256,
+      proof: {
+        standard: 'nep413',
+        signature: signed.signature,
+        public_key: signed.public_key,
+        nonce: prep.nonce,
+      },
     });
-    expect(solDone.status, JSON.stringify(solDone.body)).toBe(200);
-    const record = await recordOf(w.ctx, w.map);
-    expect(record.map((e) => [e.publication.author, e.publication.proof?.standard])).toEqual([
-      [evmAuthor, 'eip191'],
-      [solAuthor, 'ed25519'],
-    ]);
+    expect(done.status, JSON.stringify(done.body)).toBe(200);
+    // the link is public and checkable: the wallet's own signed text names both accounts
+    const history = (await w.request(`/api/v1/maps/${encodeURIComponent(profile)}/record`)).body;
+    expect(history.entries[0]).toMatchObject({ author: profile, signed: true });
+    // a version the Solana wallet published (before the NEAR-only rule) now counts as the profile's
+    const l = layerAbout(w.map);
+    await appendPublication(
+      w.ctx,
+      {
+        petal: 'publication/v1',
+        about: w.map,
+        author: solAuthor,
+        via: null,
+        layers: [{ sha256: layerHash(l), petal: 'layer/v1' }],
+        parent: null,
+        previous: null,
+        published_at: '2026-11-13T00:00:00.000Z',
+        proof: null,
+      },
+      new Map([[layerHash(l), l]]),
+    );
+    const credit = await creditFor(w.ctx, profile);
+    expect(credit.layers.map((x) => x.sha256)).toContain(layerHash(l));
+    expect((await creditFor(w.ctx, solAuthor)).layers.map((x) => x.sha256)).not.toContain(
+      layerHash(l),
+    );
+    // Disconnect: the Ethereum wallet goes, and the profile's next version leaves its link out
+    const gone = await w.request(`/api/v1/me/wallets/${encodeURIComponent(evmAuthor)}`, 'DELETE');
+    expect(gone.status, JSON.stringify(gone.body)).toBe(200);
+    const next = (
+      await w.request('/api/v1/publish/data/prepare', 'POST', { maps: [profile], author: profile })
+    ).body;
+    expect(next.publications[0].publication.layers).toHaveLength(1);
+    expect(next.publications[0].publication.previous).toBe(history.entries[0].hash);
+    expect(me.person_id).toBeTruthy();
   });
 });

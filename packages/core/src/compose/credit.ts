@@ -79,8 +79,15 @@ export function creditOf(
   author: string,
   record: readonly Entry[],
   docs: ReadonlyMap<string, unknown>,
+  /** wallets with a public link to a NEAR profile, wallet → profile (composition.md, section 2c): one author */
+  links: ReadonlyMap<string, string> = new Map(),
 ): Credit {
-  const entries = asAuthored(record).sort((a, b) => a.seq - b.seq);
+  const entries = asAuthored(record)
+    .map((e) => {
+      const profile = links.get(e.publication.author);
+      return profile ? { ...e, publication: { ...e.publication, author: profile } } : e;
+    })
+    .sort((a, b) => a.seq - b.seq);
   // every chain of `from` back from a layer: what it was built on, directly or not
   const ancestry = new Map<string, Set<string>>();
   const ancestorsOf = (sha: string, path = new Set<string>()): Set<string> => {
