@@ -2,18 +2,9 @@
 // question means what they are looking at: the map they're inside on the Power Map (or the whole map), the
 // conversation's flower when it's drawn apart from the map, the layers switched on where some are off, and what's
 // chosen (a wallet, a pinned proposal). The server checks it and writes it into the model's notes.
-import type { MapShow } from '@petal/core/types';
+import type { InFront, MapShow } from '@petal/core/types';
 
-export interface InFront {
-  /** the map's card id the person is inside, or null: the whole Power Map, or a flower drawn apart */
-  map: string | null;
-  /** the conversation's flower, by its spec_sha256, when it's drawn apart from the map */
-  flower?: string;
-  /** the layers still on, by their sha256, only when some of the map's are switched off */
-  layers?: string[];
-  /** what's chosen, in the shape of the show event */
-  selected?: MapShow;
-}
+export type { InFront };
 
 export interface CanvasFront {
   /** the Power Map is the ground (else the conversation's flower is drawn on its own) */
