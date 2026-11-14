@@ -49,7 +49,12 @@ const RESULT = obj(
       items: { type: 'integer', minimum: 0 },
       description: 'the seq of each step this job saved in the project',
     },
-    notes: { type: 'string', maxLength: NOTES_MAX },
+    notes: {
+      type: 'string',
+      maxLength: NOTES_MAX,
+      description:
+        'more of what it found, up to 8,000 characters; anything longer goes in add_note',
+    },
     annotations: {
       type: 'array',
       items: { type: 'string', minLength: 1, maxLength: 100 },
@@ -243,7 +248,7 @@ export const reportJob = defineTool<
   name: 'report_job',
   title: 'Report a job',
   description:
-    "Report a job you took with take_job: result, with a summary of two or three plain sentences, the steps it saved in the project and the ids of the annotations it added, or failed, with why. Petals' agent on the page reads it.",
+    "Report a job you took with take_job: result, with a summary of two or three plain sentences, the steps it saved in the project and the ids of the annotations it added, or failed, with why. result.notes holds up to 8,000 characters; save anything longer with add_note. Petals' agent on the page reads it.",
   input: obj(
     ['exploration', 'job'],
     {
