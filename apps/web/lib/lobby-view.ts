@@ -42,7 +42,7 @@ export const fundsWords = {
     'Nothing to withdraw yet: what you deposit in Petals’ credit contract stays yours, and Withdraw sends what chats haven’t spent back to your wallet.',
   /** The rest of the balance, which isn't in the contract, and why. */
   cannotWithdraw: (m: Money) =>
-    `${moneyWords(m)} can’t be withdrawn: credit from before the contract, from another token through NEAR Intents, or from an invite isn’t held in the contract. Chats spend it first.`,
+    `${moneyWords(m)} can’t be withdrawn: credit from before the contract or from an invite isn’t held in the contract. Chats spend it first.`,
   /** Opens the pay row's own flow under the balance: NEAR from a wallet, or any token through NEAR Intents. */
   add: 'Add funds',
   /** The pay row's first line in the lobby, with the credit contract: what a deposit is. */
