@@ -19,7 +19,7 @@ import {
   wordsOf,
 } from '../src/search-index.ts';
 import { fakeSearchModel, type SearchModel, searchModel } from '../src/search-model.ts';
-import { claimTitle, MEANING_OFF, shortRef } from '../src/tools/search-petals.ts';
+import { claimTitle, MEANING_OFF, searchPetals, shortRef } from '../src/tools/search-petals.ts';
 import { rig, type TestRig } from './helpers.ts';
 
 // biome-ignore lint/suspicious/noExplicitAny: walking tool outputs
@@ -227,6 +227,11 @@ describe('search_petals', () => {
         ],
       }),
     });
+  });
+
+  test('a page of the docs is as good as its best section: the one that matches comes before long pages that half match', async () => {
+    const quick = await searchPetals(r.ctx, 'voting blocs', { kinds: ['doc'], rerank: false });
+    expect(quick.results[0]?.id).toBe('brain/governance/voting-blocs-over-time.md');
   });
 
   test("finds /docs' pages when asked for, each by its repo path with its sections under it, never by default", async () => {
