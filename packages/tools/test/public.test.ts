@@ -3,7 +3,7 @@
 // and posts what it made. The shared map is the copies of published rows the site ships.
 
 import { randomBytes } from 'node:crypto';
-import { mkdtempSync } from 'node:fs';
+import { mkdtempSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { gzipSync } from 'node:zlib';
@@ -373,5 +373,74 @@ describe("a reading made on the person's machine, posted so the site can draw it
     });
     expect(res.status).toBe(400);
     expect(((await res.json()) as Out).error.message).toContain('256 KiB');
+  });
+});
+
+describe("a public site with its writer's key: the person signed in publishes their own flower", () => {
+  function withWriter(): ToolContext {
+    const state = mkdtempSync(join(tmpdir(), 'petal-public-'));
+    const env = {
+      PETAL_PUBLIC: '1',
+      PETAL_MAP_NETWORK: 'testnet',
+      PETAL_MAP_RECEIVER: 'petals.testnet',
+      PETAL_WRITER_ACCOUNT: 'petals-writer.testnet',
+      // never read here: the writer opens its key only when it writes
+      PETAL_WRITER_KEY_FILE: join(state, 'writer.json'),
+      PETAL_API: 'https://petals.example',
+      PETAL_STATE_DIR: state,
+    };
+    return createContext(configFromEnv(env, REPO));
+  }
+  const draft = () => {
+    const row = JSON.parse(
+      readFileSync(join(REPO, 'fixtures', 'map-rows', `${FIRST_FLOWER}.row.json`), 'utf8'),
+    ) as { value: Record<string, Out> };
+    const { id: _id, ...entry } = row.value;
+    const { maker: _maker, ...provenance } = entry.provenance as Out;
+    return { ...entry, provenance };
+  };
+
+  test('a visitor is refused; a person signed in with their wallet prepares it, reading nothing outside', async () => {
+    const ctx = withWriter();
+    expect(ctx.map.writer).not.toBeNull();
+    const visitor = (await callTool('prepare_publish', { entry: draft() }, ctx)) as Out;
+    expect(visitor.error?.code).toBe('not_on_this_site');
+    const person = {
+      ...ctx,
+      caller: { subject: 'prs_a', by: 'near:testnet:alice.testnet', door: 'http' },
+    };
+    const prepared = (await callTool('prepare_publish', { entry: draft() }, person)) as Out;
+    expect(prepared.error).toBeUndefined();
+    expect(prepared).toMatchObject({ recipient: 'petals.testnet' });
+    expect(prepared.sign_url).toMatch(/^https:\/\/petals\.example\/publish\//);
+    expect(outside).toEqual([]);
+    // publishing goes on to check the signature (a wrong one is refused there), not refused as off this site
+    const published = (await callTool(
+      'publish_flower',
+      {
+        entry_sha256: prepared.entry_sha256,
+        proof: {
+          account_id: 'alice.testnet',
+          public_key: 'ed25519:11111111111111111111111111111111',
+          signature: 'AAAA',
+          nonce: prepared.nonce,
+          recipient: prepared.recipient,
+          message: prepared.message,
+          type: 'nep413',
+        },
+      },
+      person,
+    )) as Out;
+    expect(published.error?.code).not.toBe('not_on_this_site');
+  });
+
+  test("without the writer's key, the site refuses both, signed in or not", async () => {
+    const ctx = publicSite();
+    const person = {
+      ...ctx,
+      caller: { subject: 'prs_a', by: 'near:testnet:alice.testnet', door: 'http' },
+    };
+    for (const name of ['prepare_publish', 'publish_flower'])
+      expect(((await callTool(name, {}, person)) as Out).error?.code).toBe('not_on_this_site');
   });
 });

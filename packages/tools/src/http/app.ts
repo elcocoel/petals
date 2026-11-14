@@ -355,10 +355,28 @@ export function httpApp(given: ToolContext, o: { gate?: SessionGate } = {}): Hon
     });
   });
   app.get('/api/v1/flowers/:id', limit, (c) => answer(c, 'get_flower', { id: c.req.param('id') }));
+  // a flower's publish, for the person signed in with their wallet: on a public site only they may run it
+  const signedIn = async (c: Context): Promise<ToolContext> => {
+    const who = o.gate?.callerOf
+      ? await o.gate.callerOf(c)
+      : { subject: (await o.gate?.subjectOf(c)) ?? null, credential: null };
+    return {
+      ...ctx,
+      caller: {
+        ...ctx.caller,
+        door: 'http',
+        subject: who.subject,
+        credential: who.credential,
+        ...('by' in who && who.by ? { by: who.by } : {}),
+      },
+    };
+  };
   app.post('/api/v1/publish/prepare', limit, async (c) =>
-    answer(c, 'prepare_publish', await body(c)),
+    answer(c, 'prepare_publish', await body(c), await signedIn(c)),
   );
-  app.post('/api/v1/publish', limit, async (c) => answer(c, 'publish_flower', await body(c)));
+  app.post('/api/v1/publish', limit, async (c) =>
+    answer(c, 'publish_flower', await body(c), await signedIn(c)),
+  );
   app.post('/api/v1/quote', limit, async (c) => answer(c, 'quote_payment', await body(c)));
 
   // -- relations between groups
