@@ -55,7 +55,8 @@ function fake1Click() {
           amountInUsd: '1.0050',
           amountOut: String(NEAR / 4n),
           amountOutUsd: '0.8750',
-          deadline: '2026-11-14T21:00:00.000Z',
+          // an address for any amount waits a week
+          deadline: new Date(Date.now() + 7 * 86_400_000).toISOString(),
         },
       });
     if (url.pathname === '/v0/tokens')
@@ -341,6 +342,12 @@ describe('the credit contract', () => {
     const top = await w.call('POST', '/api/v1/pay/intents', { origin_asset: 'nep141:wrap.near' });
     expect(top.status, await top.clone().text()).toBe(200);
     const quoted = w.one.asked.find((a) => a.path === '/v0/quote')?.body as Record<string, unknown>;
+    // asked again for the same token while nothing has come: the same address, with no new quote
+    const again = (await (
+      await w.call('POST', '/api/v1/pay/intents', { origin_asset: 'nep141:wrap.near' })
+    ).json()) as { top_up: { deposit_address: string } };
+    expect(again.top_up.deposit_address).toBe('0xdeposit');
+    expect(w.one.asked.filter((a) => a.path === '/v0/quote').length).toBe(1);
     // a dollar's reference (a quarter NEAR at $4), back to the person's own NEAR account inside NEAR Intents if unswapped
     expect(quoted).toMatchObject({
       swapType: 'FLEX_INPUT',

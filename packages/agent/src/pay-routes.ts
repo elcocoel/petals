@@ -21,7 +21,9 @@
 import type { Price } from '@petal/core';
 import { TOOLS_VERSION } from '@petal/core';
 import {
+  DEPOSIT_DAYS,
   type DepositDeps,
+  type DepositQuote,
   depositQuote,
   nearUsd,
   PAY_RECEIVER,
@@ -427,6 +429,19 @@ export function payRoutes(d: PayDeps): Hono {
           nearUsd,
           amountIn: unitsOf(usd / token.usd, token.decimals),
         };
+      }
+      // the person's open address for this token, while it has days left and nothing has come to it: shown again,
+      // so opening the panel doesn't make a new address (each one is asked after until its deadline)
+      if (into) {
+        for (const row of await d.store.topUp.ofPerson(me.person, Number.MAX_SAFE_INTEGER)) {
+          if (row.settled_at || row.status !== 'PENDING_DEPOSIT' || row.usd !== usd) continue;
+          const open = JSON.parse(row.quote) as DepositQuote;
+          if (open.origin_asset !== origin_asset || open.into?.payer !== into.payer) continue;
+          if (Date.parse(open.deadline) - clock() < (DEPOSIT_DAYS / 2) * 86_400_000) continue;
+          const s = await settleTopUp(d, me.person, row).catch(() => null);
+          if (s?.status === 'PENDING_DEPOSIT')
+            return ok(c, { top_up: { ...open, usd, status: 'PENDING_DEPOSIT' } });
+        }
       }
       let quote: Awaited<ReturnType<typeof depositQuote>>;
       try {
