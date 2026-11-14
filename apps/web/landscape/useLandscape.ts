@@ -36,10 +36,11 @@ import {
 import { type Drawn, drawnOf, glideBetween } from '../flower/glide.ts';
 import { clickedAt } from '../flower/live.ts';
 import { SHAPE } from '../flower/ring.ts';
-import type { PetalLook } from '../flower/scene.ts';
+import type { FakeRelations, PetalLook } from '../flower/scene.ts';
 import { advance, SNAP, spring, stepOf } from '../flower/spring.ts';
 import { readMapProposals, readShared } from '../lib/agent-client.ts';
 import type { CanvasHit } from '../lib/panel-view.ts';
+import { tiePairs } from '../lib/ties.ts';
 import { type VoteRing, voteRing } from '../lib/vote-ring.ts';
 import {
   anchorsOf,
@@ -181,6 +182,10 @@ const LONGEST_THROW = 2400;
 const FARTHEST = 0.6;
 
 const quiet = () => window.matchMedia('(prefers-reduced-motion: reduce)');
+
+/** A flower's ties inside it, as the scene draws them: pairs of its petals, and no dotted ring; none without. */
+const tiesFor = (f: LandFlower): FakeRelations | null =>
+  f.ties?.length ? { pairs: tiePairs(f.ties, f.model.petals), ring: 0 } : null;
 
 /**
  * How far in from the chain's home the far wave hands over to petals, for every flower at once, so the far shape
@@ -614,7 +619,8 @@ export function useLandscape(
           width: cam.width,
           height: cam.height,
           calm,
-          relations: null,
+          // the view's Lines: ties between its petals, from the flower's own data (lib/ties.ts)
+          relations: tiesFor(flowers[i] as LandFlower),
           readout: false,
           bloom: false,
           // the art direction's colours, as the far wave's; inside a flower, the wallets it shares with the other one

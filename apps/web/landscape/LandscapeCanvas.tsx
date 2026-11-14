@@ -51,6 +51,7 @@ import type { CanvasHit } from '../lib/panel-view.ts';
 import { panelWords } from '../lib/panel-words.ts';
 import { CHOOSABLE } from '../lib/person-view.ts';
 import { proposalView, proposalWords } from '../lib/proposal-view.ts';
+import { tiesOf } from '../lib/ties.ts';
 import { type LegendEdit, onlyWhatDraws } from '../lib/view-edit.ts';
 import { differsOf, walletView, walletWords } from '../lib/wallet-view.ts';
 import { useClaimPins } from '../viewmodels/useClaimPins.ts';
@@ -828,6 +829,7 @@ export function LandscapeCanvas({
         map: f.map ?? null,
         proposals: f.proposals ?? 0,
         worth: f.worth,
+        ties: tiesOf(f.given, person.view),
       });
     });
     const roads = data.roads.flatMap((r) => {
@@ -844,7 +846,7 @@ export function LandscapeCanvas({
       from,
       keyed: mapKeyed,
     };
-  }, [data, chain, focus, mapKeyed]);
+  }, [data, chain, focus, mapKeyed, person.view]);
   // the DAO a click put in the middle, by its map; the rest arranged round it by the wallets they share with it
   const [centre, setCentre] = useState<string | null>(null);
   // drawn where its reading will land: spread by the gravity, as every place on the map is

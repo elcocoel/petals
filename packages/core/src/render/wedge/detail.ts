@@ -68,7 +68,7 @@ export const DETAIL = {
   /** The small map of the flower, once it no longer fits the window. */
   wayBack: { driver: 'overflow', fadeIn: [1.4, 2.2] },
 
-  /** The illustrative layer, only with ?relations=1. */
+  /** Ties inside a flower, the view's Lines (votes alike): from this size on screen. */
   relations: { driver: 'flowerRadius', fadeIn: [56, 96] },
 
   // The map (specs/006-the-map). A flower on the map uses every row above, by its own size on screen; its
