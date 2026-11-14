@@ -88,6 +88,9 @@ import {
   useLandscape,
 } from './useLandscape.ts';
 
+/** No layer list: the server's composed reading of every published layer. */
+const EVERY_LAYER: readonly string[] = [];
+
 export interface CanvasFlower {
   name: string;
   mark: {
@@ -995,9 +998,10 @@ export function LandscapeCanvas({
   }, [joined, strataMap]);
   // the whole map, all layers on, read once: the version you're seeing (its rule and the publications it was
   // composed from) and, where authors differ, who stated which value
+  // asked with no layer list (every published layer), so a map with hundreds of layers still reads
   const wholeRead = useComposed(
     strata ? strataMap : null,
-    strata ? strata.ids : null,
+    strata ? EVERY_LAYER : null,
     person.hash,
     version,
   );
