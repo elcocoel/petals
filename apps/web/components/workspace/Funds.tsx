@@ -1,13 +1,14 @@
 // The Balance band's own side: the credit the person holds, dollars first in the display's size, as the landing
 // sets its headline, NEAR beside at today's price, and what it is; then the band's two actions, as the
 // landing's: Add funds, the black button, which unfolds the pay row's own flow under it (NEAR from a wallet, or
-// any token through NEAR Intents); and Withdraw beside it while the credit contract holds something, which takes
-// everything out through their own wallet. Under them, the tip, an optional donation to Petals on the price's
+// any token through NEAR Intents); and Withdraw beside it, always there with the credit contract, which takes
+// everything the contract holds out through their own wallet, and says under it what it can take out and what it
+// can't, and why (pressable only while the contract holds something). Under them, the tip, an optional donation to Petals on the price's
 // scale (TipControl), once Petals has said what it is. Props only: viewmodels/useFunds.ts reads the credit and
 // holds the withdrawal, viewmodels/usePay.ts and useTopUp.ts the payment (in `add`), viewmodels/useTip.ts the
 // tip. Words from lib/lobby-view.ts and lib/tip.ts.
 import type { ReactNode } from 'react';
-import { canWithdraw, fundsWords, type WithdrawPhase } from '../../lib/lobby-view.ts';
+import { fundsWords, type WithdrawPhase, type WithdrawView } from '../../lib/lobby-view.ts';
 import type { Money } from '../../lib/pay.ts';
 import { ActionRow } from '../ui/ActionRow.tsx';
 import { Button } from '../ui/Button.tsx';
@@ -15,7 +16,7 @@ import { TipControl, type TipView } from './TipControl.tsx';
 
 export function Funds({
   balance,
-  held,
+  withdrawal,
   phase,
   withdrew,
   failedWhy = null,
@@ -27,8 +28,8 @@ export function Funds({
 }: {
   /** What's left, dollars first and NEAR beside, as /make shows it; null until it can be read. */
   balance: Money | null;
-  /** What the contract holds for the person, in yoctoNEAR; null when there's no contract to hold it. */
-  held: string | null;
+  /** Withdraw: what it can and can't take out; null when there's no contract to hold anything. */
+  withdrawal: WithdrawView | null;
   phase: WithdrawPhase;
   /** What the last withdrawal took out, in NEAR, once it has. */
   withdrew: string | null;
@@ -44,7 +45,6 @@ export function Funds({
   /** The person's tip; absent where only the balance shows. */
   tip?: TipView;
 }) {
-  const offer = held !== null && canWithdraw(held) && phase !== 'withdrew';
   return (
     <div className="flex flex-col gap-block-gap">
       {balance !== null ? (
@@ -62,19 +62,29 @@ export function Funds({
         <p className="my-0 type-lead text-muted">{fundsWords.unread}</p>
       )}
       <p className="my-0 type-body text-muted">{fundsWords.note}</p>
-      {(onAdd || offer) && (
+      {(onAdd || withdrawal) && (
         <ActionRow>
           {onAdd && (
             <Button variant={adding ? 'secondary' : 'primary'} arrow={!adding} onClick={onAdd}>
               {adding ? fundsWords.closeAdd : fundsWords.add}
             </Button>
           )}
-          {offer && (
-            <Button variant="secondary" disabled={phase === 'withdrawing'} onClick={onWithdraw}>
+          {withdrawal && (
+            <Button
+              variant="secondary"
+              disabled={!withdrawal.enabled || phase === 'withdrawing'}
+              onClick={onWithdraw}
+            >
               {phase === 'withdrawing' ? fundsWords.waiting : fundsWords.withdraw}
             </Button>
           )}
         </ActionRow>
+      )}
+      {withdrawal && (
+        <div className="flex max-w-content-width flex-col gap-text-gap">
+          <p className="my-0 type-caption text-muted">{withdrawal.can}</p>
+          {withdrawal.cannot && <p className="my-0 type-caption text-muted">{withdrawal.cannot}</p>}
+        </div>
       )}
       {adding && add}
       {phase === 'withdrew' && withdrew !== null && (

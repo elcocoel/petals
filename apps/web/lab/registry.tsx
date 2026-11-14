@@ -145,7 +145,7 @@ import { settledMs } from '../lib/hero-story.ts';
 import { intentWords, type TopUpView, tokenChoices } from '../lib/intents.ts';
 import { type JobControlsView, jobMoves, jobWords } from '../lib/jobs.ts';
 import { landingCopy } from '../lib/landing-copy.ts';
-import type { ProfileEditorView } from '../lib/lobby-view.ts';
+import { type ProfileEditorView, withdrawView } from '../lib/lobby-view.ts';
 import { mapClaimGroups } from '../lib/map-claims.ts';
 import { mappingView, toMapLines } from '../lib/mapping.ts';
 import { drawingTile, type MapCard, mapTile } from '../lib/maps.ts';
@@ -2985,7 +2985,7 @@ export const registry: LabEntry[] = [
         render: () => (
           <Funds
             balance={{ usd: '1.52', near: '0.42' }}
-            held={null}
+            withdrawal={null}
             phase="ready"
             withdrew={null}
             onWithdraw={() => {}}
@@ -3008,7 +3008,7 @@ export const registry: LabEntry[] = [
         render: () => (
           <Funds
             balance={{ usd: '3.04', near: '0.84' }}
-            held="840000000000000000000000"
+            withdrawal={withdrawView('840000000000000000000000', 3.04, 3.62)}
             phase="ready"
             withdrew={null}
             onWithdraw={() => {}}
@@ -3021,7 +3021,7 @@ export const registry: LabEntry[] = [
         render: () => (
           <Funds
             balance={{ usd: '1.52', near: '0.42' }}
-            held={null}
+            withdrawal={null}
             phase="ready"
             withdrew={null}
             onWithdraw={() => {}}
@@ -3033,7 +3033,7 @@ export const registry: LabEntry[] = [
         render: () => (
           <Funds
             balance={{ usd: '3.04', near: '0.84' }}
-            held="840000000000000000000000"
+            withdrawal={withdrawView('840000000000000000000000', 3.04, 3.62)}
             phase="ready"
             withdrew={null}
             onWithdraw={() => {}}
@@ -3045,7 +3045,7 @@ export const registry: LabEntry[] = [
         render: () => (
           <Funds
             balance={{ usd: '3.04', near: '0.84' }}
-            held="840000000000000000000000"
+            withdrawal={withdrawView('840000000000000000000000', 3.04, 3.62)}
             phase="withdrawing"
             withdrew={null}
             onWithdraw={() => {}}
@@ -3057,7 +3057,7 @@ export const registry: LabEntry[] = [
         render: () => (
           <Funds
             balance={{ usd: '0.00', near: '0.00' }}
-            held="0"
+            withdrawal={withdrawView('0', 0, 3.62)}
             phase="withdrew"
             withdrew="0.84"
             onWithdraw={() => {}}
@@ -3069,7 +3069,7 @@ export const registry: LabEntry[] = [
         render: () => (
           <Funds
             balance={{ usd: '3.04', near: '0.84' }}
-            held="840000000000000000000000"
+            withdrawal={withdrawView('840000000000000000000000', 3.04, 3.62)}
             phase="failed"
             withdrew={null}
             onWithdraw={() => {}}
@@ -3079,7 +3079,13 @@ export const registry: LabEntry[] = [
       {
         name: 'the balance can’t be read',
         render: () => (
-          <Funds balance={null} held={null} phase="ready" withdrew={null} onWithdraw={() => {}} />
+          <Funds
+            balance={null}
+            withdrawal={null}
+            phase="ready"
+            withdrew={null}
+            onWithdraw={() => {}}
+          />
         ),
       },
       {
@@ -3087,10 +3093,36 @@ export const registry: LabEntry[] = [
         render: () => (
           <Funds
             balance={{ usd: '0.00', near: '0.00' }}
-            held="0"
+            withdrawal={withdrawView('0', 0, 3.62)}
             phase="ready"
             withdrew={null}
             onWithdraw={() => {}}
+          />
+        ),
+      },
+      {
+        name: 'credit from before the contract, nothing to withdraw',
+        render: () => (
+          <Funds
+            balance={{ usd: '1.00', near: '0.29' }}
+            withdrawal={withdrawView('0', 1, 3.46)}
+            phase="ready"
+            withdrew={null}
+            onWithdraw={() => {}}
+            onAdd={() => {}}
+          />
+        ),
+      },
+      {
+        name: 'some in the contract, some from before it',
+        render: () => (
+          <Funds
+            balance={{ usd: '4.04', near: '1.12' }}
+            withdrawal={withdrawView('840000000000000000000000', 4.04, 3.62)}
+            phase="ready"
+            withdrew={null}
+            onWithdraw={() => {}}
+            onAdd={() => {}}
           />
         ),
       },

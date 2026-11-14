@@ -1,7 +1,7 @@
 // The lobby (specs/004-workspace, W3): where a person's work sits when they come back. A skeleton. Pure: its
 // words and where each thing goes are decided here, and the view only lays them out.
 import type { ProfileDraft, SocialProfile } from './near-social.ts';
-import { type Credit, type PayAction, payWords } from './pay.ts';
+import { type Credit, type Money, money, moneyWords, type PayAction, payWords } from './pay.ts';
 
 export const lobbyWords = {
   /** What a screen reader hears for the page. The menu's words are lib/panel-words.ts's. */
@@ -34,8 +34,24 @@ export const fundsWords = {
   /** The credit or NEAR's price couldn't be read. */
   unread: 'Your balance can’t be read right now.',
   withdraw: 'Withdraw',
+  /** Beside Withdraw: what it takes out, which is everything the person holds in the contract. */
+  canWithdraw: (m: Money) =>
+    `You can withdraw ${moneyWords(m)}: the NEAR you deposited in Petals’ credit contract that chats haven’t spent. Withdraw sends all of it back to your wallet.`,
+  /** Beside Withdraw while the contract holds nothing for the person. */
+  nothingToWithdraw:
+    'Nothing to withdraw yet: what you deposit in Petals’ credit contract stays yours, and Withdraw sends what chats haven’t spent back to your wallet.',
+  /** The rest of the balance, which isn't in the contract, and why. */
+  cannotWithdraw: (m: Money) =>
+    `${moneyWords(m)} can’t be withdrawn: credit from before the contract, from another token through NEAR Intents, or from an invite isn’t held in the contract. Chats spend it first.`,
   /** Opens the pay row's own flow under the balance: NEAR from a wallet, or any token through NEAR Intents. */
   add: 'Add funds',
+  /** The pay row's first line in the lobby, with the credit contract: what a deposit is. */
+  addDeposit:
+    'Choose how much to add, in dollars. Your NEAR wallet deposits it in Petals’ credit contract: it stays yours, chats spend from it, and you can withdraw what’s left.',
+  /** Without the contract: a plain transfer to Petals. */
+  addTransfer: 'Choose how much to add, in dollars. Your NEAR wallet sends it to Petals.',
+  /** Once a payment landed. */
+  added: (near: string) => `Added ${near} NEAR.`,
   /** Folds it away again. */
   closeAdd: 'Close',
   waiting: payWords.paying,
@@ -246,8 +262,44 @@ export function nearOf(yocto: string): string {
   return `${hundredths / 100n}.${(hundredths % 100n).toString().padStart(2, '0')}`;
 }
 
-/** Withdraw is there while the contract holds something to take out. */
+/** Withdraw takes something out while the contract holds something for the person. */
 export const canWithdraw = (held: string): boolean => BigInt(held) > 0n;
+
+/** yoctoNEAR in dollars at `nearUsd`, to the millionth of a NEAR. */
+const usdOfYocto = (yocto: string, nearUsd: number) =>
+  (Number(BigInt(yocto) / 10n ** 18n) / 1e6) * nearUsd;
+
+/** Withdraw in the Balance band: always there with the contract, and saying what it can and can't take out. */
+export interface WithdrawView {
+  /** what Withdraw takes out: what the contract holds for the person */
+  can: string;
+  /** the rest of the balance, which isn't in the contract, and why; null when there's none */
+  cannot: string | null;
+  /** false while the contract holds nothing */
+  enabled: boolean;
+}
+
+/**
+ * `held` is what the contract holds for the person (yoctoNEAR), null with no contract; `balanceUsd` the whole
+ * balance shown (the contract's NEAR at today's price, plus credit off the contract and on invites).
+ */
+export function withdrawView(
+  held: string | null,
+  balanceUsd: number,
+  nearUsd: number | null,
+): WithdrawView | null {
+  if (held === null || !nearUsd || nearUsd <= 0) return null;
+  const heldUsd = usdOfYocto(held, nearUsd);
+  const kept = balanceUsd - heldUsd;
+  return {
+    can: canWithdraw(held)
+      ? fundsWords.canWithdraw(money(heldUsd, nearUsd))
+      : fundsWords.nothingToWithdraw,
+    // under half a cent is rounding, not credit
+    cannot: kept >= 0.005 ? fundsWords.cannotWithdraw(money(kept, nearUsd)) : null,
+    enabled: canWithdraw(held),
+  };
+}
 
 /** What came out between two balances, as NEAR to two places. */
 export function withdrawn(before: string, after: string): string {

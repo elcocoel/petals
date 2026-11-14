@@ -21,6 +21,7 @@ export function PayRow({
   failedWords = payWords.failed,
   canPay = true,
   addedWords,
+  line,
 }: {
   /** offered before the first question, to someone with no credit yet: its words say so */
   first?: boolean;
@@ -39,6 +40,8 @@ export function PayRow({
   canPay?: boolean;
   /** what the row says once a payment was added, where the page has its own words for it */
   addedWords?: (near: string) => string;
+  /** the row's first line, where the page has its own words for it */
+  line?: string;
 }) {
   if (phase === 'added' && added) {
     return (
@@ -57,7 +60,7 @@ export function PayRow({
   }
   return (
     <div className="flex flex-col items-start gap-text-gap border border-hairline p-text-gap">
-      <p className="my-0 type-ui">{first ? payWords.start : payWords.out}</p>
+      <p className="my-0 type-ui">{line ?? (first ? payWords.start : payWords.out)}</p>
       {amount && (
         <Field
           id="pay-usd"

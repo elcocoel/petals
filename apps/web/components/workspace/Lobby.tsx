@@ -24,6 +24,7 @@ import {
   type ProfileEditorView,
   type SocialState,
   type WithdrawPhase,
+  type WithdrawView,
 } from '../../lib/lobby-view.ts';
 import type { Money } from '../../lib/pay.ts';
 import type { PowerQuoteItem } from '../../lib/power-quotes.ts';
@@ -98,7 +99,7 @@ export function Lobby({
   editor: ProfileEditorView | null;
   funds: {
     balance: Money | null;
-    held: string | null;
+    withdrawal: WithdrawView | null;
     phase: WithdrawPhase;
     withdrew: string | null;
     failedWhy?: string | null;
@@ -196,14 +197,14 @@ export function Lobby({
         >
           <Funds
             balance={funds.balance}
-            held={funds.held}
+            withdrawal={funds.withdrawal}
             phase={funds.phase}
             withdrew={funds.withdrew}
             failedWhy={funds.failedWhy ?? null}
             onWithdraw={funds.withdraw}
             adding={add.open}
             onAdd={add.toggle}
-            add={<PayRow first {...add.row} />}
+            add={<PayRow {...add.row} />}
             tip={tip}
           />
           <Usage usage={usage} />
