@@ -174,6 +174,8 @@ export interface LandscapeAt {
   pinCard?: RefObject<HTMLElement | null>;
   /** Told when a press opens a pin's claims, and when they close (null). */
   onPin?: (pin: PinAnchor | null) => void;
+  /** The Play's control (components/PlayControl.tsx): the map places it under the flower you're in on each frame. */
+  playBox?: RefObject<HTMLElement | null>;
 }
 
 const LONGEST_FRAME = 1 / 15;
@@ -716,6 +718,7 @@ export function useLandscape(
       pinGroups = groupPins(anchorsOf(lives, flowers, cam, at?.current?.claims ?? new Map(), slid));
       pins.draw(pinGroups, at?.current?.pinOpen ?? null);
       placeCard();
+      placePlay();
       // the names moved since the notes gave way to them: once more, so the notes keep clear where they settle
       const key = scene
         .taken()
@@ -775,6 +778,45 @@ export function useLandscape(
           : Math.max(8, Math.min(right, cam.width - w - 8));
       card.style.translate = `${Math.round(x)}px ${Math.round(y)}px`;
       card.style.visibility = 'visible';
+    };
+    /** The Play's control right under the flower you're in, or over it where that runs off the window or into a box. */
+    const placePlay = () => {
+      const box = at?.current?.playBox?.current;
+      if (!box) return;
+      const p = places[entered];
+      if (entered < 0 || !p) {
+        box.style.visibility = 'hidden';
+        return;
+      }
+      const c = screenCentre(cam, p);
+      const r = screenRadius(cam, p) * (reach[entered] ?? 1);
+      const w = box.offsetWidth;
+      const h = box.offsetHeight;
+      const map = node.getBoundingClientRect();
+      const boxes = [...document.querySelectorAll<HTMLElement>('section[data-float]')]
+        .filter((b) => b !== box && !b.hidden)
+        .map((b) => b.getBoundingClientRect())
+        .filter((b) => b.width > 0 && b.height > 0);
+      const x = Math.max(8, Math.min(c.x - w / 2, cam.width - w - 8));
+      const fits = (y: number) =>
+        y >= 8 &&
+        y + h <= cam.height - 8 &&
+        !boxes.some(
+          (b) =>
+            x < b.right - map.left &&
+            x + w > b.left - map.left &&
+            y < b.bottom - map.top &&
+            y + h > b.top - map.top,
+        );
+      const below = c.y + r + 12;
+      const above = c.y - r - h - 12;
+      const y = fits(below)
+        ? below
+        : fits(above)
+          ? above
+          : Math.max(8, Math.min(below, cam.height - h - 8));
+      box.style.translate = `${Math.round(x)}px ${Math.round(y)}px`;
+      box.style.visibility = 'visible';
     };
     /**
      * A press on a pin: a group of several flies in, twice as close where it stands, so it parts; one opens what's
