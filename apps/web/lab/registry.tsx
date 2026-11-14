@@ -25,7 +25,7 @@ import { CreditPointer } from '../components/chat/CreditPointer.tsx';
 import { JobRow } from '../components/chat/JobRow.tsx';
 import { ModelOptions } from '../components/chat/ModelOptions.tsx';
 import { NewConversation } from '../components/chat/NewConversation.tsx';
-import { PayRow, TopUpFields } from '../components/chat/PayRow.tsx';
+import { PayRow } from '../components/chat/PayRow.tsx';
 import { Speech } from '../components/chat/Speech.tsx';
 import { Steps } from '../components/chat/Steps.tsx';
 import { Thread } from '../components/chat/Thread.tsx';
@@ -99,6 +99,7 @@ import { NavItem } from '../components/ui/NavItem.tsx';
 import { OrgBadge } from '../components/ui/OrgBadge.tsx';
 import { Overlay } from '../components/ui/Overlay.tsx';
 import { PlateLink } from '../components/ui/PlateLink.tsx';
+import { Qr } from '../components/ui/Qr.tsx';
 import { Quote } from '../components/ui/Quote.tsx';
 import { Ramp } from '../components/ui/Ramp.tsx';
 import { Range } from '../components/ui/Range.tsx';
@@ -131,6 +132,7 @@ import { PublicProfile } from '../components/workspace/PublicProfile.tsx';
 import { Published } from '../components/workspace/Published.tsx';
 import { ReadingKey } from '../components/workspace/ReadingKey.tsx';
 import { TipControl } from '../components/workspace/TipControl.tsx';
+import { TokenPay } from '../components/workspace/TokenPay.tsx';
 import { Usage } from '../components/workspace/Usage.tsx';
 import { DimensionChoices } from '../components/workspace/ViewControls.tsx';
 import { WalletAsk } from '../components/workspace/WalletAsk.tsx';
@@ -143,7 +145,16 @@ import { contributionView, publicContributionWords } from '../lib/contribution-v
 import type { DrawingKind } from '../lib/figures.ts';
 import { keysOf, oneKey, readingKey, svgImage } from '../lib/flower-view.ts';
 import { settledMs } from '../lib/hero-story.ts';
-import { intentWords, type TopUpView, tokenChoices } from '../lib/intents.ts';
+import {
+  chainName,
+  chainsOf,
+  historyRows,
+  intentWords,
+  type PayToken,
+  quoteLine,
+  type TopUpView,
+  tokensOn,
+} from '../lib/intents.ts';
 import { type JobControlsView, jobMoves, jobWords } from '../lib/jobs.ts';
 import { landingCopy } from '../lib/landing-copy.ts';
 import type { ProfileEditorView } from '../lib/lobby-view.ts';
@@ -163,6 +174,7 @@ import { publishPressView, publishWords, signerOf } from '../lib/publish-press.t
 import type { Done } from '../lib/thread.ts';
 import { answeredBy, composerView, type TurnRow, threadView } from '../lib/thread-view.ts';
 import { tipLine } from '../lib/tip.ts';
+import { chainIcon, tokenIcon } from '../lib/token-icons.ts';
 import { withData, withScale } from '../lib/view-edit.ts';
 import {
   entry,
@@ -533,57 +545,127 @@ const JOB_CONTROLS = {
   },
 } satisfies Record<string, JobControlsView>;
 
-/** Paying with another token through NEAR Intents, as the pay row shows it at each step. */
+/** Paying with another token through NEAR Intents, as the money panel shows it at each step. */
+const TOPUP_TOKENS: PayToken[] = [
+  { asset: 'nep141:eth-usdt', chain: 'eth', symbol: 'USDT', decimals: 6, usd: 1 },
+  { asset: 'nep141:eth-usdc', chain: 'eth', symbol: 'USDC', decimals: 6, usd: 1 },
+  { asset: 'nep141:eth', chain: 'eth', symbol: 'ETH', decimals: 18, usd: 3100 },
+  { asset: 'nep141:eth-pepe', chain: 'eth', symbol: 'PEPE', decimals: 18, usd: 0.00001 },
+  { asset: 'nep141:eth-cow', chain: 'eth', symbol: 'COW', decimals: 18, usd: 0.3 },
+  { asset: 'nep141:eth-kaito', chain: 'eth', symbol: 'KAITO', decimals: 18, usd: 1.2 },
+  { asset: 'nep141:base-usdc', chain: 'base', symbol: 'USDC', decimals: 6, usd: 1 },
+  { asset: 'nep141:sol', chain: 'sol', symbol: 'SOL', decimals: 9, usd: 150 },
+  { asset: 'nep141:arb-usdc', chain: 'arb', symbol: 'USDC', decimals: 6, usd: 1 },
+  { asset: 'nep141:wrap.near', chain: 'near', symbol: 'wNEAR', decimals: 24, usd: 3.4 },
+  { asset: 'nep141:tron-usdt', chain: 'tron', symbol: 'USDT', decimals: 6, usd: 1 },
+  { asset: 'nep141:btc', chain: 'btc', symbol: 'BTC', decimals: 8, usd: 95000 },
+  { asset: 'nep141:miden', chain: 'miden', symbol: 'MIDEN', decimals: 6, usd: 1 },
+];
 const TOPUP_BASE: TopUpView = {
-  open: true,
-  groups: tokenChoices([
-    { asset: 'nep141:base-usdc', chain: 'base', symbol: 'USDC', decimals: 6, usd: 1 },
-    { asset: 'nep141:eth-usdc', chain: 'eth', symbol: 'USDC', decimals: 6, usd: 1 },
-    { asset: 'nep141:sol', chain: 'sol', symbol: 'SOL', decimals: 9, usd: 150 },
-  ]),
-  asset: 'nep141:base-usdc',
-  usd: '5',
-  refund: '0x5aAeb6053F3E94C9b9A09f33669435E7Ef1BeAed',
-  refundLabel: intentWords.refund('Base'),
-  getting: false,
+  search: '',
+  chains: chainsOf(TOPUP_TOKENS).map((c) => ({
+    chain: c.chain,
+    name: chainName(c.chain),
+    icon: chainIcon(c.chain),
+  })),
+  chain: 'eth',
+  tokens: tokensOn(TOPUP_TOKENS, 'eth').map((t) => ({
+    asset: t.asset,
+    symbol: t.symbol,
+    icon: tokenIcon(t.symbol),
+  })),
+  asset: '',
+  asking: false,
+  address: null,
+  refund: null,
   error: null,
-  sent: null,
   copied: null,
+  history: [],
   actions: {
-    open: () => {},
-    setAsset: () => {},
-    setUsd: () => {},
+    search: () => {},
+    chooseChain: () => {},
+    choose: () => {},
     setRefund: () => {},
-    get: () => {},
+    sendRefund: () => {},
     copy: () => {},
-    again: () => {},
   },
+};
+const TOPUP_ADDRESS = {
+  line: intentWords.send('USDT', 'Ethereum'),
+  address: '0x76b4c56085ED136a8744D52bE956396624a730E8',
+  memo: null,
+  quote: quoteLine(
+    {
+      deposit_address: '0x76b4c56085ED136a8744D52bE956396624a730E8',
+      amount_in_formatted: '1.000201',
+      amount_in_usd: '1.0002',
+      amount_out_usd: '0.9972',
+      deadline: '2026-11-21T19:42:00Z',
+      status: 'PENDING_DEPOSIT',
+    },
+    'USDT',
+  ),
+  status: null,
 };
 const TOPUP = {
   picking: TOPUP_BASE,
   sending: {
     ...TOPUP_BASE,
-    sent: {
-      line: intentWords.send('5.0125', 'USDC', 'Base'),
-      address: '0x76b4c56085ED136a8744D52bE956396624a730E8',
-      memo: null,
-      before: '19:42',
-      status: intentWords.status.PENDING_DEPOSIT,
-      ended: false,
-      landed: false,
-    },
+    asset: 'nep141:eth-usdt',
+    address: TOPUP_ADDRESS,
+    history: historyRows(
+      [
+        {
+          deposit_address: '0x11',
+          created_at: '2026-11-14T16:02:00Z',
+          origin_asset: 'nep141:eth-usdc',
+          deadline: '2026-11-21T16:02:00Z',
+          status: 'SUCCESS',
+          sent: '12',
+          sent_usd: '12.00',
+          landed_near: '3.517',
+          landed_usd: '11.96',
+        },
+        {
+          deposit_address: '0x12',
+          created_at: '2026-11-14T18:40:00Z',
+          origin_asset: 'nep141:base-usdc',
+          deadline: '2026-11-21T18:40:00Z',
+          status: 'PROCESSING',
+          sent: '5',
+          sent_usd: '5.00',
+          landed_near: null,
+          landed_usd: null,
+        },
+      ],
+      TOPUP_TOKENS,
+      3.4,
+    ),
   },
-  landed: {
+  searched: {
     ...TOPUP_BASE,
-    sent: {
-      line: '',
-      address: '',
-      memo: null,
-      before: null,
-      status: intentWords.added(5),
-      ended: true,
-      landed: true,
-    },
+    search: 'usdc',
+    chains: chainsOf(TOPUP_TOKENS, 'usdc').map((c) => ({
+      chain: c.chain,
+      name: chainName(c.chain),
+      icon: chainIcon(c.chain),
+    })),
+    tokens: tokensOn(TOPUP_TOKENS, 'eth', 'usdc').map((t) => ({
+      asset: t.asset,
+      symbol: t.symbol,
+      icon: tokenIcon(t.symbol),
+    })),
+  },
+  refund: {
+    ...TOPUP_BASE,
+    chain: 'btc',
+    tokens: tokensOn(TOPUP_TOKENS, 'btc').map((t) => ({
+      asset: t.asset,
+      symbol: t.symbol,
+      icon: tokenIcon(t.symbol),
+    })),
+    asset: 'nep141:btc',
+    refund: { label: intentWords.refund('Bitcoin'), value: '' },
   },
 } satisfies Record<string, TopUpView>;
 
@@ -1922,6 +2004,7 @@ export const registry: LabEntry[] = [
         name: "a logo, round, an icon's size",
         render: () => <Logo src={logo('magic-eden')} />,
       },
+      { name: 'no logo: its first letter', render: () => <Logo letter="SHITZU" /> },
       {
         name: "in a row of the map's chain list",
         render: () => (
@@ -2976,13 +3059,15 @@ export const registry: LabEntry[] = [
     states: [
       {
         name: 'the one money panel',
+        wide: true,
         render: () => (
           <Funds
             balance={{ usd: '3.88', near: '1.13' }}
-            amount={{ usd: '5', label: 'Dollars', onUsd: () => {} }}
+            amount={{ usd: '5', label: 'Dollars', onUsd: () => {}, top: 5, onGrow: () => {} }}
             add={{ label: 'Add $5.00 · 1.46 NEAR', canPress: true, onPress: () => {} }}
             withdraw={{ label: 'Withdraw $5.00 · 1.46 NEAR', canPress: false, onPress: () => {} }}
             line="Adds to elcocoel.near’s balance; any NEAR wallet you connect can pay."
+            topUp={TOPUP.sending}
           />
         ),
       },
@@ -2991,7 +3076,7 @@ export const registry: LabEntry[] = [
         render: () => (
           <Funds
             balance={{ usd: '4.88', near: '1.42' }}
-            amount={{ usd: '1', label: 'Dollars', onUsd: () => {} }}
+            amount={{ usd: '1', label: 'Dollars', onUsd: () => {}, top: 5, onGrow: () => {} }}
             add={{ label: 'Add $1.00 · 0.29 NEAR', canPress: true, onPress: () => {} }}
             withdraw={{ label: 'Withdraw $1.00 · 0.29 NEAR', canPress: true, onPress: () => {} }}
             status="Added 0.292 NEAR to elcocoel.near, paid from petals.near."
@@ -3532,14 +3617,43 @@ export const registry: LabEntry[] = [
     ],
   },
   {
-    id: 'TopUpFields',
+    id: 'Qr',
     group: 'The workspace',
     figmaName: null,
     figmaNode: null,
-    source: 'apps/web/components/chat/PayRow.tsx',
+    source: 'apps/web/components/ui/Qr.tsx',
     states: [
-      { name: 'laid out, a token picked', render: () => <TopUpFields topUp={TOPUP.picking} /> },
-      { name: 'sending', render: () => <TopUpFields topUp={TOPUP.sending} /> },
+      {
+        name: 'an address to send to',
+        render: () => (
+          <Qr text="0x76b4c56085ED136a8744D52bE956396624a730E8" label="Send USDT on Ethereum" />
+        ),
+      },
+    ],
+  },
+  {
+    id: 'TokenPay',
+    group: 'The workspace',
+    figmaName: null,
+    figmaNode: null,
+    source: 'apps/web/components/workspace/TokenPay.tsx',
+    states: [
+      {
+        name: 'a chain open, no token yet',
+        wide: true,
+        render: () => <TokenPay topUp={TOPUP.picking} />,
+      },
+      {
+        name: 'a token chosen: its address',
+        wide: true,
+        render: () => <TokenPay topUp={TOPUP.sending} />,
+      },
+      { name: 'searched', wide: true, render: () => <TokenPay topUp={TOPUP.searched} /> },
+      {
+        name: 'no wallet there: a refund address',
+        wide: true,
+        render: () => <TokenPay topUp={TOPUP.refund} />,
+      },
     ],
   },
   {
@@ -3561,20 +3675,6 @@ export const registry: LabEntry[] = [
       {
         name: "didn't go through",
         render: () => <PayRow phase="failed" added={null} onPay={() => {}} />,
-      },
-      {
-        name: 'another token: picking it',
-        wide: true,
-        render: () => <PayRow phase="ready" added={null} onPay={() => {}} topUp={TOPUP.picking} />,
-      },
-      {
-        name: 'another token: the address to send to',
-        wide: true,
-        render: () => <PayRow phase="ready" added={null} onPay={() => {}} topUp={TOPUP.sending} />,
-      },
-      {
-        name: 'another token: landed',
-        render: () => <PayRow phase="ready" added={null} onPay={() => {}} topUp={TOPUP.landed} />,
       },
     ],
   },

@@ -1,14 +1,10 @@
 // The way to add credit for Petals' agent, where the person meets it in the chat (B): one line and one
-// button, which opens the wallet, and beside it paying with any other token from any chain through NEAR
-// Intents: pick the token and a refund address (the dollars are the row's one amount), then send the exact
-// amount to the address given, in one transfer from any wallet. Props only: viewmodels/usePay.ts and useTopUp.ts
-// hold the payments. Words from lib/pay.ts and lib/intents.ts.
-import { intentWords, type TopUpView } from '../../lib/intents.ts';
+// button, which opens the wallet. Paying with another token is the lobby's (workspace/TokenPay). Props only:
+// viewmodels/usePay.ts holds the payment. Words from lib/pay.ts.
 import { PAY_NEAR, PAY_USD_MAX, type PayPhase, payWords } from '../../lib/pay.ts';
 import { ActionRow } from '../ui/ActionRow.tsx';
 import { Button } from '../ui/Button.tsx';
 import { Field } from '../ui/Field.tsx';
-import { Mono } from '../ui/Mono.tsx';
 import { Range } from '../ui/Range.tsx';
 
 export function PayRow({
@@ -16,7 +12,6 @@ export function PayRow({
   phase,
   added,
   onPay,
-  topUp,
   label = payWords.button(PAY_NEAR),
   amount,
   failedWords = payWords.failed,
@@ -31,8 +26,6 @@ export function PayRow({
   /** What the last payment added, in NEAR, once it has. */
   added: string | null;
   onPay: () => void;
-  /** Paying with any other token, through NEAR Intents. */
-  topUp?: TopUpView;
   /** what the press says: dollars with NEAR beside it, or Confirm my transfer while one waits */
   label?: string;
   /** the dollars the person chooses to add, where there's a price to send them in */
@@ -57,10 +50,6 @@ export function PayRow({
             : payWords.added(added)}
       </p>
     );
-  }
-  const sent = topUp?.sent ?? null;
-  if (sent?.landed) {
-    return <p className="my-0 type-ui">{sent.status}</p>;
   }
   return (
     <div
@@ -102,117 +91,8 @@ export function PayRow({
         >
           {phase === 'paying' ? payWords.paying : label}
         </Button>
-        {topUp && !topUp.open && (
-          <Button variant="quiet" onClick={topUp.actions.open}>
-            {intentWords.other}
-          </Button>
-        )}
       </ActionRow>
       {phase === 'failed' && <p className="my-0 type-ui text-muted">{failedWords}</p>}
-      {topUp?.open &&
-        (sent && !sent.ended ? (
-          <Sending sent={sent} topUp={topUp} />
-        ) : (
-          <Form topUp={topUp} withUsd={!amount} />
-        ))}
-      {sent?.ended && <p className="my-0 type-ui text-muted">{sent.status}</p>}
-    </div>
-  );
-}
-
-/**
- * Paying with another token, laid out where nothing opens it (the lobby's money panel): the form, or, once an
- * address is given, where to send and how it stands.
- */
-export function TopUpFields({ topUp }: { topUp: TopUpView }) {
-  const sent = topUp.sent;
-  // the form stays where it is; where to send, and how it stands, show in their own place under it
-  return (
-    <>
-      <Form topUp={topUp} withUsd={false} />
-      {sent && !sent.ended && !sent.landed ? (
-        <Sending sent={sent} topUp={topUp} />
-      ) : (
-        sent && <p className="my-0 type-ui text-muted">{sent.status}</p>
-      )}
-    </>
-  );
-}
-
-/** `withUsd`: the dollars here too, where the row above has none to share (no price, or a transfer waiting). */
-function Form({ topUp, withUsd }: { topUp: TopUpView; withUsd: boolean }) {
-  const { actions } = topUp;
-  if (!topUp.groups) return <p className="my-0 type-ui text-muted">{intentWords.loading}</p>;
-  return (
-    <div className="flex w-full flex-col gap-text-gap">
-      <Field
-        id="topup-token"
-        label={intentWords.token}
-        value={topUp.asset}
-        onChange={actions.setAsset}
-        choices={topUp.groups}
-        none={intentWords.pick}
-        scale="app"
-      />
-      {topUp.asset && (
-        <>
-          {withUsd && (
-            <Field
-              id="topup-usd"
-              label={intentWords.usd}
-              value={topUp.usd}
-              onChange={actions.setUsd}
-              scale="app"
-            />
-          )}
-          <Field
-            id="topup-refund"
-            label={topUp.refundLabel}
-            value={topUp.refund}
-            onChange={actions.setRefund}
-            scale="app"
-          />
-          <div>
-            {/* one main action in the row: Add 1 NEAR's */}
-            <Button variant="pill" disabled={topUp.getting} onClick={actions.get}>
-              {topUp.getting ? intentWords.getting : intentWords.get}
-            </Button>
-          </div>
-        </>
-      )}
-      {topUp.error && <p className="error my-0">{topUp.error}</p>}
-    </div>
-  );
-}
-
-function Sending({ sent, topUp }: { sent: NonNullable<TopUpView['sent']>; topUp: TopUpView }) {
-  const { copy } = topUp.actions;
-  return (
-    <div className="flex w-full flex-col gap-text-gap">
-      <p className="my-0 type-ui">{sent.line}</p>
-      <ActionRow gap="tight">
-        <span className="min-w-0 wrap-anywhere">
-          <Mono as="span">{sent.address}</Mono>
-        </span>
-        <Button variant="quiet" onClick={() => copy('address', sent.address)}>
-          {topUp.copied === 'address' ? intentWords.copied : intentWords.copy}
-        </Button>
-      </ActionRow>
-      {sent.memo && (
-        <>
-          <p className="my-0 type-ui">{intentWords.memo}</p>
-          <ActionRow gap="tight">
-            <span className="min-w-0 wrap-anywhere">
-              <Mono as="span">{sent.memo}</Mono>
-            </span>
-            <Button variant="quiet" onClick={() => copy('memo', sent.memo ?? '')}>
-              {topUp.copied === 'memo' ? intentWords.copied : intentWords.copy}
-            </Button>
-          </ActionRow>
-        </>
-      )}
-      {sent.before && <p className="my-0 type-ui text-muted">{intentWords.before(sent.before)}</p>}
-      <p className="my-0 type-ui text-muted">{sent.status}</p>
     </div>
   );
 }

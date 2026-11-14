@@ -17,6 +17,8 @@ export function Field({
   choices,
   none,
   scale = 'site',
+  fit,
+  onEnter,
 }: {
   id: string;
   label: string;
@@ -35,13 +37,17 @@ export function Field({
   /** Read aloud, not shown: a field in a row whose first row says what it is. */
   hideLabel?: boolean;
   disabled?: boolean;
+  /** A one-line well as wide as what's in it, this many characters at least, growing as it's typed into. */
+  fit?: number;
+  /** Enter pressed in a one-line well. */
+  onEnter?: () => void;
 }) {
   const change = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
     onChange(e.target.value);
   const app = scale === 'app';
-  const look = `min-w-0 flex-1 bg-transparent ${app ? 'type-ui' : 'type-label'} text-primary outline-none`;
+  const look = `min-w-0 ${fit ? 'flex-none' : 'flex-1'} bg-transparent ${app ? 'type-ui' : 'type-label'} text-primary outline-none`;
   return (
-    <div className="flex min-w-0 flex-col gap-space-8">
+    <div className={`flex min-w-0 flex-col gap-space-8 ${fit ? 'w-fit max-w-full' : ''}`}>
       <label
         htmlFor={id}
         className={hideLabel ? 'sr-only' : app ? 'type-ui text-muted' : 'type-label'}
@@ -73,6 +79,8 @@ export function Field({
             maxLength={maxLength}
             placeholder={placeholder}
             disabled={disabled}
+            onKeyDown={onEnter ? (e) => e.key === 'Enter' && onEnter() : undefined}
+            size={fit ? Math.max(fit, value.length, placeholder?.length ?? 0) + 1 : undefined}
             className={`${look} placeholder:text-muted`}
           />
         ) : (
