@@ -12,6 +12,7 @@ class FakeConnector {
   listeners = new Set<Listener>();
   connect = vi.fn(async () => {
     if (this.reply === 'cancel') throw new Error('User rejected');
+    if (this.accountsAfterSignIn) this.accounts = this.accountsAfterSignIn;
     if (this.reply === 'signed') {
       for (const l of this.listeners) {
         l({
@@ -24,6 +25,7 @@ class FakeConnector {
         });
       }
     }
+    return this.connected();
   });
   // What Meteor does when it is already connected: the account it last signed in, ignoring the network.
   signedAs = 'petals.near';
@@ -35,14 +37,25 @@ class FakeConnector {
   getConnectedWallet = vi.fn(async () => ({ wallet: { signMessage: this.signMessage } }));
   /** the accounts the connected wallet names; none means no wallet is connected on this page */
   accounts: string[] = [];
-  wallet = vi.fn(async () => {
-    if (this.accounts.length === 0) throw new Error('No accounts found');
+  walletId = 'hot-wallet';
+  signAndSendTransaction = vi.fn(async (_: unknown) => ({
+    transaction: { hash: 'h', signer_id: 'x' },
+  }));
+  connected() {
     return {
+      manifest: { id: this.walletId },
       getAccounts: async () => this.accounts.map((accountId) => ({ accountId })),
       signMessage: this.signMessage,
+      signAndSendTransaction: this.signAndSendTransaction,
     };
+  }
+  wallet = vi.fn(async () => {
+    if (this.accounts.length === 0) throw new Error('No accounts found');
+    return this.connected();
   });
   reply: 'signed' | 'cancel' | 'silent' = 'signed';
+  /** the accounts a sign-in through connect() leaves the wallet with */
+  accountsAfterSignIn: string[] | null = null;
   options: { network: string; excludedWallets?: string[] };
   constructor(options: { network: string; excludedWallets?: string[] }) {
     this.options = options;
@@ -195,5 +208,61 @@ describe('signAs', () => {
     expect(await w.signsInFirst('mainnet', 'petals.near')).toBe(true);
     expect(c.connect).not.toHaveBeenCalled();
     expect(c.signMessage).not.toHaveBeenCalled();
+  });
+});
+
+describe('sendAs: a transaction is signed as the account signed in to Petals, or not sent', () => {
+  beforeEach(() => {
+    made.length = 0;
+  });
+  const deposit = {
+    type: 'FunctionCall' as const,
+    params: { methodName: 'deposit', args: {}, gas: '30000000000000', deposit: '1' },
+  };
+
+  async function connected(accounts: string[], walletId = 'hot-wallet') {
+    const w = await load();
+    await w.signsInFirst('mainnet', 'nobody');
+    const c = made.find((m) => m.options.network === 'mainnet') as FakeConnector;
+    c.accounts = accounts;
+    c.walletId = walletId;
+    return { w, c };
+  }
+
+  test('the wallet signed in as that account sends it, naming the signer', async () => {
+    const { w, c } = await connected(['elcocoel.near']);
+    await w.sendAs('mainnet', 'petals-credit.near', deposit, 'elcocoel.near');
+    expect(c.signAndSendTransaction.mock.calls[0]?.[0]).toEqual({
+      network: 'mainnet',
+      signerId: 'elcocoel.near',
+      receiverId: 'petals-credit.near',
+      actions: [deposit],
+    });
+  });
+
+  test('a wallet signed in as another account sends nothing and says which', async () => {
+    const { w, c } = await connected(['elco.near']);
+    const out = w.sendAs('mainnet', 'petals-credit.near', deposit, 'elcocoel.near');
+    await expect(out).rejects.toBeInstanceOf(w.WrongAccount);
+    await expect(out).rejects.toMatchObject({ signer: 'elcocoel.near', connected: 'elco.near' });
+    expect(c.signAndSendTransaction).not.toHaveBeenCalled();
+  });
+
+  test('Meteor signs with the account it last signed in, whatever it lists: that one is checked', async () => {
+    const { w, c } = await connected(['elcocoel.near', 'elco.near'], 'meteor-wallet');
+    const kept = JSON.stringify({ account: { accountId: 'elco.near' } });
+    const read = (key: string) => (key === 'meteor-wallet:meteor-account-data' ? kept : null);
+    await expect(
+      w.sendAs('mainnet', 'petals-credit.near', deposit, 'elcocoel.near', false, read),
+    ).rejects.toBeInstanceOf(w.WrongAccount);
+    expect(c.signAndSendTransaction).not.toHaveBeenCalled();
+  });
+
+  test('pressed again, the wallet signs in first, then sends as the right account', async () => {
+    const { w, c } = await connected(['elco.near']);
+    c.accountsAfterSignIn = ['elcocoel.near'];
+    await w.sendAs('mainnet', 'petals-credit.near', deposit, 'elcocoel.near', true);
+    expect(c.connect).toHaveBeenCalledTimes(1);
+    expect(c.signAndSendTransaction).toHaveBeenCalledTimes(1);
   });
 });

@@ -50,6 +50,7 @@ import {
 } from '../lib/near-social.ts';
 import { sentBy } from '../lib/pay.ts';
 import { callFunction, connectWallet } from '../lib/wallet.ts';
+import { readKept } from './usePay.ts';
 
 /** A profile picture's longest side, in pixels: well under FastFS's 1 MiB for one call. */
 const PICTURE_SIDE = 512;
@@ -207,7 +208,7 @@ export function useProfileEditor(
     if (!near) return;
     setProblem(null);
     try {
-      const wallet = await connectWallet('mainnet').catch(() => {
+      const wallet = await connectWallet('mainnet', readKept).catch(() => {
         throw new Stop(editorWords.refused);
       });
       if (wallet !== near) throw new Stop(editorWords.otherWallet(wallet, near));

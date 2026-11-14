@@ -161,6 +161,13 @@ export const payWords = {
   confirm: 'Confirm my transfer',
   pending: 'Your transfer went out and isn’t confirmed yet. Confirm it: nothing is sent twice.',
   paying: 'Waiting for your wallet…',
+  /** Before any press: the one account a payment or a withdrawal is signed as. */
+  signsAs: (account: string) => `Your NEAR wallet signs as ${account}.`,
+  /** The wallet was signed in as another account: nothing was sent. */
+  wrongAccount: (connected: string | null, signer: string) =>
+    connected
+      ? `Your NEAR wallet is signed in as ${connected}, not ${signer}. Nothing was sent. Press again to sign in to it as ${signer}.`
+      : `Your NEAR wallet isn't signed in as ${signer}. Nothing was sent. Press again to sign in to it as ${signer}.`,
   added: (near: string) => `Added ${near} NEAR. Send your question again.`,
   /** in the conversation, when Petals' agent refused for want of credit */
   outOf: "You're out of credit for Petals' agent.",

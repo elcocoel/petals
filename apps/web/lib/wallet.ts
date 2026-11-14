@@ -117,34 +117,80 @@ export async function signsInFirst(network: Network, accountId: string): Promise
   return (await connectedAs(network, accountId)) === null;
 }
 
+type NearWallet = Awaited<ReturnType<NearConnector['wallet']>>;
+
+/** Reads what a wallet keeps on this page, by key; injected by the page, so nothing here reaches a browser. */
+export type ReadKept = (key: string) => string | null;
+
 /**
- * Sends one action from the connected wallet to `receiverId` on `network` (B's payment step: a transfer,
- * or a deposit into the credit contract), and hands back what the wallet answered, for the server to check
- * on chain. It rejects when the person says no.
+ * The account a connected wallet signs transactions with on `network`. Most wallets name one account; Meteor
+ * names every account it holds but signs with the one it last signed in (kept on this page), whatever signerId
+ * it's given, so that one is read.
  */
-export async function sendAction(
+async function signingAccount(
+  wallet: NearWallet,
+  network: Network,
+  read?: ReadKept,
+): Promise<string | null> {
+  if (wallet.manifest.id === 'meteor-wallet' && read) {
+    try {
+      const kept = JSON.parse(read('meteor-wallet:meteor-account-data') ?? 'null') as {
+        account?: { accountId?: string };
+      } | null;
+      if (kept?.account?.accountId) return kept.account.accountId;
+    } catch {
+      // nothing kept: the accounts it names
+    }
+  }
+  const accounts = await wallet.getAccounts({ network }).catch(() => []);
+  return accounts[0]?.accountId ?? null;
+}
+
+/** The wallet is signed in as another account than the one that must sign; nothing was sent. */
+export class WrongAccount extends Error {
+  readonly signer: string;
+  readonly connected: string | null;
+  constructor(signer: string, connected: string | null) {
+    super(`The NEAR wallet is signed in as ${connected ?? 'no account'}, not ${signer}.`);
+    this.signer = signer;
+    this.connected = connected;
+  }
+}
+
+/**
+ * Sends one action to `receiverId` on `network` (a deposit into the credit contract, a withdrawal), signed as
+ * `signerId`, the account signed in to Petals, and hands back what the wallet answered, for the server to check
+ * on chain. With no wallet connected, or `signInFirst`, the wallet signs in first. When it would sign as another
+ * account it sends nothing and rejects with WrongAccount; it rejects too when the person says no.
+ */
+export async function sendAs(
   network: Network,
   receiverId: string,
   action: PayAction,
+  signerId: string,
+  signInFirst = false,
+  read?: ReadKept,
 ): Promise<unknown> {
   const connector = await connectorFor(network);
-  const wallet = await connector.wallet();
-  return wallet.signAndSendTransaction({ network, receiverId, actions: [action] });
+  const known = signInFirst ? null : await connector.wallet().catch(() => null);
+  const wallet = known ?? (await connector.connect());
+  const signing = await signingAccount(wallet, network, read);
+  if (signing !== signerId) throw new WrongAccount(signerId, signing);
+  return wallet.signAndSendTransaction({ network, signerId, receiverId, actions: [action] });
 }
 
 /**
  * Connects a wallet on `network`, or uses the one already connected there, and names its account: for a
  * write the person's own wallet signs (NEAR Social's), where no Petals sign-in is asked.
  */
-export async function connectWallet(network: Network): Promise<string> {
+export async function connectWallet(network: Network, read?: ReadKept): Promise<string> {
   const connector = await connectorFor(network);
   const known = await connector.wallet().catch(() => null);
-  const already = known ? await known.getAccounts({ network }).catch(() => []) : [];
-  const accounts =
-    already.length > 0 ? already : await (await connector.connect()).getAccounts({ network });
-  const [first] = accounts;
-  if (!first) throw new Error('The wallet connected but named no account.');
-  return first.accountId;
+  const already = known ? await signingAccount(known, network, read) : null;
+  // the account it signs with, which for Meteor isn't always the first it names
+  const account = already ?? (await signingAccount(await connector.connect(), network, read));
+  if (!account) throw new Error('The wallet connected but named no account.');
+  return account;
 }
 
 /**

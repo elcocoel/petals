@@ -9,7 +9,7 @@
 // tip. Words from lib/lobby-view.ts and lib/tip.ts.
 import type { ReactNode } from 'react';
 import { fundsWords, type WithdrawPhase, type WithdrawView } from '../../lib/lobby-view.ts';
-import type { Money } from '../../lib/pay.ts';
+import { type Money, payWords } from '../../lib/pay.ts';
 import { ActionRow } from '../ui/ActionRow.tsx';
 import { Button } from '../ui/Button.tsx';
 import { TipControl, type TipView } from './TipControl.tsx';
@@ -20,6 +20,7 @@ export function Funds({
   phase,
   withdrew,
   failedWhy = null,
+  signer = null,
   onWithdraw,
   adding,
   onAdd,
@@ -35,6 +36,8 @@ export function Funds({
   withdrew: string | null;
   /** Why the last withdrawal didn't go through, as the wallet or Petals said it. */
   failedWhy?: string | null;
+  /** The NEAR account a deposit or a withdrawal is signed as, named before any press. */
+  signer?: string | null;
   onWithdraw: () => void;
   /** The pay row is open under the balance. */
   adding?: boolean;
@@ -79,6 +82,9 @@ export function Funds({
             </Button>
           )}
         </ActionRow>
+      )}
+      {signer && (onAdd || withdrawal) && (
+        <p className="my-0 type-caption text-muted">{payWords.signsAs(signer)}</p>
       )}
       {withdrawal && (
         <div className="flex max-w-content-width flex-col gap-text-gap">
