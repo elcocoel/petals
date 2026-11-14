@@ -1,6 +1,6 @@
-// The lobby's one money panel: the balance, at the app's heading size, with NEAR beside at today's price; then
-// Add NEAR from the connected wallet, one amount (in a field as wide as its figure) with Add and Withdraw beside
-// it (Add into the signed-in person's balance from any NEAR wallet, Withdraw that much of the wallet's own balance
+// The lobby's one money panel: the one balance, the contract's, in NEAR at the app's heading size with its dollars
+// beside at today's price; then Add NEAR from the connected wallet, one amount (in a field as wide as its figure)
+// with Add and Withdraw beside it (Add into the signed-in person's balance from any NEAR wallet, Withdraw that much of the wallet's own balance
 // back to it); one short line saying what the last press did; and under it, sending another token (TokenPay).
 // Props only: viewmodels/useLobby.ts holds it. Words from lib/lobby-view.ts, lib/pay.ts and lib/intents.ts.
 
@@ -24,7 +24,7 @@ export interface MoneyPress {
 export function Funds({
   balance,
   held = null,
-  allowance = false,
+  heldUsd = null,
   amount,
   add,
   withdraw,
@@ -36,8 +36,8 @@ export function Funds({
   balance: Money | null;
   /** What the contract holds for the person, in NEAR as the chain says it; null with no contract. */
   held?: string | null;
-  /** Part of the balance is Petals' allowance, off the contract: the one figure is then the dollars usable. */
-  allowance?: boolean;
+  /** The contract's balance in dollars at today's price, beside its NEAR; null with no price. */
+  heldUsd?: string | null;
   /** The one amount both presses act on, in dollars; null until there's a price to set it against. */
   amount: { usd: string; label: string; onUsd: (usd: string) => void } | null;
   add: MoneyPress;
@@ -52,17 +52,13 @@ export function Funds({
 }) {
   return (
     <div className="flex flex-col gap-block-gap">
-      {balance !== null && held !== null && allowance ? (
-        // one figure: what the person can use, saying in a few words that Petals' allowance is in it
-        <p className="my-0 flex flex-wrap items-baseline gap-x-block-gap">
-          <span className="type-heading whitespace-nowrap">${grouped(balance.usd)}</span>
-          <span className="type-ui whitespace-nowrap text-muted">{fundsWords.withAllowance}</span>
-        </p>
-      ) : balance !== null && held !== null ? (
-        // the contract's own NEAR, as the chain says it, and the balance in dollars beside
+      {held !== null ? (
+        // the one balance: the contract's own NEAR, as the chain says it, and its dollars beside
         <p className="my-0 flex flex-wrap items-baseline gap-x-block-gap">
           <span className="type-heading whitespace-nowrap">{fundsWords.near(held)}</span>
-          <span className="type-ui whitespace-nowrap text-muted">${grouped(balance.usd)}</span>
+          {heldUsd !== null && (
+            <span className="type-ui whitespace-nowrap text-muted">${grouped(heldUsd)}</span>
+          )}
         </p>
       ) : balance !== null ? (
         <p className="my-0 flex flex-wrap items-baseline gap-x-block-gap">
