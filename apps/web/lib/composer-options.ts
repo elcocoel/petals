@@ -1,6 +1,6 @@
 // The composer's model picker: what's picked, what really answered, and what can be picked instead. Every
 // option comes from the catalogue (GET /api/v1/catalogue). Pure, so the views only lay it out.
-import { type Money, money, moneyWords } from './pay.ts';
+import { type Money, money } from './pay.ts';
 
 export interface Settings {
   provider: string;
@@ -83,8 +83,9 @@ const turnCost = (m: Money) =>
 
 /**
  * What a turn costs the person with the model picked, beside the balance: that model's measured turn (what NEAR AI
- * bills), plus their tip as a percent of it; "A turn: $0.013 · 0.004 NEAR, with your 5% tip". Nothing while no
- * turn of that model is measured, so it never guesses.
+ * bills), plus their tip as a percent of it; "A turn: $0.013, with your 5% tip". Dollars only, so it sits beside
+ * the model on a phone; the balance beside it says NEAR. Nothing while no turn of that model is measured, so it
+ * never guesses.
  */
 export function turnPrice(
   c: Catalogue,
@@ -95,7 +96,7 @@ export function turnPrice(
   const usd = modelOf(c, s.model)?.usd_per_turn;
   if (typeof usd !== 'number' || usd <= 0) return null;
   const tip = tipPercent && tipPercent > 0 ? tipPercent : 0;
-  const cost = moneyWords(money(usd * (1 + tip / 100), near_usd, 'cost'));
+  const cost = `$${money(usd * (1 + tip / 100), near_usd, 'cost').usd}`;
   return tip > 0 ? `A turn: ${cost}, with your ${tip}% tip` : `A turn: ${cost}`;
 }
 

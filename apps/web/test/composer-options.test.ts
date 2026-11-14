@@ -96,8 +96,8 @@ describe('a pick', () => {
 });
 
 describe('what a turn costs, beside the balance', () => {
-  test("the picked model's measured turn, dollars first and NEAR beside", () => {
-    expect(turnPrice(catalogue, settings, 0, 3)).toBe('A turn: $0.012 · 0.004 NEAR');
+  test("the picked model's measured turn, in dollars", () => {
+    expect(turnPrice(catalogue, settings, 0, 3)).toBe('A turn: $0.012');
   });
 
   test('with the tip on top, said as the tip', () => {
