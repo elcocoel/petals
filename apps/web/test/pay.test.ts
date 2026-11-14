@@ -121,6 +121,30 @@ describe('about $1, never twice', () => {
   });
 });
 
+describe('a deposit names the balance it funds', () => {
+  test('any wallet pays into the signed-in account’s balance, named in the deposit', () => {
+    const info = {
+      network: 'mainnet' as const,
+      receiver: 'petals-credit.near',
+      near_usd: 3.4,
+      method: 'deposit' as const,
+    };
+    expect(payAction(info, '5', 'elcocoel.near')).toEqual({
+      type: 'FunctionCall',
+      params: {
+        methodName: 'deposit',
+        args: { account_id: 'elcocoel.near' },
+        gas: '30000000000000',
+        deposit: '5',
+      },
+    });
+    expect(payAction(info, '5')).toMatchObject({ params: { args: {} } });
+    expect(payWords.addedFor('1.458', 'elcocoel.near', 'petals.near')).toBe(
+      'Added 1.458 NEAR to elcocoel.near, paid from petals.near.',
+    );
+  });
+});
+
 describe('the dollars the person chooses', () => {
   test('with a price, the field stays while they type, and an empty one waits instead of sending 1 NEAR', () => {
     expect(payOffer('1', 3.42, false)).toEqual({

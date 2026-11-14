@@ -64,7 +64,7 @@ export function Funds({
         // as every address is shortened, whole on hover
         <p className="my-0" title={signer}>
           <Mono as="span" tone="muted">
-            {payWords.signsAs(shortId(signer))}
+            {payWords.fundsFor(shortId(signer))}
           </Mono>
         </p>
       )}

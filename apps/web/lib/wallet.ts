@@ -119,6 +119,21 @@ export async function signsInFirst(network: Network, accountId: string): Promise
 
 type NearWallet = Awaited<ReturnType<NearConnector['wallet']>>;
 
+/**
+ * Sends one action to `receiverId` on `network` from whichever NEAR wallet is connected (its picker opens when
+ * none is): for a deposit that names the balance it funds, so any wallet may pay. It rejects when the person
+ * says no.
+ */
+export async function sendFrom(
+  network: Network,
+  receiverId: string,
+  action: PayAction,
+): Promise<unknown> {
+  const connector = await connectorFor(network);
+  const wallet = (await connector.wallet().catch(() => null)) ?? (await connector.connect());
+  return wallet.signAndSendTransaction({ network, receiverId, actions: [action] });
+}
+
 /** Reads what a wallet keeps on this page, by key; injected by the page, so nothing here reaches a browser. */
 export type ReadKept = (key: string) => string | null;
 
