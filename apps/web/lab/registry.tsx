@@ -562,7 +562,6 @@ const TOPUP_TOKENS: PayToken[] = [
   { asset: 'nep141:miden', chain: 'miden', symbol: 'MIDEN', decimals: 6, usd: 1 },
 ];
 const TOPUP_BASE: TopUpView = {
-  search: '',
   chains: chainsOf(TOPUP_TOKENS).map((c) => ({
     chain: c.chain,
     name: chainName(c.chain),
@@ -577,16 +576,12 @@ const TOPUP_BASE: TopUpView = {
   asset: '',
   asking: false,
   address: null,
-  refund: null,
   error: null,
   copied: null,
   history: [],
   actions: {
-    search: () => {},
     chooseChain: () => {},
     choose: () => {},
-    setRefund: () => {},
-    sendRefund: () => {},
     copy: () => {},
   },
 };
@@ -609,7 +604,7 @@ const TOPUP_ADDRESS = {
   status: null,
 };
 const TOPUP = {
-  picking: TOPUP_BASE,
+  picking: { ...TOPUP_BASE, asset: 'nep141:eth-usdc', asking: true },
   sending: {
     ...TOPUP_BASE,
     asset: 'nep141:eth-usdt',
@@ -642,31 +637,6 @@ const TOPUP = {
       TOPUP_TOKENS,
       3.4,
     ),
-  },
-  searched: {
-    ...TOPUP_BASE,
-    search: 'usdc',
-    chains: chainsOf(TOPUP_TOKENS, 'usdc').map((c) => ({
-      chain: c.chain,
-      name: chainName(c.chain),
-      icon: chainIcon(c.chain),
-    })),
-    tokens: tokensOn(TOPUP_TOKENS, 'eth', 'usdc').map((t) => ({
-      asset: t.asset,
-      symbol: t.symbol,
-      icon: tokenIcon(t.symbol),
-    })),
-  },
-  refund: {
-    ...TOPUP_BASE,
-    chain: 'btc',
-    tokens: tokensOn(TOPUP_TOKENS, 'btc').map((t) => ({
-      asset: t.asset,
-      symbol: t.symbol,
-      icon: tokenIcon(t.symbol),
-    })),
-    asset: 'nep141:btc',
-    refund: { label: intentWords.refund('Bitcoin'), value: '' },
   },
 } satisfies Record<string, TopUpView>;
 
@@ -3064,7 +3034,7 @@ export const registry: LabEntry[] = [
         render: () => (
           <Funds
             balance={{ usd: '3.88', near: '1.13' }}
-            amount={{ usd: '5', label: 'Dollars', onUsd: () => {}, top: 5, onGrow: () => {} }}
+            amount={{ usd: '5', label: 'Dollars', onUsd: () => {} }}
             add={{ label: 'Add $5.00 · 1.46 NEAR', canPress: true, onPress: () => {} }}
             withdraw={{ label: 'Withdraw $5.00 · 1.46 NEAR', canPress: false, onPress: () => {} }}
             line="Adds to elcocoel.near’s balance; any NEAR wallet you connect can pay."
@@ -3077,7 +3047,7 @@ export const registry: LabEntry[] = [
         render: () => (
           <Funds
             balance={{ usd: '4.88', near: '1.42' }}
-            amount={{ usd: '1', label: 'Dollars', onUsd: () => {}, top: 5, onGrow: () => {} }}
+            amount={{ usd: '1', label: 'Dollars', onUsd: () => {} }}
             add={{ label: 'Add $1.00 · 0.29 NEAR', canPress: true, onPress: () => {} }}
             withdraw={{ label: 'Withdraw $1.00 · 0.29 NEAR', canPress: true, onPress: () => {} }}
             status="Added 0.292 NEAR to elcocoel.near, paid from petals.near."
@@ -3640,7 +3610,7 @@ export const registry: LabEntry[] = [
     source: 'apps/web/components/workspace/TokenPay.tsx',
     states: [
       {
-        name: 'a chain open, no token yet',
+        name: 'USDC on Ethereum, its address on the way',
         wide: true,
         render: () => <TokenPay topUp={TOPUP.picking} />,
       },
@@ -3648,12 +3618,6 @@ export const registry: LabEntry[] = [
         name: 'a token chosen: its address',
         wide: true,
         render: () => <TokenPay topUp={TOPUP.sending} />,
-      },
-      { name: 'searched', wide: true, render: () => <TokenPay topUp={TOPUP.searched} /> },
-      {
-        name: 'no wallet there: a refund address',
-        wide: true,
-        render: () => <TokenPay topUp={TOPUP.refund} />,
       },
     ],
   },

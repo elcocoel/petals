@@ -1,10 +1,10 @@
-// Paying with another token through NEAR Intents, in the lobby's money panel: a search over the tokens, the
-// chains side by side with the chosen chain's tokens, and, the moment a token is chosen, the address that takes
-// any amount of it (asked of the server once per token a visit), with the fees, the least it takes and until when.
-// Nothing to type and nothing to press but the token: the refund address is the person's own wallet on that chain,
-// and only where they have none does one field ask for it. Under it, their top-ups: what was sent, what it should
-// land as, what landed. The shown address is read again every few seconds while it waits or swaps; once it lands
-// the balance and the history read again (`paid`). lib/intents.ts holds the order, the words and the view.
+// Sending another token, in the lobby's money panel under Add NEAR: a chain and a token, each a dropdown with a
+// search, and the moment a token is chosen, an address asked of the server (once per token a visit) that takes
+// any amount of it, landing as NEAR on the person's balance, with the fees, the least it takes and until when.
+// USDC on Ethereum is chosen when the panel opens, so an address is there at once. Under it, their top-ups: what
+// was sent, what it should land as, what landed. The shown address is read again every few seconds while it waits
+// or swaps; once it lands the balance and the history read again (`paid`). lib/intents.ts holds the order, the
+// words and the view.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { readPayTokens, readTopUp, readTopUps, startTopUp } from '../lib/agent-client.ts';
 import {
@@ -13,6 +13,7 @@ import {
   historyRows,
   intentWords,
   isUnderWay,
+  OPENS_ON,
   type PayToken,
   quoteLine,
   shortAddress,
@@ -31,17 +32,14 @@ export function useTopUp(
   paid: () => void,
   /** today's NEAR price, for what a top-up should land as */
   nearUsd: number | null,
-  /** the chain the list opens on (lib/intents homeChain) */
-  home: string,
 ): TopUpView {
   const [tokens, setTokens] = useState<PayToken[] | null>(null);
-  const [search, setSearch] = useState('');
-  const [picked, setPicked] = useState<string | null>(null);
-  const [asset, setAsset] = useState('');
+  const [chain, setChain] = useState<string>(OPENS_ON.chain);
+  /** the token chosen on the chain; none yet is the chain's first */
+  const [picked, setPicked] = useState('');
   /** the addresses given this visit, by token: choosing one again shows its own */
   const [given, setGiven] = useState<Record<string, TopUp>>({});
   const [askingFor, setAskingFor] = useState<string | null>(null);
-  const [refund, setRefund] = useState<{ asset: string; value: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState<'address' | 'memo' | null>(null);
   const [rows, setRows] = useState<TopUpRow[] | null>(null);
@@ -49,7 +47,6 @@ export function useTopUp(
   const [askedBy, setAskedBy] = useState(asking);
   if (asking !== askedBy) {
     setAskedBy(asking);
-    setAsset('');
     setGiven({});
     setError(null);
   }
@@ -68,44 +65,35 @@ export function useTopUp(
   }, []);
   useEffect(() => readHistory(), [readHistory]);
 
-  const chains = useMemo(() => (tokens ? chainsOf(tokens, search) : []), [tokens, search]);
-  // the chain chosen, else the home chain, else the first the search finds
-  const chain =
-    [picked, home].find((c) => c && chains.some((x) => x.chain === c)) ?? chains[0]?.chain ?? home;
-  const onChain = useMemo(
-    () => (tokens ? tokensOn(tokens, chain, search) : []),
-    [tokens, chain, search],
-  );
+  const chains = useMemo(() => (tokens ? chainsOf(tokens) : []), [tokens]);
+  const onChain = useMemo(() => (tokens ? tokensOn(tokens, chain) : []), [tokens, chain]);
+  // none chosen yet: the chain's USDC, else its first
+  const asset = onChain.some((t) => t.asset === picked)
+    ? picked
+    : (onChain.find((t) => t.symbol === OPENS_ON.symbol)?.asset ?? onChain[0]?.asset ?? '');
 
-  const ask = useCallback(async (origin: string, refundTo?: string) => {
+  // the chosen token's address, asked for the moment it's chosen, once a visit (again after a failed ask)
+  const tried = useRef(new Set<string>());
+  const ask = useCallback(async (origin: string) => {
     setError(null);
     setAskingFor(origin);
     try {
-      const t = await startTopUp({
-        origin_asset: origin,
-        ...(refundTo ? { refund_to: refundTo } : {}),
-      });
+      const t = await startTopUp({ origin_asset: origin });
       setGiven((g) => ({ ...g, [origin]: t }));
-      setRefund(null);
     } catch (e) {
-      const said = e instanceof Error ? e.message : '';
-      // no wallet of theirs on that chain: one field asks where anything unswapped goes back
-      if (/refund_to/.test(said))
-        setRefund((r) => (r?.asset === origin ? r : { asset: origin, value: '' }));
-      else setError(said || intentWords.state.FAILED);
+      tried.current.delete(origin);
+      setError((e instanceof Error && e.message) || intentWords.state.FAILED);
     } finally {
       setAskingFor((a) => (a === origin ? null : a));
     }
   }, []);
 
-  const choose = useCallback(
-    (origin: string) => {
-      setAsset(origin);
-      setCopied(null);
-      if (!given[origin]) void ask(origin);
-    },
-    [given, ask],
-  );
+  useEffect(() => {
+    if (!asset || given[asset] || tried.current.has(asset)) return;
+    tried.current.add(asset);
+    setCopied(null);
+    void ask(asset);
+  }, [asset, given, ask]);
 
   // the shown address, read again while it waits or swaps; once it lands, the balance and the history again
   const shown = asset ? (given[asset] ?? null) : null;
@@ -143,7 +131,6 @@ export function useTopUp(
 
   const token = tokens?.find((t) => t.asset === asset) ?? null;
   return {
-    search,
     chains: tokens
       ? chains.map((c) => ({ chain: c.chain, name: chainName(c.chain), icon: chainIcon(c.chain) }))
       : null,
@@ -162,21 +149,15 @@ export function useTopUp(
             status: shown.status === 'PENDING_DEPOSIT' ? null : intentWords.state[shown.status],
           }
         : null,
-    refund:
-      refund && refund.asset === asset && token
-        ? { label: intentWords.refund(chainName(token.chain)), value: refund.value }
-        : null,
     error,
     copied,
     history: rows && tokens ? historyRows(rows, tokens, nearUsd) : null,
     actions: {
-      search: setSearch,
-      chooseChain: setPicked,
-      choose,
-      setRefund: (value: string) => setRefund((r) => (r ? { ...r, value } : r)),
-      sendRefund: () => {
-        if (refund?.value.trim()) void ask(refund.asset, refund.value.trim());
+      chooseChain: (c: string) => {
+        setChain(c);
+        setPicked('');
       },
+      choose: setPicked,
       copy,
     },
   };

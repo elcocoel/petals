@@ -18,7 +18,6 @@ export function Field({
   none,
   scale = 'site',
   fit,
-  onEnter,
 }: {
   id: string;
   label: string;
@@ -39,8 +38,6 @@ export function Field({
   disabled?: boolean;
   /** A one-line well as wide as what's in it, this many characters at least, growing as it's typed into. */
   fit?: number;
-  /** Enter pressed in a one-line well. */
-  onEnter?: () => void;
 }) {
   const change = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
     onChange(e.target.value);
@@ -79,7 +76,6 @@ export function Field({
             maxLength={maxLength}
             placeholder={placeholder}
             disabled={disabled}
-            onKeyDown={onEnter ? (e) => e.key === 'Enter' && onEnter() : undefined}
             size={fit ? Math.max(fit, value.length, placeholder?.length ?? 0) + 1 : undefined}
             className={`${look} placeholder:text-muted`}
           />

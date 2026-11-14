@@ -1,75 +1,40 @@
-// Paying with another token, in the money panel, as wallets lay it out: a search on top; the chains, each with
-// its logo, side by side with the chosen chain's tokens, each with its own; and, the moment a token is chosen, the
-// address that takes any amount of it, as text to copy and as a QR code for a phone, with one line of the fees,
-// the least it takes and until when. Nothing to type and no amount to choose; only where the person has no wallet
-// on that chain does one field ask where anything unswapped goes back. Under it, their top-ups: when, what was
-// sent, the NEAR it should land as, what landed and where it stands. Every part keeps its place in every state.
-// Props only: viewmodels/useTopUp.ts holds it. Words from lib/intents.ts.
+// Sending another token, in the money panel under Add NEAR: a chain and a token, two dropdowns with a search and
+// logos, and, the moment a token is chosen, the address that takes any amount of it, as text to copy and as a QR
+// code for a phone, with one line of the fees, the least it takes and until when; it lands as NEAR on the
+// balance. Under it, their top-ups: when, what was sent, the NEAR it should land as, what landed and where it
+// stands. Props only: viewmodels/useTopUp.ts holds it. Words from lib/intents.ts.
 import { intentWords, type TopUpView } from '../../lib/intents.ts';
 import { ActionRow } from '../ui/ActionRow.tsx';
 import { Button } from '../ui/Button.tsx';
-import { Field } from '../ui/Field.tsx';
 import { Mono } from '../ui/Mono.tsx';
-import { NavItem } from '../ui/NavItem.tsx';
 import { Qr } from '../ui/Qr.tsx';
+import { Select } from '../ui/Select.tsx';
 
 export function TokenPay({ topUp }: { topUp: TopUpView }) {
   const { actions } = topUp;
   const address = topUp.address;
   return (
     <div className="flex w-full min-w-0 flex-col gap-text-gap">
-      <Field
-        id="topup-search"
-        label={intentWords.search}
-        hideLabel
-        placeholder={intentWords.search}
-        value={topUp.search}
-        onChange={actions.search}
-        scale="app"
-        fit={1}
-      />
-      <div className="grid w-full grid-cols-2 gap-text-gap">
-        <div
-          role="listbox"
-          aria-label={intentWords.chain}
-          className="h-drawing-240 min-w-0 overflow-y-auto border border-hairline"
-        >
-          {topUp.chains === null ? (
-            <NavItem label={intentWords.loading} muted />
-          ) : (
-            topUp.chains.map((c) => (
-              <NavItem
-                key={c.chain}
-                label={c.name}
-                logo={c.icon}
-                mark={c.name}
-                chosen={c.chain === topUp.chain}
-                onClick={() => actions.chooseChain(c.chain)}
-              />
-            ))
-          )}
+      {topUp.chains === null ? (
+        <p className="my-0 type-ui text-muted">{intentWords.loading}</p>
+      ) : (
+        <div className="flex flex-wrap items-center gap-text-gap">
+          <Select
+            label={intentWords.chain}
+            value={topUp.chain}
+            options={topUp.chains.map((c) => ({ value: c.chain, label: c.name, logo: c.icon }))}
+            onChange={actions.chooseChain}
+            search={intentWords.searchChains}
+          />
+          <Select
+            label={intentWords.token}
+            value={topUp.asset}
+            options={topUp.tokens.map((t) => ({ value: t.asset, label: t.symbol, logo: t.icon }))}
+            onChange={actions.choose}
+            search={intentWords.searchTokens}
+          />
         </div>
-        <div
-          role="listbox"
-          aria-label={intentWords.token}
-          className="h-drawing-240 min-w-0 overflow-y-auto border border-hairline"
-        >
-          {topUp.chains !== null && topUp.tokens.length === 0 ? (
-            <NavItem label={intentWords.none} muted />
-          ) : (
-            topUp.tokens.map((t) => (
-              <NavItem
-                key={t.asset}
-                label={t.symbol}
-                logo={t.icon}
-                mark={t.symbol}
-                chosen={t.asset === topUp.asset}
-                onClick={() => actions.choose(t.asset)}
-              />
-            ))
-          )}
-        </div>
-      </div>
+      )}
       <div className="flex min-h-drawing-144 w-full min-w-0 flex-wrap items-start gap-text-gap border border-hairline p-space-8">
         {address ? (
           <>
@@ -102,19 +67,6 @@ export function TokenPay({ topUp }: { topUp: TopUpView }) {
               {address.status && <p className="my-0 type-ui">{address.status}</p>}
             </div>
           </>
-        ) : topUp.refund ? (
-          <div className="flex min-w-0 flex-col gap-space-8">
-            <Field
-              id="topup-refund"
-              label={topUp.refund.label}
-              value={topUp.refund.value}
-              onChange={actions.setRefund}
-              onEnter={actions.sendRefund}
-              scale="app"
-              fit={42}
-            />
-            <p className="my-0 type-ui text-muted">{intentWords.refundThen}</p>
-          </div>
         ) : (
           <p className="my-0 type-ui text-muted">
             {topUp.asking ? intentWords.asking : intentWords.pick}
