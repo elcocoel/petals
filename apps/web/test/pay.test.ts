@@ -6,6 +6,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, test } from 'vitest';
 import { ConnectWallet } from '../components/chat/ConnectWallet.tsx';
 import { PayRow } from '../components/chat/PayRow.tsx';
+import { Funds } from '../components/workspace/Funds.tsx';
 import { notSignedInWords } from '../lib/door-words.ts';
 import {
   money,
@@ -31,6 +32,23 @@ describe('paying for Petals’ agent', () => {
     expect(money(2, 4)).toEqual({ usd: '2.00', near: '0.50' });
     expect(moneyWords(money(2, 4))).toBe('$2.00 · 0.50 NEAR');
     expect(payWords.balance(money(1, 3.62))).toBe('Balance: $1.00 · 0.28 NEAR');
+  });
+
+  test('the money panel shows one balance, the contract’s, with no allowance in it', () => {
+    const html = renderToStaticMarkup(
+      createElement(Funds, {
+        balance: { usd: '11.56', near: '3.40' },
+        held: '0.50000',
+        heldUsd: '1.70',
+        amount: null,
+        add: { label: 'Add', canPress: true, onPress: () => {} },
+        withdraw: null,
+      }),
+    );
+    expect(html).toContain('0.50000 NEAR');
+    expect(html).toContain('$1.70');
+    expect(html).not.toContain('11.56');
+    expect(html).not.toMatch(/allowance/i);
   });
 
   test('a big amount has its thousands grouped, a small one is as it was', () => {
